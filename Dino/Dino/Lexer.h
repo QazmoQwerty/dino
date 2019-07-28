@@ -5,7 +5,7 @@
 class Lexer
 {
 public:
-	std::vector<Token*>& lex(std::string);
+	static std::vector<Token*>& lex(std::string);
 private:
 
 };
