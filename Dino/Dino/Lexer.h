@@ -13,7 +13,8 @@ class Lexer
 {
 public:
 	static void setup();
-	static std::vector<Token*>& lex(std::string str);
+	static vector<Token*>& lex(string str);
 private:
-	static std::unordered_map<char, CharType> _dict;
+	static unordered_map<char, CharType> _dict;
+	static Token* getToken(string str, int index);
 };
