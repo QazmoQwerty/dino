@@ -31,18 +31,71 @@ vector<Token*>& Lexer::lex(string str)
 	return *tokens;
 }
 
-Token * Lexer::getToken(string str, int index)
+Token * Lexer::getToken(string str, int & index, int line)
 {
-	Token* t = new struct Token;
+	Token* token = new struct Token;
 	char curr = str[index];
-	t->_data = curr;
-
+	token->_data = curr;
+	index++;
 	switch (_dict[curr])
 	{
 		case CT_WHITESPACE:
+			token->_type = TT_WHITESPACE;
+			break;
+
+		case CT_LINE_BREAK:
+			token->_type = TT_LINE_BREAK;
+			break;
+
+		case CT_NEWLINE:
+			token->_type = TT_NEWLINE;
+			break;
+
+		case CT_DIGIT:
+			bool isFraction = false;
+			while (index < str.length())
+			{
+				if (_dict[str[index]] == CT_DIGIT)
+					token->_data += str[index];
+				else if (str[index] == '.' && !isFraction)
+				{
+					isFraction = true;
+					token->_data += '.';
+				}
+				else break;
+				index++;
+			}
+			if (isFraction)
+			{
+				LiteralToken<float> * temp = new struct LiteralToken<float>;
+				temp->_data = token->_data;
+				temp->_type = TT_LITERAL;
+				temp->_literalType = LT_FRACTION;
+				temp->_value = stof(temp->_data);	// TODO - exception handling
+			}
+			else
+			{
+				LiteralToken<int> * temp = new struct LiteralToken<int>;
+				temp->_data = token->_data;
+				temp->_type = TT_LITERAL;
+				temp->_literalType = LT_INTEGER;
+				temp->_value = stoi(temp->_data);	// TODO - exception handling
+			}
+
+
+			break;
+
+		case CT_LETTER:
+			break;
+
+		case CT_OPERATOR:
+			break;
+
+		case CT_UNKNOWN:
 			break;
 	}
 
 
+	token->_line = line;
 	return nullptr;
 }

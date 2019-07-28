@@ -2,6 +2,7 @@
 
 enum TokenType
 {
+	TT_WHITESPACE,
 	TT_NEWLINE,
 	TT_OPERATOR,
 	TT_LINE_BREAK,

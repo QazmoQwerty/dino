@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <unordered_map>
+#include <string>
+#include <iostream>
 #include "Token.h"
 #include "OperatorsMap.h"
 
@@ -16,5 +18,5 @@ public:
 	static vector<Token*>& lex(string str);
 private:
 	static unordered_map<char, CharType> _dict;
-	static Token* getToken(string str, int index);
+	static Token* getToken(string str, int & index, int line);
 };
