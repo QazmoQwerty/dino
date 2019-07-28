@@ -7,12 +7,12 @@ struct Token
 	TokenType _type;
 	std::string _data;
 	int _line;
-} ;
+};
 
 struct OperatorToken : public Token
 {
 	OperatorType _operatorType;
-} OperatorToken;
+};
 
 template <class T>
 struct LiteralToken : public Token
