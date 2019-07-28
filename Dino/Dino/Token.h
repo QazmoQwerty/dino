@@ -1,11 +1,14 @@
 #pragma once
+
 #include <iostream>
 #include "TypeEnums.h"
+
+using std::string;
 
 struct Token 
 {
 	TokenType _type;
-	std::string _data;
+	string _data;
 	int _line;
 };
 
