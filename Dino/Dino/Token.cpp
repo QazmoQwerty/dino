@@ -1,4 +1,5 @@
 #include "Token.h"
+#include "OperatorsMap.h"
 
 void printToken(Token * token)
 {

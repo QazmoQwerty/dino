@@ -21,4 +21,5 @@ void OperatorsMap::setup()
 	_map["("] = OT_UNKNOWN;
 	_map[")"] = OT_UNKNOWN;
 	_map["=="] = OT_UNKNOWN;
+	_map["."] = OT_UNKNOWN;
 }

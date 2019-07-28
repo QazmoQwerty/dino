@@ -12,7 +12,9 @@ int main()
 	std::string str = buffer.str();
 	std::cout << str << std::endl;
 
+	OperatorsMap::setup();
 	Lexer::setup();
+	
 	for (Token * t : Lexer::lex(str))
 	{
 		printToken(t);
