@@ -21,12 +21,14 @@ void Lexer::setup()
 
 vector<Token*>& Lexer::lex(string str)
 {
-	//Token* currentToken;
-
 	vector<Token*> *tokens = new vector<Token*>();
-	for (unsigned int i = 0; i < str.length(); i++)
+	int line = 1;
+	unsigned int index = 0;
+	while (index < str.length())
 	{
-		char curr = str[i];
+		tokens->push_back(getToken(str, index, line));
+		if (tokens->back()->_type == TT_NEWLINE)
+			line++;
 	}
 	return *tokens;
 }
@@ -128,13 +130,13 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 			token = temp;
 			break;
 			// TODO - deal with comments (multi line AND single line).
+			// TODO - deal with strings and characters.
 		}
 
 		case CT_UNKNOWN:
 			break;
 	}
 
-
 	token->_line = line;
-	return nullptr;
+	return token;
 }

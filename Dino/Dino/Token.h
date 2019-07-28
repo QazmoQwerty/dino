@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 #include "TypeEnums.h"
 
 using std::string;
@@ -23,3 +24,6 @@ struct LiteralToken : public Token
 	LiteralType _literalType;
 	T _value;
 };
+
+void printToken(Token* token);
+void printLiteralToken(Token * token);
