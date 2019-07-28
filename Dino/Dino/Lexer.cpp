@@ -97,12 +97,37 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 
 		case CT_LETTER:
 		{
+			while (index < str.length())
+			{
+				if (_dict[str[index]] == CT_DIGIT || _dict[str[index]] == CT_LETTER)
+					token->_data += str[index];
+				else break;
+				index++;
+			}
+			token->_type = TT_IDENTIFIER;
 			break;
 		}
 
 		case CT_OPERATOR:
 		{
+			while (index < str.length() && _dict[str[index]] == CT_OPERATOR)
+			{
+				string newOp = token->_data + str[index];
+				if (OperatorsMap::getOperators().count(newOp))
+				{
+					token->_data = newOp;
+					index++;
+				}
+				else break;
+			}
+			OperatorToken * temp = new struct OperatorToken;
+			temp->_data = token->_data;
+			temp->_type = TT_OPERATOR;
+			temp->_operatorType = OperatorsMap::getOperators()[temp->_data];
+			delete token;
+			token = temp;
 			break;
+			// TODO - deal with comments (multi line AND single line).
 		}
 
 		case CT_UNKNOWN:
