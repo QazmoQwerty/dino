@@ -11,8 +11,8 @@ void OperatorsMap::setup()
 {
 	_map = unordered_map<string, OperatorType>();
 	// temporary for testing
-	_map["+"] = OT_UNKNOWN;
-	_map["-"] = OT_UNKNOWN;
+	_map["+"] = OT_ADD;
+	_map["-"] = OT_SUBTRACT;
 	_map["/"] = OT_UNKNOWN;
 	_map["*"] = OT_UNKNOWN;
 	_map["%"] = OT_UNKNOWN;
@@ -20,6 +20,6 @@ void OperatorsMap::setup()
 	_map[")"] = OT_UNKNOWN;
 	_map["("] = OT_UNKNOWN;
 	_map[")"] = OT_UNKNOWN;
-	_map["=="] = OT_UNKNOWN;
+	_map["=="] = OT_EQUAL;
 	_map["."] = OT_UNKNOWN;
 }
