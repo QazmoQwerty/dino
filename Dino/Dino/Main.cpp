@@ -10,7 +10,6 @@ int main()
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
-	std::cout << str << std::endl;
 
 	OperatorsMap::setup();
 	Lexer::setup();

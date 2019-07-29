@@ -24,8 +24,6 @@ enum LiteralType
 
 enum OperatorType
 {
-	// TODO - add operator types
-
 	// Arithmetic Operators:
 	OT_ADD,							//	+
 	OT_SUBTRACT,					//	-

@@ -16,10 +16,7 @@ void Lexer::setup()
 		_dict[c] = CT_DIGIT;
 	for (auto c : OperatorsMap::getOperators())
 		for (unsigned int i = 0; i < c.first.length(); i++)
-		{
-			std::cout << "aaa - " << c.first[i] << std::endl;
 			_dict[c.first[i]] = CT_OPERATOR;
-		}
 }
 
 vector<Token*>& Lexer::lex(string str)
