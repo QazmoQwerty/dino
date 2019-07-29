@@ -155,14 +155,26 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 			}
 			else
 			{
+				if (temp->_operatorType == OT_SINGLE_LINE_COMMENT)
+				{
+					temp->_data = "";
+					while (index < str.length() && str[index] != SINGLE_LINE_COMMENT_END)
+						index++;
+					index++;	// Can probably find a more elegant solution
+					temp->_type = TT_COMMENT;
+				}
+				else if (temp->_operatorType == OT_MULTI_LINE_COMMENT_OPEN)
+				{
+					temp->_data = "";
+					while (index + 1 < str.length() && string() + str[index] + str[index + 1] != MULTI_LINE_COMMENT_END)
+						index++;
+					index += 2;
+					temp->_type = TT_COMMENT;
+				}
 				delete token;
 				token = temp;
 			}
-
-			
 			break;
-			
-			// TODO - deal with comments (multi line AND single line).
 		}
 
 		case CT_UNKNOWN:

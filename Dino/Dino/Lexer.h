@@ -1,5 +1,8 @@
 #pragma once
 
+#define SINGLE_LINE_COMMENT_END '\n'
+#define MULTI_LINE_COMMENT_END "*/"
+
 #include <vector>
 #include <unordered_map>
 #include <string>

@@ -8,6 +8,7 @@ enum TokenType
 	TT_LINE_BREAK,
 	TT_IDENTIFIER,
 	TT_LITERAL,
+	TT_COMMENT,
 	TT_UNKNOWN,
 };
 
