@@ -6,13 +6,13 @@ void printToken(Token * token)
 	switch (token->_type)
 	{
 		case(TT_WHITESPACE):
-			std::cout << "line " << token->_line << " - [WHITESPACE: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [WHITESPACE]" << std::endl;
 			break;
 		case(TT_NEWLINE):
 			std::cout << "line " << token->_line << " - [NEWLINE]" << std::endl;
 			break;
 		case(TT_OPERATOR):
-			std::cout << "line " << token->_line << " - [OPERATOR (opId " << ((OperatorToken*)token)->_operatorType << "): "<< token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [OPERATOR: "<< token->_data << "]" << std::endl;
 			break;
 		case(TT_LINE_BREAK):
 			std::cout << "line " << token->_line << " - [LINE_BREAK: " << token->_data << "]" << std::endl;

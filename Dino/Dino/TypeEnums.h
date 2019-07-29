@@ -86,7 +86,7 @@ enum OperatorType
 	OT_PERIOD,						//	.
 	OT_COMMA,						//	,
 	OT_COLON,						//	:
-	OT_SEMICOLON,					//	;
+	OT_ESCAPE,						//	\ 
 	OT_UNKNOWN,
 };
 
