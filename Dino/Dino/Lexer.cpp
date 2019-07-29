@@ -27,13 +27,13 @@ vector<Token*>& Lexer::lex(string str)
 	while (index < str.length())
 	{
 		tokens->push_back(getToken(str, index, line));
-		if (tokens->back()->_type == TT_NEWLINE)
-			line++;
+		/*if (tokens->back()->_type == TT_NEWLINE)
+			line++;*/
 	}
 	return *tokens;
 }
 
-Token * Lexer::getToken(string str, unsigned int & index, int line)
+Token * Lexer::getToken(string str, unsigned int & index, int & line)
 {
 	Token* token = new struct Token;
 	char curr = str[index];
@@ -59,6 +59,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 		{
 			token->_type = TT_NEWLINE;
 			token->_line = line;
+			line++;
 			break;
 		}
 
@@ -140,8 +141,26 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 			{
 				char c = temp->_data[0];
 				temp->_data = "";
-				while (index < str.length() && str[index] != c)
+
+				// Temporary fix - escape character can't be escaped currently.
+				/*while (index < str.length() && !(str[index] == c && str[index - 1] != ESCAPE_CHAR))	
 				{
+					temp->_data += str[index];
+					index++;
+				}*/
+
+				while (index < str.length())
+				{
+					if (str[index] == c)
+					{
+						unsigned int count = 0;
+						while (count < index && str[index - count - 1] == ESCAPE_CHAR)
+							count++;
+						if (count % 2 == 0)	// Check if number of escape characters before string/char closer is even.
+							break;
+					}
+					else if (str[index] == '\n')
+						line++;
 					temp->_data += str[index];
 					index++;
 				}
@@ -162,12 +181,17 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 						index++;
 					index++;	// Can probably find a more elegant solution
 					temp->_type = TT_COMMENT;
+					line++;
 				}
 				else if (temp->_operatorType == OT_MULTI_LINE_COMMENT_OPEN)
 				{
 					temp->_data = "";
 					while (index + 1 < str.length() && string() + str[index] + str[index + 1] != MULTI_LINE_COMMENT_END)
+					{
+						if (str[index] == '\n')
+							line++;
 						index++;
+					}
 					index += 2;
 					temp->_type = TT_COMMENT;
 				}

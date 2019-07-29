@@ -84,6 +84,7 @@ void printLiteralTokenByValue(Token * token)
 
 LiteralToken<string> * createStringLiteralToken(string value, int line)
 {
+	// TODO - special characters (like '\n')
 	LiteralToken<string> * token = new struct LiteralToken<string>;
 	token->_data = '"' + value + '"';
 	token->_line = line;
@@ -93,11 +94,16 @@ LiteralToken<string> * createStringLiteralToken(string value, int line)
 	return token;
 }
 
-LiteralToken<char> * createCharacterLiteralToken(string value, int line)
+LiteralToken<char> * createCharacterLiteralToken(string value, int line)	
 {
+	// TODO - exception handling
 	// TODO - special characters (like '\n')
+	if (value.length() == 0)
+		return NULL;	// ERROR - empty char constant
+	if (value[0] == '\\')
+		value = getSpecialCharConstant(value);
 	if (value.length() != 1)
-		return NULL;	// TODO - exception handling
+		return NULL;	
 	LiteralToken<char> * token = new struct LiteralToken<char>;
 	token->_data = '\'' + value + '\'';
 	token->_line = line;
@@ -105,6 +111,26 @@ LiteralToken<char> * createCharacterLiteralToken(string value, int line)
 	token->_type = TT_LITERAL;
 	token->_value = value[0];
 	return token;
+}
+
+string getSpecialCharConstant(string value)
+{
+	// Note: not all ASCII special characters have been included.
+	if (value == "\\b")		// Backspace
+		return "\b";
+	if (value == "\\n")		// Newline
+		return "\n";
+	if (value == "\\t")		// Horizontal Tab
+		return "\t";
+	if (value == "\\v")		// Vertical Tab
+		return "\v";
+	if (value == "\\\\")	// Backslash
+		return "\\";
+	if (value == "\\'")		// Single Quotation Mark
+		return "'";
+	if (value == "\\\"")	// Single Quotation Mark
+		return "\"";
+	return value;
 }
 
 LiteralToken<float> * createFractionLiteralToken(string data, int line)

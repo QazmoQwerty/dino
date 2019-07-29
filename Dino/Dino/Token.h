@@ -28,6 +28,7 @@ struct LiteralToken : public Token
 void printToken(Token* token);
 void printLiteralToken(Token * token);
 void printLiteralTokenByValue(Token * token);
+string getSpecialCharConstant(string value);
 
 LiteralToken<string> * createStringLiteralToken(string data, int line);
 LiteralToken<char> * createCharacterLiteralToken(string data, int line);
