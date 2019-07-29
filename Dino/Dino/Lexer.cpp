@@ -102,8 +102,19 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 				else break;
 				index++;
 			}
-			token->_type = TT_IDENTIFIER;
-			token->_line = line;
+			
+			if (token->_data == "false" || token->_data == "true")
+			{
+				Token * booleanToken = createBooleanLiteralToken(token->_data, line);
+				delete token;
+				token = booleanToken;
+			}
+			else
+			{
+				token->_type = TT_IDENTIFIER;
+				token->_line = line;
+			}
+			
 			break;
 		}
 

@@ -2,6 +2,7 @@ for(int i=0; i<100; i++) {
 	Std.Print(i)
 	"wow"
 	float x = 1.2; x = 2.4
+	bool b = false || true
 	'a'
 	""
 }

@@ -33,3 +33,4 @@ LiteralToken<string> * createStringLiteralToken(string data, int line);
 LiteralToken<char> * createCharacterLiteralToken(string data, int line);
 LiteralToken<float> * createFractionLiteralToken(string data, int line);
 LiteralToken<int> * createIntegerLiteralToken(string data, int line);
+LiteralToken<bool> * createBooleanLiteralToken(string data, int line);
