@@ -44,18 +44,21 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 		case CT_WHITESPACE:
 		{
 			token->_type = TT_WHITESPACE;
+			token->_line = line;
 			break;
 		}
 
 		case CT_LINE_BREAK:
 		{
 			token->_type = TT_LINE_BREAK;
+			token->_line = line;
 			break;
 		}
 
 		case CT_NEWLINE:
 		{
 			token->_type = TT_NEWLINE;
+			token->_line = line;
 			break;
 		}
 
@@ -76,23 +79,16 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 			}
 			if (isFraction)
 			{
-				LiteralToken<float> * temp = new struct LiteralToken<float>;
-				temp->_data = token->_data;
-				temp->_type = TT_LITERAL;
-				temp->_literalType = LT_FRACTION;
-				temp->_value = stof(temp->_data);	// TODO - exception handling
+				auto fractionToken = createFractionLiteralToken(token->_data, line);
 				delete token;
-				token = temp;
+				token = fractionToken;
 			}
 			else
 			{
-				LiteralToken<int> * temp = new struct LiteralToken<int>;
-				temp->_data = token->_data;
-				temp->_type = TT_LITERAL;
-				temp->_literalType = LT_INTEGER;
-				temp->_value = stoi(temp->_data);	// TODO - exception handling
+				auto intToken = createIntegerLiteralToken(token->_data, line);
+				std::cout << intToken->_line << std::endl;
 				delete token;
-				token = temp;
+				token = intToken;
 			}
 			break;
 		}
@@ -107,6 +103,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 				index++;
 			}
 			token->_type = TT_IDENTIFIER;
+			token->_line = line;
 			break;
 		}
 
@@ -126,17 +123,47 @@ Token * Lexer::getToken(string str, unsigned int & index, int line)
 			temp->_data = token->_data;
 			temp->_type = TT_OPERATOR;
 			temp->_operatorType = OperatorsMap::getOperators()[temp->_data];
-			delete token;
-			token = temp;
+			temp->_line = line;
+
+			if (temp->_operatorType == OT_SINGLE_QUOTE || temp->_operatorType == OT_DOUBLE_QUOTE)	// Character
+			{
+				char c = temp->_data[0];
+				temp->_data = "";
+				while (index < str.length() && str[index] != c)
+				{
+					temp->_data += str[index];
+					index++;
+				}
+				index++;
+
+				delete token;
+				token = (temp->_operatorType == OT_SINGLE_QUOTE) ?
+					createCharacterLiteralToken(temp->_data, line) :
+					token = createStringLiteralToken(temp->_data, line);
+				delete temp;
+			}
+			else
+			{
+				delete token;
+				token = temp;
+			}
+
+			
 			break;
+			
 			// TODO - deal with comments (multi line AND single line).
-			// TODO - deal with strings and characters.
 		}
 
 		case CT_UNKNOWN:
 			break;
 	}
-
-	token->_line = line;
 	return token;
+}
+
+pair<const string, OperatorType> Lexer::getOperatorByDefinition(OperatorType operatorType)
+{
+	for (auto t : OperatorsMap::getOperators())
+		if (t.second == operatorType)
+			return t;
+	return pair<const string, OperatorType>("", OT_UNKNOWN);
 }

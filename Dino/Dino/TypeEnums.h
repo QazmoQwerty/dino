@@ -14,11 +14,11 @@ enum TokenType
 enum LiteralType
 {
 	LT_BOOLEAN,
-	LT_NULL,
 	LT_INTEGER,
 	LT_FRACTION,
 	LT_CHARACTER,
 	LT_STRING,
+	LT_NULL,
 	LT_UNKNOWN,
 };
 
