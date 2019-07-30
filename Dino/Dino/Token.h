@@ -9,6 +9,8 @@
 
 using std::string;
 
+// TODO - comments in Token.h and Token.cpp
+
 struct Token 
 {
 	TokenType _type;

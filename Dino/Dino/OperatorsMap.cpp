@@ -2,11 +2,12 @@
 
 unordered_map<string, OperatorType> OperatorsMap::_map;
 
-unordered_map<string, OperatorType>& OperatorsMap::getOperators()
-{
-	return _map;
-}
+const unordered_map<string, OperatorType>& OperatorsMap::getOperators() { return _map; }
 
+/*
+	Sets up values in _map.
+	IMPORTANT: Function MUST be called once before using any other functions of this class.
+*/
 void OperatorsMap::setup()
 {
 	_map = unordered_map<string, OperatorType>();

@@ -1,24 +1,34 @@
 #include "Lexer.h"
 
-unordered_map<char, CharType> Lexer::_dict;
+unordered_map<char, CharType> Lexer::_map;
 
+/*
+	Sets up values in _map.
+	IMPORTANT: Function MUST be called once before using any other functions of this class.
+*/
 void Lexer::setup()
 {
-	_dict[' '] = _dict['\t'] = _dict['\r'] = CT_WHITESPACE;
-	_dict['\n'] = CT_NEWLINE;
-	_dict[';'] = CT_LINE_BREAK;
-	_dict['_'] = CT_LETTER;
+	_map[' '] = _map['\t'] = _map['\r'] = CT_WHITESPACE;
+	_map['\n'] = CT_NEWLINE;
+	_map[';'] = CT_LINE_BREAK;
+	_map['_'] = CT_LETTER;
 	for (char c = 'a'; c <= 'z'; c++)
-		_dict[c] = CT_LETTER;
+		_map[c] = CT_LETTER;
 	for (char c = 'A'; c <= 'Z'; c++)
-		_dict[c] = CT_LETTER;
+		_map[c] = CT_LETTER;
 	for (char c = '0'; c <= '9'; c++)
-		_dict[c] = CT_DIGIT;
+		_map[c] = CT_DIGIT;
 	for (auto c : OperatorsMap::getOperators())
 		for (unsigned int i = 0; i < c.first.length(); i++)
-			_dict[c.first[i]] = CT_OPERATOR;
+			_map[c.first[i]] = CT_OPERATOR;
 }
 
+/*
+	Gets a string of code (usually either interpreted or taken from a file).
+	Function proccesses the code and returns a vector of Tokens.
+	NOTE: Token could be of type "OperatorToken" or "LiteralToken<T>" as well as regular "Token",
+			so make sure to check the _type variable of each token.
+*/
 vector<Token*>& Lexer::lex(string str)
 {
 	vector<Token*> *tokens = new vector<Token*>();
@@ -29,13 +39,19 @@ vector<Token*>& Lexer::lex(string str)
 	return *tokens;
 }
 
+/*
+	Gets a string of code, an index, and the current line number.
+	Function creates and returns a Token based on the inputted string (starting from the index).
+	NOTE: "index" and "line" parameters are passed by reference, and are 
+		  changed internally, no need to increment them outside of this function.
+*/
 Token * Lexer::getToken(string str, unsigned int & index, int & line)
 {
 	Token* token = new struct Token;
 	char curr = str[index];
 	token->_data = curr;
 	index++;
-	switch (_dict[curr])
+	switch (_map[curr])
 	{
 		case CT_WHITESPACE:
 		{
@@ -64,7 +80,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 			bool isFraction = false;
 			while (index < str.length())
 			{
-				if (_dict[str[index]] == CT_DIGIT)
+				if (_map[str[index]] == CT_DIGIT)
 					token->_data += str[index];
 				else if (str[index] == '.' && !isFraction)
 				{
@@ -93,7 +109,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 		{
 			while (index < str.length())
 			{
-				if (_dict[str[index]] == CT_DIGIT || _dict[str[index]] == CT_LETTER)
+				if (_map[str[index]] == CT_DIGIT || _map[str[index]] == CT_LETTER)
 					token->_data += str[index];
 				else break;
 				index++;
@@ -116,7 +132,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 
 		case CT_OPERATOR:
 		{
-			while (index < str.length() && _dict[str[index]] == CT_OPERATOR)
+			while (index < str.length() && _map[str[index]] == CT_OPERATOR)
 			{
 				string newOp = token->_data + str[index];
 				if (OperatorsMap::getOperators().count(newOp))
@@ -129,7 +145,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 			OperatorToken * temp = new struct OperatorToken;
 			temp->_data = token->_data;
 			temp->_type = TT_OPERATOR;
-			temp->_operatorType = OperatorsMap::getOperators()[temp->_data];
+			temp->_operatorType = OperatorsMap::getOperators().find(temp->_data)->second;
 			temp->_line = line;
 
 			if (temp->_operatorType == OT_SINGLE_QUOTE || temp->_operatorType == OT_DOUBLE_QUOTE)	// Character
@@ -190,13 +206,14 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 		}
 
 		case CT_UNKNOWN:
-			break;
+			throw DinoException("internal lexer error", ET_LEXER, line);
 	}
 	return token;
 }
 
 /*
-	Unused function, might need to be deleted.
+	Gets an OperatorType and searches _map for the corresponding operator string.
+	NOTE: Unused function, might get deleted in the future.
 */
 pair<const string, OperatorType> Lexer::getOperatorByDefinition(OperatorType operatorType)
 {
