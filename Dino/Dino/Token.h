@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include "Exceptions.h"
 #include "TypeEnums.h"
 
 #define ESCAPE_CHAR '\\'

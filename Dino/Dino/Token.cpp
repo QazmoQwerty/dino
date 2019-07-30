@@ -1,7 +1,6 @@
 #include "Token.h"
 #include "OperatorsMap.h"
 
-
 void printToken(Token * token)
 {
 	switch (token->_type)
@@ -90,26 +89,22 @@ LiteralToken<string> * createStringLiteralToken(string value, int line)
 	token->_line = line;
 	token->_literalType = LT_STRING;
 	token->_type = TT_LITERAL;
-
 	for (unsigned int i = 1; i < value.length(); i++)
 		if (value[i - 1] == '\\')
 			value.replace(i - 1, 2, getSpecialCharConstant(value[i]));
-
-
 	token->_value = value;
 	return token;
 }
 
 LiteralToken<char> * createCharacterLiteralToken(string value, int line)	
 {
-	// TODO - exception handling
 	if (value.length() == 0)
-		return NULL;	// ERROR - empty char constant
+		throw DinoException("Empty char constant", ET_LEXER, line);
 	string tempData = value;
 	if (value[0] == '\\' && value.length() >= 2)
 		value = getSpecialCharConstant(value[1]);
 	if (value.length() != 1)
-		return NULL;	// ERROR - character is too long
+		throw DinoException("Too many characters in character constant", ET_LEXER, line);
 	LiteralToken<char> * token = new struct LiteralToken<char>;
 	token->_data = '\'' + tempData + '\'';
 	token->_line = line;
@@ -162,7 +157,7 @@ string getSpecialCharConstant(char secondChar)
 		case '\\':
 			return "\\";
 		default:
-			return string() + secondChar;	// Error?
+			return string() + secondChar;	// no special character fount
 	}
 }
 
@@ -173,7 +168,8 @@ LiteralToken<float> * createFractionLiteralToken(string data, int line)
 	token->_line = line;
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_FRACTION;
-	token->_value = stof(data);	// TODO - exception handling
+	try { token->_value = stof(data); }
+	catch (exception) { throw DinoException("Invalid fraction literal", ET_LEXER, line); }
 	return token;
 }
 
@@ -184,7 +180,8 @@ LiteralToken<int> * createIntegerLiteralToken(string data, int line)
 	token->_line = line;
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_INTEGER;
-	token->_value = stoi(data);	// TODO - exception handling
+	try { token->_value = stoi(data); }
+	catch (exception) { throw DinoException("Invalid integer literal", ET_LEXER, line); }
 	return token;
 }
 
@@ -199,6 +196,6 @@ LiteralToken<bool> * createBooleanLiteralToken(string data, int line)
 		temp->_value = true;
 	else if (data == "false")
 		temp->_value = false;
-	// TODO - exception handling
+	else throw DinoException("Invalid boolean literal", ET_LEXER, line);
 	return temp;
 }

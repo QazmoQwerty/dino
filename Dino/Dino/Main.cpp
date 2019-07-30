@@ -14,9 +14,18 @@ int main()
 	OperatorsMap::setup();
 	Lexer::setup();
 	
-	for (Token * t : Lexer::lex(str))
+	try 
 	{
-		printToken(t);
+		for (Token * t : Lexer::lex(str))
+		{
+			printToken(t);
+		}
+	} 
+	catch (DinoException d) 
+	{
+		std::cout << "ERR_" << d.getType() << ": Error in line " << d.getLine() << ": \"" << d.what() << "\"" << std::endl;
+		if (d.getInfo() != "")
+			std::cout << "Additional info: " << d.getInfo() << std::endl;
 	}
 
 	system("pause");

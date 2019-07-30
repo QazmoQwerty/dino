@@ -106,5 +106,4 @@ enum ExceptionType
 {
 	ET_GENERAL,
 	ET_LEXER,
-
 };

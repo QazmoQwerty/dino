@@ -25,9 +25,7 @@ vector<Token*>& Lexer::lex(string str)
 	int line = 1;
 	unsigned int index = 0;
 	while (index < str.length())
-	{
 		tokens->push_back(getToken(str, index, line));
-	}
 	return *tokens;
 }
 
@@ -197,6 +195,9 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 	return token;
 }
 
+/*
+	Unused function, might need to be deleted.
+*/
 pair<const string, OperatorType> Lexer::getOperatorByDefinition(OperatorType operatorType)
 {
 	for (auto t : OperatorsMap::getOperators())
