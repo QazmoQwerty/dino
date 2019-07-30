@@ -87,7 +87,6 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 			else
 			{
 				auto intToken = createIntegerLiteralToken(token->_data, line);
-				std::cout << intToken->_line << std::endl;
 				delete token;
 				token = intToken;
 			}

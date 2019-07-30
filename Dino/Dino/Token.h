@@ -4,6 +4,8 @@
 #include <string>
 #include "TypeEnums.h"
 
+#define ESCAPE_CHAR '\\'
+
 using std::string;
 
 struct Token 
@@ -29,6 +31,7 @@ void printToken(Token* token);
 void printLiteralToken(Token * token);
 void printLiteralTokenByValue(Token * token);
 string getSpecialCharConstant(string value);
+string getSpecialCharConstant(char secondChar);
 
 LiteralToken<string> * createStringLiteralToken(string data, int line);
 LiteralToken<char> * createCharacterLiteralToken(string data, int line);

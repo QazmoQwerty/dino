@@ -1,6 +1,7 @@
 #include "Token.h"
 #include "OperatorsMap.h"
 
+
 void printToken(Token * token)
 {
 	switch (token->_type)
@@ -90,6 +91,12 @@ LiteralToken<string> * createStringLiteralToken(string value, int line)
 	token->_line = line;
 	token->_literalType = LT_STRING;
 	token->_type = TT_LITERAL;
+
+	for (unsigned int i = 1; i < value.length(); i++)
+		if (value[i - 1] == '\\')
+			value.replace(i - 1, 2, getSpecialCharConstant(value[i]));
+
+
 	token->_value = value;
 	return token;
 }
@@ -97,15 +104,15 @@ LiteralToken<string> * createStringLiteralToken(string value, int line)
 LiteralToken<char> * createCharacterLiteralToken(string value, int line)	
 {
 	// TODO - exception handling
-	// TODO - special characters (like '\n')
 	if (value.length() == 0)
 		return NULL;	// ERROR - empty char constant
-	if (value[0] == '\\')
-		value = getSpecialCharConstant(value);
+	string tempData = value;
+	if (value[0] == '\\' && value.length() >= 2)
+		value = getSpecialCharConstant(value[1]);
 	if (value.length() != 1)
-		return NULL;	
+		return NULL;	// ERROR - character is too long
 	LiteralToken<char> * token = new struct LiteralToken<char>;
-	token->_data = '\'' + value + '\'';
+	token->_data = '\'' + tempData + '\'';
 	token->_line = line;
 	token->_literalType = LT_CHARACTER;
 	token->_type = TT_LITERAL;
@@ -113,6 +120,10 @@ LiteralToken<char> * createCharacterLiteralToken(string value, int line)
 	return token;
 }
 
+
+/*
+	Redacted function - use getSpecialCharConstant(char) instead.
+*/
 string getSpecialCharConstant(string value)
 {
 	// Note: not all ASCII special characters have been included.
@@ -131,6 +142,30 @@ string getSpecialCharConstant(string value)
 	if (value == "\\\"")	// Single Quotation Mark
 		return "\"";
 	return value;
+}
+
+string getSpecialCharConstant(char secondChar)
+{
+	// Note: not all ASCII special characters have been included.
+	switch (secondChar)
+	{
+		case 'b':
+			return "\b";
+		case 'n':
+			return "\b";
+		case 't':
+			return "\b";
+		case 'v':
+			return "\b";
+		case '"':
+			return "\"";
+		case '\'':
+			return "'";
+		case '\\':
+			return "\\";
+		default:
+			return string() + secondChar;	// Error?
+	}
 }
 
 LiteralToken<float> * createFractionLiteralToken(string data, int line)
