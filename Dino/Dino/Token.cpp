@@ -22,7 +22,7 @@ void printToken(Token * token)
 			std::cout << "line " << token->_line << " - [IDENTIFIER: " << token->_data << "]" << std::endl;
 			break;
 		case (TT_LITERAL):
-			printLiteralTokenByValue(token);
+			printLiteralToken(token);
 			break;
 		case (TT_COMMENT):
 			std::cout << "line " << token->_line << " - [COMMENT]" << std::endl;
@@ -85,7 +85,6 @@ void printLiteralTokenByValue(Token * token)
 
 LiteralToken<string> * createStringLiteralToken(string value, int line)
 {
-	// TODO - special characters (like '\n')
 	LiteralToken<string> * token = new struct LiteralToken<string>;
 	token->_data = '"' + value + '"';
 	token->_line = line;
@@ -119,7 +118,6 @@ LiteralToken<char> * createCharacterLiteralToken(string value, int line)
 	token->_value = value[0];
 	return token;
 }
-
 
 /*
 	Redacted function - use getSpecialCharConstant(char) instead.

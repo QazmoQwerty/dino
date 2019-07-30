@@ -23,6 +23,17 @@ enum LiteralType
 	LT_UNKNOWN,
 };
 
+enum CharType
+{
+	CT_WHITESPACE,
+	CT_LINE_BREAK,
+	CT_NEWLINE,
+	CT_LETTER,
+	CT_DIGIT,
+	CT_OPERATOR,
+	CT_UNKNOWN,
+};
+
 enum OperatorType
 {
 	// Arithmetic Operators:
@@ -91,13 +102,9 @@ enum OperatorType
 	OT_UNKNOWN,
 };
 
-enum CharType
+enum ExceptionType
 {
-	CT_WHITESPACE,
-	CT_LINE_BREAK,
-	CT_NEWLINE,
-	CT_LETTER,
-	CT_DIGIT,
-	CT_OPERATOR,
-	CT_UNKNOWN,
+	ET_GENERAL,
+	ET_LEXER,
+
 };

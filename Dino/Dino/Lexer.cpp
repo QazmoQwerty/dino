@@ -27,8 +27,6 @@ vector<Token*>& Lexer::lex(string str)
 	while (index < str.length())
 	{
 		tokens->push_back(getToken(str, index, line));
-		/*if (tokens->back()->_type == TT_NEWLINE)
-			line++;*/
 	}
 	return *tokens;
 }
@@ -140,13 +138,6 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 			{
 				char c = temp->_data[0];
 				temp->_data = "";
-
-				// Temporary fix - escape character can't be escaped currently.
-				/*while (index < str.length() && !(str[index] == c && str[index - 1] != ESCAPE_CHAR))	
-				{
-					temp->_data += str[index];
-					index++;
-				}*/
 
 				while (index < str.length())
 				{
