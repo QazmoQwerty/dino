@@ -1,5 +1,8 @@
 #pragma once
 
+/*
+	Types of tokens the lexer creates
+*/
 enum TokenType
 {
 	TT_WHITESPACE,
@@ -12,6 +15,9 @@ enum TokenType
 	TT_UNKNOWN,
 };
 
+/*
+	Types of literals the lexer proccesses
+*/
 enum LiteralType
 {
 	LT_BOOLEAN,
@@ -23,6 +29,9 @@ enum LiteralType
 	LT_UNKNOWN,
 };
 
+/*
+	Types of characters the lexer proccesses
+*/
 enum CharType
 {
 	CT_WHITESPACE,
@@ -34,6 +43,10 @@ enum CharType
 	CT_UNKNOWN,
 };
 
+/*
+	Types of operators the lexer proccesses.
+	Probably incomplete.
+*/
 enum OperatorType
 {
 	// Arithmetic Operators:
@@ -102,6 +115,9 @@ enum OperatorType
 	OT_UNKNOWN,
 };
 
+/*
+	Types of exceptions (in all of the project)
+*/
 enum ExceptionType
 {
 	ET_GENERAL,
