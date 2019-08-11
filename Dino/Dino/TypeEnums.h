@@ -138,6 +138,48 @@ enum WordOperatorType
 */
 enum ExceptionType
 {
-	ET_GENERAL,
-	ET_LEXER,
+	EXT_GENERAL,
+	EXT_LEXER,
+};
+
+enum VariableType
+{
+	VT_BOOLEAN,
+	VT_INTEGER,
+	VT_FRACTION,
+	VT_CHARACTER,
+	VT_STRING,
+	VT_CUSTOM,
+	VT_NULL,
+	VT_UNKNOWN,
+};
+
+enum StatementType
+{
+	ST_UNKNOWN,
+};
+
+enum ExpressionType
+{
+	ET_UNKNOWN,
+};
+
+enum VariableModifier
+{
+
+};
+
+enum AssignmentOperator
+{
+
+};
+
+enum BinaryOperator
+{
+
+};
+
+enum UnaryOperator
+{
+
 };

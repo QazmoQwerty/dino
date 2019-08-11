@@ -115,6 +115,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AstNode.h" />
     <ClInclude Include="Exceptions.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="OperatorsMap.h" />

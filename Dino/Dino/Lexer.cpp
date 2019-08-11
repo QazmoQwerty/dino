@@ -206,7 +206,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 		}
 
 		case CT_UNKNOWN:
-			throw DinoException("internal lexer error", ET_LEXER, line);
+			throw DinoException("internal lexer error", EXT_LEXER, line);
 	}
 	return token;
 }
