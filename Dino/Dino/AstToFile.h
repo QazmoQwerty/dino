@@ -20,7 +20,7 @@ string astToString(AST::Node* node)
 	return ss.str();
 }
 
-void AstToFile(string fileName, AST::Node* ast)
+void astToFile(string fileName, AST::Node* ast)
 {
 	ofstream file;
 	file.open("AstDisplay.gv");

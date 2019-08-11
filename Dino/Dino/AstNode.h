@@ -29,6 +29,7 @@ namespace AST
 	class Statement : public Node
 	{
 	public:
+		Statement(unsigned int nodeId) : Node(nodeId) {};
 		virtual bool isStatement() { return true; };
 		virtual bool isExpression() { return false; };
 
@@ -38,6 +39,7 @@ namespace AST
 	class Expression : public Node
 	{
 	public:
+		Expression(unsigned int nodeId) : Node(nodeId) {};
 		virtual bool isStatement() { return false; };
 		virtual bool isExpression() { return true; };
 
@@ -50,6 +52,7 @@ namespace AST
 	{
 		vector<Statement*> _statements;
 	public:
+		StatementBlock(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_UNKNOWN; };
 		virtual string toString() { return "<StatementBlock>"; };
 		virtual vector<Node*> getChildren();
@@ -64,6 +67,7 @@ namespace AST
 		Statement* _elseBranch;
 
 	public:
+		IfThenElse(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_UNKNOWN; };
 		virtual string toString() { return "<IfThenElse>"; };
 		virtual vector<Node*> getChildren();
@@ -79,6 +83,7 @@ namespace AST
 		Statement* _statement;
 
 	public:
+		WhileLoop(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_UNKNOWN; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
@@ -94,6 +99,7 @@ namespace AST
 		vector<VariableModifier> _modifiers; // public, static, reactive, etc.
 
 	public:
+		VariableDeclaration(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_UNKNOWN; };
 		virtual string toString() { return "<VariableDeclaration>"; };
 		virtual vector<Node*> getChildren();
@@ -110,6 +116,7 @@ namespace AST
 		Expression* _right;
 
 	public:
+		Assignment(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_UNKNOWN; };
 		virtual string toString() { return "<Assignment>"; };
 		virtual vector<Node*> getChildren();
@@ -128,6 +135,7 @@ namespace AST
 		Expression* _right;
 
 	public:
+		BinaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		virtual ExpressionType getType() { return ET_UNKNOWN; };
 		virtual string toString() { return string() + "<BinaryOperator>\\n" + "TODO"; };
 		virtual vector<Node*> getChildren();
@@ -144,6 +152,7 @@ namespace AST
 		Expression* _right;
 
 	public:
+		UnaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		virtual string toString() { return string() + "<UnaryOperator>\\n" + "TODO"; };
 		virtual vector<Node*> getChildren();
 
@@ -158,6 +167,7 @@ namespace AST
 		vector<Expression*> _parameters;
 
 	public:
+		FunctionCall(unsigned int nodeId) : Expression(nodeId) {};
 		virtual ExpressionType getType() { return ET_UNKNOWN; };
 		virtual string toString() { return string() + "<FunctionCall>\\n" + "TODO"; };
 		virtual vector<Node*> getChildren();
@@ -173,6 +183,7 @@ namespace AST
 		Expression* _elseBranch;
 
 	public:
+		ConditionalExpression(unsigned int nodeId) : Expression(nodeId) {};
 		virtual ExpressionType getType() { return ET_UNKNOWN; };
 		virtual string toString() { return string() + "<ConditionaExpression>"; };
 		virtual vector<Node*> getChildren();

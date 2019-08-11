@@ -33,7 +33,10 @@ int main()
 	//		std::cout << "Additional info: " << d.getInfo() << std::endl;
 	//}
 
+	auto ite = new AST::IfThenElse(1);
 
+	
+	astToFile("", NULL);
 
 	system("pause");
 }
