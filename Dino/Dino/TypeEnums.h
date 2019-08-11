@@ -11,6 +11,7 @@ enum TokenType
 	TT_LINE_BREAK,
 	TT_IDENTIFIER,
 	TT_LITERAL,
+	TT_WORD_OPERATOR,
 	TT_COMMENT,
 	TT_UNKNOWN,
 };
@@ -113,6 +114,22 @@ enum OperatorType
 	OT_COLON,						//	:
 	OT_ESCAPE,						//	\ 
 	OT_UNKNOWN,
+};
+
+/*
+	Types of word operator the preparser identifies.
+	NOTE: (very) incomplete.
+*/
+enum WordOperatorType
+{
+	WOT_IF,
+	WOT_FOR,
+	WOT_WHILE,
+
+	WOT_RETURN,
+
+	WOT_PUBLIC,
+	WOT_PRIVATE,
 };
 
 /*
