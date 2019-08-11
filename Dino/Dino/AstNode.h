@@ -102,7 +102,7 @@ namespace AST
 		VariableDeclaration(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_UNKNOWN; };
 		virtual string toString() { return "<VariableDeclaration>"; };
-		virtual vector<Node*> getChildren();
+		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 
 		void setVarId(Identificator varId) { _varId = varId; }
 		void setType(VariableType type) { _type = type; }
@@ -191,5 +191,24 @@ namespace AST
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setIfBranch(Expression* ifBranch) { _ifBranch = ifBranch; }
 		void setElseBranch(Expression* elseBranch) { _elseBranch = elseBranch; }
+	};
+
+	class Literal : public Expression
+	{
+		LiteralType _type;
+
+	public:
+		Literal(unsigned int nodeId, LiteralType type) : Expression(nodeId) { _type = type; };
+		virtual ExpressionType getType() { return ET_UNKNOWN; };
+		virtual string toString() { return string() + "<Literal>\\n" + "TODO"; };
+		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+	};
+
+	class Integer : public Literal
+	{
+		int _value;
+	public:
+		Integer(unsigned int nodeId, int value) : Literal(nodeId, LT_INTEGER) { _value = value; }
+		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
 	};
 }

@@ -1,0 +1,8 @@
+digraph G {
+1 [label="<IfThenElse>"];1->2;1->5;1->6;
+2 [label="<BinaryOperator>\nTODO"];2->3;2->4;
+3 [label="<IntegerLiteral>\n12"];
+4 [label="<IntegerLiteral>\n14"];
+5 [label="<StatementBlock>"];
+6 [label="<StatementBlock>"];
+}

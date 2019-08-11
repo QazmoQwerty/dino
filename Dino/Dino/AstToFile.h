@@ -11,7 +11,7 @@ string astToString(AST::Node* node)
 {
 	stringstream ss;
 	int id = node->getNodeId();
-	ss << id << "[label=\"" << node->toString() << "\";";
+	ss << id << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren())
 		ss << id << "->" << child->getNodeId() << ';';
 	ss << '\n';
@@ -20,10 +20,10 @@ string astToString(AST::Node* node)
 	return ss.str();
 }
 
-void astToFile(string fileName, AST::Node* ast)
+void astToFile(string filename, AST::Node* ast)
 {
 	ofstream file;
-	file.open("AstDisplay.gv");
+	file.open(filename);
 	file << "digraph G {\n";
 	file << astToString(ast);
 	file << '}';

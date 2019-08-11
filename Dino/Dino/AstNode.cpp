@@ -25,11 +25,6 @@ vector<AST::Node*> AST::WhileLoop::getChildren()
 	return v;
 }
 
-vector<AST::Node*> AST::VariableDeclaration::getChildren()
-{
-	return vector<Node*>();
-}
-
 vector<AST::Node*> AST::Assignment::getChildren()
 {
 	vector<Node*> v;

@@ -33,10 +33,18 @@ int main()
 	//		std::cout << "Additional info: " << d.getInfo() << std::endl;
 	//}
 
-	auto ite = new AST::IfThenElse(1);
+	int i = 0;
 
-	
-	astToFile("", NULL);
+	auto ite = new AST::IfThenElse(++i);
+	auto condition = new AST::BinaryOperation(++i);
+	condition->setLeft(new AST::Integer(++i, 12));
+	condition->setRight(new AST::Integer(++i, 14));
+	auto block1 = new AST::StatementBlock(++i);
+	auto block2 = new AST::StatementBlock(++i);
+	ite->setCondition(condition);
+	ite->setIfBranch(block1);
+	ite->setElseBranch(block2);
+	astToFile("AstDisplay.gv", ite);
 
 	system("pause");
 }
