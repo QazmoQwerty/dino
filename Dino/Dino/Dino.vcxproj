@@ -118,6 +118,7 @@
     <ClInclude Include="Exceptions.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="OperatorsMap.h" />
+    <ClInclude Include="Preparser.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="TypeEnums.h" />
   </ItemGroup>
@@ -125,9 +126,11 @@
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="OperatorsMap.cpp" />
+    <ClCompile Include="Preparser.cpp" />
     <ClCompile Include="Token.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="DinoSyntax.txt" />
     <Text Include="Text.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
