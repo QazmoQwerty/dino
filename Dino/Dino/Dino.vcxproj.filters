@@ -36,6 +36,12 @@
     <ClInclude Include="Preparser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AstNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AstToFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Lexer.cpp">
@@ -51,6 +57,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Preparser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AstNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

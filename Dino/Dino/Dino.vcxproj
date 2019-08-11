@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AstNode.h" />
+    <ClInclude Include="AstToFile.h" />
     <ClInclude Include="Exceptions.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="OperatorsMap.h" />
@@ -124,6 +125,7 @@
     <ClInclude Include="TypeEnums.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AstNode.cpp" />
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="OperatorsMap.cpp" />
