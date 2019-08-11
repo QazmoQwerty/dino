@@ -3,10 +3,11 @@
 #include <sstream> 
 
 #include "Lexer.h"
+#include "Preparser.h"
 
-int main()
+int main() 
 {
-	std::ifstream t("Text.txt");
+	std::ifstream t(/*"Text.txt"*/ "DinoSyntax.txt");
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
@@ -16,9 +17,11 @@ int main()
 	
 	try 
 	{
-		for (Token * t : Lexer::lex(str))
+		for (vector<Token *>* v : Preparser::Preparse(Lexer::lex(str)))
 		{
-			printToken(t);
+			for(Token * t : *v)
+				printToken(t);
+			std::cout << std::endl << " ----------------- " << std::endl << std::endl;
 		}
 	} 
 	catch (DinoException d) 

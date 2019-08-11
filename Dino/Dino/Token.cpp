@@ -27,8 +27,11 @@ void printToken(Token * token)
 		case (TT_LITERAL):
 			printLiteralToken(token);
 			break;
-		case (TT_COMMENT):
-			std::cout << "line " << token->_line << " - [COMMENT]" << std::endl;
+		case (TT_SINGLE_LINE_COMMENT):
+			std::cout << "line " << token->_line << " - [SINGLE_LINE_COMMENT]" << std::endl;
+			break;
+		case (TT_MULTI_LINE_COMMENT):
+			std::cout << "line " << token->_line << " - [MULTI_LINE_COMMENT]" << std::endl;
 			break;
 		case (TT_UNKNOWN):
 			std::cout << "line " << token->_line << " - [UNKNOWN]" << std::endl;

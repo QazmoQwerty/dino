@@ -33,7 +33,7 @@
     <ClInclude Include="Exceptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AstNode.h">
+    <ClInclude Include="Preparser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,9 +50,15 @@
     <ClCompile Include="Token.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Preparser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Text.txt">
+      <Filter>Test Code Examples</Filter>
+    </Text>
+    <Text Include="DinoSyntax.txt">
       <Filter>Test Code Examples</Filter>
     </Text>
   </ItemGroup>

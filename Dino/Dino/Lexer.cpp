@@ -34,7 +34,7 @@ vector<Token*>& Lexer::lex(string str)
 	vector<Token*> *tokens = new vector<Token*>();
 	int line = 1;
 	unsigned int index = 0;
-	while (index < str.length())
+	while (index < str.length()) 
 		tokens->push_back(getToken(str, index, line));
 	return *tokens;
 }
@@ -184,7 +184,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 					while (index < str.length() && str[index] != SINGLE_LINE_COMMENT_END)
 						index++;
 					index++;	// Can probably find a more elegant solution
-					temp->_type = TT_COMMENT;
+					temp->_type = TT_SINGLE_LINE_COMMENT;
 					line++;
 				}
 				else if (temp->_operatorType == OT_MULTI_LINE_COMMENT_OPEN)
@@ -197,7 +197,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 						index++;
 					}
 					index += 2;
-					temp->_type = TT_COMMENT;
+					temp->_type = TT_MULTI_LINE_COMMENT;
 				}
 				delete token;
 				token = temp;
