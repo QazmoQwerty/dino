@@ -178,18 +178,3 @@ enum VariableModifier
 {
 
 };
-
-enum AssignmentOperator
-{
-
-};
-
-enum BinaryOperator
-{
-
-};
-
-enum UnaryOperator
-{
-
-};

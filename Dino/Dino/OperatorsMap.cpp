@@ -5,6 +5,18 @@ unordered_map<string, OperatorType> OperatorsMap::_map;
 const unordered_map<string, OperatorType>& OperatorsMap::getOperators() { return _map; }
 
 /*
+	Gets an OperatorType and searches _map for the corresponding operator string.
+	NOTE: Unused function, might get deleted in the future.
+*/
+pair<const string, OperatorType> OperatorsMap::getOperatorByDefinition(OperatorType operatorType)
+{
+	for (auto t : OperatorsMap::getOperators())
+		if (t.second == operatorType)
+			return t;
+	return pair<const string, OperatorType>("", OT_UNKNOWN);
+}
+
+/*
 	Sets up values in _map.
 	IMPORTANT: Function MUST be called once before using any other functions of this class.
 */

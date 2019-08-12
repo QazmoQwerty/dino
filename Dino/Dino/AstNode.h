@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include "TypeEnums.h"
+#include "OperatorsMap.h"
 using std::string;
 using std::vector;
 
@@ -111,17 +112,17 @@ namespace AST
 
 	class Assignment : public Statement
 	{
-		AssignmentOperator _operator;
+		OperatorType _operator;
 		Identificator _left;	// Temporary
 		Expression* _right;
 
 	public:
 		Assignment(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_ASSIGNMENT; };
-		virtual string toString() { return "<Assignment>\\nTODO"; };
+		virtual string toString() { return "<Assignment>\\n" + OperatorsMap::getOperatorByDefinition(_operator).first; };
 		virtual vector<Node*> getChildren();
 
-		void setOperator(AssignmentOperator op) { _operator = op; }
+		void setOperator(OperatorType op) { _operator = op; }
 		void setLeft(Identificator left) { _left = left; }
 		void setRight(Expression* right) { _right = right; }
 	};
@@ -130,36 +131,34 @@ namespace AST
 
 	class BinaryOperation : public Expression
 	{
-		BinaryOperator _operator;
+		OperatorType _operator;
 		Expression* _left;
 		Expression* _right;
 
 	public:
 		BinaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		virtual ExpressionType getType() { return ET_BINARY_OPERATION; };
-		virtual string toString() { return string() + "<BinaryOperator>\\n" + "TODO"; };
+		virtual string toString() { return string() + "<BinaryOperator>\\n" + OperatorsMap::getOperatorByDefinition(_operator).first; };
 		virtual vector<Node*> getChildren();
 
-		void setOperator(BinaryOperator op) { _operator = op; }
+		void setOperator(OperatorType op) { _operator = op; }
 		void setLeft(Expression* left) { _left = left; }
 		void setRight(Expression* right) { _right = right; }
 	};
 
 	class UnaryOperation : public Expression
 	{
-		UnaryOperator _operator;
-		Expression* _left;
-		Expression* _right;
+		OperatorType _operator;
+		Expression* _expression;
 
 	public:
 		UnaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		virtual ExpressionType getType() { return ET_UNARY_OPERATION; };
-		virtual string toString() { return string() + "<UnaryOperator>\\n" + "TODO"; };
+		virtual string toString() { return string() + "<UnaryOperator>\\n" + OperatorsMap::getOperatorByDefinition(_operator).first; };
 		virtual vector<Node*> getChildren();
 
-		void setOperator(UnaryOperator op) { _operator = op; }
-		void setLeft(Expression* left) { _left = left; }
-		void setRight(Expression* right) { _right = right; }
+		void setOperator(OperatorType op) { _operator = op; }
+		void setExpression(Expression* expression) { _expression = expression; }
 	};
 
 	class FunctionCall : public Expression
@@ -205,7 +204,6 @@ namespace AST
 	public:
 		Literal(unsigned int nodeId, LiteralType type) : Expression(nodeId) { _type = type; };
 		virtual ExpressionType getType() { return ET_LITERAL; };
-		virtual string toString() { return string() + "<Literal>\\n" + "TODO"; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 	};
 

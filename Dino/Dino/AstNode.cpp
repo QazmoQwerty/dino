@@ -43,8 +43,7 @@ vector<AST::Node*> AST::BinaryOperation::getChildren()
 vector<AST::Node*> AST::UnaryOperation::getChildren()
 {
 	vector<Node*> v;
-	v.push_back(_left);
-	v.push_back(_right);
+	v.push_back(_expression);
 	return v;
 }
 
