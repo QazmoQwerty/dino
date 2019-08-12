@@ -9,6 +9,17 @@ using std::string;
 using std::pair;
 using std::unordered_map;
 
+#define LEFT_TO_RIGHT true
+#define RIGHT_TO_LEFT false
+
+typedef struct Operator
+{
+	OperatorType _type;
+	string _str;
+	bool _associativity;
+	unsigned int _precedence; // Lower value means HIGHER precedence - first precedense is 1.
+} Operator;
+
 class OperatorsMap
 {
 public:
