@@ -176,6 +176,19 @@ namespace AST
 		void addParameter(Expression* parameter) { _parameters.push_back(parameter); }
 	};
 
+	class Variable : public Expression
+	{
+		Identificator _varId;	// Temporary
+
+	public:
+		void setVarId(Identificator varId) { _varId = varId; }
+
+		Variable(unsigned int nodeId) : Expression(nodeId) {};
+		virtual ExpressionType getType() { return ET_VARIABLE; };
+		virtual string toString() { return "<Variable>\\n" + _varId.name; };
+		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+	};
+
 	class ConditionalExpression : public Expression
 	{
 		Expression* _condition;

@@ -20,6 +20,7 @@ unsigned int Parser::calcPrecedence(Token * token)
 
 AST::Node * Parser::nud(Token * token)
 {
+	//if(token->_type == TT_IDENTIFIER ||)
 	return nullptr;
 }
 
