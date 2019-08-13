@@ -112,17 +112,17 @@ namespace AST
 
 	class Assignment : public Statement
 	{
-		OperatorType _operator;
+		Operator _operator;
 		Identificator _left;	// Temporary
 		Expression* _right;
 
 	public:
 		Assignment(unsigned int nodeId) : Statement(nodeId) {};
 		virtual StatementType getType() { return ST_ASSIGNMENT; };
-		virtual string toString() { return "<Assignment>\\n" + OperatorsMap::getOperatorByDefinition(_operator).first; };
+		virtual string toString() { return "<Assignment>\\n" + _operator._str; };
 		virtual vector<Node*> getChildren();
 
-		void setOperator(OperatorType op) { _operator = op; }
+		void setOperator(Operator op) { _operator = op; }
 		void setLeft(Identificator left) { _left = left; }
 		void setRight(Expression* right) { _right = right; }
 	};
@@ -131,33 +131,33 @@ namespace AST
 
 	class BinaryOperation : public Expression
 	{
-		OperatorType _operator;
+		Operator _operator;
 		Expression* _left;
 		Expression* _right;
 
 	public:
 		BinaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		virtual ExpressionType getType() { return ET_BINARY_OPERATION; };
-		virtual string toString() { return string() + "<BinaryOperator>\\n" + OperatorsMap::getOperatorByDefinition(_operator).first; };
+		virtual string toString() { return string() + "<BinaryOperator>\\n" + _operator._str; };
 		virtual vector<Node*> getChildren();
 
-		void setOperator(OperatorType op) { _operator = op; }
+		void setOperator(Operator op) { _operator = op; }
 		void setLeft(Expression* left) { _left = left; }
 		void setRight(Expression* right) { _right = right; }
 	};
 
 	class UnaryOperation : public Expression
 	{
-		OperatorType _operator;
+		Operator _operator;
 		Expression* _expression;
 
 	public:
 		UnaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		virtual ExpressionType getType() { return ET_UNARY_OPERATION; };
-		virtual string toString() { return string() + "<UnaryOperator>\\n" + OperatorsMap::getOperatorByDefinition(_operator).first; };
+		virtual string toString() { return string() + "<UnaryOperator>\\n" + _operator._str; };
 		virtual vector<Node*> getChildren();
 
-		void setOperator(OperatorType op) { _operator = op; }
+		void setOperator(Operator op) { _operator = op; }
 		void setExpression(Expression* expression) { _expression = expression; }
 	};
 
