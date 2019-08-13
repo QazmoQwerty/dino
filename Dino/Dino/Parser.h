@@ -17,8 +17,16 @@ using std::unordered_map;
 class Parser
 {
 public:
-	static void setup(vector<Token*>& tokens) { _tokens = tokens; }
-	static AST::Node* Parse(int lastPrecedence);
+	Parser(vector<vector<Token*>*>& tokens) : _tokens(tokens) { _line = _index = 0; }
+	Token* getToken(int line, int index) { return (*_tokens[line])[index]; }
+	AST::Node* Parse(unsigned int lastPrecedence);
+	unsigned int calcPrecedence(Token *token);
 private:
-	static vector<Token*>& _tokens;
+
+	AST::Node* nud(Token* token);
+	AST::Node* led(Token* left, Token* current);
+
+	vector<vector<Token*>*>& _tokens;
+	int _line;
+	int _index;
 };

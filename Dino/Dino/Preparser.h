@@ -24,6 +24,4 @@ class Preparser
 {
 public:
 	static vector<vector<Token*>*>& Preparse(vector<Token*> tokens);
-private:
-
 };
