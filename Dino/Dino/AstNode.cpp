@@ -12,7 +12,7 @@ vector<AST::Node*> AST::IfThenElse::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_condition);
-	v.push_back(_ifBranch);
+	v.push_back(_thenBranch);
 	v.push_back(_elseBranch);
 	return v;
 }
@@ -59,7 +59,7 @@ vector<AST::Node*> AST::ConditionalExpression::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_condition);
-	v.push_back(_ifBranch);
+	v.push_back(_thenBranch);
 	v.push_back(_elseBranch);
 	return v;
 }

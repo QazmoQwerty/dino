@@ -64,7 +64,7 @@ namespace AST
 	class IfThenElse : public Statement
 	{
 		Expression* _condition;
-		Statement* _ifBranch;
+		Statement* _thenBranch;
 		Statement* _elseBranch;
 
 	public:
@@ -74,7 +74,7 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setIfBranch(Statement* ifBranch) { _ifBranch = ifBranch; }
+		void setThenBranch(Statement* thenBranch) { _thenBranch = thenBranch; }
 		void setElseBranch(Statement* elseBranch) { _elseBranch = elseBranch; }
 	};
 
@@ -179,7 +179,7 @@ namespace AST
 	class ConditionalExpression : public Expression
 	{
 		Expression* _condition;
-		Expression* _ifBranch;
+		Expression* _thenBranch;
 		Expression* _elseBranch;
 
 	public:
@@ -189,7 +189,7 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setIfBranch(Expression* ifBranch) { _ifBranch = ifBranch; }
+		void setThenBranch(Expression* thenBranch) { _thenBranch = thenBranch; }
 		void setElseBranch(Expression* elseBranch) { _elseBranch = elseBranch; }
 	};
 
