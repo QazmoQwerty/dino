@@ -4,6 +4,21 @@ unordered_map<string, Operator> OperatorsMap::_map;
 
 const unordered_map<string, Operator>& OperatorsMap::getOperators() { return _map; }
 
+bool OperatorsMap::isUnary(OperatorType type)
+{
+	OperatorType unaryTypes[] = {
+		OT_ADD,
+		OT_ADD,
+		OT_SUBTRACT,
+		OT_LOGICAL_NOT,
+		OT_BITWISE_NOT,
+		OT_INCREMENT,
+		OT_DECREMENT,
+		OT_PARENTHESIS_OPEN,
+	};
+	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
+}
+
 /*
 	Gets an OperatorType and searches _map for the corresponding operator string.
 	NOTE: Unused function, might get deleted in the future.
@@ -76,7 +91,7 @@ void OperatorsMap::setup()
 	_map["&="]	=	{ OT_ASSIGN_BITWISE_AND,	"&=",	RIGHT_TO_LEFT,		20 };
 	_map["|="]	=	{ OT_ASSIGN_BITWISE_OR,		"|=",	RIGHT_TO_LEFT,		20 };
 	_map["^="]	=	{ OT_ASSIGN_BITWISE_XOR,	"^=",	RIGHT_TO_LEFT,		20 };
-	_map[","]	=	{ OT_COMMA,					"\"",	LEFT_TO_RIGHT,		10 };
+	_map[","]	=	{ OT_COMMA,					",",	LEFT_TO_RIGHT,		10 };
 
 	// Non-parser related operators:
 	_map["//"]	=	{ OT_SINGLE_LINE_COMMENT,		"//",	NULL,		NULL };

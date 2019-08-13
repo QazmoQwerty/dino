@@ -24,6 +24,9 @@ public:
 	*/
 	static const unordered_map<string, Operator>& getOperators();
 
+	static bool isUnary(OperatorType type);
+	static bool isBinary(OperatorType type) { return !isUnary(type); }
+
 	static pair<const string, Operator> getOperatorByDefinition(OperatorType operatorType);
 private:
 	static unordered_map<string, Operator> _map;

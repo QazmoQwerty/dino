@@ -17,16 +17,20 @@ using std::unordered_map;
 class Parser
 {
 public:
-	Parser(vector<vector<Token*>*>& tokens) : _tokens(tokens) { _line = _index = 0; }
-	Token* getToken(int line, int index) { return (*_tokens[line])[index]; }
-	AST::Node* Parse(unsigned int lastPrecedence);
-	unsigned int calcPrecedence(Token *token);
+	Parser(vector<vector<Token*>*>& tokens) : _tokens(tokens) { _line = _index = _idCount = 0; }
+	Token* getToken(unsigned int line, unsigned int index);
+	Token* peekToken() { return getToken(_line, _index); }
+	Token* nextToken();
+
+	AST::Node* parse(unsigned int lastPrecedence);
+	unsigned int precedence(Token* token);
 private:
 
 	AST::Node* nud(Token* token);
-	AST::Node* led(Token* left, Token* current);
+	AST::Node* led(AST::Node* left, Token* token);
 
 	vector<vector<Token*>*>& _tokens;
-	int _line;
-	int _index;
+	unsigned int _idCount;
+	unsigned int _line;
+	unsigned int _index;
 };

@@ -1,10 +1,7 @@
-for(int i=0; i<100; i++) {
+x = 2 + 12 * 3
+
+/*for(int i=0; i<100; i++) {
 	Std.Print(i)
-	/* this is a comment, it should be ignored*/
-	/* this is a comment
-	that spans multiple lines!
-	it should be 
-	ignored! */
 	// this is also a \n comment, should be */ ignored
 	'\\';
 	"\\\\"
@@ -12,4 +9,4 @@ for(int i=0; i<100; i++) {
 	float x = 1.2; x = 2.4
 	bool b = false || true
 	'a';"wow"
-}
+}*/
