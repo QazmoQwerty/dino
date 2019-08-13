@@ -145,7 +145,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 			OperatorToken * temp = new struct OperatorToken;
 			temp->_data = token->_data;
 			temp->_type = TT_OPERATOR;
-			temp->_operator._type = OperatorsMap::getOperators().find(temp->_data)->second._type;
+			temp->_operator = OperatorsMap::getOperators().find(temp->_data)->second;
 			temp->_line = line;
 
 			if (temp->_operator._type == OT_SINGLE_QUOTE || temp->_operator._type == OT_DOUBLE_QUOTE)	// Character
