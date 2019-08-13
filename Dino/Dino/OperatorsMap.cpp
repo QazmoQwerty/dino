@@ -1,19 +1,19 @@
 #include "OperatorsMap.h"
 
-unordered_map<string, OperatorType> OperatorsMap::_map;
+unordered_map<string, Operator> OperatorsMap::_map;
 
-const unordered_map<string, OperatorType>& OperatorsMap::getOperators() { return _map; }
+const unordered_map<string, Operator>& OperatorsMap::getOperators() { return _map; }
 
 /*
 	Gets an OperatorType and searches _map for the corresponding operator string.
 	NOTE: Unused function, might get deleted in the future.
 */
-pair<const string, OperatorType> OperatorsMap::getOperatorByDefinition(OperatorType operatorType)
+pair<const string, Operator> OperatorsMap::getOperatorByDefinition(OperatorType operatorType)
 {
 	for (auto t : OperatorsMap::getOperators())
-		if (t.second == operatorType)
+		if (t.second._type == operatorType)
 			return t;
-	return pair<const string, OperatorType>("", OT_UNKNOWN);
+	return pair<const string, Operator>("", { OT_UNKNOWN, "", NULL, NULL });
 }
 
 /*
@@ -22,69 +22,67 @@ pair<const string, OperatorType> OperatorsMap::getOperatorByDefinition(OperatorT
 */
 void OperatorsMap::setup()
 {
-	_map = unordered_map<string, OperatorType>();
+	/*
+		TODO - operators to add: 
+		  - unary +/-
+		  - more specific meanings for brackets (parenthesis, function calls, subscripts, etc.)
+		  - more specific meanings for periods (member accesss)
+		  - different operators for pre/post-fix increment/decrement ("++"/"--"), since they have differenc precedence and associativity
+		  - special comparison operators (like ".==.")
+		  - word operators: "for", "while", "new", etc.
+		  - do we need operators for backslash ("\") and colon (":")?
+	*/
 
-	// Arithmetic Operators:
-	_map["+"] = OT_ADD;
-	_map["-"] = OT_SUBTRACT;
-	_map["/"] = OT_DIVIDE;
-	_map["*"] = OT_MULTIPLY;
-	_map["%"] = OT_MODULUS;
-	_map["++"] = OT_INCREMENT;
-	_map["--"] = OT_DECREMENT;
+	_map = unordered_map<string, Operator>();
 
-	// Relational Operators:
-	_map["=="] = OT_EQUAL;
-	_map["!+"] = OT_NOT_EQUAL;
-	_map[">"] = OT_GREATER;
-	_map["<"] = OT_SMALLER;
-	_map[">="] = OT_GREATER_EQUAL;
-	_map["<="] = OT_SMALLER_EQUAL;
+	//				  type						str		associativity	precedence
+	_map["++"]	=	{ OT_INCREMENT,				"++",	LEFT_TO_RIGHT,		1 };	
+	_map["--"]	=	{ OT_DECREMENT,				"--",	LEFT_TO_RIGHT,		1 };
+	_map["("]	=	{ OT_PARENTHESIS_OPEN,		"(",	LEFT_TO_RIGHT,		1 };
+	_map[")"]	=	{ OT_PARENTHESIS_CLOSE,		")",	LEFT_TO_RIGHT,		1 };
+	_map["["]	=	{ OT_SQUARE_BRACKETS_OPEN,	"[",	LEFT_TO_RIGHT,		1 };
+	_map["]"]	=	{ OT_SQUARE_BRACKETS_CLOSE, "]",	LEFT_TO_RIGHT,		1 };
+	_map["{"]	=	{ OT_CURLY_BRACES_OPEN,		"{",	LEFT_TO_RIGHT,		1 };
+	_map["}"]	=	{ OT_CURLY_BRACES_CLOSE,	"}",	LEFT_TO_RIGHT,		1 };
+	_map["."]	=	{ OT_PERIOD,				".",	LEFT_TO_RIGHT,		1 };
+	_map["^^"]	=	{ OT_EXPONENTIATION,		"^^",	RIGHT_TO_LEFT,		2 };
+	_map["!"]	=	{ OT_LOGICAL_NOT,			"!",	RIGHT_TO_LEFT,		3 };
+	_map["~"]	=	{ OT_BITWISE_NOT,			"~",	RIGHT_TO_LEFT,		3 };
+	_map["*"]	=	{ OT_MULTIPLY,				"*",	LEFT_TO_RIGHT,		4 };
+	_map["/"]	=	{ OT_DIVIDE,				"/",	LEFT_TO_RIGHT,		4 };
+	_map["%"]	=	{ OT_MODULUS,				"%",	LEFT_TO_RIGHT,		4 };
+	_map["+"]	=	{ OT_ADD,					"+",	LEFT_TO_RIGHT,		5 };
+	_map["-"]	=	{ OT_SUBTRACT,				"-",	LEFT_TO_RIGHT,		5 };
+	_map["<<"]	=	{ OT_BITWISE_SHIFT_LEFT,	"<<",	LEFT_TO_RIGHT,		6 };
+	_map["<"]	=	{ OT_SMALLER,				"<",	LEFT_TO_RIGHT,		7 };
+	_map["<="]	=	{ OT_SMALLER_EQUAL,			"<=",	LEFT_TO_RIGHT,		7 };
+	_map[">"]	=	{ OT_GREATER,				">",	LEFT_TO_RIGHT,		7 };
+	_map[">="]	=	{ OT_GREATER_EQUAL,			">=",	LEFT_TO_RIGHT,		7 };
+	_map["=="]	=	{ OT_EQUAL,					"==",	LEFT_TO_RIGHT,		8 };
+	_map["!="]	=	{ OT_NOT_EQUAL,				"!=",	LEFT_TO_RIGHT,		8 };
+	_map["&"]	=	{ OT_BITWISE_AND,			"&",	LEFT_TO_RIGHT,		9 };
+	_map["^"]	=	{ OT_BITWISE_XOR,			"^",	LEFT_TO_RIGHT,		10 };
+	_map["|"]	=	{ OT_BITWISE_OR,			"|",	LEFT_TO_RIGHT,		11 };
+	_map["&&"]	=	{ OT_LOGICAL_AND,			"&&",	LEFT_TO_RIGHT,		12 };
+	_map["||"]	=	{ OT_LOGICAL_OR,			"||",	LEFT_TO_RIGHT,		13 };
+	_map["="]	=	{ OT_ASSIGN_EQUAL,			"=",	RIGHT_TO_LEFT,		14 };
+	_map["+="]	=	{ OT_ASSIGN_ADD,			"+=",	RIGHT_TO_LEFT,		14 };
+	_map["-="]	=	{ OT_ASSIGN_SUBTRACT,		"-=",	RIGHT_TO_LEFT,		14 };
+	_map["*="]	=	{ OT_ASSIGN_MULTIPLY,		"*=",	RIGHT_TO_LEFT,		14 };
+	_map["/="]	=	{ OT_ASSIGN_DIVIDE,			"/=",	RIGHT_TO_LEFT,		14 };
+	_map["%="]	=	{ OT_ASSIGN_MODULUS,		"%=",	RIGHT_TO_LEFT,		14 };
+	_map["<<="]	=	{ OT_ASSIGN_SHIFT_LEFT,		"<<=",	RIGHT_TO_LEFT,		14 };
+	_map[">>="]	=	{ OT_ASSIGN_SHIFT_RIGHT,	">>=",	RIGHT_TO_LEFT,		14 };
+	_map["&="]	=	{ OT_ASSIGN_BITWISE_AND,	"&=",	RIGHT_TO_LEFT,		14 };
+	_map["|="]	=	{ OT_ASSIGN_BITWISE_OR,		"|=",	RIGHT_TO_LEFT,		14 };
+	_map["^="]	=	{ OT_ASSIGN_BITWISE_XOR,	"^=",	RIGHT_TO_LEFT,		14 };
+	_map[","]	=	{ OT_COMMA,					"\"",	LEFT_TO_RIGHT,		15 };
 
-	// Bitwise Operators:
-	_map["&"] = OT_BITWISE_AND;
-	_map["|"] = OT_BITWISE_OR;
-	_map["^"] = OT_BITWISE_XOR;
-	_map["~"] = OT_BITWISE_NOT;
-	_map["<<"] = OT_BITWISE_SHIFT_LEFT;
-	_map[">>"] = OT_BITWISE_SHIFT_RIGHT;
-
-	// Logical Operators:
-	_map["&&"] = OT_LOGICAL_AND;
-	_map["||"] = OT_LOGICAL_OR;
-	_map["!"] = OT_LOGICAL_NOT;
-
-	// Assignment Operators:
-	_map["="] = OT_ASSIGN_EQUAL;
-	_map["+="] = OT_ASSIGN_ADD;
-	_map["-="] = OT_ASSIGN_SUBTRACT;
-	_map["*="] = OT_ASSIGN_MULTIPLY;
-	_map["/="] = OT_ASSIGN_DIVIDE;
-	_map["%="] = OT_ASSIGN_MODULUS;
-	_map["<<="] = OT_ASSIGN_SHIFT_LEFT;
-	_map[">>="] = OT_ASSIGN_SHIFT_RIGHT;
-	_map["&="] = OT_ASSIGN_BITWISE_AND;
-	_map["|="] = OT_ASSIGN_BITWISE_OR;
-	_map["^="] = OT_ASSIGN_BITWISE_XOR;
-
-	// Brackets / Parenthesis:
-	_map["("] = OT_PARENTHESIS_OPEN;
-	_map[")"] = OT_PARENTHESIS_CLOSE;
-	_map["["] = OT_SQUARE_BRACKETS_OPEN;
-	_map["]"] = OT_SQUARE_BRACKETS_CLOSE;
-	_map["{"] = OT_CURLY_BRACES_OPEN;
-	_map["}"] = OT_CURLY_BRACES_CLOSE;
-
-	// Comments:
-	_map["//"] = OT_SINGLE_LINE_COMMENT;
-	_map["/*"] = OT_MULTI_LINE_COMMENT_OPEN;
-	_map["*/"] = OT_MULTI_LINE_COMMENT_CLOSE;
-
-	// Misc:
-	_map["'"] = OT_SINGLE_QUOTE;
-	_map["\""] = OT_DOUBLE_QUOTE;
-	_map["."] = OT_PERIOD;
-	_map[","] = OT_COMMA;
-	_map[":"] = OT_COLON;
-	_map["\\"] = OT_ESCAPE;
+	// Non-parser related operators:
+	_map["//"]	=	{ OT_SINGLE_LINE_COMMENT,		"//",	NULL,		NULL };
+	_map["/*"]	=	{ OT_MULTI_LINE_COMMENT_OPEN,	"/*",	NULL,		NULL };
+	_map["*/"]	=	{ OT_MULTI_LINE_COMMENT_CLOSE,	"*/",	NULL,		NULL };
+	_map["'"]	=	{ OT_SINGLE_QUOTE,				"'",	NULL,		NULL };
+	_map["\""]	=	{ OT_DOUBLE_QUOTE,				"\"",	NULL,		NULL };
+	_map["\\"]	=	{ OT_DOUBLE_QUOTE,				"\"",	NULL,		NULL };
 }

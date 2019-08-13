@@ -59,6 +59,7 @@ enum OperatorType
 	OT_MODULUS,						//	%
 	OT_INCREMENT,					//	++
 	OT_DECREMENT,					//	--
+	OT_EXPONENTIATION,				//	^^
 
 	// Relational Operators:
 	OT_EQUAL,						//	==
