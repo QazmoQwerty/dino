@@ -184,6 +184,7 @@ namespace AST
 		void setVarId(Identificator varId) { _varId = varId; }
 
 		Variable(unsigned int nodeId) : Expression(nodeId) {};
+		Variable(unsigned int nodeId, Identificator varId) : Expression(nodeId) { _varId = varId; };
 		virtual ExpressionType getType() { return ET_VARIABLE; };
 		virtual string toString() { return "<Variable>\\n" + _varId.name; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };

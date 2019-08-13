@@ -19,6 +19,17 @@ bool OperatorsMap::isUnary(OperatorType type)
 	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
 }
 
+bool OperatorsMap::isBinary(OperatorType type)
+{
+	OperatorType nonBinaryTypes[] = {
+		OT_INCREMENT,
+		OT_DECREMENT,
+		OT_LOGICAL_NOT,
+		OT_BITWISE_NOT,
+	};
+	return std::find(std::begin(nonBinaryTypes), std::end(nonBinaryTypes), type) == std::end(nonBinaryTypes);
+}
+
 /*
 	Gets an OperatorType and searches _map for the corresponding operator string.
 	NOTE: Unused function, might get deleted in the future.

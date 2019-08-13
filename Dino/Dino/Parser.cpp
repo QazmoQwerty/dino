@@ -38,7 +38,11 @@ unsigned int Parser::precedence(Token * token)
 AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
-		return new AST::Variable(++_idCount);
+	{
+		AST::Identificator varId;
+		varId.name = token->_data;
+		return new AST::Variable(++_idCount, varId);
+	}
 	if (token->_type == TT_LITERAL)
 	{
 		switch (((LiteralToken<int>*)token)->_literalType)
@@ -67,6 +71,7 @@ AST::Node * Parser::nud(Token * token)
 			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
 			try { op->setExpression((AST::Expression*)parse(prec)); }
 			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
 		}
 	}
 	return NULL;	// Error
@@ -91,6 +96,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 			try { op->setRight((AST::Expression*)parse(prec)); }
 			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
 		}
 	}
 	throw "led could not find an option";
