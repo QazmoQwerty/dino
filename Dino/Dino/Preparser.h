@@ -23,5 +23,6 @@ using std::unordered_map;
 class Preparser
 {
 public:
-	static vector<vector<Token*>*>& Preparse(vector<Token*> tokens);
+	//static vector<vector<Token*>*>& Preparse(vector<Token*> tokens);
+	static vector<Token*>& Preparse(vector<Token*> tokens);
 };
