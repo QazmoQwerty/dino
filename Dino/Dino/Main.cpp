@@ -17,9 +17,13 @@ int main()
 
 	OperatorsMap::setup();
 	Lexer::setup();
-	Parser p = Parser(Preparser::Preparse(Lexer::lex(str)));
-	AST::Node* ast = p.parse();
-	astToFile("AstDisplay.gv", ast);
+	try
+	{
+		Parser p = Parser(Preparser::Preparse(Lexer::lex(str)));
+		AST::Node* ast = p.parse();
+		astToFile("AstDisplay.gv", ast);
+	} 
+	catch (exception e) { std::cout << e.what(); }
 	
 
 	/*int i = 0;

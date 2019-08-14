@@ -9,12 +9,6 @@
 #include "OperatorsMap.h"
 #include "AstNode.h"
 
-// TODO - do we need all of these?
-using std::vector;	
-using std::string;
-using std::pair;
-using std::unordered_map;
-
 class Parser
 {
 public:
