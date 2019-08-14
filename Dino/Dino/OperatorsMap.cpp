@@ -65,7 +65,7 @@ void OperatorsMap::setup()
 	_map["++"]	=	{ OT_INCREMENT,				"++",	LEFT_TO_RIGHT,		150 };	
 	_map["--"]	=	{ OT_DECREMENT,				"--",	LEFT_TO_RIGHT,		150 };
 	_map["("]	=	{ OT_PARENTHESIS_OPEN,		"(",	LEFT_TO_RIGHT,		150 };
-	_map[")"]	=	{ OT_PARENTHESIS_CLOSE,		")",	LEFT_TO_RIGHT,		150 };
+	_map[")"]	=	{ OT_PARENTHESIS_CLOSE,		")",	LEFT_TO_RIGHT,		0 };
 	_map["["]	=	{ OT_SQUARE_BRACKETS_OPEN,	"[",	LEFT_TO_RIGHT,		150 };
 	_map["]"]	=	{ OT_SQUARE_BRACKETS_CLOSE, "]",	LEFT_TO_RIGHT,		150 };
 	_map["{"]	=	{ OT_CURLY_BRACES_OPEN,		"{",	LEFT_TO_RIGHT,		150 };

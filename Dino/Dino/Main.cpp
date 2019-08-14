@@ -18,23 +18,9 @@ int main()
 	OperatorsMap::setup();
 	Lexer::setup();
 	Parser p = Parser(Preparser::Preparse(Lexer::lex(str)));
-	AST::Node* ast = p.parse(0);
+	AST::Node* ast = p.parse();
 	astToFile("AstDisplay.gv", ast);
-	/*try 
-	{
-		for (vector<Token *>* v : Preparser::Preparse(Lexer::lex(str)))
-		{
-			for(Token * t : *v)
-				printToken(t);
-			std::cout << std::endl << " ----------------- " << std::endl << std::endl;
-		}
-	} 
-	catch (DinoException d) 
-	{
-		std::cout << "ERR_" << d.getType() << ": Error in line " << d.getLine() << ": \"" << d.what() << "\"" << std::endl;
-		if (d.getInfo() != "")
-			std::cout << "Additional info: " << d.getInfo() << std::endl;
-	}*/
+	
 
 	/*int i = 0;
 

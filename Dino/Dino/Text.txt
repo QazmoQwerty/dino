@@ -1,12 +1,2 @@
-x = 2 + 12 * 3
+x = y = 2 / (4 + 1 * (3 + 2)) * 3
 
-/*for(int i=0; i<100; i++) {
-	Std.Print(i)
-	// this is also a \n comment, should be */ ignored
-	'\\';
-	"\\\\"
-	"\\\""
-	float x = 1.2; x = 2.4
-	bool b = false || true
-	'a';"wow"
-}*/

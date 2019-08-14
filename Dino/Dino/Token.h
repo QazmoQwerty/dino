@@ -26,7 +26,7 @@ typedef struct Operator
 	OperatorType _type;
 	string _str;
 	unsigned char _associativity;
-	unsigned int _precedence; // higher value means higher precedence.
+	int _precedence; // higher value means higher precedence.
 } Operator;
 
 /*
