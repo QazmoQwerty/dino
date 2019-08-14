@@ -24,8 +24,12 @@ public:
 
 	AST::Node* parse() { return parse(0); };
 	AST::Node* parse(int lastPrecedence);
+	AST::Block* parseBlock() { return parseBlock(OT_EOF); };
+	AST::Block* parseBlock(OperatorType expected);
 	int precedence(Token* token);
 private:
+
+	bool isOperator(Token * token, OperatorType type) { return token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == type; };
 
 	AST::Node* nud(Token* token);
 	AST::Node* led(AST::Node * left, Token * token);

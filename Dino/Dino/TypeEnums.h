@@ -115,6 +115,7 @@ enum OperatorType
 	OT_COMMA,						//	,
 	OT_COLON,						//	:
 	OT_ESCAPE,						//	\ 
+	OT_EOF,
 	OT_UNKNOWN,
 };
 

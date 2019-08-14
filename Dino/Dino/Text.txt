@@ -1,2 +1,4 @@
-x = func() || func()
+x = func() || func();
+x = 2 + 12 + 12;
+
 

@@ -1,7 +1,15 @@
 digraph G {
-1 [label="<BinaryOperator>\n="];1->0;1->4;
-0 [label="<Variable>\nx"];
-4 [label="<BinaryOperator>\n||"];4->3;4->6;
-3 [label="<FunctionCall>\nfunc"];
-6 [label="<FunctionCall>\nfunc"];
+0 [label="<Block>"];0->2;0->9;
+2 [label="<BinaryOperator>\n="];2->1;2->5;
+1 [label="<Variable>\nx"];
+5 [label="<BinaryOperator>\n||"];5->4;5->7;
+4 [label="<FunctionCall>\nfunc"];
+7 [label="<FunctionCall>\nfunc"];
+9 [label="<BinaryOperator>\n="];9->8;9->13;
+8 [label="<Variable>\nx"];
+13 [label="<BinaryOperator>\n+"];13->11;13->14;
+11 [label="<BinaryOperator>\n+"];11->10;11->12;
+10 [label="<IntegerLiteral>\n2"];
+12 [label="<IntegerLiteral>\n12"];
+14 [label="<IntegerLiteral>\n12"];
 }

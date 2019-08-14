@@ -34,7 +34,7 @@ int _index;
 
 Token * Parser::getToken(unsigned int index)
 {
-	if(index >= _tokens.size())
+	if (index >= _tokens.size())
 		return NULL;
 	return _tokens[index];
 }
@@ -42,7 +42,7 @@ Token * Parser::getToken(unsigned int index)
 Token * Parser::nextToken(OperatorType expected)
 {
 	Token * token = peekToken();
-	if (token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == expected) 
+	if (isOperator(token, expected))
 	{
 		_index++;
 		return token;
@@ -51,13 +51,32 @@ Token * Parser::nextToken(OperatorType expected)
 	return NULL;
 }
 
+AST::Block * Parser::parseBlock(OperatorType expected)
+{
+	auto block = new AST::Block();
+	while (peekToken() && !isOperator(peekToken(), expected))
+	{
+		auto node = parse();
+		if (node)
+			block->addStatement(node);
+		else std::cout << "Empty block?" << std::endl;
+		if (isOperator(peekToken(), expected))
+			return block;
+		nextToken();
+	}
+	return block;
+}
+
 AST::Node * Parser::parse(int lastPrecedence)
 {
 	AST::Node* left = nud(nextToken());
-	while (peekToken() && precedence(peekToken()) > lastPrecedence)
+	while (peekToken()->_type != TT_LINE_BREAK && precedence(peekToken()) > lastPrecedence)
 		left = led(left, nextToken());
+	/*if (peekToken()->_type == TT_LINE_BREAK)
+		nextToken();*/
 	return left;
 }
+
 
 /*
 	Returns the relevant operator precedence if token is an operator, otherwise returns 0.
@@ -131,13 +150,13 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				auto funcCall = new AST::FunctionCall();
 				auto varId = ((AST::Variable*)left)->getVarId();	// this line needs to be split into two parts for some wierd reason
 				funcCall->setFunctionId(varId);
-				while (!(peekToken()->_type == TT_OPERATOR && ((OperatorToken*)peekToken())->_operator._type == OT_PARENTHESIS_CLOSE))
+				while (!isOperator(peekToken(), OT_PARENTHESIS_CLOSE))
 				{
 					auto exp = parse(10);
 					if (!exp->isExpression())
 						throw "Could not convert from Node* to Expression*";
 					funcCall->addParameter((AST::Expression*)exp);
-					if (peekToken()->_type == TT_OPERATOR && ((OperatorToken*)peekToken())->_operator._type == OT_COMMA)
+					if (isOperator(peekToken(), OT_COMMA))
 						nextToken();
 				}
 				nextToken(OT_PARENTHESIS_CLOSE);
@@ -158,17 +177,14 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		op->setOperator(ot->_operator);
 		int prec = ot->_operator._precedence;
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-		/*if (ot->_operator._type == OT_PARENTHESIS_OPEN || ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
-			prec = 0;*/
 		try { op->setLeft((AST::Expression*)left); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 		try { op->setRight((AST::Expression*)parse(prec)); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 
-		/*if (ot->_operator._type == OT_PARENTHESIS_OPEN)
-			nextToken(OT_PARENTHESIS_CLOSE);
-		else*/ if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
+		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
 			nextToken(OT_SQUARE_BRACKETS_CLOSE);
+
 		return op;
 	}
 	throw "led could not find an option";

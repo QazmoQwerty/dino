@@ -40,13 +40,23 @@ vector<Token*>& Preparser::Preparse(vector<Token*> tokens)
 			delete token;
 			continue;
 		}
-		if (token->_type == TT_SINGLE_LINE_COMMENT || token->_type == TT_LINE_BREAK || token->_type == TT_NEWLINE)	// TODO - make it so you can have multiple-line sections of code.
+		if (token->_type == TT_SINGLE_LINE_COMMENT || token->_type == TT_NEWLINE)	// TODO - make it so you can have multiple-line sections of code.
 		{
 			token->_type = TT_LINE_BREAK;
 			token->_data = ";";
 		}
+		if (token->_type == TT_LINE_BREAK && preparsedTokens->back()->_type == TT_LINE_BREAK)
+		{
+			delete token;
+			continue;
+		}
 		preparsedTokens->push_back(token);
 	}
-
+	auto eof = new OperatorToken;
+	eof->_data = "EOF";
+	eof->_type = TT_OPERATOR;
+	eof->_line = preparsedTokens->back()->_line;
+	eof->_operator = { OT_EOF, "EOF", NULL, NULL };
+	preparsedTokens->push_back(eof);
 	return *preparsedTokens;
 }

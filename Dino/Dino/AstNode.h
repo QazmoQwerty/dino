@@ -67,6 +67,18 @@ namespace AST
 		void addStatement(Statement* statement) { _statements.push_back(statement); }
 	};
 
+	class Block : public Statement
+	{
+		vector<Node*> _statements;
+	public:
+		Block(unsigned int nodeId) : Statement(nodeId) {};
+		Block() : Statement() {};
+		virtual StatementType getType() { return ST_STATEMENT_BLOCK; };
+		virtual string toString() { return "<Block>"; };
+		virtual vector<Node*> getChildren() { return _statements; }
+		void addStatement(Node* statement) { _statements.push_back(statement); }
+	};
+
 	class IfThenElse : public Statement
 	{
 		Expression* _condition;
