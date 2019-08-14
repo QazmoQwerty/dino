@@ -1,2 +1,2 @@
-x = func[10 + func[12 * 2] * 6]
+x = func() || func()
 

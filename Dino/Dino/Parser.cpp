@@ -123,7 +123,28 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 	{
 		auto ot = ((OperatorToken*)token);
 		
-		
+		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
+		{
+			
+			if (left->isExpression() && ((AST::Expression*)left)->getType() == ET_VARIABLE)
+			{
+				auto funcCall = new AST::FunctionCall();
+				auto varId = ((AST::Variable*)left)->getVarId();	// this line needs to be split into two parts for some wierd reason
+				funcCall->setFunctionId(varId);
+				while (!(peekToken()->_type == TT_OPERATOR && ((OperatorToken*)peekToken())->_operator._type == OT_PARENTHESIS_CLOSE))
+				{
+					auto exp = parse(10);
+					if (!exp->isExpression())
+						throw "Could not convert from Node* to Expression*";
+					funcCall->addParameter((AST::Expression*)exp);
+					if (peekToken()->_type == TT_OPERATOR && ((OperatorToken*)peekToken())->_operator._type == OT_COMMA)
+						nextToken();
+				}
+				nextToken(OT_PARENTHESIS_CLOSE);
+				return funcCall;
+			}
+			else throw "Expression preceding parenthesis of apparent call must be a variable id";
+		}
 		
 		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
 		{
@@ -137,16 +158,16 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		op->setOperator(ot->_operator);
 		int prec = ot->_operator._precedence;
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-		if (ot->_operator._type == OT_PARENTHESIS_OPEN || ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
-			prec = 0;
+		/*if (ot->_operator._type == OT_PARENTHESIS_OPEN || ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
+			prec = 0;*/
 		try { op->setLeft((AST::Expression*)left); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 		try { op->setRight((AST::Expression*)parse(prec)); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 
-		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
+		/*if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 			nextToken(OT_PARENTHESIS_CLOSE);
-		else if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
+		else*/ if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
 			nextToken(OT_SQUARE_BRACKETS_CLOSE);
 		return op;
 	}

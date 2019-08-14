@@ -182,7 +182,7 @@ namespace AST
 		FunctionCall(unsigned int nodeId) : Expression(nodeId) {};
 		FunctionCall() : Expression() {};
 		virtual ExpressionType getType() { return ET_FUNCTION_CALL; };
-		virtual string toString() { return string() + "<FunctionCall>\\n" + "TODO"; };
+		virtual string toString() { return string() + "<FunctionCall>\\n" + _functionId.name; };
 		virtual vector<Node*> getChildren();
 
 		void setFunctionId(Identificator funcId) { _functionId = funcId; }
@@ -195,7 +195,7 @@ namespace AST
 
 	public:
 		void setVarId(Identificator varId) { _varId = varId; }
-
+		virtual Identificator getVarId() { return _varId; }
 		Variable(unsigned int nodeId) : Expression(nodeId) {};
 		Variable() : Expression() {};
 		Variable(unsigned int nodeId, Identificator varId) : Expression(nodeId) { _varId = varId; };
