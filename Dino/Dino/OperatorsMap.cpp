@@ -1,8 +1,11 @@
 #include "OperatorsMap.h"
 
 unordered_map<string, Operator> OperatorsMap::_map;
+unordered_map<string, Operator> OperatorsMap::_wordsMap;
 
 const unordered_map<string, Operator>& OperatorsMap::getOperators() { return _map; }
+
+const unordered_map<string, Operator>& OperatorsMap::getWordOperators() { return _wordsMap; }
 
 bool OperatorsMap::isUnary(OperatorType type)
 {
@@ -15,6 +18,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_INCREMENT,
 		OT_DECREMENT,
 		OT_PARENTHESIS_OPEN,
+		OT_CURLY_BRACES_OPEN,
 	};
 	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
 }
@@ -111,4 +115,7 @@ void OperatorsMap::setup()
 	_map["'"]	=	{ OT_SINGLE_QUOTE,				"'",	NULL,		NULL };
 	_map["\""]	=	{ OT_DOUBLE_QUOTE,				"\"",	NULL,		NULL };
 	_map["\\"]	=	{ OT_DOUBLE_QUOTE,				"\"",	NULL,		NULL };
+
+	_wordsMap = unordered_map<string, Operator>();
+	_wordsMap["while"] = { OT_WHILE, "while", NULL, NULL };
 }

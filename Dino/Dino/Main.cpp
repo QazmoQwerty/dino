@@ -19,7 +19,8 @@ int main()
 	Lexer::setup();
 	try
 	{
-		auto vec = Preparser::Preparse(Lexer::lex(str));
+		auto lexed = Lexer::lex(str);
+		auto vec = Preparser::Preparse(lexed);
 		for (auto i : vec)
 		{
 			printToken(i);

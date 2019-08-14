@@ -72,8 +72,6 @@ AST::Node * Parser::parse(int lastPrecedence)
 	AST::Node* left = nud(nextToken());
 	while (peekToken()->_type != TT_LINE_BREAK && precedence(peekToken()) > lastPrecedence)
 		left = led(left, nextToken());
-	/*if (peekToken()->_type == TT_LINE_BREAK)
-		nextToken();*/
 	return left;
 }
 
@@ -110,6 +108,18 @@ AST::Node * Parser::nud(Token * token)
 	if (token->_type == TT_OPERATOR && OperatorsMap::isUnary(((OperatorToken*)token)->_operator._type))
 	{
 		auto ot = ((OperatorToken*)token);
+
+		if (ot->_operator._type == OT_WHILE)
+		{
+			auto node = new AST::WhileLoop();
+			AST::Node* inner = parse();
+			if (inner->isExpression())
+				node->setCondition((AST::Expression*)inner);
+			else throw "could not convert from Node* to Expression*";
+			nextToken();
+			node->setStatement(parseBlock());
+			return node;
+		}
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{
 			AST::Node* inner = parse();
@@ -118,8 +128,7 @@ AST::Node * Parser::nud(Token * token)
 		}
 		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
 		{
-			// TODO - hande statement blocks (and arrays).
-			AST::Node* inner = parse();
+			AST::Node* inner = parseBlock(OT_CURLY_BRACES_CLOSE);
 			nextToken(OT_CURLY_BRACES_CLOSE);
 			return inner;
 		}
@@ -163,14 +172,6 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				return funcCall;
 			}
 			else throw "Expression preceding parenthesis of apparent call must be a variable id";
-		}
-		
-		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
-		{
-			// TODO - hande statement blocks (and arrays).
-			AST::Node* inner = parse();
-			nextToken(OT_CURLY_BRACES_CLOSE);
-			return inner;
 		}
 
 		auto op = new AST::BinaryOperation();
