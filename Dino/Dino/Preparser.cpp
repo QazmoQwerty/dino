@@ -45,7 +45,7 @@ vector<Token*>& Preparser::Preparse(vector<Token*> tokens)
 			token->_type = TT_LINE_BREAK;
 			token->_data = ";";
 		}
-		if (token->_type == TT_LINE_BREAK && preparsedTokens->size() && preparsedTokens->back()->_type == TT_LINE_BREAK)
+		if (token->_type == TT_LINE_BREAK && (preparsedTokens->size() == 0 || preparsedTokens->back()->_type == TT_LINE_BREAK))
 		{
 			delete token;
 			continue;

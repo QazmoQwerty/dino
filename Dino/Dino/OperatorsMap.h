@@ -25,6 +25,7 @@ public:
 	static const unordered_map<string, Operator>& getOperators();
 	static const unordered_map<string, Operator>& getWordOperators();
 
+	static bool isWord(OperatorType type);
 	static bool isUnary(OperatorType type);
 	static bool isBinary(OperatorType type);
 

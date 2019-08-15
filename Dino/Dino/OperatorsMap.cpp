@@ -7,6 +7,16 @@ const unordered_map<string, Operator>& OperatorsMap::getOperators() { return _ma
 
 const unordered_map<string, Operator>& OperatorsMap::getWordOperators() { return _wordsMap; }
 
+bool OperatorsMap::isWord(OperatorType type)
+{
+	OperatorType wordTypes[] = {
+		OT_WHILE,
+		OT_FOR,
+		OT_IF,
+	};
+	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);
+}
+
 bool OperatorsMap::isUnary(OperatorType type)
 {
 	OperatorType unaryTypes[] = {
@@ -19,6 +29,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_DECREMENT,
 		OT_PARENTHESIS_OPEN,
 		OT_CURLY_BRACES_OPEN,
+		OT_WHILE,
 	};
 	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
 }

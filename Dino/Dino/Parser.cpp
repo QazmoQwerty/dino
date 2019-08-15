@@ -56,6 +56,8 @@ AST::Block * Parser::parseBlock(OperatorType expected)
 	auto block = new AST::Block();
 	while (peekToken() && !isOperator(peekToken(), expected))
 	{
+		if (peekToken()->_type == TT_LINE_BREAK)
+			nextToken();
 		auto node = parse();
 		if (node)
 			block->addStatement(node);
@@ -70,6 +72,10 @@ AST::Block * Parser::parseBlock(OperatorType expected)
 AST::Node * Parser::parse(int lastPrecedence)
 {
 	AST::Node* left = nud(nextToken());
+
+	if (left->isExpression() && ((AST::Expression*)left)->getType() == OT_WHILE)	// not the most elegant of solutions
+		return left;
+
 	while (peekToken()->_type != TT_LINE_BREAK && precedence(peekToken()) > lastPrecedence)
 		left = led(left, nextToken());
 	return left;
@@ -117,7 +123,9 @@ AST::Node * Parser::nud(Token * token)
 				node->setCondition((AST::Expression*)inner);
 			else throw "could not convert from Node* to Expression*";
 			nextToken();
-			node->setStatement(parseBlock());
+			if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
+				nextToken();
+			node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
 			return node;
 		}
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
@@ -150,7 +158,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 	if (token->_type == TT_OPERATOR && OperatorsMap::isBinary(((OperatorToken*)token)->_operator._type))
 	{
 		auto ot = ((OperatorToken*)token);
-		
+
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{
 			
