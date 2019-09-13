@@ -28,6 +28,7 @@ public:
 	static bool isWord(OperatorType type);
 	static bool isUnary(OperatorType type);
 	static bool isBinary(OperatorType type);
+	static bool isAssignment(OperatorType type);
 
 	static pair<const string, Operator> getOperatorByDefinition(OperatorType operatorType);
 private:

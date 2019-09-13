@@ -22,10 +22,8 @@ int main()
 	{
 		auto lexed = Lexer::lex(str);
 		auto vec = Preparser::Preparse(lexed);
-		for (auto i : vec)
-		{
-			printToken(i);
-		}
+		/*for (auto i : vec)
+			printToken(i);*/
 		Parser p = Parser(vec);
 		AST::Node* ast = p.parseBlock();
 		if (ast == NULL)

@@ -145,6 +145,7 @@ namespace AST
 		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
 		Identificator getVarId() { return _varId; }
 		Identificator getVarType() { return _type; }
+		vector<Identificator> getModifiers() { return _modifiers; }
 	};
 
 	class Assignment : public Statement

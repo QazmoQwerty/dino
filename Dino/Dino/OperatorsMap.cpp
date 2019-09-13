@@ -48,6 +48,24 @@ bool OperatorsMap::isBinary(OperatorType type)
 	return std::find(std::begin(nonBinaryTypes), std::end(nonBinaryTypes), type) == std::end(nonBinaryTypes);
 }
 
+bool OperatorsMap::isAssignment(OperatorType type)
+{
+	OperatorType assignmentTypes[] = {
+		OT_ASSIGN_EQUAL,
+		OT_ASSIGN_ADD,
+		OT_ASSIGN_DIVIDE,
+		OT_ASSIGN_MULTIPLY,
+		OT_ASSIGN_SUBTRACT,
+		OT_ASSIGN_MODULUS,
+		OT_ASSIGN_BITWISE_AND,
+		OT_ASSIGN_BITWISE_OR,
+		OT_ASSIGN_BITWISE_XOR,
+		OT_ASSIGN_SHIFT_LEFT,
+		OT_ASSIGN_SHIFT_RIGHT,
+	};
+	return std::find(std::begin(assignmentTypes), std::end(assignmentTypes), type) != std::end(assignmentTypes);
+}
+
 /*
 	Gets an OperatorType and searches _map for the corresponding operator string.
 	NOTE: Unused function, might get deleted in the future.

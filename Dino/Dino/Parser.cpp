@@ -47,7 +47,7 @@ Token * Parser::nextToken(OperatorType expected)
 		_index++;
 		return token;
 	}
-	std::cout << expected << " was expected, " << token->_data << "found instead" << std::endl;
+	//std::cout << expected << " was expected, " << token->_data << "found instead" << std::endl;
 	return NULL;
 }
 

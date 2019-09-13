@@ -43,7 +43,9 @@ private:
 	Value* interpretUnaryOp(AST::UnaryOperation* node);
 	Value* interpretFuncCall(AST::FunctionCall* node);
 	Value* interpretLiteral(AST::Literal* node);
+	Value* interpretVariable(AST::Variable* node);
 
+	void interpretVariableDeclaration(AST::VariableDeclaration* node);
 	void interpretIfThenElse(AST::IfThenElse* node);
 	void interpretWhileLoop(AST::WhileLoop* node);
 public:

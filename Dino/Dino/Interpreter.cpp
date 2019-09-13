@@ -20,6 +20,7 @@ Value* Interpreter::interpret(AST::Node * node)
 			return interpretLiteral((AST::Literal*)node);
 			break;
 		case (ET_VARIABLE):
+			return interpretVariable((AST::Variable*)node);
 			break;
 		default:
 			break;
@@ -40,7 +41,7 @@ Value* Interpreter::interpret(AST::Node * node)
 				interpret(i);
 			break;
 		case(ST_VARIABLE_DECLARATION):
-			
+			interpretVariableDeclaration((AST::VariableDeclaration*)node);
 			break;
 		case(ST_WHILE_LOOP):
 			interpretWhileLoop((AST::WhileLoop*)node);
@@ -53,36 +54,58 @@ Value* Interpreter::interpret(AST::Node * node)
 
 Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 {
-	auto binaryOp = ((AST::BinaryOperation*)node);
 	// TODO - assignment operators
-
-	Value* leftVal = interpret(binaryOp->getLeft());
-	Value* rightVal = interpret(binaryOp->getRight());
-	if (leftVal->getType() != rightVal->getType())
-		throw "different types invalid";
-	switch (binaryOp->getOperator()._type)
+	if (OperatorsMap::isAssignment(node->getOperator()._type))
 	{
-	case (OT_EQUAL):
-		if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
-		break;
+		if (node->getLeft()->getType() != ET_VARIABLE)
+			throw "cannot assign to anything but a variable!";
 
-	case(OT_ADD):
-		if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
-		break;
-	case(OT_SUBTRACT):
-		if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() - ((IntValue*)rightVal)->getValue());
-		break;
-	case(OT_MULTIPLY):
-		if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() * ((IntValue*)rightVal)->getValue());
-		break;
-	case(OT_DIVIDE):
-		if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() / ((IntValue*)rightVal)->getValue());
-		break;
-	case(OT_MODULUS):
-		if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() % ((IntValue*)rightVal)->getValue());
-		break;
-	default:
-		break;
+		Value* rightVal = interpret(node->getRight());
+		Value* var = interpretVariable((AST::Variable*)node->getLeft());
+		if (var->getType() != rightVal->getType())
+			throw "different types invalid";
+		switch (node->getOperator()._type)
+		{
+		case (OT_ASSIGN_EQUAL):
+			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)rightVal)->getValue());
+			else if (var->getType() == "bool") ((BoolValue*)var)->setValue(((BoolValue*)rightVal)->getValue());
+			return var;
+			break;
+		}
+	}
+	else
+	{
+		Value* leftVal = interpret(node->getLeft());
+		Value* rightVal = interpret(node->getRight());
+		if (leftVal->getType() != rightVal->getType())
+			throw "different types invalid";
+		switch (node->getOperator()._type)
+		{
+		case (OT_EQUAL):
+			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
+			break;
+		case (OT_SMALLER):
+			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
+			break;
+
+		case(OT_ADD):
+			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
+			break;
+		case(OT_SUBTRACT):
+			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() - ((IntValue*)rightVal)->getValue());
+			break;
+		case(OT_MULTIPLY):
+			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() * ((IntValue*)rightVal)->getValue());
+			break;
+		case(OT_DIVIDE):
+			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() / ((IntValue*)rightVal)->getValue());
+			break;
+		case(OT_MODULUS):
+			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() % ((IntValue*)rightVal)->getValue());
+			break;
+		default:
+			break;
+		}
 	}
 	return NULL;
 }
@@ -119,6 +142,25 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 		break;
 	}
 	return nullptr;
+}
+
+Value * Interpreter::interpretVariable(AST::Variable * node)
+{
+	if (_variables.count(node->getVarId().name) == 0)
+		throw "variable does not exist";
+	return _variables[node->getVarId().name];
+}
+
+void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
+{
+	string type = node->getVarType().name;
+	string name = node->getVarId().name;
+	if		(type == "bool")	_variables[name] = new BoolValue();
+	else if (type == "int")		_variables[name] = new IntValue();
+	else if (type == "frac")	{ }
+	else if (type == "string")	{ }
+	else if (type == "char")	{ }
+	else throw "custom types are not implemented yet.";
 }
 
 void Interpreter::interpretIfThenElse(AST::IfThenElse * node)
