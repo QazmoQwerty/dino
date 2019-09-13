@@ -112,6 +112,27 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 
 Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 {
+	Value* val = interpret(node->getExpression());
+	switch (node->getOperator()._type)
+	{
+	case (OT_ADD):
+		return val;
+	case (OT_SUBTRACT):
+		if (val->getType() == "int") ((IntValue*)val)->setValue(-((IntValue*)val)->getValue());
+		return val;
+	case (OT_INCREMENT):
+		if (val->getType() == "int") ((IntValue*)val)->setValue(((IntValue*)val)->getValue() + 1);
+		return val;
+	case (OT_DECREMENT):
+		if (val->getType() == "int") ((IntValue*)val)->setValue(((IntValue*)val)->getValue() - 1);
+		return val;
+	case (OT_BITWISE_NOT):
+		if (val->getType() == "int") ((IntValue*)val)->setValue(~((IntValue*)val)->getValue());
+		return val;
+	case (OT_LOGICAL_NOT):
+		if (val->getType() == "bool") ((BoolValue*)val)->setValue(!((BoolValue*)val)->getValue());
+		return val;
+	}
 	return nullptr;
 }
 

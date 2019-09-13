@@ -20,5 +20,5 @@ else {
 
 while i < 12 {
 	print(i - 2)
-	i = i + 1
+	++i	// (No support for "i++" yet) 
 }

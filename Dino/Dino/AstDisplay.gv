@@ -24,14 +24,11 @@ digraph G {
 25 [label="<BinaryOperator>\n<"];25->24;25->26;
 24 [label="<Variable>\ni"];
 26 [label="<IntegerLiteral>\n12"];
-27 [label="<Block>"];27->29;27->34;
+27 [label="<Block>"];27->29;27->33;
 29 [label="<FunctionCall>\nprint"];29->31;
 31 [label="<BinaryOperator>\n-"];31->30;31->32;
 30 [label="<Variable>\ni"];
 32 [label="<IntegerLiteral>\n2"];
-34 [label="<BinaryOperator>\n="];34->33;34->36;
-33 [label="<Variable>\ni"];
-36 [label="<BinaryOperator>\n+"];36->35;36->37;
-35 [label="<Variable>\ni"];
-37 [label="<IntegerLiteral>\n1"];
+33 [label="<UnaryOperator>\n++"];33->34;
+34 [label="<Variable>\ni"];
 }

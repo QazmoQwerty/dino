@@ -22,7 +22,6 @@ bool OperatorsMap::isUnary(OperatorType type)
 {
 	OperatorType unaryTypes[] = {
 		OT_ADD,
-		OT_ADD,
 		OT_SUBTRACT,
 		OT_LOGICAL_NOT,
 		OT_BITWISE_NOT,

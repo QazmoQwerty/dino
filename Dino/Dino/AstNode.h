@@ -204,6 +204,9 @@ namespace AST
 
 		void setOperator(Operator op) { _operator = op; }
 		void setExpression(Expression* expression) { _expression = expression; }
+
+		Operator getOperator() { return _operator; }
+		Expression* getExpression() { return _expression; }
 	};
 
 	class FunctionCall : public Expression
