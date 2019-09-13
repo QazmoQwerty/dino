@@ -328,6 +328,23 @@ namespace AST
 		string getValue() { return _value; }
 	};
 
+	class Function : public Literal
+	{
+		vector<VariableDeclaration*> _parameters;
+		Block* _content;
+
+	public:
+		Function(unsigned int nodeId) : Literal(nodeId, LT_FUNCTION) {}
+		Function() : Literal(LT_FUNCTION) { }
+		virtual string toString() { return string() + "<FunctionLiteral>"; };
+
+		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void setContent(Block* content) { _content = content; }
+
+		vector<VariableDeclaration*> getParameters() { return _parameters; }
+		Block* getContent() { return _content; }
+	};
+
 	class Null : public Literal
 	{
 	public:

@@ -58,6 +58,8 @@ AST::Block * Parser::parseBlock(OperatorType expected)
 	{
 		if (peekToken()->_type == TT_LINE_BREAK)
 			nextToken();
+		if (eatOperator(expected))
+			return block;
 		auto node = parse();
 		if (node)
 			block->addStatement(node);
@@ -123,6 +125,35 @@ AST::Node * Parser::nud(Token * token)
 				varId.name = peekToken()->_data;
 				node->setVarId(varId);
 				nextToken();
+			}
+			if (isOperator(peekToken(), OT_PARENTHESIS_OPEN))	// function declaration
+			{
+				node->addModifier({ "func" });
+				auto func = new AST::Function();
+
+				while (!eatOperator(OT_PARENTHESIS_CLOSE))
+				{
+					auto param = parse(10);
+					//if (!exp->isExpression())
+					//	throw "Could not convert from Node* to Expression*";
+					if (param == NULL)
+						break;
+					if (!param->isStatement() || ((AST::Statement*)param)->getType() != ST_VARIABLE_DECLARATION)
+						throw "could not convert to VariableDeclaration";
+					func->addParameter((AST::VariableDeclaration*)param);
+					peekToken();
+					eatOperator(OT_COMMA);
+				}
+				nextToken(OT_PARENTHESIS_CLOSE);
+				if (!eatOperator(OT_CURLY_BRACES_OPEN))
+					throw "function has no body";
+				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+
+				auto bo = new AST::BinaryOperation();
+				bo->setOperator(OperatorsMap::getOperatorByDefinition(OT_ASSIGN_EQUAL).second);
+				bo->setLeft((AST::Expression*)node); //eew
+				bo->setRight(func);
+				return bo;
 			}
 
 			return node;
@@ -242,7 +273,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				auto funcCall = new AST::FunctionCall();
 				auto varId = ((AST::Variable*)left)->getVarId();	// this line needs to be split into two parts for some wierd reason
 				funcCall->setFunctionId(varId);
-				while (!isOperator(peekToken(), OT_PARENTHESIS_CLOSE))
+				while (!eatOperator(OT_PARENTHESIS_CLOSE))
 				{
 					auto exp = parse(10);
 					if (!exp->isExpression())
@@ -251,7 +282,6 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 					if (isOperator(peekToken(), OT_COMMA))
 						nextToken();
 				}
-				nextToken(OT_PARENTHESIS_CLOSE);
 				return funcCall;
 			}
 			else throw "Expression preceding parenthesis of apparent call must be a variable id";
