@@ -73,7 +73,26 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)rightVal)->getValue());
 			else if (var->getType() == "char") ((CharValue*)var)->setValue(((CharValue*)rightVal)->getValue());
 			return var;
-			break;
+		case (OT_ASSIGN_ADD):
+			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() + ((IntValue*)rightVal)->getValue());
+			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() + ((FracValue*)rightVal)->getValue());
+			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)var)->getValue() + ((StringValue*)rightVal)->getValue());
+			return var;
+		case (OT_ASSIGN_SUBTRACT):
+			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() - ((IntValue*)rightVal)->getValue());
+			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() - ((FracValue*)rightVal)->getValue());
+			return var;
+		case (OT_ASSIGN_MULTIPLY):
+			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() * ((IntValue*)rightVal)->getValue());
+			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() * ((FracValue*)rightVal)->getValue());
+			return var;
+		case (OT_ASSIGN_DIVIDE):
+			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() / ((IntValue*)rightVal)->getValue());
+			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() / ((FracValue*)rightVal)->getValue());
+			return var;
+		case (OT_ASSIGN_MODULUS):
+			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() % ((IntValue*)rightVal)->getValue());
+			return var;
 		}
 	}
 	else

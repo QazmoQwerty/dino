@@ -27,4 +27,9 @@ while i < 12 {
 }
 frac x;
 x = 1.4 / 2.1
+
+string z;
+z = "abc"
+z = z + z
+print(z)
 print(x, 12, "hello" + " world")

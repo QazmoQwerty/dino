@@ -1,5 +1,5 @@
 digraph G {
-0 [label="<Block>"];0->1;0->3;0->5;0->27;0->39;0->41;0->46;
+0 [label="<Block>"];0->1;0->3;0->5;0->27;0->39;0->41;0->45;0->47;0->50;0->55;0->58;
 1 [label="<VariableDeclaration>\nint i"];
 3 [label="<BinaryOperator>\n="];3->2;3->4;
 2 [label="<Variable>\ni"];
@@ -41,10 +41,21 @@ digraph G {
 43 [label="<BinaryOperator>\n/"];43->42;43->44;
 42 [label="<IntegerLiteral>\n1.400000"];
 44 [label="<IntegerLiteral>\n2.100000"];
-46 [label="<FunctionCall>\nprint"];46->47;46->48;46->50;
-47 [label="<Variable>\nx"];
-48 [label="<IntegerLiteral>\n12"];
-50 [label="<BinaryOperator>\n+"];50->49;50->51;
-49 [label="<IntegerLiteral>\n"hello""];
-51 [label="<IntegerLiteral>\n" world""];
+45 [label="<VariableDeclaration>\nstring z"];
+47 [label="<BinaryOperator>\n="];47->46;47->48;
+46 [label="<Variable>\nz"];
+48 [label="<IntegerLiteral>\n"abc""];
+50 [label="<BinaryOperator>\n="];50->49;50->52;
+49 [label="<Variable>\nz"];
+52 [label="<BinaryOperator>\n+"];52->51;52->53;
+51 [label="<Variable>\nz"];
+53 [label="<Variable>\nz"];
+55 [label="<FunctionCall>\nprint"];55->56;
+56 [label="<Variable>\nz"];
+58 [label="<FunctionCall>\nprint"];58->59;58->60;58->62;
+59 [label="<Variable>\nx"];
+60 [label="<IntegerLiteral>\n12"];
+62 [label="<BinaryOperator>\n+"];62->61;62->63;
+61 [label="<IntegerLiteral>\n"hello""];
+63 [label="<IntegerLiteral>\n" world""];
 }
