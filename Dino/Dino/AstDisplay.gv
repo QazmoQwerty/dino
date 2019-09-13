@@ -1,20 +1,14 @@
 digraph G {
-0 [label="<Block>"];0->1;0->12;
-1 [label="<While>"];1->3;1->5;
+0 [label="<Block>"];0->1;0->10;
+1 [label="<IfThenElse>"];1->3;1->5;1->4294967295;
 3 [label="<BinaryOperator>\n=="];3->2;3->4;
 2 [label="<Variable>\ny"];
 4 [label="<IntegerLiteral>\n5"];
 5 [label="<Block>"];5->7;
-7 [label="<BinaryOperator>\n="];7->6;7->9;
+7 [label="<BinaryOperator>\n="];7->6;7->8;
 6 [label="<Variable>\nx"];
-9 [label="<BinaryOperator>\n+"];9->8;9->10;
-8 [label="<Variable>\nx"];
-10 [label="<IntegerLiteral>\n2"];
-12 [label="<BinaryOperator>\n="];12->11;12->16;
-11 [label="<Variable>\nname"];
-16 [label="<BinaryOperator>\n+"];16->14;16->17;
-14 [label="<BinaryOperator>\n+"];14->13;14->15;
-13 [label="<IntegerLiteral>\n2"];
-15 [label="<IntegerLiteral>\n12"];
-17 [label="<IntegerLiteral>\n13"];
+8 [label="<IntegerLiteral>\n2"];
+10 [label="<BinaryOperator>\n="];10->9;10->11;
+9 [label="<Variable>\nname"];
+11 [label="<IntegerLiteral>\n4"];
 }

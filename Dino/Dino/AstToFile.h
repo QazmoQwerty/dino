@@ -9,6 +9,8 @@ using std::ofstream;
 
 string astToString(AST::Node* node)
 {
+	if (node == NULL || node == nullptr)
+		return "";
 	stringstream ss;
 	int id = node->getNodeId();
 	ss << id << " [label=\"" << node->toString() << "\"];";

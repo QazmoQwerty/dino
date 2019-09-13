@@ -54,7 +54,7 @@ Token * Parser::nextToken(OperatorType expected)
 AST::Block * Parser::parseBlock(OperatorType expected)
 {
 	auto block = new AST::Block();
-	while (peekToken() && !eatOperator(peekToken(), expected))
+	while (peekToken() && !eatOperator(expected))
 	{
 		if (peekToken()->_type == TT_LINE_BREAK)
 			nextToken();
@@ -62,7 +62,7 @@ AST::Block * Parser::parseBlock(OperatorType expected)
 		if (node)
 			block->addStatement(node);
 		//else std::cout << "Empty block?" << std::endl;
-		if (eatOperator(peekToken(), expected))
+		if (eatOperator(expected))
 			return block;
 		nextToken();
 	}
@@ -76,8 +76,10 @@ AST::Node * Parser::parse(int lastPrecedence)
 	if (left == NULL)
 		return NULL;
 
-	if (left->isStatement() && ((AST::Statement*)left)->getType() == ST_WHILE_LOOP)	// not the most elegant of solutions
+	if (left->isStatement() && (((AST::Statement*)left)->getType() == ST_WHILE_LOOP ||
+		((AST::Statement*)left)->getType() == ST_IF_THEN_ELSE))	// not the most elegant of solutions
 		return left;
+
 
 	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) && precedence(peekToken()) > lastPrecedence)
 		left = led(left, nextToken());
@@ -125,8 +127,7 @@ AST::Node * Parser::nud(Token * token)
 			if (inner->isExpression())
 				node->setCondition((AST::Expression*)inner);
 			else throw "could not convert from Node* to Expression*";
-			//nextToken();
-
+			
 			while (peekToken()->_type == TT_LINE_BREAK)
 				nextToken();
 
@@ -138,6 +139,43 @@ AST::Node * Parser::nud(Token * token)
 			else throw "could not parse while loop";
 			return node;
 		}
+
+		if (ot->_operator._type == OT_IF)
+		{
+			AST::IfThenElse * node = new AST::IfThenElse();
+			AST::Node* inner = parse();
+			if (inner->isExpression())
+				node->setCondition((AST::Expression*)inner);
+			else throw "could not convert from Node* to Expression*";
+
+			while (peekToken()->_type == TT_LINE_BREAK)
+				nextToken();
+
+			if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
+			{
+				nextToken();
+				node->setThenBranch(parseBlock(OT_CURLY_BRACES_CLOSE));
+			}
+			else throw "could not parse while loop";
+
+			bool b = false;
+			while (peekToken()->_type == TT_LINE_BREAK)
+			{
+				b = true;
+				nextToken();
+			}
+			if (eatOperator(OT_ELSE))
+			{
+				auto p = parse();
+				if (p->isStatement())
+					node->setElseBranch((AST::Statement*)p);
+				else throw "else branch must be a statement!";
+			}
+			else if (b) _index--;
+
+			return node;
+		}
+
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{
 			AST::Node* inner = parse();

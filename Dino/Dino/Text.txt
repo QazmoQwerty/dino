@@ -1,6 +1,9 @@
 /*x = func() || func();*/
-while y == 5 {
-	x = x + 2
+if y == 5 {
+	x = 2
+} 
+else {
+	z = 3
 }
-name = 2 + 12 + 13;
+name = 4;
 

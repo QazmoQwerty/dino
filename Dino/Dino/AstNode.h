@@ -23,7 +23,7 @@ namespace AST
 	public:
 		Node(unsigned int nodeId) { _nodeId = nodeId; };
 		Node() { _nodeId = _idCount++; };
-		const unsigned int getNodeId() const { return _nodeId; };
+		const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
 		virtual bool isStatement() = 0;
 		virtual bool isExpression() = 0;
 		virtual string toString() = 0;
