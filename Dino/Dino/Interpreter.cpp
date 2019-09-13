@@ -8,14 +8,16 @@ Value* Interpreter::interpret(AST::Node * node)
 		switch (expression->getType())
 		{
 		case (ET_BINARY_OPERATION):
-			return interpretBinaryOp((AST::BinaryOperation*)expression);
+			return interpretBinaryOp((AST::BinaryOperation*)node);
 		case (ET_UNARY_OPERATION):
-			return interpretUnaryOp((AST::UnaryOperation*)expression);
+			return interpretUnaryOp((AST::UnaryOperation*)node);
 		case (ET_CONDITIONAL_EXPRESSION):
 			break;
 		case (ET_FUNCTION_CALL):
+			interpretFuncCall((AST::FunctionCall*)node);
 			break;
 		case (ET_LITERAL):
+			return interpretLiteral((AST::Literal*)node);
 			break;
 		case (ET_VARIABLE):
 			break;
@@ -60,6 +62,10 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 		throw "different types invalid";
 	switch (binaryOp->getOperator()._type)
 	{
+	case (OT_EQUAL):
+		if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
+		break;
+
 	case(OT_ADD):
 		if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
 		break;
@@ -88,7 +94,30 @@ Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 {
-	
+	if (node->getFunctionId().name == "print")
+		for (auto i : node->getParameters())
+			std::cout << interpret(i)->toString() << std::endl;
+	return nullptr;
+}
+
+Value * Interpreter::interpretLiteral(AST::Literal * node)
+{
+	switch (node->getLiteralType())
+	{
+	case (LT_BOOLEAN):
+		return new BoolValue(((AST::Boolean*)node)->getValue());
+	case (LT_INTEGER):
+		return new IntValue(((AST::Boolean*)node)->getValue());
+		break;
+	case (LT_CHARACTER):
+		break;
+	case (LT_STRING):
+		break;
+	case (LT_FRACTION):
+		break;
+	case (LT_NULL):
+		break;
+	}
 	return nullptr;
 }
 

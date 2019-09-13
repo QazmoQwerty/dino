@@ -271,6 +271,7 @@ namespace AST
 		Literal(LiteralType type) : Expression() { _type = type; };
 		virtual ExpressionType getType() { return ET_LITERAL; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+		LiteralType getLiteralType() { return _type; }
 	};
 
 	class Boolean : public Literal
@@ -280,6 +281,7 @@ namespace AST
 		Boolean(unsigned int nodeId, bool value) : Literal(nodeId, LT_BOOLEAN) { _value = value; }
 		Boolean(bool value) : Literal(LT_BOOLEAN) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
+		bool getValue() { return _value; }
 	};
 
 	class Integer : public Literal
@@ -289,6 +291,7 @@ namespace AST
 		Integer(unsigned int nodeId, int value) : Literal(nodeId, LT_INTEGER) { _value = value; }
 		Integer(int value) : Literal(LT_INTEGER) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
+		int getValue() { return _value; }
 	};
 
 	class Fraction : public Literal
@@ -298,6 +301,7 @@ namespace AST
 		Fraction(unsigned int nodeId, float value) : Literal(nodeId, LT_FRACTION) { _value = value; }
 		Fraction(float value) : Literal(LT_FRACTION) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
+		float getValue() { return _value; }
 	};
 
 	class Character : public Literal
@@ -307,6 +311,7 @@ namespace AST
 		Character(unsigned int nodeId, char value) : Literal(nodeId, LT_STRING) { _value = value; }
 		Character(char value) : Literal(LT_STRING) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n'" + _value + '\''; };
+		char getValue() { return _value; }
 	};
 
 	class String : public Literal
@@ -316,6 +321,7 @@ namespace AST
 		String(unsigned int nodeId, string value) : Literal(nodeId, LT_STRING) { _value = value; }
 		String(string value) : Literal(LT_STRING) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n\"" + _value + '"'; };
+		string getValue() { return _value; }
 	};
 
 	class Null : public Literal

@@ -1,18 +1,19 @@
 digraph G {
-0 [label="<Block>"];0->2;0->5;0->14;
-2 [label="<BinaryOperator>\n="];2->1;2->3;
-1 [label="<VariableDeclaration>\nprivate static int num"];
-3 [label="<IntegerLiteral>\n0"];
-5 [label="<BinaryOperator>\n="];5->4;5->11;
-4 [label="<Variable>\nl"];
-11 [label="<BinaryOperator>\n+"];11->9;11->12;
-9 [label="<BinaryOperator>\n."];9->7;9->10;
-7 [label="<BinaryOperator>\n."];7->6;7->8;
-6 [label="<Variable>\ny"];
-8 [label="<Variable>\nname2"];
-10 [label="<Variable>\nname3"];
+0 [label="<Block>"];0->1;
+1 [label="<IfThenElse>"];1->5;1->7;1->13;
+5 [label="<BinaryOperator>\n=="];5->3;5->6;
+3 [label="<BinaryOperator>\n+"];3->2;3->4;
+2 [label="<IntegerLiteral>\n2"];
+4 [label="<IntegerLiteral>\n3"];
+6 [label="<IntegerLiteral>\n4"];
+7 [label="<Block>"];7->9;
+9 [label="<FunctionCall>\nprint"];9->11;
+11 [label="<BinaryOperator>\n/"];11->10;11->12;
+10 [label="<IntegerLiteral>\n4"];
 12 [label="<IntegerLiteral>\n2"];
-14 [label="<BinaryOperator>\n="];14->13;14->15;
-13 [label="<Variable>\nname"];
-15 [label="<IntegerLiteral>\n4"];
+13 [label="<Block>"];13->15;
+15 [label="<FunctionCall>\nprint"];15->17;
+17 [label="<BinaryOperator>\n*"];17->16;17->18;
+16 [label="<IntegerLiteral>\n4"];
+18 [label="<IntegerLiteral>\n2"];
 }

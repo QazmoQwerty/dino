@@ -42,6 +42,7 @@ private:
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
 	Value* interpretUnaryOp(AST::UnaryOperation* node);
 	Value* interpretFuncCall(AST::FunctionCall* node);
+	Value* interpretLiteral(AST::Literal* node);
 
 	void interpretIfThenElse(AST::IfThenElse* node);
 	void interpretWhileLoop(AST::WhileLoop* node);
