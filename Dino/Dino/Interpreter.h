@@ -23,6 +23,42 @@ public:
 	virtual string toString() { return std::to_string(_value); };
 };
 
+class FracValue : public Value
+{
+private:
+	float _value;
+public:
+	FracValue() : Value("frac") { _value = 0; }
+	FracValue(float value) : Value("frac") { _value = value; }
+	void setValue(float value) { _value = value; }
+	float getValue() { return _value; }
+	virtual string toString() { return std::to_string(_value); };
+};
+
+class CharValue : public Value
+{
+private:
+	char _value;
+public:
+	CharValue() : Value("char") { _value = 0; }
+	CharValue(char value) : Value("char") { _value = value; }
+	void setValue(char value) { _value = value; }
+	char getValue() { return _value; }
+	virtual string toString() { return std::to_string(_value); };
+};
+
+class StringValue : public Value
+{
+private:
+	string _value;
+public:
+	StringValue() : Value("string") { _value = ""; }
+	StringValue(string value) : Value("string") { _value = value; }
+	void setValue(string value) { _value = value; }
+	string getValue() { return _value; }
+	virtual string toString() { return _value; };
+};
+
 class BoolValue : public Value
 {
 private:

@@ -9,9 +9,12 @@ else if m == 2 {
 l = y.name2.name3 + 2
 name = 4;*/
 
+
+
+
 int i;
 i = 2;
-if i * 2 == 4 {
+if i * 2 == 4 && i < 1 {
 	print(i * 3)
 }
 else {
@@ -22,3 +25,6 @@ while i < 12 {
 	print(i - 2)
 	++i	// (No support for "i++" yet) 
 }
+frac x;
+x = 1.4 / 2.1
+print(x, 12, "hello" + " world")

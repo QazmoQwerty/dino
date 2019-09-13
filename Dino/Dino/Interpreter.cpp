@@ -69,6 +69,9 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 		case (OT_ASSIGN_EQUAL):
 			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)rightVal)->getValue());
 			else if (var->getType() == "bool") ((BoolValue*)var)->setValue(((BoolValue*)rightVal)->getValue());
+			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)rightVal)->getValue());
+			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)rightVal)->getValue());
+			else if (var->getType() == "char") ((CharValue*)var)->setValue(((CharValue*)rightVal)->getValue());
 			return var;
 			break;
 		}
@@ -87,18 +90,26 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 		case (OT_SMALLER):
 			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
 			break;
+		case (OT_LOGICAL_AND):
+			if (leftVal->getType() == "bool") return new BoolValue(((BoolValue*)leftVal)->getValue() && ((BoolValue*)rightVal)->getValue());
+			break;
 
 		case(OT_ADD):
 			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() + ((FracValue*)rightVal)->getValue());
+			if (leftVal->getType() == "string") return new StringValue(((StringValue*)leftVal)->getValue() + ((StringValue*)rightVal)->getValue());
 			break;
 		case(OT_SUBTRACT):
 			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() - ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() - ((FracValue*)rightVal)->getValue());
 			break;
 		case(OT_MULTIPLY):
 			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() * ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() * ((FracValue*)rightVal)->getValue());
 			break;
 		case(OT_DIVIDE):
 			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() / ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() / ((FracValue*)rightVal)->getValue());
 			break;
 		case(OT_MODULUS):
 			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() % ((IntValue*)rightVal)->getValue());
@@ -133,7 +144,7 @@ Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 		if (val->getType() == "bool") ((BoolValue*)val)->setValue(!((BoolValue*)val)->getValue());
 		return val;
 	}
-	return nullptr;
+	return NULL;
 }
 
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
@@ -154,10 +165,13 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 		return new IntValue(((AST::Boolean*)node)->getValue());
 		break;
 	case (LT_CHARACTER):
+		return new CharValue(((AST::Character*)node)->getValue());
 		break;
 	case (LT_STRING):
+		return new StringValue(((AST::String*)node)->getValue());
 		break;
 	case (LT_FRACTION):
+		return new FracValue(((AST::Fraction*)node)->getValue());
 		break;
 	case (LT_NULL):
 		break;
@@ -178,9 +192,9 @@ void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 	string name = node->getVarId().name;
 	if		(type == "bool")	_variables[name] = new BoolValue();
 	else if (type == "int")		_variables[name] = new IntValue();
-	else if (type == "frac")	{ }
-	else if (type == "string")	{ }
-	else if (type == "char")	{ }
+	else if (type == "frac")	_variables[name] = new FracValue();
+	else if (type == "string")	_variables[name] = new StringValue();
+	else if (type == "char")	_variables[name] = new CharValue();
 	else throw "custom types are not implemented yet.";
 }
 
