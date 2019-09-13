@@ -80,6 +80,12 @@ AST::Node * Parser::parse(int lastPrecedence)
 		((AST::Statement*)left)->getType() == ST_IF_THEN_ELSE))	// not the most elegant of solutions
 		return left;
 
+	/*if (left->isExpression() && ((AST::Expression*)left)->getType() == TT_IDENTIFIER && peekToken()->_type == TT_IDENTIFIER)
+	{ 
+		auto decl = new AST::VariableDeclaration();
+
+		decl->setType(*(AST::Identificator*)left);
+	}*/
 
 	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) && precedence(peekToken()) > lastPrecedence)
 		left = led(left, nextToken());
@@ -99,8 +105,52 @@ AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
 	{
+		/*if (token->_data == "int")
+		{
+
+		}
+		else if (token->_data == "frac")
+		{
+
+		}
+		else if (token->_data == "bool")
+		{
+
+		}
+		else if (token->_data == "string")
+		{
+
+		}
+		else if (token->_data == "char")
+		{
+			
+		}*/
+
+		
+
 		AST::Identificator varId;
 		varId.name = token->_data;
+
+		if (peekToken()->_type == TT_IDENTIFIER)
+		{
+			auto node = new AST::VariableDeclaration();
+			node->setType(varId);
+			varId.name = peekToken()->_data;
+			node->setVarId(varId);
+			nextToken();
+
+			while (peekToken()->_type == TT_IDENTIFIER)
+			{
+				node->addModifier(node->getVarType());
+				node->setType(node->getVarId());
+				varId.name = peekToken()->_data;
+				node->setVarId(varId);
+				nextToken();
+			}
+
+			return node;
+		}
+		
 		return new AST::Variable(varId);
 	}
 	if (token->_type == TT_LITERAL)

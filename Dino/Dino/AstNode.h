@@ -116,19 +116,28 @@ namespace AST
 	class VariableDeclaration : public Statement
 	{
 		Identificator _varId;	// Temporary
-		VariableType _type;
-		vector<VariableModifier> _modifiers; // public, static, reactive, etc.
+		Identificator _type;
+		vector<Identificator> _modifiers; // public, static, reactive, etc.
 
 	public:
 		VariableDeclaration(unsigned int nodeId) : Statement(nodeId) {};
 		VariableDeclaration() : Statement() {};
 		virtual StatementType getType() { return ST_VARIABLE_DECLARATION; };
-		virtual string toString() { return "<VariableDeclaration>\\nTODO"; };
+		virtual string toString() { 
+			string modifiers = "";
+			for (auto s : _modifiers) {
+				modifiers += s.name + ' ';
+				std::cout << s.name << std::endl;
+			}
+			return "<VariableDeclaration>\\n" + modifiers + _type.name + ' ' + _varId.name; 
+		};
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 
 		void setVarId(Identificator varId) { _varId = varId; }
-		void setType(VariableType type) { _type = type; }
-		void addModifier(VariableModifier modifier) { _modifiers.push_back(modifier); }
+		void setType(Identificator type) { _type = type; }
+		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
+		Identificator getVarId() { return _varId; }
+		Identificator getVarType() { return _type; }
 	};
 
 	class Assignment : public Statement
