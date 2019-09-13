@@ -1,9 +1,12 @@
 /*x = func() || func();*/
-if y == 5 {
+/*if y == 5 {
 	x = 2
 } 
-else {
-	z = 3
-}
+else if m == 2 {
+	foo(12, 12)
+}*/
+
+
+l = y.name2.name3 + 2
 name = 4;
 
