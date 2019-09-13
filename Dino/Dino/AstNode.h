@@ -95,6 +95,10 @@ namespace AST
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(Statement* thenBranch) { _thenBranch = thenBranch; }
 		void setElseBranch(Statement* elseBranch) { _elseBranch = elseBranch; }
+
+		Expression* getCondition() { return _condition; }
+		Statement* getThenBranch() { return _thenBranch; }
+		Statement* getElseBranch() { return _elseBranch; }
 	};
 
 	class WhileLoop : public Statement	// Add 'for' as a seperate class?
@@ -111,6 +115,9 @@ namespace AST
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setStatement(Statement* statement) { _statement = statement; }
+
+		Expression* getCondition() { return _condition; }
+		Statement* getStatement() { return _statement; }
 	};
 
 	class VariableDeclaration : public Statement
@@ -176,6 +183,10 @@ namespace AST
 		void setOperator(Operator op) { _operator = op; }
 		void setLeft(Expression* left) { _left = left; }
 		void setRight(Expression* right) { _right = right; }
+
+		Expression* getLeft() { return _left; }
+		Expression* getRight() { return _right; }
+		Operator getOperator() { return _operator; }
 	};
 
 	class UnaryOperation : public Expression
@@ -208,6 +219,9 @@ namespace AST
 
 		void setFunctionId(Identificator funcId) { _functionId = funcId; }
 		void addParameter(Expression* parameter) { _parameters.push_back(parameter); }
+
+		Identificator getFunctionId() { return _functionId; }
+		vector<Expression*> getParameters() { return _parameters; }
 	};
 
 	class Variable : public Expression
