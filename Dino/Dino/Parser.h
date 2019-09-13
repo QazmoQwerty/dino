@@ -30,6 +30,7 @@ public:
 private:
 
 	bool isOperator(Token * token, OperatorType type) { return token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == type; };
+	bool eatOperator(Token * token, OperatorType type) { if (isOperator(token, type)) { nextToken(); return true; } return false; }
 
 	AST::Node* nud(Token* token);
 	AST::Node* led(AST::Node * left, Token * token);

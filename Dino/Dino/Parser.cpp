@@ -54,15 +54,15 @@ Token * Parser::nextToken(OperatorType expected)
 AST::Block * Parser::parseBlock(OperatorType expected)
 {
 	auto block = new AST::Block();
-	while (peekToken() && !isOperator(peekToken(), expected))
+	while (peekToken() && !eatOperator(peekToken(), expected))
 	{
 		if (peekToken()->_type == TT_LINE_BREAK)
 			nextToken();
 		auto node = parse();
 		if (node)
 			block->addStatement(node);
-		else std::cout << "Empty block?" << std::endl;
-		if (isOperator(peekToken(), expected))
+		//else std::cout << "Empty block?" << std::endl;
+		if (eatOperator(peekToken(), expected))
 			return block;
 		nextToken();
 	}
@@ -73,10 +73,13 @@ AST::Node * Parser::parse(int lastPrecedence)
 {
 	AST::Node* left = nud(nextToken());
 
-	if (left->isExpression() && ((AST::Expression*)left)->getType() == OT_WHILE)	// not the most elegant of solutions
+	if (left == NULL)
+		return NULL;
+
+	if (left->isStatement() && ((AST::Statement*)left)->getType() == ST_WHILE_LOOP)	// not the most elegant of solutions
 		return left;
 
-	while (peekToken()->_type != TT_LINE_BREAK && precedence(peekToken()) > lastPrecedence)
+	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) && precedence(peekToken()) > lastPrecedence)
 		left = led(left, nextToken());
 	return left;
 }
@@ -117,15 +120,22 @@ AST::Node * Parser::nud(Token * token)
 
 		if (ot->_operator._type == OT_WHILE)
 		{
-			auto node = new AST::WhileLoop();
+			AST::WhileLoop * node = new AST::WhileLoop();
 			AST::Node* inner = parse();
 			if (inner->isExpression())
 				node->setCondition((AST::Expression*)inner);
 			else throw "could not convert from Node* to Expression*";
-			nextToken();
-			if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
+			//nextToken();
+
+			while (peekToken()->_type == TT_LINE_BREAK)
 				nextToken();
-			node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
+
+			if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
+			{
+				nextToken();
+				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
+			}
+			else throw "could not parse while loop";
 			return node;
 		}
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
