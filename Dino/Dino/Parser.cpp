@@ -105,29 +105,6 @@ AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
 	{
-		/*if (token->_data == "int")
-		{
-
-		}
-		else if (token->_data == "frac")
-		{
-
-		}
-		else if (token->_data == "bool")
-		{
-
-		}
-		else if (token->_data == "string")
-		{
-
-		}
-		else if (token->_data == "char")
-		{
-			
-		}*/
-
-		
-
 		AST::Identificator varId;
 		varId.name = token->_data;
 
