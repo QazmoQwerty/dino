@@ -13,7 +13,7 @@ class Parser
 {
 public:
 	//Parser(vector<vector<Token*>*>& tokens) : _tokens(tokens) { _line = _index = _idCount = 0; }
-	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = _idCount = 0; }
+	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = 0; }
 	//Token* getToken(unsigned int line, unsigned int index);
 	Token* getToken(unsigned int index);
 	//Token* peekToken() { return getToken(_line, _index); }
@@ -35,11 +35,6 @@ private:
 	AST::Node* nud(Token* token);
 	AST::Node* led(AST::Node * left, Token * token);
 
-	//vector<vector<Token*>*>& _tokens;
-
 	vector<Token*>& _tokens;
-
-	unsigned int _idCount;
-	//unsigned int _line;
 	unsigned int _index;
 };

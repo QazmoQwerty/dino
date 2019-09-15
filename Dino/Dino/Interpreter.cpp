@@ -144,7 +144,7 @@ Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 {
 	Value* val = interpret(node->getExpression());
 	switch (node->getOperator()._type)
-	{
+	{ 
 	case (OT_ADD):
 		return val;
 	case (OT_SUBTRACT):

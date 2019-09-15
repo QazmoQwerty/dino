@@ -31,7 +31,7 @@ int main()
 		else astToFile("AstDisplay.gv", ast);
 
 		Interpreter i;
-		//i.interpret(ast);
+		i.interpret(ast);
 	} 
 	catch (exception e) { std::cout << e.what(); }
 	

@@ -158,7 +158,7 @@ AST::Node * Parser::nud(Token * token)
 
 			return node;
 		}
-		
+
 		return new AST::Variable(varId);
 	}
 	if (token->_type == TT_LITERAL)
@@ -189,12 +189,10 @@ AST::Node * Parser::nud(Token * token)
 			while (peekToken()->_type == TT_LINE_BREAK)
 				nextToken();
 
-			if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
-			{
-				nextToken();
+			if (eatOperator(OT_CURLY_BRACES_OPEN))			
 				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
-			}
 			else throw "could not parse while loop";
+
 			return node;
 		}
 
@@ -266,8 +264,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		auto ot = ((OperatorToken*)token);
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
-		{
-			
+		{	
 			if (left->isExpression() && ((AST::Expression*)left)->getType() == ET_VARIABLE)
 			{
 				auto funcCall = new AST::FunctionCall();
@@ -297,7 +294,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 
 		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
-			nextToken(OT_SQUARE_BRACKETS_CLOSE);
+			nextToken(OT_SQUARE_BRACKETS_CLOSE); // TODO - should be "parseBlock"
 
 		return op;
 	}

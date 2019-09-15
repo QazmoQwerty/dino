@@ -85,12 +85,8 @@ void OperatorsMap::setup()
 {
 	/*
 		TODO - operators to add: 
-		  - unary +/-
-		  - more specific meanings for brackets (parenthesis, function calls, subscripts, etc.)
-		  - more specific meanings for periods (member accesss)
 		  - different operators for pre/post-fix increment/decrement ("++"/"--"), since they have differenc precedence and associativity
 		  - special comparison operators (like ".==.")
-		  - word operators: "for", "while", "new", etc.
 		  - do we need operators for backslash ("\") and colon (":")?
 	*/
 

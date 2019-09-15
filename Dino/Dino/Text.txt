@@ -9,16 +9,11 @@ else if m == 2 {
 l = y.name2.name3 + 2
 name = 4;*/
 
-
-
 /*int x(int x) {
 	d = 2
 }*/
 
-func(1, 2, 4 * 4)
-
-
-/*int i;
+int i;
 i = 2;
 if i * 2 == 4 && i < 1 {
 	print(i * 3)
@@ -38,4 +33,4 @@ string z;
 z = "abc"
 z = z + z
 print(z)
-print(x, 12, "hello" + " world")*/
+print(x, 12, "hello" + " world")
