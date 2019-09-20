@@ -3,11 +3,11 @@ digraph G {
 1 [label="<VariableDeclaration>\nint x"];
 3 [label="<BinaryOperator>\n="];3->2;3->4;
 2 [label="<Variable>\nx"];
-4 [label="<IntegerLiteral>\n1"];
+4 [label="<IntegerLiteral>\n10"];
 5 [label="<Do>"];5->13;5->6;
-13 [label="<BinaryOperator>\n!="];13->12;13->14;
+13 [label="<BinaryOperator>\n<"];13->12;13->14;
 12 [label="<Variable>\nx"];
-14 [label="<IntegerLiteral>\n2"];
+14 [label="<IntegerLiteral>\n0"];
 6 [label="<Block>"];6->8;6->10;
 8 [label="<FunctionCall>\nprint"];8->9;
 9 [label="<Variable>\nx"];
