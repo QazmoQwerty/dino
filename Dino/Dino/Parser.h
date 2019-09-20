@@ -34,6 +34,7 @@ private:
 	
 	bool eatLineBreak() { if (peekToken()->_type == TT_LINE_BREAK) { nextToken(); return true; } return false; }
 
+	AST::Node* std(Token* token);
 	AST::Node* nud(Token* token);
 	AST::Node* led(AST::Node * left, Token * token);
 
