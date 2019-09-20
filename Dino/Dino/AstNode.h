@@ -122,6 +122,35 @@ namespace AST
 		vector<Expression*> getParameters() { return _parameters; }
 	};
 
+	class VariableDeclaration : public ExpressionStatement
+	{
+		Identificator _varId;	// Temporary
+		Identificator _type;
+		vector<Identificator> _modifiers; // public, static, reactive, etc.
+
+	public:
+		VariableDeclaration(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		VariableDeclaration() : ExpressionStatement() {};
+		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
+		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
+		virtual string toString() {
+			string modifiers = "";
+			for (auto s : _modifiers) {
+				modifiers += s.name + ' ';
+				std::cout << s.name << std::endl;
+			}
+			return "<VariableDeclaration>\\n" + modifiers + _type.name + ' ' + _varId.name;
+		};
+		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+
+		void setVarId(Identificator varId) { _varId = varId; }
+		void setType(Identificator type) { _type = type; }
+		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
+		Identificator getVarId() { return _varId; }
+		Identificator getVarType() { return _type; }
+		vector<Identificator> getModifiers() { return _modifiers; }
+	};
+
 	/********************** Statements **********************/
 
 	class StatementBlock : public Statement
@@ -200,36 +229,6 @@ namespace AST
 		virtual string toString() { return "<Do>"; };
 		
 	};
-
-	class VariableDeclaration : public Statement
-	{
-		Identificator _varId;	// Temporary
-		Identificator _type;
-		vector<Identificator> _modifiers; // public, static, reactive, etc.
-
-	public:
-		VariableDeclaration(unsigned int nodeId) : Statement(nodeId) {};
-		VariableDeclaration() : Statement() {};
-		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
-		virtual string toString() { 
-			string modifiers = "";
-			for (auto s : _modifiers) {
-				modifiers += s.name + ' ';
-				std::cout << s.name << std::endl;
-			}
-			return "<VariableDeclaration>\\n" + modifiers + _type.name + ' ' + _varId.name; 
-		};
-		virtual vector<Node*> getChildren() { return vector<Node*>(); };
-
-		void setVarId(Identificator varId) { _varId = varId; }
-		void setType(Identificator type) { _type = type; }
-		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
-		Identificator getVarId() { return _varId; }
-		Identificator getVarType() { return _type; }
-		vector<Identificator> getModifiers() { return _modifiers; }
-	};
-
-	
 
 	/********************** Expressions **********************/
 

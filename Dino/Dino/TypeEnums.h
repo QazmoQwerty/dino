@@ -163,6 +163,7 @@ enum StatementType
 
 enum ExpressionType
 {
+	ET_VARIABLE_DECLARATION,
 	ET_INCREMENT,
 	ET_ASSIGNMENT,
 	ET_BINARY_OPERATION,

@@ -241,6 +241,16 @@ AST::Node * Parser::nud(Token * token)
 			nextToken(OT_CURLY_BRACES_CLOSE);
 			return inner;
 		}
+		if (ot->_operator._type == OT_INCREMENT || ot->_operator._type == OT_DECREMENT)
+		{
+			auto op = new AST::Increment();
+			op->setOperator(ot->_operator);
+			int prec = ot->_operator._precedence;
+			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
+			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
+		}
 
 		auto op = new AST::UnaryOperation();
 		op->setOperator(ot->_operator);
@@ -279,6 +289,18 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				return funcCall;
 			}
 			else throw "Expression preceding parenthesis of apparent call must be a variable id";
+		}
+		if (OperatorsMap::isAssignment(ot->_operator._type))
+		{
+			auto op = new AST::Assignment();
+			op->setOperator(ot->_operator);
+			int prec = ot->_operator._precedence;
+			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
+			try { op->setLeft(dynamic_cast<AST::Expression*>(left)); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			try { op->setRight(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
 		}
 
 		auto op = new AST::BinaryOperation();

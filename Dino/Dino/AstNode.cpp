@@ -33,6 +33,13 @@ vector<AST::Node*> AST::Assignment::getChildren()
 	return v;
 }
 
+vector<AST::Node*> AST::Increment::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
+	return v;
+}
+
 vector<AST::Node*> AST::BinaryOperation::getChildren()
 {
 	vector<Node*> v;
