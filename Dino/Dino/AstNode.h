@@ -217,6 +217,25 @@ namespace AST
 		
 	};
 
+	class UnaryOperationStatement : public Statement
+	{
+		Operator _operator;
+		Expression* _expression;
+
+	public:
+		UnaryOperationStatement(unsigned int nodeId) : Statement(nodeId) {};
+		UnaryOperationStatement() : Statement() {};
+		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
+		virtual string toString() { return string() + "<UnaryOperatorStatement>\\n" + _operator._str; };
+		virtual vector<Node*> getChildren();
+
+		void setOperator(Operator op) { _operator = op; }
+		void setExpression(Expression* expression) { _expression = expression; }
+
+		Operator getOperator() { return _operator; }
+		Expression* getExpression() { return _expression; }
+	};
+
 	/********************** Expressions **********************/
 
 	class BinaryOperation : public Expression

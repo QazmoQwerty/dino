@@ -214,6 +214,17 @@ AST::Node * Parser::std(Token * token)
 
 			return node;
 		}
+
+		if (ot->_operator._type == OT_RETURN)
+		{
+			auto op = new AST::UnaryOperationStatement();
+			op->setOperator(ot->_operator);
+			int prec = ot->_operator._precedence;
+			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
+			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
+		}
 	}
 	return NULL;
 }

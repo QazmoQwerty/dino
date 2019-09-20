@@ -35,6 +35,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_IF,
 		OT_ELSE,
 		OT_FOR,
+		OT_RETURN,
 	};
 	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
 }
@@ -152,4 +153,5 @@ void OperatorsMap::setup()
 	_wordsMap["do"] = { OT_DO, "do", NULL, NULL };
 	_wordsMap["if"] = { OT_IF, "if", NULL, NULL };
 	_wordsMap["else"] = { OT_ELSE, "else", NULL, NULL };
+	_wordsMap["return"] = { OT_RETURN, "return", NULL, NULL };
 }

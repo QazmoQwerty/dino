@@ -80,3 +80,10 @@ vector<AST::Node*> AST::Function::getChildren()
 	v.push_back(_content);
 	return v;
 }
+
+vector<AST::Node*> AST::UnaryOperationStatement::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
+	return v;
+}
