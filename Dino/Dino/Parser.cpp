@@ -207,6 +207,9 @@ AST::Node * Parser::nud(Token * token)
 				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
 			else throw "could not do parse while loop";
 
+			while (peekToken()->_type == TT_LINE_BREAK)
+				nextToken();
+
 			if (!eatOperator(OT_WHILE))
 				throw "Missing 'while' in do-while statement.";
 
