@@ -89,6 +89,54 @@ AST::Node * Parser::std(Token * token)
 			return node;
 		}
 
+		if (ot->_operator._type == OT_FOR)
+		{
+			AST::Block *node = new AST::Block();
+
+			while (!eatLineBreak())
+			{
+				AST::Node *decleration = parse();
+				if (decleration->isExpression() && decleration->getNodeId())
+					node->addStatement((AST::Expression*)decleration);
+				else throw "for's decleration statement failed";
+			}
+
+			AST::WhileLoop * whileNode = new AST::WhileLoop();
+
+			AST::Node* inner = parse();
+			if (inner->isExpression())
+				whileNode->setCondition((AST::Expression*)inner);
+			else throw "could not convert from Node* to Expression*";
+
+			if (!eatLineBreak())
+				throw "miss 3rd part of for loop";
+
+			vector<AST::Node *> increcments;
+			do
+			{
+				AST::Node *increcment = parse();
+				if (increcment->getNodeId())
+					increcments.push_back(increcment);
+				else throw "for's decleration statement failed";
+			} while (eatOperator(OT_COMMA));
+
+			while (peekToken()->_type == TT_LINE_BREAK)
+				nextToken();
+
+			AST::Block *innerBlock = new AST::Block();
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				innerBlock = parseBlock(OT_CURLY_BRACES_CLOSE);
+			else throw "could not parse while loop";
+
+			for (AST::Node* increcment : increcments)
+				innerBlock->addStatement(increcment);
+
+			whileNode->setStatement(innerBlock);
+
+			node->addStatement(whileNode);
+			return node;
+		}
+
 		if (ot->_operator._type == OT_DO)
 		{
 			AST::DoWhileLoop * node = new AST::DoWhileLoop();
@@ -224,108 +272,6 @@ AST::Node * Parser::nud(Token * token)
 	if (token->_type == TT_OPERATOR && OperatorsMap::isUnary(((OperatorToken*)token)->_operator._type))
 	{
 		auto ot = ((OperatorToken*)token);
-
-		if (ot->_operator._type == OT_WHILE)
-		{
-			AST::WhileLoop * node = new AST::WhileLoop();
-			AST::Node* inner = parse();
-			if (inner->isExpression())
-				node->setCondition((AST::Expression*)inner);
-			else throw "could not convert from Node* to Expression*";
-			
-			while (peekToken()->_type == TT_LINE_BREAK)
-				nextToken();
-
-			if (eatOperator(OT_CURLY_BRACES_OPEN))			
-				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
-			else throw "could not parse while loop";
-
-			return node;
-		}
-
-		if (ot->_operator._type == OT_FOR)
-		{
-			AST::Block *node = new AST::Block();
-
-			while (!eatLineBreak())
-			{
-				AST::Node *decleration = parse();
-				if (decleration->isExpression() && decleration->getNodeId())
-					node->addStatement((AST::Expression*)decleration);
-				else throw "for's decleration statement failed";
-			}
-
-			AST::WhileLoop * whileNode = new AST::WhileLoop();
-			
-			AST::Node* inner = parse();
-			if (inner->isExpression())
-				whileNode->setCondition((AST::Expression*)inner);
-			else throw "could not convert from Node* to Expression*";
-			
-			if (!eatLineBreak())
-				throw "miss 3rd part of for loop";
-
-			vector<AST::Node *> increcments;
-			do
-			{
-				AST::Node *increcment = parse();
-				if (increcment->getNodeId())
-					increcments.push_back(increcment);
-				else throw "for's decleration statement failed";
-			} while (eatOperator(OT_COMMA));
-
-			while (peekToken()->_type == TT_LINE_BREAK)
-				nextToken();
-
-			AST::Block *innerBlock = new AST::Block();
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
-				innerBlock = parseBlock(OT_CURLY_BRACES_CLOSE);
-			else throw "could not parse while loop";
-			
-			for (AST::Node* increcment : increcments)
-				innerBlock->addStatement(increcment);
-
-			whileNode->setStatement(innerBlock);
-
-			node->addStatement(whileNode);
-			return node;
-		}
-
-		if (ot->_operator._type == OT_IF)
-		{
-			AST::IfThenElse * node = new AST::IfThenElse();
-			AST::Node* inner = parse();
-			if (inner->isExpression())
-				node->setCondition((AST::Expression*)inner);
-			else throw "could not convert from Node* to Expression*";
-
-			while (peekToken()->_type == TT_LINE_BREAK)
-				nextToken();
-
-			if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
-			{
-				nextToken();
-				node->setThenBranch(parseBlock(OT_CURLY_BRACES_CLOSE));
-			}
-			else throw "could not parse while loop";
-
-			bool b = false;
-			while (peekToken()->_type == TT_LINE_BREAK)
-			{
-				b = true;
-				nextToken();
-			}
-			if (eatOperator(OT_ELSE))
-			{
-				auto p = parse();
-				if (p->isStatement())
-					node->setElseBranch((AST::Statement*)p);
-				else throw "else branch must be a statement!";
-			}
-			else if (b) _index--;
-
-			return node;
-		}
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{
