@@ -82,8 +82,5 @@
     <Text Include="DinoSyntax.txt">
       <Filter>Test Code Examples</Filter>
     </Text>
-    <Text Include="DoWhile.txt">
-      <Filter>Test Code Examples</Filter>
-    </Text>
   </ItemGroup>
 </Project>
