@@ -196,6 +196,28 @@ AST::Node * Parser::nud(Token * token)
 			return node;
 		}
 
+		if (ot->_operator._type == OT_DO)
+		{
+			AST::DoWhileLoop * node = new AST::DoWhileLoop();
+
+			while (peekToken()->_type == TT_LINE_BREAK)
+				nextToken();
+
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else throw "could not do parse while loop";
+
+			if (!eatOperator(OT_WHILE))
+				throw "Missing 'while' in do-while statement.";
+
+			AST::Node* inner = parse();
+			if (inner->isExpression())
+				node->setCondition((AST::Expression*)inner);
+			else throw "could not convert from Node* to Expression*";
+
+			return node;
+		}
+
 		if (ot->_operator._type == OT_IF)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();

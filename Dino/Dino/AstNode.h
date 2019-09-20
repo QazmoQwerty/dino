@@ -120,6 +120,16 @@ namespace AST
 		Statement* getStatement() { return _statement; }
 	};
 
+	class DoWhileLoop : public WhileLoop
+	{
+	public:
+		DoWhileLoop(unsigned int nodeId) : WhileLoop(nodeId) {};
+		DoWhileLoop() : WhileLoop() {};
+		virtual StatementType getType() { return ST_DO_WHILE_LOOP; };
+		virtual string toString() { return "<Do>"; };
+		
+	};
+
 	class VariableDeclaration : public Statement
 	{
 		Identificator _varId;	// Temporary

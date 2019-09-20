@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="DinoSyntax.txt" />
+    <Text Include="DoWhile.txt" />
     <Text Include="Text.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

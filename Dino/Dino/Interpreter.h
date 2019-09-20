@@ -84,6 +84,7 @@ private:
 	void interpretVariableDeclaration(AST::VariableDeclaration* node);
 	void interpretIfThenElse(AST::IfThenElse* node);
 	void interpretWhileLoop(AST::WhileLoop* node);
+	void interpretDoWhileLoop(AST::DoWhileLoop* node);
 public:
 	Value* interpret(AST::Node* node);
 };

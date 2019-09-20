@@ -46,6 +46,9 @@ Value* Interpreter::interpret(AST::Node * node)
 		case(ST_WHILE_LOOP):
 			interpretWhileLoop((AST::WhileLoop*)node);
 			break;
+		case(ST_DO_WHILE_LOOP):
+			interpretDoWhileLoop((AST::DoWhileLoop*)node);
+			break;
 		}
 	}
 
@@ -233,4 +236,12 @@ void Interpreter::interpretWhileLoop(AST::WhileLoop * node)
 	if (interpret(node->getCondition())->getType() == "bool")
 		while (((BoolValue*)interpret(node->getCondition()))->getValue())
 			interpret(node->getStatement());
+}
+
+void Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
+{
+	if (interpret(node->getCondition())->getType() == "bool")
+		do {
+			interpret(node->getStatement());
+		} while (((BoolValue*)interpret(node->getCondition()))->getValue());
 }
