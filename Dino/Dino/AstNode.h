@@ -30,7 +30,7 @@ namespace AST
 		virtual vector<Node*> getChildren() = 0;
 	};
 
-	class Statement : public Node
+	class Statement : virtual public Node
 	{
 	public:
 		Statement(unsigned int nodeId) : Node(nodeId) {};
@@ -41,7 +41,7 @@ namespace AST
 		virtual StatementType getStatementType() = 0;
 	};
 
-	class Expression : public Node
+	class Expression : virtual public Node
 	{
 	public:
 		Expression(unsigned int nodeId) : Node(nodeId) {};
@@ -52,16 +52,74 @@ namespace AST
 		virtual ExpressionType getExpressionType() = 0;
 	};
 
-	class ExpressionStatement : public Expression, Statement
+	class ExpressionStatement : public Expression, public Statement
 	{
 	public:
 		ExpressionStatement(unsigned int nodeId) : Expression(nodeId) {};
 		ExpressionStatement() : Expression() {};
-		virtual bool isStatement() { return false; };
+		virtual bool isStatement() { return true; };
 		virtual bool isExpression() { return true; };
 
 		//virtual StatementType getStatementType() = 0;
 		//virtual ExpressionType getExpressionType() = 0;
+	};
+
+	/***************** ExpressionStatements *****************/
+
+	class Assignment : public ExpressionStatement
+	{
+		Operator _operator;
+		Expression* _left;	// Temporary
+		Expression* _right;
+
+	public:
+		Assignment(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		Assignment() : ExpressionStatement() {};
+		virtual StatementType getStatementType() { return ST_ASSIGNMENT; };
+		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; };
+		virtual string toString() { return "<Assignment>\\n" + _operator._str; };
+		virtual vector<Node*> getChildren();
+
+		void setOperator(Operator op) { _operator = op; }
+		void setLeft(Expression* left) { _left = left; }
+		void setRight(Expression* right) { _right = right; }
+	};
+
+	class Increment : public ExpressionStatement
+	{
+		Operator _operator;
+		Expression* _expression;
+
+	public:
+		Increment(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		Increment() : ExpressionStatement() {};
+		virtual StatementType getStatementType() { return ST_INCREMENT; };
+		virtual ExpressionType getExpressionType() { return ET_INCREMENT; };
+		virtual string toString() { return "<Increment>\\n" + _operator._str; };
+		virtual vector<Node*> getChildren();
+
+		void setOperator(Operator op) { _operator = op; }
+		void setExpression(Expression* expression) { _expression = expression; }
+	};
+
+	class FunctionCall : public ExpressionStatement
+	{
+		Identificator _functionId;	// Temporary
+		vector<Expression*> _parameters;
+
+	public:
+		FunctionCall(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		FunctionCall() : ExpressionStatement() {};
+		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
+		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
+		virtual string toString() { return string() + "<FunctionCall>\\n" + _functionId.name; };
+		virtual vector<Node*> getChildren();
+
+		void setFunctionId(Identificator funcId) { _functionId = funcId; }
+		void addParameter(Expression* parameter) { _parameters.push_back(parameter); }
+
+		Identificator getFunctionId() { return _functionId; }
+		vector<Expression*> getParameters() { return _parameters; }
 	};
 
 	/********************** Statements **********************/
@@ -79,7 +137,8 @@ namespace AST
 		void addStatement(Statement* statement) { _statements.push_back(statement); }
 	};
 
-	class Block : public Statement
+	// TODO - remove
+	/*class Block : public Statement
 	{
 		vector<Node*> _statements;
 	public:
@@ -89,7 +148,7 @@ namespace AST
 		virtual string toString() { return "<Block>"; };
 		virtual vector<Node*> getChildren() { return _statements; }
 		void addStatement(Node* statement) { _statements.push_back(statement); }
-	};
+	};  */
 
 	class IfThenElse : public Statement
 	{
@@ -170,23 +229,7 @@ namespace AST
 		vector<Identificator> getModifiers() { return _modifiers; }
 	};
 
-	class Assignment : public Statement
-	{
-		Operator _operator;
-		Identificator _left;	// Temporary
-		Expression* _right;
-
-	public:
-		Assignment(unsigned int nodeId) : Statement(nodeId) {};
-		Assignment() : Statement() {};
-		virtual StatementType getStatementType() { return ST_ASSIGNMENT; };
-		virtual string toString() { return "<Assignment>\\n" + _operator._str; };
-		virtual vector<Node*> getChildren();
-
-		void setOperator(Operator op) { _operator = op; }
-		void setLeft(Identificator left) { _left = left; }
-		void setRight(Expression* right) { _right = right; }
-	};
+	
 
 	/********************** Expressions **********************/
 
@@ -229,25 +272,6 @@ namespace AST
 
 		Operator getOperator() { return _operator; }
 		Expression* getExpression() { return _expression; }
-	};
-
-	class FunctionCall : public Expression
-	{
-		Identificator _functionId;	// Temporary
-		vector<Expression*> _parameters;
-
-	public:
-		FunctionCall(unsigned int nodeId) : Expression(nodeId) {};
-		FunctionCall() : Expression() {};
-		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
-		virtual string toString() { return string() + "<FunctionCall>\\n" + _functionId.name; };
-		virtual vector<Node*> getChildren();
-
-		void setFunctionId(Identificator funcId) { _functionId = funcId; }
-		void addParameter(Expression* parameter) { _parameters.push_back(parameter); }
-
-		Identificator getFunctionId() { return _functionId; }
-		vector<Expression*> getParameters() { return _parameters; }
 	};
 
 	class Variable : public Expression
@@ -353,7 +377,7 @@ namespace AST
 	class Function : public Literal
 	{
 		vector<VariableDeclaration*> _parameters;
-		Block* _content;
+		StatementBlock* _content;
 
 	public:
 		Function(unsigned int nodeId) : Literal(nodeId, LT_FUNCTION) {}
@@ -361,10 +385,10 @@ namespace AST
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
 
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
-		void setContent(Block* content) { _content = content; }
+		void setContent(StatementBlock* content) { _content = content; }
 
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
-		Block* getContent() { return _content; }
+		StatementBlock* getContent() { return _content; }
 	};
 
 	class Null : public Literal

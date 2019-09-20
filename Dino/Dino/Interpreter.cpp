@@ -4,23 +4,24 @@ Value* Interpreter::interpret(AST::Node * node)
 {
 	if (node->isExpression())
 	{
-		auto expression = (AST::Expression*)node;
+		//auto expression = (AST::Expression*)node;
+		auto expression = dynamic_cast<AST::Expression*>(node);
 		switch (expression->getExpressionType())
 		{
 		case (ET_BINARY_OPERATION):
-			return interpretBinaryOp((AST::BinaryOperation*)node);
+			return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
 		case (ET_UNARY_OPERATION):
-			return interpretUnaryOp((AST::UnaryOperation*)node);
+			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
 		case (ET_CONDITIONAL_EXPRESSION):
 			break;
 		case (ET_FUNCTION_CALL):
-			interpretFuncCall((AST::FunctionCall*)node);
+			interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
 			break;
 		case (ET_LITERAL):
-			return interpretLiteral((AST::Literal*)node);
+			return interpretLiteral(dynamic_cast<AST::Literal*>(node));
 			break;
 		case (ET_VARIABLE):
-			return interpretVariable((AST::Variable*)node);
+			return interpretVariable(dynamic_cast<AST::Variable*>(node));
 			break;
 		default:
 			break;
@@ -28,26 +29,26 @@ Value* Interpreter::interpret(AST::Node * node)
 	}
 	else
 	{
-		auto statement = (AST::Statement*)node;
+		auto statement = dynamic_cast<AST::Statement*>(node);
 		switch (statement->getStatementType())
 		{
 		/*case(ST_ASSIGNMENT):
 			break;*/
 		case(ST_IF_THEN_ELSE):
-			interpretIfThenElse((AST::IfThenElse*)node);
+			interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
 			break;
 		case(ST_STATEMENT_BLOCK):
-			for (auto i : ((AST::StatementBlock*)node)->getChildren())
+			for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
 				interpret(i);
 			break;
 		case(ST_VARIABLE_DECLARATION):
-			interpretVariableDeclaration((AST::VariableDeclaration*)node);
+			interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
 			break;
 		case(ST_WHILE_LOOP):
-			interpretWhileLoop((AST::WhileLoop*)node);
+			interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
 			break;
 		case(ST_DO_WHILE_LOOP):
-			interpretDoWhileLoop((AST::DoWhileLoop*)node);
+			interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
 			break;
 		}
 	}

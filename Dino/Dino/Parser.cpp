@@ -21,9 +21,9 @@ Token * Parser::nextToken(OperatorType expected)
 	return NULL;
 }
 
-AST::Block * Parser::parseBlock(OperatorType expected)
+AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 {
-	auto block = new AST::Block();
+	auto block = new AST::StatementBlock();
 	while (peekToken() && !eatOperator(expected))
 	{
 		if (peekToken()->_type == TT_LINE_BREAK)
@@ -31,9 +31,13 @@ AST::Block * Parser::parseBlock(OperatorType expected)
 		if (eatOperator(expected))
 			return block;
 		auto node = parse();
-		if (node)
-			block->addStatement(node);
-		//else std::cout << "Empty block?" << std::endl;
+		if (node) 
+		{
+			if (node->isStatement())
+				block->addStatement(dynamic_cast<AST::Statement*>(node));
+			else throw "unused expression";
+		}
+
 		if (eatOperator(expected))
 			return block;
 		nextToken();
@@ -76,7 +80,7 @@ AST::Node * Parser::std(Token * token)
 			AST::WhileLoop * node = new AST::WhileLoop();
 			AST::Node* inner = parse();
 			if (inner->isExpression())
-				node->setCondition((AST::Expression*)inner);
+				node->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw "could not convert from Node* to Expression*";
 
 			while (peekToken()->_type == TT_LINE_BREAK)
@@ -105,7 +109,7 @@ AST::Node * Parser::std(Token * token)
 
 			AST::Node* inner = parse();
 			if (inner->isExpression())
-				node->setCondition((AST::Expression*)inner);
+				node->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw "could not convert from Node* to Expression*";
 
 			return node;
@@ -116,7 +120,7 @@ AST::Node * Parser::std(Token * token)
 			AST::IfThenElse * node = new AST::IfThenElse();
 			AST::Node* inner = parse();
 			if (inner->isExpression())
-				node->setCondition((AST::Expression*)inner);
+				node->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw "could not convert from Node* to Expression*";
 
 			while (peekToken()->_type == TT_LINE_BREAK)
@@ -139,7 +143,7 @@ AST::Node * Parser::std(Token * token)
 			{
 				auto p = parse();
 				if (p->isStatement())
-					node->setElseBranch((AST::Statement*)p);
+					node->setElseBranch(dynamic_cast<AST::Statement*>(p));
 				else throw "else branch must be a statement!";
 			}
 			else if (b) _index--;
@@ -185,9 +189,9 @@ AST::Node * Parser::nud(Token * token)
 					//	throw "Could not convert from Node* to Expression*";
 					if (param == NULL)
 						break;
-					if (!param->isStatement() || ((AST::Statement*)param)->getStatementType() != ST_VARIABLE_DECLARATION)
+					if (!param->isStatement() || (dynamic_cast<AST::Statement*>(param))->getStatementType() != ST_VARIABLE_DECLARATION)
 						throw "could not convert to VariableDeclaration";
-					func->addParameter((AST::VariableDeclaration*)param);
+					func->addParameter(dynamic_cast<AST::VariableDeclaration*>(param));
 					peekToken();
 					eatOperator(OT_COMMA);
 				}
@@ -242,7 +246,7 @@ AST::Node * Parser::nud(Token * token)
 		op->setOperator(ot->_operator);
 		int prec = ot->_operator._precedence;
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-		try { op->setExpression((AST::Expression*)parse(prec)); }
+		try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 		return op;
 		
@@ -258,17 +262,17 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{	
-			if (left->isExpression() && ((AST::Expression*)left)->getExpressionType() == ET_VARIABLE)
+			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE)
 			{
 				auto funcCall = new AST::FunctionCall();
-				auto varId = ((AST::Variable*)left)->getVarId();	// this line needs to be split into two parts for some wierd reason
+				auto varId = dynamic_cast<AST::Variable*>(left)->getVarId();	// this line needs to be split into two parts for some wierd reason
 				funcCall->setFunctionId(varId);
 				while (!eatOperator(OT_PARENTHESIS_CLOSE))
 				{
 					auto exp = parse(10);
 					if (!exp->isExpression())
 						throw "Could not convert from Node* to Expression*";
-					funcCall->addParameter((AST::Expression*)exp);
+					funcCall->addParameter(dynamic_cast<AST::Expression*>(exp));
 					if (isOperator(peekToken(), OT_COMMA))
 						nextToken();
 				}
@@ -281,9 +285,9 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		op->setOperator(ot->_operator);
 		int prec = ot->_operator._precedence;
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-		try { op->setLeft((AST::Expression*)left); }
+		try { op->setLeft(dynamic_cast<AST::Expression*>(left)); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
-		try { op->setRight((AST::Expression*)parse(prec)); }
+		try { op->setRight(dynamic_cast<AST::Expression*>(parse(prec))); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 
 		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
