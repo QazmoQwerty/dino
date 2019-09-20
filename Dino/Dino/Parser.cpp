@@ -93,6 +93,59 @@ AST::Node * Parser::std(Token * token)
 			return node;
 		}
 
+		if (ot->_operator._type == OT_FOR)
+		{
+			AST::Block *node = new AST::Block();
+
+			if (!eatLineBreak())
+			{
+				do
+				{
+					AST::Node *decleration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
+					if (decleration->isExpression() && decleration->getNodeId())
+						node->addStatement((AST::Expression*)decleration);
+					else throw "for's decleration statement failed";
+				} while (eatOperator(OT_COMMA));
+			}
+			AST::WhileLoop * whileNode = new AST::WhileLoop();
+
+			if (!eatLineBreak())
+				throw "miss part 2 of for";
+
+			AST::Node* inner = parse();
+			if (inner->isExpression())
+				whileNode->setCondition((AST::Expression*)inner);
+			else throw "could not convert from Node* to Expression*";
+
+			if (!eatLineBreak())
+				throw "miss 3rd part of for loop";
+
+			vector<AST::Node *> increcments;
+			do
+			{
+				AST::Node *increcment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
+				if (increcment->getNodeId())
+					increcments.push_back(increcment);
+				else throw "for's decleration statement failed";
+			} while (eatOperator(OT_COMMA));
+
+			while (peekToken()->_type == TT_LINE_BREAK)
+				nextToken();
+
+			AST::Block *innerBlock = new AST::Block();
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				innerBlock = parseBlock(OT_CURLY_BRACES_CLOSE);
+			else throw "could not parse while loop";
+
+			for (AST::Node* increcment : increcments)
+				innerBlock->addStatement(increcment);
+
+			whileNode->setStatement(innerBlock);
+
+			node->addStatement(whileNode);
+			return node;
+		}
+
 		if (ot->_operator._type == OT_DO)
 		{
 			AST::DoWhileLoop * node = new AST::DoWhileLoop();
@@ -119,7 +172,8 @@ AST::Node * Parser::std(Token * token)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();
 			AST::Node* inner = parse();
-			if (inner->isExpression())
+
+			if (inner && inner->isExpression())
 				node->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw "could not convert from Node* to Expression*";
 
@@ -141,8 +195,16 @@ AST::Node * Parser::std(Token * token)
 			}
 			if (eatOperator(OT_ELSE))
 			{
-				auto p = parse();
-				if (p->isStatement())
+				AST::Node *p = NULL;
+				if (isOperator(peekToken(), OT_IF))
+				{
+					p = parse();
+				}
+				else if (eatOperator(OT_CURLY_BRACES_OPEN))
+				{
+					p = parseBlock(OT_CURLY_BRACES_CLOSE);
+				}
+				if (p && p->isStatement())
 					node->setElseBranch(dynamic_cast<AST::Statement*>(p));
 				else throw "else branch must be a statement!";
 			}
@@ -261,7 +323,7 @@ AST::Node * Parser::nud(Token * token)
 		return op;
 		
 	}
-	return NULL;	// Error
+	return NULL; // Error
 }
 
 AST::Node * Parser::led(AST::Node * left, Token * token)

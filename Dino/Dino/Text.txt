@@ -1,4 +1,12 @@
+int x
 
+x = 6
+
+if x == 5
+{
+	print("first: correct")
+}
+else if x == 2
 {
 	int x = 0
 	while x < 100 {
