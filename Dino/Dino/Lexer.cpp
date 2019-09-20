@@ -10,7 +10,6 @@ void Lexer::setup()
 {
 	_map[' '] = _map['\t'] = _map['\r'] = CT_WHITESPACE;
 	_map['\n'] = CT_NEWLINE;
-	_map[';'] = CT_LINE_BREAK;
 	_map['_'] = CT_LETTER;
 	for (char c = 'a'; c <= 'z'; c++)
 		_map[c] = CT_LETTER;
@@ -21,6 +20,7 @@ void Lexer::setup()
 	for (auto c : OperatorsMap::getOperators())
 		for (unsigned int i = 0; i < c.first.length(); i++)
 			_map[c.first[i]] = CT_OPERATOR;
+	_map['|'] = CT_LINE_BREAK;
 }
 
 /*

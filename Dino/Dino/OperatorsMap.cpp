@@ -121,9 +121,9 @@ void OperatorsMap::setup()
 	_map["!="]	=	{ OT_NOT_EQUAL,				"!=",	LEFT_TO_RIGHT,		80 };
 	_map["&"]	=	{ OT_BITWISE_AND,			"&",	LEFT_TO_RIGHT,		70 };
 	_map["^"]	=	{ OT_BITWISE_XOR,			"^",	LEFT_TO_RIGHT,		60 };
-	_map["|"]	=	{ OT_BITWISE_OR,			"|",	LEFT_TO_RIGHT,		50 };
+	_map["?"]	=	{ OT_BITWISE_OR,			"?",	LEFT_TO_RIGHT,		50 };
 	_map["&&"]	=	{ OT_LOGICAL_AND,			"&&",	LEFT_TO_RIGHT,		40 };
-	_map["||"]	=	{ OT_LOGICAL_OR,			"||",	LEFT_TO_RIGHT,		30 };
+	_map["??"]	=	{ OT_LOGICAL_OR,			"??",	LEFT_TO_RIGHT,		30 };
 	_map["="]	=	{ OT_ASSIGN_EQUAL,			"=",	RIGHT_TO_LEFT,		20 };
 	_map["+="]	=	{ OT_ASSIGN_ADD,			"+=",	RIGHT_TO_LEFT,		20 };
 	_map["-="]	=	{ OT_ASSIGN_SUBTRACT,		"-=",	RIGHT_TO_LEFT,		20 };
@@ -133,7 +133,7 @@ void OperatorsMap::setup()
 	_map["<<="]	=	{ OT_ASSIGN_SHIFT_LEFT,		"<<=",	RIGHT_TO_LEFT,		20 };
 	_map[">>="]	=	{ OT_ASSIGN_SHIFT_RIGHT,	">>=",	RIGHT_TO_LEFT,		20 };
 	_map["&="]	=	{ OT_ASSIGN_BITWISE_AND,	"&=",	RIGHT_TO_LEFT,		20 };
-	_map["|="]	=	{ OT_ASSIGN_BITWISE_OR,		"|=",	RIGHT_TO_LEFT,		20 };
+	_map["?="]	=	{ OT_ASSIGN_BITWISE_OR,		"?=",	RIGHT_TO_LEFT,		20 };
 	_map["^="]	=	{ OT_ASSIGN_BITWISE_XOR,	"^=",	RIGHT_TO_LEFT,		20 };
 	_map[","]	=	{ OT_COMMA,					",",	LEFT_TO_RIGHT,		10 };
 

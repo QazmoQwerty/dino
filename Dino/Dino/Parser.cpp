@@ -51,7 +51,7 @@ AST::Node * Parser::parse(int lastPrecedence)
 	left = nud(tok);
 	if (left == NULL) return NULL;
 
-	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) /*&& !isOperator(peekToken(), OT_CURLY_BRACES_OPEN)*/ && precedence(peekToken()) > lastPrecedence)
+	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) && precedence(peekToken()) > lastPrecedence)
 		left = led(left, nextToken());
 	return left;
 }

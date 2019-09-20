@@ -43,7 +43,7 @@ vector<Token*>& Preparser::Preparse(vector<Token*> tokens)
 		if (token->_type == TT_SINGLE_LINE_COMMENT || token->_type == TT_NEWLINE)	// TODO - make it so you can have multiple-line sections of code.
 		{
 			token->_type = TT_LINE_BREAK;
-			token->_data = ";";
+			token->_data = "|";
 		}
 		if (token->_type == TT_LINE_BREAK && (preparsedTokens->size() == 0 || preparsedTokens->back()->_type == TT_LINE_BREAK))
 		{
