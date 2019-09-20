@@ -95,15 +95,15 @@ AST::Node * Parser::std(Token * token)
 
 		if (ot->_operator._type == OT_FOR)
 		{
-			AST::Block *node = new AST::Block();
+			AST::StatementBlock *node = new AST::StatementBlock();
 
 			if (!eatLineBreak())
 			{
 				do
 				{
-					AST::Node *decleration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
-					if (decleration->isExpression() && decleration->getNodeId())
-						node->addStatement((AST::Expression*)decleration);
+					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
+					if (declaration->isStatement()/* && declaration->getNodeId()*/)	// why is the commented out code here?
+						node->addStatement(dynamic_cast<AST::Statement*>(declaration));
 					else throw "for's decleration statement failed";
 				} while (eatOperator(OT_COMMA));
 			}
@@ -114,31 +114,33 @@ AST::Node * Parser::std(Token * token)
 
 			AST::Node* inner = parse();
 			if (inner->isExpression())
-				whileNode->setCondition((AST::Expression*)inner);
+				whileNode->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw "could not convert from Node* to Expression*";
 
 			if (!eatLineBreak())
 				throw "miss 3rd part of for loop";
 
-			vector<AST::Node *> increcments;
+			vector<AST::Node *> increments;
 			do
 			{
-				AST::Node *increcment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
-				if (increcment->getNodeId())
-					increcments.push_back(increcment);
+				AST::Node *increment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
+				if (increment->getNodeId())
+					increments.push_back(increment);
 				else throw "for's decleration statement failed";
 			} while (eatOperator(OT_COMMA));
 
 			while (peekToken()->_type == TT_LINE_BREAK)
 				nextToken();
 
-			AST::Block *innerBlock = new AST::Block();
+			AST::StatementBlock *innerBlock = new AST::StatementBlock();
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				innerBlock = parseBlock(OT_CURLY_BRACES_CLOSE);
 			else throw "could not parse while loop";
 
-			for (AST::Node* increcment : increcments)
-				innerBlock->addStatement(increcment);
+			for (AST::Node* increment : increments)
+				if (increment->isStatement())
+					innerBlock->addStatement(dynamic_cast<AST::Statement*>(increment));
+				else throw "TODO - error";
 
 			whileNode->setStatement(innerBlock);
 
