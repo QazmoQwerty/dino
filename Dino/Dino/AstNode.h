@@ -120,23 +120,14 @@ namespace AST
 		Statement* getStatement() { return _statement; }
 	};
 
-	class DoWhileLoop : public Statement	// Add 'for' as a seperate class?
+	class DoWhileLoop : public WhileLoop
 	{
-		Expression* _condition;
-		Statement* _statement;
-
 	public:
-		DoWhileLoop(unsigned int nodeId) : Statement(nodeId) {};
-		DoWhileLoop() : Statement() {};
+		DoWhileLoop(unsigned int nodeId) : WhileLoop(nodeId) {};
+		DoWhileLoop() : WhileLoop() {};
 		virtual StatementType getType() { return ST_DO_WHILE_LOOP; };
 		virtual string toString() { return "<Do>"; };
-		virtual vector<Node*> getChildren();
-
-		void setCondition(Expression* condition) { _condition = condition; }
-		void setStatement(Statement* statement) { _statement = statement; }
-
-		Expression* getCondition() { return _condition; }
-		Statement* getStatement() { return _statement; }
+		
 	};
 
 	class VariableDeclaration : public Statement

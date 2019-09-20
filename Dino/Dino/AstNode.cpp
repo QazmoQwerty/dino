@@ -25,14 +25,6 @@ vector<AST::Node*> AST::WhileLoop::getChildren()
 	return v;
 }
 
-vector<AST::Node*> AST::DoWhileLoop::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_condition);
-	v.push_back(_statement);
-	return v;
-}
-
 vector<AST::Node*> AST::Assignment::getChildren()
 {
 	vector<Node*> v;
