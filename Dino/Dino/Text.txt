@@ -1,4 +1,15 @@
-for x = 0, i = 1 | x < 10 | ++x, i = i + 1 {
-	print(x * i)
+int x
 
+x = 6
+
+if x == 5
+{
+	print("first: correct")
+}
+else if x == 2
+{
+	print("secont: correct")
+}
+else {
+	print("third: correct")
 }

@@ -168,7 +168,7 @@ AST::Node * Parser::std(Token * token)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();
 			AST::Node* inner = parse();
-			if (inner->isExpression())
+			if (inner && inner->isExpression())
 				node->setCondition((AST::Expression*)inner);
 			else throw "could not convert from Node* to Expression*";
 
@@ -190,8 +190,16 @@ AST::Node * Parser::std(Token * token)
 			}
 			if (eatOperator(OT_ELSE))
 			{
-				auto p = parse();
-				if (p->isStatement())
+				AST::Node *p = NULL;
+				if (isOperator(peekToken(), OT_IF))
+				{
+					p = parse();
+				}
+				else if (eatOperator(OT_CURLY_BRACES_OPEN))
+				{
+					p = parseBlock(OT_CURLY_BRACES_CLOSE);
+				}
+				if (p && p->isStatement())
 					node->setElseBranch((AST::Statement*)p);
 				else throw "else branch must be a statement!";
 			}
