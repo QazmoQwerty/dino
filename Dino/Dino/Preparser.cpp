@@ -37,7 +37,7 @@ vector<Token*>& Preparser::Preparse(vector<Token*> tokens)
 	auto eof = new OperatorToken;
 	eof->_data = "EOF";
 	eof->_type = TT_OPERATOR;
-	eof->_line = preparsedTokens->back()->_line;
+	eof->_line = preparsedTokens->back()->_line; // TODO: fix crush when file is empty.
 	eof->_operator = { OT_EOF, "EOF", NULL, NULL };
 	preparsedTokens->push_back(eof);
 	return *preparsedTokens;
