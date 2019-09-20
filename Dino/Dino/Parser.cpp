@@ -185,7 +185,7 @@ AST::Node * Parser::nud(Token * token)
 					//	throw "Could not convert from Node* to Expression*";
 					if (param == NULL)
 						break;
-					if (!param->isStatement() || ((AST::Statement*)param)->getType() != ST_VARIABLE_DECLARATION)
+					if (!param->isStatement() || ((AST::Statement*)param)->getStatementType() != ST_VARIABLE_DECLARATION)
 						throw "could not convert to VariableDeclaration";
 					func->addParameter((AST::VariableDeclaration*)param);
 					peekToken();
@@ -258,7 +258,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{	
-			if (left->isExpression() && ((AST::Expression*)left)->getType() == ET_VARIABLE)
+			if (left->isExpression() && ((AST::Expression*)left)->getExpressionType() == ET_VARIABLE)
 			{
 				auto funcCall = new AST::FunctionCall();
 				auto varId = ((AST::Variable*)left)->getVarId();	// this line needs to be split into two parts for some wierd reason

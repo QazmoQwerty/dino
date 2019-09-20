@@ -38,7 +38,7 @@ namespace AST
 		virtual bool isStatement() { return true; };
 		virtual bool isExpression() { return false; };
 
-		virtual StatementType getType() = 0;
+		virtual StatementType getStatementType() = 0;
 	};
 
 	class Expression : public Node
@@ -49,7 +49,19 @@ namespace AST
 		virtual bool isStatement() { return false; };
 		virtual bool isExpression() { return true; };
 
-		virtual ExpressionType getType() = 0;
+		virtual ExpressionType getExpressionType() = 0;
+	};
+
+	class ExpressionStatement : public Expression, Statement
+	{
+	public:
+		ExpressionStatement(unsigned int nodeId) : Expression(nodeId) {};
+		ExpressionStatement() : Expression() {};
+		virtual bool isStatement() { return false; };
+		virtual bool isExpression() { return true; };
+
+		//virtual StatementType getStatementType() = 0;
+		//virtual ExpressionType getExpressionType() = 0;
 	};
 
 	/********************** Statements **********************/
@@ -60,7 +72,7 @@ namespace AST
 	public:
 		StatementBlock(unsigned int nodeId) : Statement(nodeId) {};
 		StatementBlock() : Statement() {};
-		virtual StatementType getType() { return ST_STATEMENT_BLOCK; };
+		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		virtual string toString() { return "<StatementBlock>"; };
 		virtual vector<Node*> getChildren();
 
@@ -73,7 +85,7 @@ namespace AST
 	public:
 		Block(unsigned int nodeId) : Statement(nodeId) {};
 		Block() : Statement() {};
-		virtual StatementType getType() { return ST_STATEMENT_BLOCK; };
+		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		virtual string toString() { return "<Block>"; };
 		virtual vector<Node*> getChildren() { return _statements; }
 		void addStatement(Node* statement) { _statements.push_back(statement); }
@@ -88,7 +100,7 @@ namespace AST
 	public:
 		IfThenElse(unsigned int nodeId) : Statement(nodeId) {};
 		IfThenElse() : Statement() {};
-		virtual StatementType getType() { return ST_IF_THEN_ELSE; };
+		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
 		virtual string toString() { return "<IfThenElse>"; };
 		virtual vector<Node*> getChildren();
 
@@ -109,7 +121,7 @@ namespace AST
 	public:
 		WhileLoop(unsigned int nodeId) : Statement(nodeId) {};
 		WhileLoop() : Statement() {};
-		virtual StatementType getType() { return ST_WHILE_LOOP; };
+		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
 
@@ -125,7 +137,7 @@ namespace AST
 	public:
 		DoWhileLoop(unsigned int nodeId) : WhileLoop(nodeId) {};
 		DoWhileLoop() : WhileLoop() {};
-		virtual StatementType getType() { return ST_DO_WHILE_LOOP; };
+		virtual StatementType getStatementType() { return ST_DO_WHILE_LOOP; };
 		virtual string toString() { return "<Do>"; };
 		
 	};
@@ -139,7 +151,7 @@ namespace AST
 	public:
 		VariableDeclaration(unsigned int nodeId) : Statement(nodeId) {};
 		VariableDeclaration() : Statement() {};
-		virtual StatementType getType() { return ST_VARIABLE_DECLARATION; };
+		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
 		virtual string toString() { 
 			string modifiers = "";
 			for (auto s : _modifiers) {
@@ -167,7 +179,7 @@ namespace AST
 	public:
 		Assignment(unsigned int nodeId) : Statement(nodeId) {};
 		Assignment() : Statement() {};
-		virtual StatementType getType() { return ST_ASSIGNMENT; };
+		virtual StatementType getStatementType() { return ST_ASSIGNMENT; };
 		virtual string toString() { return "<Assignment>\\n" + _operator._str; };
 		virtual vector<Node*> getChildren();
 
@@ -187,7 +199,7 @@ namespace AST
 	public:
 		BinaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		BinaryOperation() : Expression() {};
-		virtual ExpressionType getType() { return ET_BINARY_OPERATION; };
+		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; };
 		virtual string toString() { return string() + "<BinaryOperator>\\n" + _operator._str; };
 		virtual vector<Node*> getChildren();
 
@@ -208,7 +220,7 @@ namespace AST
 	public:
 		UnaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		UnaryOperation() : Expression() {};
-		virtual ExpressionType getType() { return ET_UNARY_OPERATION; };
+		virtual ExpressionType getExpressionType() { return ET_UNARY_OPERATION; };
 		virtual string toString() { return string() + "<UnaryOperator>\\n" + _operator._str; };
 		virtual vector<Node*> getChildren();
 
@@ -227,7 +239,7 @@ namespace AST
 	public:
 		FunctionCall(unsigned int nodeId) : Expression(nodeId) {};
 		FunctionCall() : Expression() {};
-		virtual ExpressionType getType() { return ET_FUNCTION_CALL; };
+		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\n" + _functionId.name; };
 		virtual vector<Node*> getChildren();
 
@@ -249,7 +261,7 @@ namespace AST
 		Variable() : Expression() {};
 		Variable(unsigned int nodeId, Identificator varId) : Expression(nodeId) { _varId = varId; };
 		Variable(Identificator varId) : Expression() { _varId = varId; };
-		virtual ExpressionType getType() { return ET_VARIABLE; };
+		virtual ExpressionType getExpressionType() { return ET_VARIABLE; };
 		virtual string toString() { return "<Variable>\\n" + _varId.name; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 	};
@@ -263,7 +275,7 @@ namespace AST
 	public:
 		ConditionalExpression(unsigned int nodeId) : Expression(nodeId) {};
 		ConditionalExpression() : Expression() {};
-		virtual ExpressionType getType() { return ET_CONDITIONAL_EXPRESSION; };
+		virtual ExpressionType getExpressionType() { return ET_CONDITIONAL_EXPRESSION; };
 		virtual string toString() { return string() + "<ConditionaExpression>"; };
 		virtual vector<Node*> getChildren();
 
@@ -283,7 +295,7 @@ namespace AST
 	public:
 		Literal(unsigned int nodeId, LiteralType type) : Expression(nodeId) { _type = type; };
 		Literal(LiteralType type) : Expression() { _type = type; };
-		virtual ExpressionType getType() { return ET_LITERAL; };
+		virtual ExpressionType getExpressionType() { return ET_LITERAL; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 		LiteralType getLiteralType() { return _type; }
 	};

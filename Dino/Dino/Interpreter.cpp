@@ -5,7 +5,7 @@ Value* Interpreter::interpret(AST::Node * node)
 	if (node->isExpression())
 	{
 		auto expression = (AST::Expression*)node;
-		switch (expression->getType())
+		switch (expression->getExpressionType())
 		{
 		case (ET_BINARY_OPERATION):
 			return interpretBinaryOp((AST::BinaryOperation*)node);
@@ -29,7 +29,7 @@ Value* Interpreter::interpret(AST::Node * node)
 	else
 	{
 		auto statement = (AST::Statement*)node;
-		switch (statement->getType())
+		switch (statement->getStatementType())
 		{
 		/*case(ST_ASSIGNMENT):
 			break;*/
@@ -60,7 +60,7 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 	// TODO - assignment operators
 	if (OperatorsMap::isAssignment(node->getOperator()._type))
 	{
-		if (node->getLeft()->getType() != ET_VARIABLE)
+		if (node->getLeft()->getExpressionType() != ET_VARIABLE)
 			throw "cannot assign to anything but a variable!";
 
 		Value* rightVal = interpret(node->getRight());
