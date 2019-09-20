@@ -166,19 +166,6 @@ namespace AST
 		void addStatement(Statement* statement) { _statements.push_back(statement); }
 	};
 
-	// TODO - remove
-	/*class Block : public Statement
-	{
-		vector<Node*> _statements;
-	public:
-		Block(unsigned int nodeId) : Statement(nodeId) {};
-		Block() : Statement() {};
-		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
-		virtual string toString() { return "<Block>"; };
-		virtual vector<Node*> getChildren() { return _statements; }
-		void addStatement(Node* statement) { _statements.push_back(statement); }
-	};  */
-
 	class IfThenElse : public Statement
 	{
 		Expression* _condition;
@@ -382,6 +369,7 @@ namespace AST
 		Function(unsigned int nodeId) : Literal(nodeId, LT_FUNCTION) {}
 		Function() : Literal(LT_FUNCTION) { }
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
+		virtual vector<Node*> getChildren();
 
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
 		void setContent(StatementBlock* content) { _content = content; }

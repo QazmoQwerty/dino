@@ -241,7 +241,7 @@ AST::Node * Parser::nud(Token * token)
 				node->setVarId(varId);
 				nextToken();
 			}
-			if (isOperator(peekToken(), OT_PARENTHESIS_OPEN))	// function declaration
+			/*if (isOperator(peekToken(), OT_PARENTHESIS_OPEN))	// function declaration
 			{
 				node->addModifier({ "func" });
 				auto func = new AST::Function();
@@ -269,7 +269,7 @@ AST::Node * Parser::nud(Token * token)
 				bo->setLeft((AST::Expression*)node); //eew
 				bo->setRight(func);
 				return bo;
-			}
+			}*/
 
 			return node;
 		}
@@ -336,6 +336,37 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{	
+			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE_DECLARATION)
+			{
+				// Function declaration
+				while (eatLineBreak());
+				auto decl = dynamic_cast<AST::VariableDeclaration*>(left);
+				auto assign = new AST::Assignment();
+				auto func = new AST::Function;
+				
+				do
+				{
+					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
+					if (declaration->isStatement() && dynamic_cast<AST::Statement*>(declaration)->getStatementType() == ST_VARIABLE_DECLARATION)	// why is the commented out code here?
+						func->addParameter(dynamic_cast<AST::VariableDeclaration*>(declaration));
+					else throw "for's decleration statement failed";
+				} while (eatOperator(OT_COMMA));
+				
+				if (!eatOperator(OT_PARENTHESIS_CLOSE))
+					throw "missing ')'";
+
+				while (eatLineBreak());
+
+				if (!eatOperator(OT_CURLY_BRACES_OPEN)) 
+					throw "missing function body.";
+
+				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+
+				assign->setLeft(decl);
+				assign->setRight(func);
+				assign->setOperator(OperatorsMap::getOperatorByDefinition(OT_ASSIGN_EQUAL).second);
+				return assign;
+			}
 			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE)
 			{
 				auto funcCall = new AST::FunctionCall();
