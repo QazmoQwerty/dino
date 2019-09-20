@@ -93,15 +93,20 @@ AST::Node * Parser::std(Token * token)
 		{
 			AST::Block *node = new AST::Block();
 
-			while (!eatLineBreak())
+			if (!eatLineBreak())
 			{
-				AST::Node *decleration = parse();
-				if (decleration->isExpression() && decleration->getNodeId())
-					node->addStatement((AST::Expression*)decleration);
-				else throw "for's decleration statement failed";
+				do
+				{
+					AST::Node *decleration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
+					if (decleration->isExpression() && decleration->getNodeId())
+						node->addStatement((AST::Expression*)decleration);
+					else throw "for's decleration statement failed";
+				} while (eatOperator(OT_COMMA));
 			}
-
 			AST::WhileLoop * whileNode = new AST::WhileLoop();
+
+			if (!eatLineBreak())
+				throw "miss part 2 of for";
 
 			AST::Node* inner = parse();
 			if (inner->isExpression())
@@ -114,7 +119,7 @@ AST::Node * Parser::std(Token * token)
 			vector<AST::Node *> increcments;
 			do
 			{
-				AST::Node *increcment = parse();
+				AST::Node *increcment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
 				if (increcment->getNodeId())
 					increcments.push_back(increcment);
 				else throw "for's decleration statement failed";
