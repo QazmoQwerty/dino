@@ -199,14 +199,16 @@ AST::Node * Parser::nud(Token * token)
 		if (ot->_operator._type == OT_DO)
 		{
 			AST::DoWhileLoop * node = new AST::DoWhileLoop();
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
-				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
-			else throw "could not do parse while loop";
 
 			while (peekToken()->_type == TT_LINE_BREAK)
 				nextToken();
 
-			if (eatOperator(OT_WHILE));
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else throw "could not do parse while loop";
+
+			if (!eatOperator(OT_WHILE))
+				throw "Missing 'while' in do-while statement.";
 
 			AST::Node* inner = parse();
 			if (inner->isExpression())

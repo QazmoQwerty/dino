@@ -35,8 +35,9 @@ int main()
 		//Interpreter i;
 		//i.interpret(ast);
 	} 
-	catch (exception e) { std::cout << e.what(); }
-	
+	catch (exception e) { std::cout << e.what() << std::endl; }
+	catch (const char *err) { std::cout << err << std::endl; }
+
 
 	/*int i = 0;
 
