@@ -11,9 +11,10 @@ bool OperatorsMap::isWord(OperatorType type)
 {
 	OperatorType wordTypes[] = {
 		OT_WHILE,
+		OT_DO,
 		OT_FOR,
 		OT_IF,
-		OT_ELSE,
+		OT_ELSE
 	};
 	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);
 }
@@ -30,8 +31,9 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_PARENTHESIS_OPEN,
 		OT_CURLY_BRACES_OPEN,
 		OT_WHILE,
+		OT_DO,
 		OT_IF,
-		OT_ELSE,
+		OT_ELSE
 	};
 	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
 }
@@ -145,6 +147,7 @@ void OperatorsMap::setup()
 
 	_wordsMap = unordered_map<string, Operator>();
 	_wordsMap["while"] = { OT_WHILE, "while", NULL, NULL };
+	_wordsMap["do"] = { OT_DO, "do", NULL, NULL };
 	_wordsMap["if"] = { OT_IF, "if", NULL, NULL };
 	_wordsMap["else"] = { OT_ELSE, "else", NULL, NULL };
 }
