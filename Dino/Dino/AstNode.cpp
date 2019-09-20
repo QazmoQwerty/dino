@@ -28,8 +28,8 @@ vector<AST::Node*> AST::WhileLoop::getChildren()
 vector<AST::Node*> AST::Assignment::getChildren()
 {
 	vector<Node*> v;
-	v.push_back(_right);
 	v.push_back(_left);
+	v.push_back(_right);
 	return v;
 }
 
@@ -69,5 +69,14 @@ vector<AST::Node*> AST::ConditionalExpression::getChildren()
 	v.push_back(_condition);
 	v.push_back(_thenBranch);
 	v.push_back(_elseBranch);
+	return v;
+}
+
+vector<AST::Node*> AST::Function::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _parameters)
+		v.push_back(i);
+	v.push_back(_content);
 	return v;
 }
