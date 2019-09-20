@@ -32,6 +32,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_WHILE,
 		OT_IF,
 		OT_ELSE,
+		OT_FOR,
 	};
 	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
 }
@@ -145,6 +146,7 @@ void OperatorsMap::setup()
 
 	_wordsMap = unordered_map<string, Operator>();
 	_wordsMap["while"] = { OT_WHILE, "while", NULL, NULL };
+	_wordsMap["for"] = { OT_FOR, "for", NULL, NULL };
 	_wordsMap["if"] = { OT_IF, "if", NULL, NULL };
 	_wordsMap["else"] = { OT_ELSE, "else", NULL, NULL };
 }

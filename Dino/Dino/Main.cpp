@@ -30,8 +30,8 @@ int main()
 			std::cout << "NOOO" << std::endl;
 		else astToFile("AstDisplay.gv", ast);
 
-		Interpreter i;
-		i.interpret(ast);
+		//Interpreter i;
+		//i.interpret(ast);
 	} 
 	catch (exception e) { std::cout << e.what(); }
 	
