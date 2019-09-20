@@ -1,13 +1,15 @@
 digraph G {
-0 [label="<Block>"];0->1|
-1 [label="<IfThenElse>"];1->3|1->5|1->4294967295|
-3 [label="<BinaryOperator>\n=="];3->2|3->4|
-2 [label="<Variable>\nx"];
-4 [label="<IntegerLiteral>\n12"];
-5 [label="<Block>"];5->6|5->9|
-6 [label="<UnaryOperator>\n++"];6->7|
-7 [label="<Variable>\ni"];
-9 [label="<BinaryOperator>\n="];9->8|9->10|
-8 [label="<Variable>\nx"];
-10 [label="<IntegerLiteral>\n2"];
+0 [label="<Block>"];0->1;
+1 [label="<Block>"];1->3;1->5;
+3 [label="<BinaryOperator>\n="];3->2;3->4;
+2 [label="<VariableDeclaration>\nint x"];
+4 [label="<IntegerLiteral>\n0"];
+5 [label="<While>"];5->7;5->9;
+7 [label="<BinaryOperator>\n<"];7->6;7->8;
+6 [label="<Variable>\nx"];
+8 [label="<IntegerLiteral>\n100"];
+9 [label="<Block>"];9->11;9->12;
+11 [label="<FunctionCall>\nDoStuff"];
+12 [label="<UnaryOperator>\n++"];12->13;
+13 [label="<Variable>\nx"];
 }

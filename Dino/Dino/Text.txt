@@ -1,2 +1,8 @@
 
-if x == 12 { ++i | x = 2 }
+{
+	int x = 0
+	while x < 100 {
+		DoStuff()
+		++x
+	}
+}

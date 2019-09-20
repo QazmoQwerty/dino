@@ -15,7 +15,7 @@ string astToString(AST::Node* node)
 	int id = node->getNodeId();
 	ss << id << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren())
-		ss << id << "->" << child->getNodeId() << '|';
+		ss << id << "->" << child->getNodeId() << ';';
 	ss << '\n';
 	for (auto child : node->getChildren())
 		ss << astToString(child);
