@@ -1,38 +1,5 @@
-/*
-/*x = func() || func();*/
-/*if y == 5 {
-	x = 2
+while x < 10
+{
+	++i
 } 
-else if m == 2 {
-	foo(12, 12)
-}*/
-/*private static int num = 0;
-l = y.name2.name3 + 2
-name = 4;*/
-
-/*int x(int x) {
-	d = 2
-}*/
-
-int i;
-i = 2;
-if i * 2 == 4 && i < 1 {
-	print(i * 3)
-}
-else {
-	print(4 * 2)
-}
-
-while i < 12 {
-	print(i - 2)
-	++i	// (No support for "i++" yet) 
-}
-frac x;
-x = 1.4 / 2.1
-
-string z;
-z = "abc"
-z = z + z
-print(z)
-print(x, 12, "hello" + " world")
-*/
+x = 12

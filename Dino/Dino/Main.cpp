@@ -11,7 +11,7 @@
 
 int main() 
 {
-	std::ifstream t("DoWhile.txt"/* "DinoSyntax.txt"*/);
+	std::ifstream t("Text.txt"/* "DinoSyntax.txt"*/);
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
@@ -32,8 +32,8 @@ int main()
 			std::cout << "NOOO" << std::endl;
 		else astToFile("AstDisplay.gv", ast);
 
-		Interpreter i;
-		i.interpret(ast);
+		//Interpreter i;
+		//i.interpret(ast);
 	} 
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }
