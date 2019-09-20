@@ -1,5 +1,3 @@
 
-void x(int a, int b) {
-	++b
-	a = b
-}
+
+int i = (int i, int y, int z, int a) { x = 12 } + 3
