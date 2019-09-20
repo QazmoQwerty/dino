@@ -8,8 +8,9 @@ if x == 5
 }
 else if x == 2
 {
-	print("secont: correct")
-}
-else {
-	print("third: correct")
+	int x = 0
+	while x < 100 {
+		DoStuff()
+		++i
+	}
 }

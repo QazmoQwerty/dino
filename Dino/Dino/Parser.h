@@ -12,11 +12,8 @@
 class Parser
 {
 public:
-	//Parser(vector<vector<Token*>*>& tokens) : _tokens(tokens) { _line = _index = _idCount = 0; }
 	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = 0; }
-	//Token* getToken(unsigned int line, unsigned int index);
 	Token* getToken(unsigned int index);
-	//Token* peekToken() { return getToken(_line, _index); }
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
 	Token* nextToken(OperatorType expected);
@@ -24,8 +21,8 @@ public:
 
 	AST::Node* parse() { return parse(0); };
 	AST::Node* parse(int lastPrecedence);
-	AST::Block* parseBlock() { return parseBlock(OT_EOF); };
-	AST::Block* parseBlock(OperatorType expected);
+	AST::StatementBlock* parseBlock() { return parseBlock(OT_EOF); };
+	AST::StatementBlock* parseBlock(OperatorType expected);
 	int precedence(Token* token);
 private:
 

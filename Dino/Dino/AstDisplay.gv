@@ -1,24 +1,15 @@
 digraph G {
-0 [label="<Block>"];0->1;0->3;0->5;
-1 [label="<VariableDeclaration>\nint x"];
-3 [label="<BinaryOperator>\n="];3->2;3->4;
-2 [label="<Variable>\nx"];
-4 [label="<IntegerLiteral>\n6"];
-5 [label="<IfThenElse>"];5->7;5->9;5->13;
-7 [label="<BinaryOperator>\n=="];7->6;7->8;
+0 [label="<StatementBlock>"];0->1;
+1 [label="<StatementBlock>"];1->3;1->5;
+3 [label="<Assignment>\n="];3->4;3->2;
+4 [label="<IntegerLiteral>\n0"];
+2 [label="<VariableDeclaration>\nint x"];
+5 [label="<While>"];5->7;5->9;
+7 [label="<BinaryOperator>\n<"];7->6;7->8;
 6 [label="<Variable>\nx"];
-8 [label="<IntegerLiteral>\n5"];
-9 [label="<Block>"];9->11;
-11 [label="<FunctionCall>\nprint"];11->12;
-12 [label="<IntegerLiteral>\n"first: correct""];
-13 [label="<IfThenElse>"];13->15;13->17;13->21;
-15 [label="<BinaryOperator>\n=="];15->14;15->16;
-14 [label="<Variable>\nx"];
-16 [label="<IntegerLiteral>\n2"];
-17 [label="<Block>"];17->19;
-19 [label="<FunctionCall>\nprint"];19->20;
-20 [label="<IntegerLiteral>\n"secont: correct""];
-21 [label="<Block>"];21->23;
-23 [label="<FunctionCall>\nprint"];23->24;
-24 [label="<IntegerLiteral>\n"third: correct""];
+8 [label="<IntegerLiteral>\n100"];
+9 [label="<StatementBlock>"];9->11;9->12;
+11 [label="<FunctionCall>\nDoStuff"];
+12 [label="<Increment>\n++"];12->13;
+13 [label="<Variable>\ni"];
 }

@@ -29,6 +29,14 @@ vector<AST::Node*> AST::Assignment::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_right);
+	v.push_back(_left);
+	return v;
+}
+
+vector<AST::Node*> AST::Increment::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
 	return v;
 }
 
