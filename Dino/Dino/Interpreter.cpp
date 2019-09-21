@@ -196,6 +196,9 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 	case (LT_FRACTION):
 		return new FracValue(((AST::Fraction*)node)->getValue());
 		break;
+	case (LT_FUNCTION):
+		return new FuncValue((AST::Function*)node);
+		break;
 	case (LT_NULL):
 		break;
 	}
@@ -213,6 +216,7 @@ void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 {
 	string type = node->getVarType().name;
 	string name = node->getVarId().name;
+	//if (std::find_if(node->getModifiers().begin(), node->getModifiers().end(), []() { return true; }))
 	if		(type == "bool")	_variables[name] = new BoolValue();
 	else if (type == "int")		_variables[name] = new IntValue();
 	else if (type == "frac")	_variables[name] = new FracValue();

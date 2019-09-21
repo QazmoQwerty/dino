@@ -383,18 +383,21 @@ namespace AST
 	{
 		vector<VariableDeclaration*> _parameters;
 		StatementBlock* _content;
+		Identificator _returnType;	// Temporary
 
 	public:
 		Function(unsigned int nodeId) : Literal(nodeId, LT_FUNCTION) {}
 		Function() : Literal(LT_FUNCTION) { }
-		virtual string toString() { return string() + "<FunctionLiteral>"; };
+		virtual string toString() { return string() + "<FunctionLiteral>\n" + _returnType.name; };
 		virtual vector<Node*> getChildren();
 
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
 		void setContent(StatementBlock* content) { _content = content; }
+		void setReturnType(Identificator type) { _returnType = type; }
 
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
 		StatementBlock* getContent() { return _content; }
+		Identificator getReturnType() { return _returnType; }
 	};
 
 	class Null : public Literal

@@ -11,6 +11,24 @@ public:
 	virtual string toString() = 0;
 };
 
+class Interpreter
+{
+private:
+	unordered_map<string, Value*> _variables;
+	Value* interpretBinaryOp(AST::BinaryOperation* node);
+	Value* interpretUnaryOp(AST::UnaryOperation* node);
+	Value* interpretFuncCall(AST::FunctionCall* node);
+	Value* interpretLiteral(AST::Literal* node);
+	Value* interpretVariable(AST::Variable* node);
+
+	void interpretVariableDeclaration(AST::VariableDeclaration* node);
+	void interpretIfThenElse(AST::IfThenElse* node);
+	void interpretWhileLoop(AST::WhileLoop* node);
+	void interpretDoWhileLoop(AST::DoWhileLoop* node);
+public:
+	Value* interpret(AST::Node* node);
+};
+
 class IntValue : public Value
 {
 private:
@@ -71,20 +89,22 @@ public:
 	virtual string toString() { return std::to_string(_value); };
 };
 
-class Interpreter
+class FuncValue : public Value
 {
 private:
-	unordered_map<string, Value*> _variables;
-	Value* interpretBinaryOp(AST::BinaryOperation* node);
-	Value* interpretUnaryOp(AST::UnaryOperation* node);
-	Value* interpretFuncCall(AST::FunctionCall* node);
-	Value* interpretLiteral(AST::Literal* node);
-	Value* interpretVariable(AST::Variable* node);
-
-	void interpretVariableDeclaration(AST::VariableDeclaration* node);
-	void interpretIfThenElse(AST::IfThenElse* node);
-	void interpretWhileLoop(AST::WhileLoop* node);
-	void interpretDoWhileLoop(AST::DoWhileLoop* node);
+	string _returnType;
+	AST::Function* _value;
 public:
-	Value* interpret(AST::Node* node);
+	FuncValue() : Value("func") { _value = NULL; }
+	FuncValue(AST::Function* value) : Value("func") { _value = value; }
+	void setValue(AST::Function* value) { _value = value; }
+	AST::Function* getValue() { return _value; }
+	virtual string toString() { return _value->toString(); };
+	/*Value* callFunction(vector<Value*> parameters)
+	{
+		for (auto varDecl : _value->getParameters())
+		{
+			Value* v = interpret(varDecl);
+		}
+	}*/
 };
