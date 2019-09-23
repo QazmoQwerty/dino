@@ -15,15 +15,13 @@ Value* Interpreter::interpret(AST::Node * node)
 			case (ST_FUNCTION_CALL):
 				return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
 			case(ST_IF_THEN_ELSE):
-				interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
-				break;
+				return interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
 			case(ST_STATEMENT_BLOCK):
 				for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
 				{
-					if (i->isStatement() && dynamic_cast<AST::Statement*>(i)->getStatementType() == ST_UNARY_OPERATION
-						&& dynamic_cast<AST::UnaryOperationStatement*>(i)->getOperator()._type == OT_RETURN)
-						return interpret(dynamic_cast<AST::UnaryOperationStatement*>(i)->getExpression());
-					interpret(i);
+					Value* val = interpret(i);
+					if (val != nullptr && val->isReturn())
+						return val;
 				}
 				break;
 			case(ST_WHILE_LOOP):
@@ -32,6 +30,8 @@ Value* Interpreter::interpret(AST::Node * node)
 			case(ST_DO_WHILE_LOOP):
 				interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
 				break;
+			case(ST_UNARY_OPERATION):
+				return interpretUnaryOpStatement(dynamic_cast<AST::UnaryOperationStatement*>(node));
 		}
 	}
 	else
@@ -257,6 +257,20 @@ Value * Interpreter::interpretVariable(AST::Variable * node)
 	return _variables[node->getVarId().name];
 }
 
+Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * node)
+{
+	switch (node->getOperator()._type)
+	{
+	case (OT_RETURN):
+		{
+			Value* val = interpret(node->getExpression());
+			val->setReturn();
+			return val;
+		}
+	}
+	return NULL;
+}
+
 void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 {
 	string type = node->getVarType().name;
@@ -280,28 +294,37 @@ void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 	}
 }
 
-void Interpreter::interpretIfThenElse(AST::IfThenElse * node)
+Value* Interpreter::interpretIfThenElse(AST::IfThenElse * node)
 {
 	Value* condition = interpret(node->getCondition());
 	if (condition->getType() == "bool")
 	{
+		Value* val;
 		if (((BoolValue*)condition)->getValue())
-			interpret(node->getThenBranch());
-		else interpret(node->getElseBranch());
+			val = interpret(node->getThenBranch());
+		else val = interpret(node->getElseBranch());
+		if (val != nullptr && val->isReturn()) return val;
 	}
+	return NULL;
 }
 
-void Interpreter::interpretWhileLoop(AST::WhileLoop * node)
+Value* Interpreter::interpretWhileLoop(AST::WhileLoop * node)
 {
 	if (interpret(node->getCondition())->getType() == "bool")
 		while (((BoolValue*)interpret(node->getCondition()))->getValue())
-			interpret(node->getStatement());
+		{
+			Value* val = interpret(node->getStatement());
+			if (val != nullptr && val->isReturn()) return val;
+		}
+	return NULL;
 }
 
-void Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
+Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
 {
 	if (interpret(node->getCondition())->getType() == "bool")
 		do {
-			interpret(node->getStatement());
+			Value* val = interpret(node->getStatement());
+			if (val != nullptr && val->isReturn()) return val;
 		} while (((BoolValue*)interpret(node->getCondition()))->getValue());
+	return NULL;
 }

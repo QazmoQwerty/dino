@@ -1,7 +1,12 @@
 
 func int Sum
 Sum = (int a, int b) int {
-	return a + b
+	if (a == 12) {
+		return a + b
+	}
+	else {
+		return 12
+	}
 }
 
 Print(Sum(3, 4))

@@ -6,8 +6,11 @@ class Value
 {
 private:
 	string _type;
+	bool _isReturn;
 public:
-	Value(string type) { _type = type; }
+	Value(string type) { _type = type; _isReturn = false; }
+	void setReturn() { _isReturn = true; }
+	bool isReturn() { return _isReturn; }
 	string getType() { return _type; }
 	virtual string toString() = 0;
 };
@@ -22,11 +25,13 @@ private:
 	Value* interpretLiteral(AST::Literal* node);
 	Value* interpretVariable(AST::Variable* node);
 	Value* interpretAssignment(AST::Assignment* node);
+	
 
+	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
 	void interpretVariableDeclaration(AST::VariableDeclaration* node);
-	void interpretIfThenElse(AST::IfThenElse* node);
-	void interpretWhileLoop(AST::WhileLoop* node);
-	void interpretDoWhileLoop(AST::DoWhileLoop* node);
+	Value* interpretIfThenElse(AST::IfThenElse* node);
+	Value* interpretWhileLoop(AST::WhileLoop* node);
+	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
 public:
 	Value* interpret(AST::Node* node);
 };
