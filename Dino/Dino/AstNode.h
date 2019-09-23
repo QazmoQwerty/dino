@@ -110,7 +110,8 @@ namespace AST
 
 	class FunctionCall : public ExpressionStatement
 	{
-		Identificator _functionId;	// Temporary
+		//Identificator _functionId;	// Temporary
+		Expression* _functionId;
 		vector<Expression*> _parameters;
 
 	public:
@@ -118,13 +119,15 @@ namespace AST
 		FunctionCall() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
-		virtual string toString() { return string() + "<FunctionCall>\\n" + _functionId.name; };
+		virtual string toString() { return string() + "<FunctionCall>\\n"/* + _functionId.name*/; };
 		virtual vector<Node*> getChildren();
 
-		void setFunctionId(Identificator funcId) { _functionId = funcId; }
+		//void setFunctionId(Identificator funcId) { _functionId = funcId; }
+		void setFunctionId(Expression* funcId) { _functionId = funcId; }
 		void addParameter(Expression* parameter) { _parameters.push_back(parameter); }
 
-		Identificator getFunctionId() { return _functionId; }
+		//Identificator getFunctionId() { return _functionId; }
+		Expression* getFunctionId() { return _functionId; }
 		vector<Expression*> getParameters() { return _parameters; }
 	};
 
@@ -291,7 +294,7 @@ namespace AST
 
 	public:
 		void setVarId(Identificator varId) { _varId = varId; }
-		virtual Identificator getVarId() { return _varId; }
+		Identificator getVarId() { return _varId; }
 		Variable(unsigned int nodeId) : Expression(nodeId) {};
 		Variable() : Expression() {};
 		Variable(unsigned int nodeId, Identificator varId) : Expression(nodeId) { _varId = varId; };

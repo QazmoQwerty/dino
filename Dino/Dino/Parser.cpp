@@ -391,7 +391,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{	
-			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE_DECLARATION)
+			/*if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE_DECLARATION)
 			{
 				// Function declaration
 				while (eatLineBreak());
@@ -440,8 +440,23 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 						nextToken();
 				}
 				return funcCall;
+			}*/
+			if (left->isExpression())
+			{
+				auto funcCall = new AST::FunctionCall();
+				funcCall->setFunctionId(dynamic_cast<AST::Expression*>(left));
+				while (!eatOperator(OT_PARENTHESIS_CLOSE))
+				{
+					auto exp = parse(10);
+					if (!exp->isExpression())
+						throw "Could not convert from Node* to Expression*";
+					funcCall->addParameter(dynamic_cast<AST::Expression*>(exp));
+					if (isOperator(peekToken(), OT_COMMA))
+						nextToken();
+				}
+				return funcCall;
 			}
-			else throw "Expression preceding parenthesis of apparent call must be a variable id";
+			else throw "Expression preceding parenthesis of apparent call must be an expression";
 		}
 		if (OperatorsMap::isAssignment(ot->_operator._type))
 		{

@@ -58,6 +58,7 @@ vector<AST::Node*> AST::UnaryOperation::getChildren()
 vector<AST::Node*> AST::FunctionCall::getChildren()
 {
 	vector<Node*> v;
+	v.push_back(_functionId);
 	for (auto i : _parameters)
 		v.push_back(i);
 	return v;

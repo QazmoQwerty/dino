@@ -216,47 +216,96 @@ Value * Interpreter::interpretIncrement(AST::Increment * node)
 
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 {
-	if (node->getFunctionId().name == "Print")
+	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
+		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "Print") 
+	{
 		for (auto i : node->getParameters())
 			std::cout << interpret(i)->toString() << std::endl;
-	else if (_variables.count(node->getFunctionId().name))
-	{
-		Value* var = _variables[node->getFunctionId().name];
-		if (var->getType() != "func")
-			throw "cannot invoke non-function value!";
-		auto values = node->getParameters();
-
-		auto params = ((FuncValue*)var)->getValue()->getParameters();
-
-		if (params.size() != values.size())
-			throw "Incorrect number of parameter inputs";
-		for (unsigned int i = 0; i < params.size(); i++)
-		{
-			interpret(params[i]);
-			auto assign = new AST::Assignment();
-			string name = params[i]->getVarId().name;
-			Value* val = interpret(values[i]);
-			if (params[i]->getVarType().name != val->getType())
-				throw "Incompatible function inputs";
-
-			if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
-			else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
-			else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
-			else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
-			else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
-			else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
-			else throw "custom types are not supported yet";
-		}
-		Value* ret = interpret(((FuncValue*)var)->getValue()->getContent());
-		for (auto i : params)
-		{
-			delete _variables[i->getVarId().name];
-			_variables.erase(i->getVarId().name);
-		}
-		return ret;
+		return NULL;
 	}
-	return nullptr;
+		
+	Value* val = interpret(node->getFunctionId());
+	if (val->getType() != "func")
+		throw "cannot invoke non-function!";
+	auto func = ((FuncValue*)val);
+	auto values = node->getParameters();
+	auto params = func->getValue()->getParameters();
+
+	if (params.size() != values.size())
+		throw "Incorrect number of parameter inputs";
+
+	for (unsigned int i = 0; i < params.size(); i++)
+	{
+		interpret(params[i]);
+
+		string name = params[i]->getVarId().name;
+		Value* val = interpret(values[i]);
+		if (params[i]->getVarType().name != val->getType())
+			throw "Incompatible function inputs";
+
+		if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
+		else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
+		else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
+		else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
+		else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
+		else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
+		else throw "custom types are not supported yet";
+	}
+	Value* ret = interpret(func->getValue()->getContent());
+	for (auto i : params)
+	{
+		delete _variables[i->getVarId().name];
+		_variables.erase(i->getVarId().name);
+	}
+	return ret;
 }
+
+//Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
+//{
+//	Value* v = interpret(node->getFunctionId());
+//	if (v->getType() != "func")
+//		throw "cannot invoke non-function!";
+//	if (node->getFunctionId().name == "Print")
+//		for (auto i : node->getParameters())
+//			std::cout << interpret(i)->toString() << std::endl;
+//	else if (_variables.count(node->getFunctionId().name))
+//	{
+//		Value* var = _variables[node->getFunctionId().name];
+//		if (var->getType() != "func")
+//			throw "cannot invoke non-function value!";
+//		auto values = node->getParameters();
+//
+//		auto params = ((FuncValue*)var)->getValue()->getParameters();
+//
+//		if (params.size() != values.size())
+//			throw "Incorrect number of parameter inputs";
+//		for (unsigned int i = 0; i < params.size(); i++)
+//		{
+//			interpret(params[i]);
+//			auto assign = new AST::Assignment();
+//			string name = params[i]->getVarId().name;
+//			Value* val = interpret(values[i]);
+//			if (params[i]->getVarType().name != val->getType())
+//				throw "Incompatible function inputs";
+//
+//			if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
+//			else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
+//			else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
+//			else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
+//			else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
+//			else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
+//			else throw "custom types are not supported yet";
+//		}
+//		Value* ret = interpret(((FuncValue*)var)->getValue()->getContent());
+//		for (auto i : params)
+//		{
+//			delete _variables[i->getVarId().name];
+//			_variables.erase(i->getVarId().name);
+//		}
+//		return ret;
+//	}
+//	return nullptr;
+//}
 
 Value * Interpreter::interpretLiteral(AST::Literal * node)
 {
@@ -310,6 +359,8 @@ void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 {
 	string type = node->getVarType().name;
 	string name = node->getVarId().name;
+	if (_variables.count(name) != 0)
+		throw "illegal redefinition/multiple initialization";
 	auto vec = node->getModifiers();
 	if (std::find_if(std::begin(vec), std::end(vec), 
 		[](AST::Identificator id) { return id.name == "func"; }) != std::end(vec))
