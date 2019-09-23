@@ -470,6 +470,10 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		return op;
 	}
+
+	if (token->_type == TT_OPERATOR && (((OperatorToken*)token)->_operator._type == OT_INCREMENT || ((OperatorToken*)token)->_operator._type == OT_DECREMENT))
+		throw "postfix increment/decrement is not supported yet.";
+
 	throw "led could not find an option";
 	return NULL;	// Error
 }

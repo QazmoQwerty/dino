@@ -21,6 +21,7 @@ private:
 	unordered_map<string, Value*> _variables;
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
 	Value* interpretUnaryOp(AST::UnaryOperation* node);
+	Value* interpretIncrement(AST::Increment* node);
 	Value* interpretFuncCall(AST::FunctionCall* node);
 	Value* interpretLiteral(AST::Literal* node);
 	Value* interpretVariable(AST::Variable* node);

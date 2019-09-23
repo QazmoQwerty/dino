@@ -29,6 +29,9 @@ Value* Interpreter::interpret(AST::Node * node)
 			case(ST_WHILE_LOOP):
 				interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
 				break;
+			case(ST_INCREMENT):
+				return interpretIncrement(dynamic_cast<AST::Increment*>(node));
+				break;
 			case(ST_DO_WHILE_LOOP):
 				interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
 				break;
@@ -194,6 +197,21 @@ Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 		return val;
 	}
 	return NULL;
+}
+
+Value * Interpreter::interpretIncrement(AST::Increment * node)
+{
+	Value* val = interpret(node->getExpression());
+	switch (node->getOperator()._type)
+	{
+		case (OT_INCREMENT):
+			if (val->getType() == "int") ((IntValue*)val)->setValue(((IntValue*)val)->getValue() + 1);
+			return val;
+		case (OT_DECREMENT):
+			if (val->getType() == "int") ((IntValue*)val)->setValue(((IntValue*)val)->getValue() - 1);
+			return val;
+	}
+	return nullptr;
 }
 
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)

@@ -1,23 +1,24 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;0->19;
+0 [label="<StatementBlock>"];0->2;0->8;
 2 [label="<Assignment>\n="];2->1;2->3;
 1 [label="<VariableDeclaration>\nfunc int Fibonacci"];
 3 [label="<FunctionLiteral>
 int"];3->4;3->5;
 4 [label="<VariableDeclaration>\nint n"];
-5 [label="<StatementBlock>"];5->6;5->16;
-6 [label="<IfThenElse>"];6->8;6->10;6->4294967295;
-8 [label="<BinaryOperator>\n<="];8->7;8->9;
+5 [label="<StatementBlock>"];5->6;
+6 [label="<UnaryOperatorStatement>\nreturn"];6->7;
 7 [label="<Variable>\nn"];
-9 [label="<IntegerLiteral>\n1"];
-10 [label="<StatementBlock>"];10->12;10->14;
-12 [label="<FunctionCall>\nPrint"];12->13;
-13 [label="<IntegerLiteral>\n"wow""];
-14 [label="<UnaryOperatorStatement>\nreturn"];14->15;
-15 [label="<IntegerLiteral>\n3"];
-16 [label="<UnaryOperatorStatement>\nreturn"];16->17;
-17 [label="<IntegerLiteral>\n10"];
-19 [label="<FunctionCall>\nPrint"];19->21;
-21 [label="<FunctionCall>\nFibonacci"];21->22;
-22 [label="<IntegerLiteral>\n4"];
+8 [label="<StatementBlock>"];8->10;8->12;
+10 [label="<Assignment>\n="];10->9;10->11;
+9 [label="<VariableDeclaration>\nint i"];
+11 [label="<IntegerLiteral>\n0"];
+12 [label="<While>"];12->14;12->19;
+14 [label="<BinaryOperator>\n<"];14->13;14->15;
+13 [label="<Variable>\ni"];
+15 [label="<IntegerLiteral>\n10"];
+19 [label="<StatementBlock>"];19->21;19->16;
+21 [label="<FunctionCall>\nPrint"];21->22;
+22 [label="<Variable>\ni"];
+16 [label="<Increment>\n++"];16->17;
+17 [label="<Variable>\ni"];
 }
