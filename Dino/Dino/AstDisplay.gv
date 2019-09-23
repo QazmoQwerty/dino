@@ -1,8 +1,30 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;0->5;
+0 [label="<StatementBlock>"];0->2;0->27;
 2 [label="<Assignment>\n="];2->1;2->3;
-1 [label="<VariableDeclaration>\nint a"];
-3 [label="<IntegerLiteral>\n12"];
-5 [label="<FunctionCall>\nPrint"];5->6;
-6 [label="<Variable>\na"];
+1 [label="<VariableDeclaration>\nfunc int Fibonacci"];
+3 [label="<FunctionLiteral>
+int"];3->4;3->5;
+4 [label="<VariableDeclaration>\nint n"];
+5 [label="<StatementBlock>"];5->6;
+6 [label="<IfThenElse>"];6->8;6->10;6->13;
+8 [label="<BinaryOperator>\n<="];8->7;8->9;
+7 [label="<Variable>\nn"];
+9 [label="<IntegerLiteral>\n1"];
+10 [label="<StatementBlock>"];10->11;
+11 [label="<UnaryOperatorStatement>\nreturn"];11->12;
+12 [label="<Variable>\nn"];
+13 [label="<StatementBlock>"];13->14;
+14 [label="<UnaryOperatorStatement>\nreturn"];14->20;
+20 [label="<BinaryOperator>\n+"];20->16;20->22;
+16 [label="<FunctionCall>\nFibonacci"];16->18;
+18 [label="<BinaryOperator>\n-"];18->17;18->19;
+17 [label="<Variable>\nn"];
+19 [label="<IntegerLiteral>\n1"];
+22 [label="<FunctionCall>\nFibonacci"];22->24;
+24 [label="<BinaryOperator>\n-"];24->23;24->25;
+23 [label="<Variable>\nn"];
+25 [label="<IntegerLiteral>\n2"];
+27 [label="<FunctionCall>\nPrint"];27->29;
+29 [label="<FunctionCall>\nFibonacci"];29->30;
+30 [label="<IntegerLiteral>\n4"];
 }

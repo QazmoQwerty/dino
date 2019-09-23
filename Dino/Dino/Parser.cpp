@@ -417,9 +417,12 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
 
+				decl->addModifier({ "func" });
 				assign->setLeft(decl);
+				func->setReturnType(decl->getVarType());
 				assign->setRight(func);
 				assign->setOperator(OperatorsMap::getOperatorByDefinition(OT_ASSIGN_EQUAL).second);
+				
 				return assign;
 			}
 			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE)
