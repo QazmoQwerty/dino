@@ -19,7 +19,12 @@ Value* Interpreter::interpret(AST::Node * node)
 				break;
 			case(ST_STATEMENT_BLOCK):
 				for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
+				{
+					if (i->isStatement() && dynamic_cast<AST::Statement*>(i)->getStatementType() == ST_UNARY_OPERATION
+						&& dynamic_cast<AST::UnaryOperationStatement*>(i)->getOperator()._type == OT_RETURN)
+						return interpret(dynamic_cast<AST::UnaryOperationStatement*>(i)->getExpression());
 					interpret(i);
+				}
 				break;
 			case(ST_WHILE_LOOP):
 				interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
@@ -190,7 +195,7 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 
 		if (params.size() != values.size())
 			throw "Incorrect number of parameter inputs";
-		for (int i = 0; i < params.size(); i++)
+		for (unsigned int i = 0; i < params.size(); i++)
 		{
 			interpret(params[i]);
 			auto assign = new AST::Assignment();
@@ -213,6 +218,7 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 			delete _variables[i->getVarId().name];
 			_variables.erase(i->getVarId().name);
 		}
+		return ret;
 	}
 	return nullptr;
 }

@@ -1,9 +1,7 @@
 
-func void PrintSum;
-PrintSum = (int y, int z) void {
-	Print(y + z);
+func int Sum
+Sum = (int a, int b) int {
+	return a + b
 }
 
-PrintSum(3, 8)
-
-PrintSum(4, 4)
+Print(Sum(3, 4))
