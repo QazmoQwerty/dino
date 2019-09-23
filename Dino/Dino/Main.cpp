@@ -23,8 +23,8 @@ int main()
 		auto lexed = Lexer::lex(str);
 		auto vec = Preparser::Preparse(lexed);
 
-		for (auto i : vec)
-			printToken(i);
+		/*for (auto i : vec)
+			printToken(i);*/
 
 		Parser p = Parser(vec);
 		AST::Node* ast = p.parseBlock();
@@ -32,8 +32,8 @@ int main()
 			std::cout << "NOOO" << std::endl;
 		else astToFile("AstDisplay.gv", ast);
 
-		//Interpreter i;
-		//i.interpret(ast);
+		Interpreter i;
+		i.interpret(ast);
 	} 
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }

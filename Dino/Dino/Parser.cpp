@@ -312,6 +312,7 @@ AST::Node * Parser::nud(Token * token)
 				throw "')' missing";
 			if (peekToken()->_type == TT_IDENTIFIER)
 			{
+				// Function literal
 				AST::Identificator returnType = { nextToken()->_data };
 
 				if (!eatOperator(OT_CURLY_BRACES_OPEN))
@@ -329,14 +330,19 @@ AST::Node * Parser::nud(Token * token)
 							vec.push_back(dynamic_cast<AST::VariableDeclaration*>(bo->getRight()));
 						else throw "TODO - error msg";
 
-					if (bo->getLeft()->isStatement())
+					/*if (bo->getLeft()->isStatement())
 						if (dynamic_cast<AST::Statement*>(bo->getLeft())->getStatementType() == ST_VARIABLE_DECLARATION)
 							vec.push_back(dynamic_cast<AST::VariableDeclaration*>(bo->getLeft()));
-						else throw "TODO - error msg";
+						else throw "TODO - error msg";*/
 
 					temp = bo->getLeft();
 					delete bo;
 				}
+				if (temp->isStatement())
+					if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
+						vec.push_back(dynamic_cast<AST::VariableDeclaration*>(temp));
+					else throw "TODO - error msg";
+
 				std::reverse(vec.begin(), vec.end());
 
 				for (auto i : vec)

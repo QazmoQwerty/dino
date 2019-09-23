@@ -1,14 +1,21 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;
-2 [label="<Assignment>\n="];2->1;2->6;
-1 [label="<VariableDeclaration>\nfunc int x"];
-6 [label="<FunctionLiteral>
-int"];6->3;6->5;6->7;
-3 [label="<VariableDeclaration>\nint i"];
-5 [label="<VariableDeclaration>\nint x"];
-7 [label="<StatementBlock>"];7->8;
-8 [label="<UnaryOperatorStatement>\nreturn"];8->10;
-10 [label="<BinaryOperator>\n+"];10->9;10->11;
-9 [label="<Variable>\ni"];
-11 [label="<Variable>\nx"];
+0 [label="<StatementBlock>"];0->1;0->3;0->15;0->19;
+1 [label="<VariableDeclaration>\nfunc void PrintSum"];
+3 [label="<Assignment>\n="];3->2;3->7;
+2 [label="<Variable>\nPrintSum"];
+7 [label="<FunctionLiteral>
+void"];7->4;7->6;7->8;
+4 [label="<VariableDeclaration>\nint y"];
+6 [label="<VariableDeclaration>\nint z"];
+8 [label="<StatementBlock>"];8->10;
+10 [label="<FunctionCall>\nPrint"];10->12;
+12 [label="<BinaryOperator>\n+"];12->11;12->13;
+11 [label="<Variable>\ny"];
+13 [label="<Variable>\nz"];
+15 [label="<FunctionCall>\nPrintSum"];15->16;15->17;
+16 [label="<IntegerLiteral>\n3"];
+17 [label="<IntegerLiteral>\n8"];
+19 [label="<FunctionCall>\nPrintSum"];19->20;19->21;
+20 [label="<IntegerLiteral>\n4"];
+21 [label="<IntegerLiteral>\n4"];
 }

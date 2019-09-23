@@ -83,6 +83,10 @@ namespace AST
 		void setOperator(Operator op) { _operator = op; }
 		void setLeft(Expression* left) { _left = left; }
 		void setRight(Expression* right) { _right = right; }
+
+		Operator getOperator() { return _operator; }
+		Expression* getLeft() { return _left; }
+		Expression* getRight() { return _right; }
 	};
 
 	class Increment : public ExpressionStatement

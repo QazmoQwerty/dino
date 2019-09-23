@@ -2,63 +2,64 @@
 
 Value* Interpreter::interpret(AST::Node * node)
 {
-	if (node->isExpression())
+	if (node->isStatement())
+	{
+		auto statement = dynamic_cast<AST::Statement*>(node);
+		switch (statement->getStatementType())
+		{
+			case(ST_ASSIGNMENT):
+				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
+			case(ST_VARIABLE_DECLARATION):
+				interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
+				break;
+			case (ST_FUNCTION_CALL):
+				return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
+			case(ST_IF_THEN_ELSE):
+				interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
+				break;
+			case(ST_STATEMENT_BLOCK):
+				for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
+					interpret(i);
+				break;
+			case(ST_WHILE_LOOP):
+				interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
+				break;
+			case(ST_DO_WHILE_LOOP):
+				interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
+				break;
+		}
+	}
+	else
 	{
 		//auto expression = (AST::Expression*)node;
 		auto expression = dynamic_cast<AST::Expression*>(node);
 		switch (expression->getExpressionType())
 		{
-		case (ET_BINARY_OPERATION):
-			return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
-		case (ET_UNARY_OPERATION):
-			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
-		case (ET_CONDITIONAL_EXPRESSION):
-			break;
-		case (ET_FUNCTION_CALL):
-			interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
-			break;
-		case (ET_LITERAL):
-			return interpretLiteral(dynamic_cast<AST::Literal*>(node));
-			break;
-		case (ET_VARIABLE):
-			return interpretVariable(dynamic_cast<AST::Variable*>(node));
-			break;
-		default:
-			break;
-		}
-	}
-	else
-	{
-		auto statement = dynamic_cast<AST::Statement*>(node);
-		switch (statement->getStatementType())
-		{
-		/*case(ST_ASSIGNMENT):
-			break;*/
-		case(ST_IF_THEN_ELSE):
-			interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
-			break;
-		case(ST_STATEMENT_BLOCK):
-			for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
-				interpret(i);
-			break;
-		case(ST_VARIABLE_DECLARATION):
-			interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
-			break;
-		case(ST_WHILE_LOOP):
-			interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
-			break;
-		case(ST_DO_WHILE_LOOP):
-			interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
-			break;
+			case (ET_BINARY_OPERATION):
+				return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
+			case (ET_UNARY_OPERATION):
+				return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
+			case (ET_CONDITIONAL_EXPRESSION):
+				break;
+			/*case (ET_FUNCTION_CALL):
+				interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
+				break;*/
+			case (ET_LITERAL):
+				return interpretLiteral(dynamic_cast<AST::Literal*>(node));
+				break;
+			case (ET_VARIABLE):
+				return interpretVariable(dynamic_cast<AST::Variable*>(node));
+				break;
+			default:
+				break;
 		}
 	}
 
 	return NULL;
 }
 
-Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
+Value * Interpreter::interpretAssignment(AST::Assignment * node)
 {
-	// TODO - assignment operators
 	if (OperatorsMap::isAssignment(node->getOperator()._type))
 	{
 		if (node->getLeft()->getExpressionType() != ET_VARIABLE)
@@ -76,6 +77,7 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)rightVal)->getValue());
 			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)rightVal)->getValue());
 			else if (var->getType() == "char") ((CharValue*)var)->setValue(((CharValue*)rightVal)->getValue());
+			else if (var->getType() == "func") ((FuncValue*)var)->setValue(((FuncValue*)rightVal)->getValue());
 			return var;
 		case (OT_ASSIGN_ADD):
 			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() + ((IntValue*)rightVal)->getValue());
@@ -99,14 +101,17 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			return var;
 		}
 	}
-	else
+	return nullptr;
+}
+
+Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
+{	
+	Value* leftVal = interpret(node->getLeft());
+	Value* rightVal = interpret(node->getRight());
+	if (leftVal->getType() != rightVal->getType())
+		throw "different types invalid";
+	switch (node->getOperator()._type)
 	{
-		Value* leftVal = interpret(node->getLeft());
-		Value* rightVal = interpret(node->getRight());
-		if (leftVal->getType() != rightVal->getType())
-			throw "different types invalid";
-		switch (node->getOperator()._type)
-		{
 		case (OT_EQUAL):
 			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
 			break;
@@ -139,7 +144,6 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			break;
 		default:
 			break;
-		}
 	}
 	return NULL;
 }
@@ -172,9 +176,44 @@ Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 {
-	if (node->getFunctionId().name == "print")
+	if (node->getFunctionId().name == "Print")
 		for (auto i : node->getParameters())
 			std::cout << interpret(i)->toString() << std::endl;
+	else if (_variables.count(node->getFunctionId().name))
+	{
+		Value* var = _variables[node->getFunctionId().name];
+		if (var->getType() != "func")
+			throw "cannot invoke non-function value!";
+		auto values = node->getParameters();
+
+		auto params = ((FuncValue*)var)->getValue()->getParameters();
+
+		if (params.size() != values.size())
+			throw "Incorrect number of parameter inputs";
+		for (int i = 0; i < params.size(); i++)
+		{
+			interpret(params[i]);
+			auto assign = new AST::Assignment();
+			string name = params[i]->getVarId().name;
+			Value* val = interpret(values[i]);
+			if (params[i]->getVarType().name != val->getType())
+				throw "Incompatible function inputs";
+
+			if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
+			else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
+			else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
+			else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
+			else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
+			else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
+			else throw "custom types are not supported yet";
+		}
+		Value* ret = interpret(((FuncValue*)var)->getValue()->getContent());
+		for (auto i : params)
+		{
+			delete _variables[i->getVarId().name];
+			_variables.erase(i->getVarId().name);
+		}
+	}
 	return nullptr;
 }
 
@@ -216,13 +255,23 @@ void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 {
 	string type = node->getVarType().name;
 	string name = node->getVarId().name;
-	//if (std::find_if(node->getModifiers().begin(), node->getModifiers().end(), []() { return true; }))
-	if		(type == "bool")	_variables[name] = new BoolValue();
-	else if (type == "int")		_variables[name] = new IntValue();
-	else if (type == "frac")	_variables[name] = new FracValue();
-	else if (type == "string")	_variables[name] = new StringValue();
-	else if (type == "char")	_variables[name] = new CharValue();
-	else throw "custom types are not implemented yet.";
+	auto vec = node->getModifiers();
+	if (std::find_if(std::begin(vec), std::end(vec), 
+		[](AST::Identificator id) { return id.name == "func"; }) != std::end(vec))
+	{
+		if (type == "bool" || type == "int" || type == "frac" || type == "string" || type == "char" || type == "void")
+			_variables[name] = new FuncValue(type);
+		else throw "custom types are not implemented yet.";
+	}
+	else
+	{
+		if		(type == "bool")	_variables[name] = new BoolValue();
+		else if (type == "int")		_variables[name] = new IntValue();
+		else if (type == "frac")	_variables[name] = new FracValue();
+		else if (type == "string")	_variables[name] = new StringValue();
+		else if (type == "char")	_variables[name] = new CharValue();
+		else throw "custom types are not implemented yet.";
+	}
 }
 
 void Interpreter::interpretIfThenElse(AST::IfThenElse * node)

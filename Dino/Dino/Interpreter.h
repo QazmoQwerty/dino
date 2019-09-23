@@ -1,5 +1,6 @@
 #pragma once
 #include "AstNode.h"
+#include <algorithm>
 
 class Value
 {
@@ -20,6 +21,7 @@ private:
 	Value* interpretFuncCall(AST::FunctionCall* node);
 	Value* interpretLiteral(AST::Literal* node);
 	Value* interpretVariable(AST::Variable* node);
+	Value* interpretAssignment(AST::Assignment* node);
 
 	void interpretVariableDeclaration(AST::VariableDeclaration* node);
 	void interpretIfThenElse(AST::IfThenElse* node);
@@ -95,16 +97,15 @@ private:
 	string _returnType;
 	AST::Function* _value;
 public:
-	FuncValue() : Value("func") { _value = NULL; }
-	FuncValue(AST::Function* value) : Value("func") { _value = value; }
-	void setValue(AST::Function* value) { _value = value; }
+	FuncValue() : Value("func") { _value = NULL; _returnType = ""; }
+	FuncValue(string returnType) : Value("func") { _returnType = returnType; _value = NULL; }
+	FuncValue(AST::Function* value) : Value("func") { _value = value; _returnType = value->getReturnType().name; }
+	void setValue(AST::Function* value) 
+	{ 
+		if (_returnType != "" && value->getReturnType().name != _returnType)
+			throw "Error: Function pointer to different value";	// TODO - fix error msg
+		_value = value; _returnType = value->getReturnType().name;
+	}
 	AST::Function* getValue() { return _value; }
 	virtual string toString() { return _value->toString(); };
-	/*Value* callFunction(vector<Value*> parameters)
-	{
-		for (auto varDecl : _value->getParameters())
-		{
-			Value* v = interpret(varDecl);
-		}
-	}*/
 };

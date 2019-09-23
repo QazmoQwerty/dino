@@ -1,5 +1,9 @@
 
-
-func int x = (int i, int x) int {
-	return i + x
+func void PrintSum;
+PrintSum = (int y, int z) void {
+	Print(y + z);
 }
+
+PrintSum(3, 8)
+
+PrintSum(4, 4)
