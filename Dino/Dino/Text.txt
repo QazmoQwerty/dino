@@ -1,5 +1,5 @@
 
-func int Sum
+/*func int Sum
 Sum = (int a, int b) int {
 	if (a == 12) {
 		return a + b
@@ -9,4 +9,7 @@ Sum = (int a, int b) int {
 	}
 }
 
-Print(Sum(3, 4))
+Print(Sum(3, 4))*/
+
+int a = 12
+Print(a)

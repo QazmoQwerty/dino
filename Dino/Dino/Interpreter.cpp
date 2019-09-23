@@ -36,28 +36,28 @@ Value* Interpreter::interpret(AST::Node * node)
 	}
 	else
 	{
-		//auto expression = (AST::Expression*)node;
-		auto expression = dynamic_cast<AST::Expression*>(node);
-		switch (expression->getExpressionType())
-		{
-			case (ET_BINARY_OPERATION):
-				return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
-			case (ET_UNARY_OPERATION):
-				return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
-			case (ET_CONDITIONAL_EXPRESSION):
-				break;
-			/*case (ET_FUNCTION_CALL):
-				interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
-				break;*/
-			case (ET_LITERAL):
-				return interpretLiteral(dynamic_cast<AST::Literal*>(node));
-				break;
-			case (ET_VARIABLE):
-				return interpretVariable(dynamic_cast<AST::Variable*>(node));
-				break;
-			default:
-				break;
-		}
+	//auto expression = (AST::Expression*)node;
+	auto expression = dynamic_cast<AST::Expression*>(node);
+	switch (expression->getExpressionType())
+	{
+	case (ET_BINARY_OPERATION):
+		return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
+	case (ET_UNARY_OPERATION):
+		return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
+	case (ET_CONDITIONAL_EXPRESSION):
+		break;
+		/*case (ET_FUNCTION_CALL):
+			interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
+			break;*/
+	case (ET_LITERAL):
+		return interpretLiteral(dynamic_cast<AST::Literal*>(node));
+		break;
+	case (ET_VARIABLE):
+		return interpretVariable(dynamic_cast<AST::Variable*>(node));
+		break;
+	default:
+		break;
+	}
 	}
 
 	return NULL;
@@ -67,11 +67,22 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 {
 	if (OperatorsMap::isAssignment(node->getOperator()._type))
 	{
-		if (node->getLeft()->getExpressionType() != ET_VARIABLE)
-			throw "cannot assign to anything but a variable!";
-
 		Value* rightVal = interpret(node->getRight());
-		Value* var = interpretVariable((AST::Variable*)node->getLeft());
+		Value* var;
+		if (node->getLeft()->getExpressionType() == ET_VARIABLE)
+		{
+			var = interpretVariable((AST::Variable*)node->getLeft());
+		}
+		else if (node->getLeft()->getExpressionType() == ET_VARIABLE_DECLARATION)
+		{
+			auto varDecl = ((AST::VariableDeclaration*)node->getLeft());
+			interpret(varDecl);
+			var = _variables[varDecl->getVarId().name];
+		}
+		else throw "cannot assign to anything but a variable!";
+
+		
+		
 		if (var->getType() != rightVal->getType())
 			throw "different types invalid";
 		switch (node->getOperator()._type)
@@ -106,6 +117,7 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 			return var;
 		}
 	}
+	
 	return nullptr;
 }
 
