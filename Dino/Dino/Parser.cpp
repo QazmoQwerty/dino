@@ -306,15 +306,21 @@ AST::Node * Parser::nud(Token * token)
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{
+			
 			AST::Node* inner = parse();
 			if (!eatOperator(OT_PARENTHESIS_CLOSE))
 				throw "')' missing";
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
+			if (peekToken()->_type == TT_IDENTIFIER)
 			{
-				auto func = new AST::Function();
+				// Function literal
+				AST::Identificator returnType = { nextToken()->_data };
 
+				if (!eatOperator(OT_CURLY_BRACES_OPEN))
+					throw "TODO - error";
+
+				auto func = new AST::Function();
 				vector<AST::VariableDeclaration*> vec;
-				
+
 				AST::Node* temp = inner;
 				while (temp->isExpression() && dynamic_cast<AST::Expression*>(temp)->getExpressionType() == ET_BINARY_OPERATION)
 				{
@@ -324,21 +330,28 @@ AST::Node * Parser::nud(Token * token)
 							vec.push_back(dynamic_cast<AST::VariableDeclaration*>(bo->getRight()));
 						else throw "TODO - error msg";
 
-					if (bo->getLeft()->isStatement())
+					/*if (bo->getLeft()->isStatement())
 						if (dynamic_cast<AST::Statement*>(bo->getLeft())->getStatementType() == ST_VARIABLE_DECLARATION)
 							vec.push_back(dynamic_cast<AST::VariableDeclaration*>(bo->getLeft()));
-						else throw "TODO - error msg";
+						else throw "TODO - error msg";*/
 
 					temp = bo->getLeft();
 					delete bo;
 				}
+				if (temp->isStatement())
+					if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
+						vec.push_back(dynamic_cast<AST::VariableDeclaration*>(temp));
+					else throw "TODO - error msg";
+
 				std::reverse(vec.begin(), vec.end());
 
 				for (auto i : vec)
 					func->addParameter(i);
 				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+				func->setReturnType(returnType);
 				return func;
 			}
+			
 			return inner;
 		}
 		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
