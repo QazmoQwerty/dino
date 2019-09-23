@@ -2,6 +2,8 @@
 
 Value* Interpreter::interpret(AST::Node * node)
 {
+	if (node == nullptr)
+		return NULL;
 	if (node->isStatement())
 	{
 		auto statement = dynamic_cast<AST::Statement*>(node);
@@ -134,6 +136,9 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			break;
 		case (OT_SMALLER):
 			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
+			break;
+		case (OT_SMALLER_EQUAL):
+			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() <= ((IntValue*)rightVal)->getValue());
 			break;
 		case (OT_LOGICAL_AND):
 			if (leftVal->getType() == "bool") return new BoolValue(((BoolValue*)leftVal)->getValue() && ((BoolValue*)rightVal)->getValue());
