@@ -14,7 +14,10 @@ bool OperatorsMap::isWord(OperatorType type)
 		OT_DO,
 		OT_FOR,
 		OT_IF,
-		OT_ELSE
+		OT_ELSE, 
+		OT_LOGICAL_AND,
+		OT_LOGICAL_OR,
+		OT_LOGICAL_NOT,
 	};
 	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);
 }
@@ -107,7 +110,7 @@ void OperatorsMap::setup()
 	_map["}"]	=	{ OT_CURLY_BRACES_CLOSE,	"}",	LEFT_TO_RIGHT,		0 };
 	_map["."]	=	{ OT_PERIOD,				".",	LEFT_TO_RIGHT,		150 };
 	_map["^^"]	=	{ OT_EXPONENTIATION,		"^^",	RIGHT_TO_LEFT,		140 };
-	_map["!"]	=	{ OT_LOGICAL_NOT,			"!",	RIGHT_TO_LEFT,		130 };
+	//_map["!"]	=	{ OT_LOGICAL_NOT,			"!",	RIGHT_TO_LEFT,		130 };
 	_map["~"]	=	{ OT_BITWISE_NOT,			"~",	RIGHT_TO_LEFT,		130 };
 	_map["*"]	=	{ OT_MULTIPLY,				"*",	LEFT_TO_RIGHT,		120 };
 	_map["/"]	=	{ OT_DIVIDE,				"/",	LEFT_TO_RIGHT,		120 };
@@ -124,8 +127,8 @@ void OperatorsMap::setup()
 	_map["&"]	=	{ OT_BITWISE_AND,			"&",	LEFT_TO_RIGHT,		70 };
 	_map["^"]	=	{ OT_BITWISE_XOR,			"^",	LEFT_TO_RIGHT,		60 };
 	_map["?"]	=	{ OT_BITWISE_OR,			"?",	LEFT_TO_RIGHT,		50 };
-	_map["&&"]	=	{ OT_LOGICAL_AND,			"&&",	LEFT_TO_RIGHT,		40 };
-	_map["??"]	=	{ OT_LOGICAL_OR,			"??",	LEFT_TO_RIGHT,		30 };
+	//_map["&&"]	=	{ OT_LOGICAL_AND,			"&&",	LEFT_TO_RIGHT,		40 };
+	//_map["??"]	=	{ OT_LOGICAL_OR,			"??",	LEFT_TO_RIGHT,		30 };
 	_map["="]	=	{ OT_ASSIGN_EQUAL,			"=",	RIGHT_TO_LEFT,		20 };
 	_map["+="]	=	{ OT_ASSIGN_ADD,			"+=",	RIGHT_TO_LEFT,		20 };
 	_map["-="]	=	{ OT_ASSIGN_SUBTRACT,		"-=",	RIGHT_TO_LEFT,		20 };
@@ -154,4 +157,8 @@ void OperatorsMap::setup()
 	_wordsMap["if"] = { OT_IF, "if", NULL, NULL };
 	_wordsMap["else"] = { OT_ELSE, "else", NULL, NULL };
 	_wordsMap["return"] = { OT_RETURN, "return", NULL, NULL };
+
+	_wordsMap["not"]	=	{ OT_LOGICAL_NOT,			"not",	RIGHT_TO_LEFT,		130 };
+	_wordsMap["and"]	=	{ OT_LOGICAL_AND,			"and",	LEFT_TO_RIGHT,		40 };
+	_wordsMap["or"]		=	{ OT_LOGICAL_OR,			"or",	LEFT_TO_RIGHT,		30 };
 }
