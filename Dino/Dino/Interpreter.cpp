@@ -12,7 +12,7 @@ Value* Interpreter::interpret(AST::Node * node)
 			case(ST_ASSIGNMENT):
 				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
 			case(ST_VARIABLE_DECLARATION):
-				interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
+				return interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
 				break;
 			case (ST_FUNCTION_CALL):
 				return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
@@ -27,13 +27,13 @@ Value* Interpreter::interpret(AST::Node * node)
 				}
 				break;
 			case(ST_WHILE_LOOP):
-				interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
+				return interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
 				break;
 			case(ST_INCREMENT):
 				return interpretIncrement(dynamic_cast<AST::Increment*>(node));
 				break;
 			case(ST_DO_WHILE_LOOP):
-				interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
+				return interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
 				break;
 			case(ST_UNARY_OPERATION):
 				return interpretUnaryOpStatement(dynamic_cast<AST::UnaryOperationStatement*>(node));
@@ -72,54 +72,55 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 {
 	if (OperatorsMap::isAssignment(node->getOperator()._type))
 	{
-		Value* rightVal = interpret(node->getRight());
-		Value* var;
-		if (node->getLeft()->getExpressionType() == ET_VARIABLE)
+		Value* rvalue = interpret(node->getRight());
+		Value* lvalue = interpret(node->getLeft());
+		/*if (node->getLeft()->getExpressionType() == ET_VARIABLE)
 		{
-			var = interpretVariable((AST::Variable*)node->getLeft());
+			lvalue = interpretVariable((AST::Variable*)node->getLeft());
 		}
 		else if (node->getLeft()->getExpressionType() == ET_VARIABLE_DECLARATION)
 		{
-			auto varDecl = ((AST::VariableDeclaration*)node->getLeft());
-			interpret(varDecl);
-			var = _variables[varDecl->getVarId().name];
+			lvalue = interpret(node->getLeft());
+			//auto varDecl = ((AST::VariableDeclaration*)node->getLeft());
+			//interpret(varDecl);
+			//lvalue = _variables[varDecl->getVarId().name];
 		}
-		else throw "cannot assign to anything but a variable!";
-
+		throw "cannot assign to anything but a variable!";*/
 		
 		
-		if (var->getType() != rightVal->getType())
+		
+		if (lvalue->getType() != rvalue->getType())
 			throw "different types invalid";
 		switch (node->getOperator()._type)
 		{
 		case (OT_ASSIGN_EQUAL):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "bool") ((BoolValue*)var)->setValue(((BoolValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)rightVal)->getValue());
-			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)rightVal)->getValue());
-			else if (var->getType() == "char") ((CharValue*)var)->setValue(((CharValue*)rightVal)->getValue());
-			else if (var->getType() == "func") ((FuncValue*)var)->setValue(((FuncValue*)rightVal)->getValue());
-			return var;
+			if (lvalue->getType() == "int") ((IntValue*)lvalue)->setValue(((IntValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "bool") ((BoolValue*)lvalue)->setValue(((BoolValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "char") ((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "func") ((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
+			return lvalue;
 		case (OT_ASSIGN_ADD):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() + ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() + ((FracValue*)rightVal)->getValue());
-			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)var)->getValue() + ((StringValue*)rightVal)->getValue());
-			return var;
+			if (lvalue->getType() == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() + ((IntValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() + ((FracValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "string") ((StringValue*)lvalue)->setValue(((StringValue*)lvalue)->getValue() + ((StringValue*)rvalue)->getValue());
+			return lvalue;
 		case (OT_ASSIGN_SUBTRACT):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() - ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() - ((FracValue*)rightVal)->getValue());
-			return var;
+			if (lvalue->getType() == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() - ((IntValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() - ((FracValue*)rvalue)->getValue());
+			return lvalue;
 		case (OT_ASSIGN_MULTIPLY):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() * ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() * ((FracValue*)rightVal)->getValue());
-			return var;
+			if (lvalue->getType() == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() * ((IntValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() * ((FracValue*)rvalue)->getValue());
+			return lvalue;
 		case (OT_ASSIGN_DIVIDE):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() / ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() / ((FracValue*)rightVal)->getValue());
-			return var;
+			if (lvalue->getType() == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() / ((IntValue*)rvalue)->getValue());
+			else if (lvalue->getType() == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() / ((FracValue*)rvalue)->getValue());
+			return lvalue;
 		case (OT_ASSIGN_MODULUS):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() % ((IntValue*)rightVal)->getValue());
-			return var;
+			if (lvalue->getType() == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() % ((IntValue*)rvalue)->getValue());
+			return lvalue;
 		}
 	}
 	
@@ -236,19 +237,19 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 
 	for (unsigned int i = 0; i < params.size(); i++)
 	{
-		interpret(params[i]);
+		Value* lvalue = interpret(params[i]);
+		Value* rvalue = interpret(values[i]);
 
 		string name = params[i]->getVarId().name;
-		Value* val = interpret(values[i]);
 		if (params[i]->getVarType().name != val->getType())
 			throw "Incompatible function inputs";
-
-		if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
-		else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
-		else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
-		else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
-		else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
-		else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
+		
+		if (val->getType() == "int")		((IntValue*)lvalue)->setValue(((IntValue*)rvalue)->getValue());
+		else if (val->getType() == "bool")	((BoolValue*)lvalue)->setValue(((BoolValue*)rvalue)->getValue());
+		else if (val->getType() == "frac")	((FracValue*)lvalue)->setValue(((FracValue*)rvalue)->getValue());
+		else if (val->getType() == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
+		else if (val->getType() == "char")	((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
+		else if (val->getType() == "func")	((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
 		else throw "custom types are not supported yet";
 	}
 	Value* ret = interpret(func->getValue()->getContent());
