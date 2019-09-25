@@ -29,7 +29,7 @@ private:
 	
 
 	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
-	void interpretVariableDeclaration(AST::VariableDeclaration* node);
+	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
 	Value* interpretIfThenElse(AST::IfThenElse* node);
 	Value* interpretWhileLoop(AST::WhileLoop* node);
 	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);

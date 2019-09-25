@@ -9,11 +9,6 @@
 	}
 }*/
 
-Print((int a, int b) int {
-	int x = a + b
-	return x
-}(1, 3))
-int x = 10
-Print(x)
-int x = 12
-Print(x)
+int i = 10
+i = 12
+Print(i)

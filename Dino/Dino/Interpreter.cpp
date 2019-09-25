@@ -260,53 +260,6 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 	return ret;
 }
 
-//Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
-//{
-//	Value* v = interpret(node->getFunctionId());
-//	if (v->getType() != "func")
-//		throw "cannot invoke non-function!";
-//	if (node->getFunctionId().name == "Print")
-//		for (auto i : node->getParameters())
-//			std::cout << interpret(i)->toString() << std::endl;
-//	else if (_variables.count(node->getFunctionId().name))
-//	{
-//		Value* var = _variables[node->getFunctionId().name];
-//		if (var->getType() != "func")
-//			throw "cannot invoke non-function value!";
-//		auto values = node->getParameters();
-//
-//		auto params = ((FuncValue*)var)->getValue()->getParameters();
-//
-//		if (params.size() != values.size())
-//			throw "Incorrect number of parameter inputs";
-//		for (unsigned int i = 0; i < params.size(); i++)
-//		{
-//			interpret(params[i]);
-//			auto assign = new AST::Assignment();
-//			string name = params[i]->getVarId().name;
-//			Value* val = interpret(values[i]);
-//			if (params[i]->getVarType().name != val->getType())
-//				throw "Incompatible function inputs";
-//
-//			if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
-//			else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
-//			else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
-//			else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
-//			else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
-//			else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
-//			else throw "custom types are not supported yet";
-//		}
-//		Value* ret = interpret(((FuncValue*)var)->getValue()->getContent());
-//		for (auto i : params)
-//		{
-//			delete _variables[i->getVarId().name];
-//			_variables.erase(i->getVarId().name);
-//		}
-//		return ret;
-//	}
-//	return nullptr;
-//}
-
 Value * Interpreter::interpretLiteral(AST::Literal * node)
 {
 	switch (node->getLiteralType())
@@ -355,29 +308,32 @@ Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * no
 	return NULL;
 }
 
-void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
+Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 {
 	string type = node->getVarType().name;
 	string name = node->getVarId().name;
 	if (_variables.count(name) != 0)
 		throw "illegal redefinition/multiple initialization";
 	auto vec = node->getModifiers();
+	_variables[name] = NULL;
+	Value* &var = _variables[name];
 	if (std::find_if(std::begin(vec), std::end(vec), 
 		[](AST::Identificator id) { return id.name == "func"; }) != std::end(vec))
 	{
 		if (type == "bool" || type == "int" || type == "frac" || type == "string" || type == "char" || type == "void")
-			_variables[name] = new FuncValue(type);
+			var = new FuncValue(type);
 		else throw "custom types are not implemented yet.";
 	}
 	else
 	{
-		if		(type == "bool")	_variables[name] = new BoolValue();
-		else if (type == "int")		_variables[name] = new IntValue();
-		else if (type == "frac")	_variables[name] = new FracValue();
-		else if (type == "string")	_variables[name] = new StringValue();
-		else if (type == "char")	_variables[name] = new CharValue();
+		if		(type == "bool")	var = new BoolValue();
+		else if (type == "int")		var = new IntValue();
+		else if (type == "frac")	var = new FracValue();
+		else if (type == "string")	var = new StringValue();
+		else if (type == "char")	var = new CharValue();
 		else throw "custom types are not implemented yet.";
 	}
+	return var;
 }
 
 Value* Interpreter::interpretIfThenElse(AST::IfThenElse * node)
