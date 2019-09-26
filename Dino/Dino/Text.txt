@@ -1,26 +1,12 @@
-
-/*for int i = 0 | i < 10 | ++i {
-	for int j = 0 | j < 10 | ++j {
-		func int c = (int a, int b) int {
-			return a * b
-		}
-		x = c(i, j)
-		Print(x)
+func int Fib = (int n) int {
+	if n <= 1 { 
+		return n 
 	}
-}*/
+	else {
+		return Fib(n-1) + Fib(n-2)
+	}
+}
 
-//func int Fib = (int n) int {
-	//if n <= 1 { 
-		//return n 
-	//}
-	/*else {
-		//return Fib(n-1) + Fib(n-2)
-	}*/
-//}
-
-//int x = Fib(0)
-
-int b = 10
-for int i = 0 | i < b | ++i {
-	Print(i * b)
+for int i = 0 | i < 20 | ++i {
+	Print(Fib(i))
 }

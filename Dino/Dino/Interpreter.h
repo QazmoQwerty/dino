@@ -118,6 +118,7 @@ private:
 	Value* interpretWhileLoop(AST::WhileLoop* node);
 	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
 
+	Value* copyValue(Value* val);
 	int currentScope() { return _variables.size() - 1; }
 	void enterBlock() { _variables.push_back(unordered_map<string, Value*>()); }
 	void leaveBlock();

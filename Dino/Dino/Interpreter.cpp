@@ -77,7 +77,6 @@ Value* Interpreter::interpret(AST::Node * node)
 	return NULL;
 }
 
-// 
 Value * Interpreter::interpretAssignment(AST::Assignment * node)
 {
 	// TODO - should return copy of lvalue, not a reference to it
@@ -230,7 +229,6 @@ Value * Interpreter::interpretIncrement(AST::Increment * node)
 
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 {
-	// TODO
 	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
 		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "Print") 
 	{
@@ -308,9 +306,11 @@ Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * no
 	{
 	case (OT_RETURN):
 		{
-			Value* val = interpret(node->getExpression()); // TODO - aaa
-			val->setReturn();
-			return val;
+			Value* val = interpret(node->getExpression());
+			Value* copy = copyValue(val);
+			copy->setReturn();
+			deleteIfIsTemp(val);
+			return copy;
 		}
 	}
 	return NULL;
@@ -398,5 +398,16 @@ Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
 			throw "condition must be bool";
 	} while (((BoolValue*)condition)->getValue());
 	leaveBlock();
+	return nullptr;
+}
+
+Value * Interpreter::copyValue(Value * val)
+{
+	string type = val->getType();
+	if		(type == "bool")	return new BoolValue(((BoolValue*)val)->getValue());
+	else if (type == "int")		return new IntValue(((IntValue*)val)->getValue());
+	else if (type == "frac")	return new FracValue(((FracValue*)val)->getValue());
+	else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
+	else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
 	return nullptr;
 }
