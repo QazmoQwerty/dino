@@ -7,34 +7,16 @@ class Value
 private:
 	string _type;
 	bool _isReturn;
+	bool _isTemp;
 public:
-	Value(string type) { _type = type; _isReturn = false; }
+	Value(string type) { _type = type; _isReturn = false; _isTemp = true; }
 	void setReturn() { _isReturn = true; }
 	bool isReturn() { return _isReturn; }
 	string getType() { return _type; }
+	void setIsTemp() { _isTemp = true; }
+	void setNotTemp() { _isTemp = false; }
+	bool isTemp() { return _isTemp; }
 	virtual string toString() = 0;
-};
-
-class Interpreter
-{
-private:
-	unordered_map<string, Value*> _variables;
-	Value* interpretBinaryOp(AST::BinaryOperation* node);
-	Value* interpretUnaryOp(AST::UnaryOperation* node);
-	Value* interpretIncrement(AST::Increment* node);
-	Value* interpretFuncCall(AST::FunctionCall* node);
-	Value* interpretLiteral(AST::Literal* node);
-	Value* interpretVariable(AST::Variable* node);
-	Value* interpretAssignment(AST::Assignment* node);
-	
-
-	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
-	void interpretVariableDeclaration(AST::VariableDeclaration* node);
-	Value* interpretIfThenElse(AST::IfThenElse* node);
-	Value* interpretWhileLoop(AST::WhileLoop* node);
-	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
-public:
-	Value* interpret(AST::Node* node);
 };
 
 class IntValue : public Value
@@ -114,4 +96,33 @@ public:
 	}
 	AST::Function* getValue() { return _value; }
 	virtual string toString() { return _value->toString(); };
+};
+
+class Interpreter
+{
+private:
+	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
+	int _scope;
+
+	Value* interpretBinaryOp(AST::BinaryOperation* node);
+	Value* interpretUnaryOp(AST::UnaryOperation* node);
+	Value* interpretIncrement(AST::Increment* node);
+	Value* interpretFuncCall(AST::FunctionCall* node);
+	Value* interpretLiteral(AST::Literal* node);
+	Value* interpretVariable(AST::Variable* node);
+	Value* interpretAssignment(AST::Assignment* node);
+	
+	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
+	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
+	Value* interpretIfThenElse(AST::IfThenElse* node);
+	Value* interpretWhileLoop(AST::WhileLoop* node);
+	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
+
+	Value* copyValue(Value* val);
+	int currentScope() { return _variables.size() - 1; }
+	void enterBlock() { _variables.push_back(unordered_map<string, Value*>()); }
+	void leaveBlock();
+public:
+	Value* interpret(AST::Node* node);
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); }
 };

@@ -1,5 +1,14 @@
 #include "Interpreter.h"
 
+#define deleteIfIsTemp(n) { if (n != nullptr && n->isTemp()) delete n; }
+
+void Interpreter::leaveBlock()
+{
+	for (auto i : _variables[currentScope()])
+		delete i.second;
+	_variables.pop_back();
+}
+
 Value* Interpreter::interpret(AST::Node * node)
 {
 	if (node == nullptr)
@@ -12,7 +21,7 @@ Value* Interpreter::interpret(AST::Node * node)
 			case(ST_ASSIGNMENT):
 				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
 			case(ST_VARIABLE_DECLARATION):
-				interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
+				return interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
 				break;
 			case (ST_FUNCTION_CALL):
 				return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
@@ -27,13 +36,13 @@ Value* Interpreter::interpret(AST::Node * node)
 				}
 				break;
 			case(ST_WHILE_LOOP):
-				interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
+				return interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
 				break;
 			case(ST_INCREMENT):
 				return interpretIncrement(dynamic_cast<AST::Increment*>(node));
 				break;
 			case(ST_DO_WHILE_LOOP):
-				interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
+				return interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
 				break;
 			case(ST_UNARY_OPERATION):
 				return interpretUnaryOpStatement(dynamic_cast<AST::UnaryOperationStatement*>(node));
@@ -70,133 +79,137 @@ Value* Interpreter::interpret(AST::Node * node)
 
 Value * Interpreter::interpretAssignment(AST::Assignment * node)
 {
+	// TODO - should return copy of lvalue, not a reference to it
+	Value* ret = nullptr;
 	if (OperatorsMap::isAssignment(node->getOperator()._type))
 	{
-		Value* rightVal = interpret(node->getRight());
-		Value* var;
-		if (node->getLeft()->getExpressionType() == ET_VARIABLE)
-		{
-			var = interpretVariable((AST::Variable*)node->getLeft());
-		}
-		else if (node->getLeft()->getExpressionType() == ET_VARIABLE_DECLARATION)
-		{
-			auto varDecl = ((AST::VariableDeclaration*)node->getLeft());
-			interpret(varDecl);
-			var = _variables[varDecl->getVarId().name];
-		}
-		else throw "cannot assign to anything but a variable!";
+		Value* rvalue = interpret(node->getRight());
+		Value* lvalue = interpret(node->getLeft());
+		
+		string type = lvalue->getType();
+
+		if (type != rvalue->getType())
+			throw "different types invalid";
 
 		
-		
-		if (var->getType() != rightVal->getType())
-			throw "different types invalid";
 		switch (node->getOperator()._type)
 		{
 		case (OT_ASSIGN_EQUAL):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "bool") ((BoolValue*)var)->setValue(((BoolValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)rightVal)->getValue());
-			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)rightVal)->getValue());
-			else if (var->getType() == "char") ((CharValue*)var)->setValue(((CharValue*)rightVal)->getValue());
-			else if (var->getType() == "func") ((FuncValue*)var)->setValue(((FuncValue*)rightVal)->getValue());
-			return var;
+			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)rvalue)->getValue());
+			else if (type == "bool") ((BoolValue*)lvalue)->setValue(((BoolValue*)rvalue)->getValue());
+			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)rvalue)->getValue());
+			else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
+			else if (type == "char") ((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
+			else if (type == "func") ((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
+			break;
 		case (OT_ASSIGN_ADD):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() + ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() + ((FracValue*)rightVal)->getValue());
-			else if (var->getType() == "string") ((StringValue*)var)->setValue(((StringValue*)var)->getValue() + ((StringValue*)rightVal)->getValue());
-			return var;
+			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() + ((IntValue*)rvalue)->getValue());
+			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() + ((FracValue*)rvalue)->getValue());
+			else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)lvalue)->getValue() + ((StringValue*)rvalue)->getValue());
+			break;
 		case (OT_ASSIGN_SUBTRACT):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() - ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() - ((FracValue*)rightVal)->getValue());
-			return var;
+			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() - ((IntValue*)rvalue)->getValue());
+			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() - ((FracValue*)rvalue)->getValue());
+			break;
 		case (OT_ASSIGN_MULTIPLY):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() * ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() * ((FracValue*)rightVal)->getValue());
-			return var;
+			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() * ((IntValue*)rvalue)->getValue());
+			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() * ((FracValue*)rvalue)->getValue());
+			break;
 		case (OT_ASSIGN_DIVIDE):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() / ((IntValue*)rightVal)->getValue());
-			else if (var->getType() == "frac") ((FracValue*)var)->setValue(((FracValue*)var)->getValue() / ((FracValue*)rightVal)->getValue());
-			return var;
+			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() / ((IntValue*)rvalue)->getValue());
+			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() / ((FracValue*)rvalue)->getValue());
+			break;
 		case (OT_ASSIGN_MODULUS):
-			if (var->getType() == "int") ((IntValue*)var)->setValue(((IntValue*)var)->getValue() % ((IntValue*)rightVal)->getValue());
-			return var;
+			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() % ((IntValue*)rvalue)->getValue());
+			break;
 		}
+		deleteIfIsTemp(rvalue);
+		return lvalue;
 	}
-	
-	return nullptr;
+	return ret;
 }
 
 Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 {	
 	Value* leftVal = interpret(node->getLeft());
 	Value* rightVal = interpret(node->getRight());
+	Value* ret = nullptr;
 	if (leftVal->getType() != rightVal->getType())
 		throw "different types invalid";
 	switch (node->getOperator()._type)
 	{
 		case (OT_EQUAL):
-			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
 			break;
 		case (OT_SMALLER):
-			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
 			break;
 		case (OT_SMALLER_EQUAL):
-			if (leftVal->getType() == "int") return new BoolValue(((IntValue*)leftVal)->getValue() <= ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() <= ((IntValue*)rightVal)->getValue());
+			break;
+		case (OT_GREATER):
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() > ((IntValue*)rightVal)->getValue());
+			break;
+		case (OT_GREATER_EQUAL):
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() >= ((IntValue*)rightVal)->getValue());
 			break;
 		case (OT_LOGICAL_AND):
-			if (leftVal->getType() == "bool") return new BoolValue(((BoolValue*)leftVal)->getValue() && ((BoolValue*)rightVal)->getValue());
+			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() && ((BoolValue*)rightVal)->getValue());
 			break;
-
 		case(OT_ADD):
-			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() + ((FracValue*)rightVal)->getValue());
-			if (leftVal->getType() == "string") return new StringValue(((StringValue*)leftVal)->getValue() + ((StringValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() + ((FracValue*)rightVal)->getValue());
+			if (leftVal->getType() == "string") ret = new StringValue(((StringValue*)leftVal)->getValue() + ((StringValue*)rightVal)->getValue());
 			break;
 		case(OT_SUBTRACT):
-			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() - ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() - ((FracValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() - ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() - ((FracValue*)rightVal)->getValue());
 			break;
 		case(OT_MULTIPLY):
-			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() * ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() * ((FracValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() * ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() * ((FracValue*)rightVal)->getValue());
 			break;
 		case(OT_DIVIDE):
-			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() / ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") return new FracValue(((FracValue*)leftVal)->getValue() / ((FracValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() / ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() / ((FracValue*)rightVal)->getValue());
 			break;
 		case(OT_MODULUS):
-			if (leftVal->getType() == "int") return new IntValue(((IntValue*)leftVal)->getValue() % ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() % ((IntValue*)rightVal)->getValue());
 			break;
-		default:
-			break;
+		default: throw "unsupported binary operator";
 	}
-	return NULL;
+	deleteIfIsTemp(leftVal);
+	deleteIfIsTemp(rightVal);
+	return ret;
 }
 
 Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 {
 	Value* val = interpret(node->getExpression());
+	Value* ret = nullptr;
 	switch (node->getOperator()._type)
 	{ 
 	case (OT_ADD):
-		return val;
+		break;
 	case (OT_SUBTRACT):
-		if (val->getType() == "int") ((IntValue*)val)->setValue(-((IntValue*)val)->getValue());
-		return val;
+		if (val->getType() == "int") ret = new IntValue(-((IntValue*)val)->getValue());
+		break;
 	case (OT_INCREMENT):
-		if (val->getType() == "int") ((IntValue*)val)->setValue(((IntValue*)val)->getValue() + 1);
-		return val;
+		if (val->getType() == "int") ret = new IntValue(((IntValue*)val)->getValue() + 1);
+		break;
 	case (OT_DECREMENT):
-		if (val->getType() == "int") ((IntValue*)val)->setValue(((IntValue*)val)->getValue() - 1);
-		return val;
+		if (val->getType() == "int") ret = new IntValue(((IntValue*)val)->getValue() - 1);
+		break;
 	case (OT_BITWISE_NOT):
-		if (val->getType() == "int") ((IntValue*)val)->setValue(~((IntValue*)val)->getValue());
-		return val;
+		if (val->getType() == "int") ret = new IntValue(~((IntValue*)val)->getValue());
+		break;
 	case (OT_LOGICAL_NOT):
-		if (val->getType() == "bool") ((BoolValue*)val)->setValue(!((BoolValue*)val)->getValue());
-		return val;
+		if (val->getType() == "bool") ret = new BoolValue(!((BoolValue*)val)->getValue());
+		break;
+	default: throw "unsupported unary operator";
 	}
-	return NULL;
+	deleteIfIsTemp(val);
+	return ret;
 }
 
 Value * Interpreter::interpretIncrement(AST::Increment * node)
@@ -219,11 +232,14 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
 		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "Print") 
 	{
-		for (auto i : node->getParameters())
-			std::cout << interpret(i)->toString() << std::endl;
+		for (auto i : node->getParameters()) 
+		{
+			Value* val = interpret(i);
+			std::cout << val->toString() << std::endl;
+		}
 		return NULL;
 	}
-		
+	enterBlock();
 	Value* val = interpret(node->getFunctionId());
 	if (val->getType() != "func")
 		throw "cannot invoke non-function!";
@@ -236,181 +252,162 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 
 	for (unsigned int i = 0; i < params.size(); i++)
 	{
-		interpret(params[i]);
+		Value* rvalue = interpret(values[i]);
+		Value* lvalue = interpret(params[i]);
 
 		string name = params[i]->getVarId().name;
-		Value* val = interpret(values[i]);
-		if (params[i]->getVarType().name != val->getType())
+		if (lvalue->getType() != rvalue->getType())
 			throw "Incompatible function inputs";
-
-		if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
-		else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
-		else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
-		else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
-		else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
-		else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
+		
+		string type = lvalue->getType();
+		if (type == "int")		((IntValue*)lvalue)->setValue(((IntValue*)rvalue)->getValue());
+		else if (type == "bool")	((BoolValue*)lvalue)->setValue(((BoolValue*)rvalue)->getValue());
+		else if (type == "frac")	((FracValue*)lvalue)->setValue(((FracValue*)rvalue)->getValue());
+		else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
+		else if (type == "char")	((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
+		else if (type == "func")	((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
 		else throw "custom types are not supported yet";
 	}
 	Value* ret = interpret(func->getValue()->getContent());
-	for (auto i : params)
-	{
-		delete _variables[i->getVarId().name];
-		_variables.erase(i->getVarId().name);
-	}
+	leaveBlock();
 	return ret;
 }
-
-//Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
-//{
-//	Value* v = interpret(node->getFunctionId());
-//	if (v->getType() != "func")
-//		throw "cannot invoke non-function!";
-//	if (node->getFunctionId().name == "Print")
-//		for (auto i : node->getParameters())
-//			std::cout << interpret(i)->toString() << std::endl;
-//	else if (_variables.count(node->getFunctionId().name))
-//	{
-//		Value* var = _variables[node->getFunctionId().name];
-//		if (var->getType() != "func")
-//			throw "cannot invoke non-function value!";
-//		auto values = node->getParameters();
-//
-//		auto params = ((FuncValue*)var)->getValue()->getParameters();
-//
-//		if (params.size() != values.size())
-//			throw "Incorrect number of parameter inputs";
-//		for (unsigned int i = 0; i < params.size(); i++)
-//		{
-//			interpret(params[i]);
-//			auto assign = new AST::Assignment();
-//			string name = params[i]->getVarId().name;
-//			Value* val = interpret(values[i]);
-//			if (params[i]->getVarType().name != val->getType())
-//				throw "Incompatible function inputs";
-//
-//			if (val->getType() == "int") ((IntValue*)_variables[name])->setValue(((IntValue*)val)->getValue());
-//			else if (val->getType() == "bool") ((BoolValue*)_variables[name])->setValue(((BoolValue*)val)->getValue());
-//			else if (val->getType() == "frac") ((FracValue*)_variables[name])->setValue(((FracValue*)val)->getValue());
-//			else if (val->getType() == "string") ((StringValue*)_variables[name])->setValue(((StringValue*)val)->getValue());
-//			else if (val->getType() == "char") ((CharValue*)_variables[name])->setValue(((CharValue*)val)->getValue());
-//			else if (val->getType() == "func") ((FuncValue*)_variables[name])->setValue(((FuncValue*)val)->getValue());
-//			else throw "custom types are not supported yet";
-//		}
-//		Value* ret = interpret(((FuncValue*)var)->getValue()->getContent());
-//		for (auto i : params)
-//		{
-//			delete _variables[i->getVarId().name];
-//			_variables.erase(i->getVarId().name);
-//		}
-//		return ret;
-//	}
-//	return nullptr;
-//}
 
 Value * Interpreter::interpretLiteral(AST::Literal * node)
 {
 	switch (node->getLiteralType())
 	{
-	case (LT_BOOLEAN):
-		return new BoolValue(((AST::Boolean*)node)->getValue());
-	case (LT_INTEGER):
-		return new IntValue(((AST::Boolean*)node)->getValue());
-		break;
-	case (LT_CHARACTER):
-		return new CharValue(((AST::Character*)node)->getValue());
-		break;
-	case (LT_STRING):
-		return new StringValue(((AST::String*)node)->getValue());
-		break;
-	case (LT_FRACTION):
-		return new FracValue(((AST::Fraction*)node)->getValue());
-		break;
-	case (LT_FUNCTION):
-		return new FuncValue((AST::Function*)node);
-		break;
-	case (LT_NULL):
-		break;
+	case (LT_BOOLEAN):	 return new BoolValue(((AST::Boolean*)node)->getValue());
+	case (LT_INTEGER):	 return new IntValue(((AST::Boolean*)node)->getValue());
+	case (LT_CHARACTER): return new CharValue(((AST::Character*)node)->getValue());
+	case (LT_STRING):	 return new StringValue(((AST::String*)node)->getValue());
+	case (LT_FRACTION):  return new FracValue(((AST::Fraction*)node)->getValue());
+	case (LT_FUNCTION):  return new FuncValue((AST::Function*)node);
+	default: return nullptr;
+	//case (LT_NULL): break;
 	}
-	return nullptr;
 }
 
 Value * Interpreter::interpretVariable(AST::Variable * node)
 {
-	if (_variables.count(node->getVarId().name) == 0)
-		throw "variable does not exist";
-	return _variables[node->getVarId().name];
+	string name = node->getVarId().name;
+	for (int scope = currentScope(); scope >= 0; scope--)
+	{
+		if (_variables[scope].count(name))
+			return _variables[scope][name];
+	}
+	throw "variable does not exist";
 }
 
 Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * node)
 {
+	
 	switch (node->getOperator()._type)
 	{
 	case (OT_RETURN):
 		{
 			Value* val = interpret(node->getExpression());
-			val->setReturn();
-			return val;
+			Value* copy = copyValue(val);
+			copy->setReturn();
+			deleteIfIsTemp(val);
+			return copy;
 		}
 	}
 	return NULL;
 }
 
-void Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
+Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 {
 	string type = node->getVarType().name;
 	string name = node->getVarId().name;
-	if (_variables.count(name) != 0)
+	int scope = currentScope();
+	if (_variables[scope].count(name) != 0)
 		throw "illegal redefinition/multiple initialization";
-	auto vec = node->getModifiers();
-	if (std::find_if(std::begin(vec), std::end(vec), 
-		[](AST::Identificator id) { return id.name == "func"; }) != std::end(vec))
+	auto modifiers = node->getModifiers();
+	Value* &val = _variables[scope][name];
+	if (std::find_if(std::begin(modifiers), std::end(modifiers),
+		[](AST::Identificator id) { return id.name == "func"; }) != std::end(modifiers))	// check if "modifiers" has "func" in it
 	{
 		if (type == "bool" || type == "int" || type == "frac" || type == "string" || type == "char" || type == "void")
-			_variables[name] = new FuncValue(type);
+			val = new FuncValue(type);
 		else throw "custom types are not implemented yet.";
 	}
 	else
 	{
-		if		(type == "bool")	_variables[name] = new BoolValue();
-		else if (type == "int")		_variables[name] = new IntValue();
-		else if (type == "frac")	_variables[name] = new FracValue();
-		else if (type == "string")	_variables[name] = new StringValue();
-		else if (type == "char")	_variables[name] = new CharValue();
+		if		(type == "bool")	val = new BoolValue();
+		else if (type == "int")		val = new IntValue();
+		else if (type == "frac")	val = new FracValue();
+		else if (type == "string")	val = new StringValue();
+		else if (type == "char")	val = new CharValue();
 		else throw "custom types are not implemented yet.";
 	}
+	val->setNotTemp();
+	return val;
 }
 
 Value* Interpreter::interpretIfThenElse(AST::IfThenElse * node)
 {
+	enterBlock();
 	Value* condition = interpret(node->getCondition());
-	if (condition->getType() == "bool")
-	{
-		Value* val;
-		if (((BoolValue*)condition)->getValue())
-			val = interpret(node->getThenBranch());
-		else val = interpret(node->getElseBranch());
-		if (val != nullptr && val->isReturn()) return val;
-	}
-	return NULL;
+	if (condition->getType() != "bool")
+		throw "condition must be bool";
+
+	Value* val;
+	if (((BoolValue*)condition)->getValue())
+		val = interpret(node->getThenBranch());
+	else val = interpret(node->getElseBranch());
+
+	leaveBlock();
+	deleteIfIsTemp(condition);
+	if (val != nullptr && val->isReturn()) return val;
+	deleteIfIsTemp(val);
+
+	return nullptr;
 }
 
 Value* Interpreter::interpretWhileLoop(AST::WhileLoop * node)
 {
-	if (interpret(node->getCondition())->getType() == "bool")
-		while (((BoolValue*)interpret(node->getCondition()))->getValue())
-		{
-			Value* val = interpret(node->getStatement());
-			if (val != nullptr && val->isReturn()) return val;
-		}
-	return NULL;
+	enterBlock();
+	Value* condition = interpret(node->getCondition());
+	if (condition->getType() != "bool")
+		throw "condition must be bool";
+	while (((BoolValue*)condition)->getValue())
+	{
+		Value* val = interpret(node->getStatement());
+		if (val != nullptr && val->isReturn()) { leaveBlock(); return val; }
+		deleteIfIsTemp(val);
+		deleteIfIsTemp(condition);
+		condition = interpret(node->getCondition());
+	}
+	deleteIfIsTemp(condition);
+	leaveBlock();
+	return nullptr;
 }
 
 Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
 {
-	if (interpret(node->getCondition())->getType() == "bool")
-		do {
-			Value* val = interpret(node->getStatement());
-			if (val != nullptr && val->isReturn()) return val;
-		} while (((BoolValue*)interpret(node->getCondition()))->getValue());
-	return NULL;
+	enterBlock();
+	Value* condition = nullptr;
+	do {
+		Value* val = interpret(node->getStatement());
+		if (val != nullptr && val->isReturn()) { leaveBlock(); return val; }
+		deleteIfIsTemp(val);
+		deleteIfIsTemp(condition);
+		condition = interpret(node->getCondition());
+		if (condition->getType() != "bool")
+			throw "condition must be bool";
+	} while (((BoolValue*)condition)->getValue());
+	leaveBlock();
+	return nullptr;
+}
+
+Value * Interpreter::copyValue(Value * val)
+{
+	string type = val->getType();
+	if		(type == "bool")	return new BoolValue(((BoolValue*)val)->getValue());
+	else if (type == "int")		return new IntValue(((IntValue*)val)->getValue());
+	else if (type == "frac")	return new FracValue(((FracValue*)val)->getValue());
+	else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
+	else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
+	return nullptr;
 }
