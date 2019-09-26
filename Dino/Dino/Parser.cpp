@@ -391,7 +391,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
 		{	
-			/*if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE_DECLARATION)
+			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE_DECLARATION)
 			{
 				// Function declaration
 				while (eatLineBreak());
@@ -425,7 +425,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				
 				return assign;
 			}
-			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE)
+			/*if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE)
 			{
 				auto funcCall = new AST::FunctionCall();
 				auto varId = dynamic_cast<AST::Variable*>(left)->getVarId();	// this line needs to be split into two parts for some wierd reason

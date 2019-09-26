@@ -1,10 +1,10 @@
 digraph G {
 0 [label="<StatementBlock>"];0->2;0->26;
-2 [label="<Assignment>\n="];2->1;2->4;
+2 [label="<Assignment>\n="];2->1;2->3;
 1 [label="<VariableDeclaration>\nfunc int Fib"];
-4 [label="<FunctionLiteral>
-int"];4->3;4->5;
-3 [label="<VariableDeclaration>\nint n"];
+3 [label="<FunctionLiteral>
+int"];3->4;3->5;
+4 [label="<VariableDeclaration>\nint n"];
 5 [label="<StatementBlock>"];5->6;
 6 [label="<IfThenElse>"];6->8;6->10;6->13;
 8 [label="<BinaryOperator>\n<="];8->7;8->9;
