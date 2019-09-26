@@ -98,10 +98,40 @@ public:
 	virtual string toString() { return _value->toString(); };
 };
 
+struct VariableTypeDefinition
+{
+	string type;
+	vector<string> modifiers;
+} typedef VariableTypeDefinition;
+
+struct TypeDefinition
+{
+	string _name;
+	unordered_map<string, VariableTypeDefinition> _variables;
+	//unordered_map<string, FuncValue*> _functions;
+} typedef TypeDefinition;
+
+class TypeValue : public Value
+{
+private:
+	unordered_map<string, TypeDefinition> &_types;
+	TypeDefinition _typeDefinition;
+	unordered_map<string, Value*> _variables;
+public:
+	TypeValue(string typeName, unordered_map<string, TypeDefinition> &types);
+	virtual string toString() { return std::to_string(NULL); };
+
+	//void setVariable(string name, Value* val);
+	Value* getVariable(string name);
+};
+
+
+
 class Interpreter
 {
 private:
 	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
+	unordered_map<string, TypeDefinition> _types;
 	int _scope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
@@ -111,7 +141,7 @@ private:
 	Value* interpretLiteral(AST::Literal* node);
 	Value* interpretVariable(AST::Variable* node);
 	Value* interpretAssignment(AST::Assignment* node);
-	
+
 	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
 	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
 	Value* interpretIfThenElse(AST::IfThenElse* node);
@@ -124,5 +154,5 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); }
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); }
 };

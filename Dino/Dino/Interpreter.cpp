@@ -411,3 +411,46 @@ Value * Interpreter::copyValue(Value * val)
 	else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
 	return nullptr;
 }
+
+TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &types) : Value(typeName), _types(types)
+{
+	_variables = unordered_map<string, Value*>();
+	if (_types.count(typeName) == 0)
+		throw "nonexistant type";
+	_typeDefinition = _types[typeName];
+	for (auto i : _typeDefinition._variables)
+	{
+		Value* var = nullptr;
+		if (i.second.type == "int") var = new IntValue();
+		else if (i.second.type == "bool") var = new BoolValue();
+		else if (i.second.type == "char") var = new CharValue();
+		else if (i.second.type == "frac") var = new FracValue();
+		else if (i.second.type == "string") var = new StringValue();
+		else if (_types.count(i.second.type)) 
+			var = new TypeValue(i.second.type, _types);
+		else throw "nonexistant type";
+		_variables[i.first] = var;
+	}
+}
+
+/*void TypeValue::setVariable(string name, Value * val) // no public/private modifiers yet
+{
+	if (_variables.count(name) == 0)
+		throw "variable does not exist";
+	Value* v = _variables[name];
+	string type = val->getType();
+	if (type != v->getType())
+		throw "incompatible "
+	//if (type == "bool")	BoolValue(((BoolValue*)val)->getValue());
+	//else if (type == "int")		return new IntValue(((IntValue*)val)->getValue());
+	//else if (type == "frac")	return new FracValue(((FracValue*)val)->getValue());
+	//else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
+	//else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
+}*/
+
+Value * TypeValue::getVariable(string name)	// no public/private modifiers yet
+{
+	if (_variables.count(name) == 0)
+		throw "variable does not exist";
+	return _variables[name];
+}
