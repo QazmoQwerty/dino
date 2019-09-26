@@ -144,10 +144,8 @@ namespace AST
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
 		virtual string toString() {
 			string modifiers = "";
-			for (auto s : _modifiers) {
+			for (auto s : _modifiers)
 				modifiers += s.name + ' ';
-				std::cout << s.name << std::endl;
-			}
 			return "<VariableDeclaration>\\n" + modifiers + _type.name + ' ' + _varId.name;
 		};
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
