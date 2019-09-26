@@ -1,5 +1,7 @@
 #include "Interpreter.h"
 
+#define deleteIfIsTemp(n) { if (n != nullptr && n->isTemp()) delete n; }
+
 void Interpreter::leaveBlock()
 {
 	for (auto i : _variables[currentScope()])
@@ -122,13 +124,12 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() % ((IntValue*)rvalue)->getValue());
 			break;
 		}
-		if (rvalue->isTemp()) delete rvalue;
+		deleteIfIsTemp(rvalue);
 		return lvalue;
 	}
 	return ret;
 }
 
-// aaa
 Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 {	
 	Value* leftVal = interpret(node->getLeft());
@@ -146,6 +147,12 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			break;
 		case (OT_SMALLER_EQUAL):
 			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() <= ((IntValue*)rightVal)->getValue());
+			break;
+		case (OT_GREATER):
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() > ((IntValue*)rightVal)->getValue());
+			break;
+		case (OT_GREATER_EQUAL):
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() >= ((IntValue*)rightVal)->getValue());
 			break;
 		case (OT_LOGICAL_AND):
 			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() && ((BoolValue*)rightVal)->getValue());
@@ -170,13 +177,13 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 		case(OT_MODULUS):
 			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() % ((IntValue*)rightVal)->getValue());
 			break;
+		default: throw "unsupported binary operator";
 	}
-	if (leftVal->isTemp()) delete leftVal;
-	if (rightVal->isTemp()) delete rightVal;
+	deleteIfIsTemp(leftVal);
+	deleteIfIsTemp(rightVal);
 	return ret;
 }
 
-// aaa
 Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 {
 	Value* val = interpret(node->getExpression());
@@ -200,12 +207,12 @@ Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 	case (OT_LOGICAL_NOT):
 		if (val->getType() == "bool") ret = new BoolValue(!((BoolValue*)val)->getValue());
 		break;
+	default: throw "unsupported unary operator";
 	}
-	if (val->isTemp()) delete val;
+	deleteIfIsTemp(val);
 	return ret;
 }
 
-// aaa?
 Value * Interpreter::interpretIncrement(AST::Increment * node)
 {
 	Value* val = interpret(node->getExpression());
@@ -223,7 +230,7 @@ Value * Interpreter::interpretIncrement(AST::Increment * node)
 
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 {
-	
+	// TODO
 	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
 		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "Print") 
 	{
@@ -265,38 +272,24 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 	}
 	Value* ret = interpret(func->getValue()->getContent());
 	leaveBlock();
-	/*for (auto i : params)
-	{
-		delete _variables[i->getVarId().name];
-		_variables.erase(i->getVarId().name);
-	}*/
 	return ret;
 }
 
-// aaa?
 Value * Interpreter::interpretLiteral(AST::Literal * node)
 {
 	switch (node->getLiteralType())
 	{
-	case (LT_BOOLEAN):
-		return new BoolValue(((AST::Boolean*)node)->getValue());
-	case (LT_INTEGER):
-		return new IntValue(((AST::Boolean*)node)->getValue());
-	case (LT_CHARACTER):
-		return new CharValue(((AST::Character*)node)->getValue());
-	case (LT_STRING):
-		return new StringValue(((AST::String*)node)->getValue());
-	case (LT_FRACTION):
-		return new FracValue(((AST::Fraction*)node)->getValue());
-	case (LT_FUNCTION):
-		return new FuncValue((AST::Function*)node);
-	case (LT_NULL):
-		break;
+	case (LT_BOOLEAN):	 return new BoolValue(((AST::Boolean*)node)->getValue());
+	case (LT_INTEGER):	 return new IntValue(((AST::Boolean*)node)->getValue());
+	case (LT_CHARACTER): return new CharValue(((AST::Character*)node)->getValue());
+	case (LT_STRING):	 return new StringValue(((AST::String*)node)->getValue());
+	case (LT_FRACTION):  return new FracValue(((AST::Fraction*)node)->getValue());
+	case (LT_FUNCTION):  return new FuncValue((AST::Function*)node);
+	default: return nullptr;
+	//case (LT_NULL): break;
 	}
-	return nullptr;
 }
 
-// aaa
 Value * Interpreter::interpretVariable(AST::Variable * node)
 {
 	string name = node->getVarId().name;
@@ -306,19 +299,16 @@ Value * Interpreter::interpretVariable(AST::Variable * node)
 			return _variables[scope][name];
 	}
 	throw "variable does not exist";
-	/*if (_variables.count(node->getVarId().name) == 0)
-		throw "variable does not exist";
-	return _variables[node->getVarId().name];*/
 }
 
-// ???
 Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * node)
 {
+	
 	switch (node->getOperator()._type)
 	{
 	case (OT_RETURN):
 		{
-			Value* val = interpret(node->getExpression());
+			Value* val = interpret(node->getExpression()); // TODO - aaa
 			val->setReturn();
 			return val;
 		}
@@ -326,7 +316,6 @@ Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * no
 	return NULL;
 }
 
-// aaa
 Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
 {
 	string type = node->getVarType().name;
@@ -356,7 +345,6 @@ Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * nod
 	return val;
 }
 
-// aaa
 Value* Interpreter::interpretIfThenElse(AST::IfThenElse * node)
 {
 	enterBlock();
@@ -370,14 +358,13 @@ Value* Interpreter::interpretIfThenElse(AST::IfThenElse * node)
 	else val = interpret(node->getElseBranch());
 
 	leaveBlock();
-	if (condition->isTemp()) delete condition;
+	deleteIfIsTemp(condition);
 	if (val != nullptr && val->isReturn()) return val;
-	if (val->isTemp()) delete val;
+	deleteIfIsTemp(val);
 
 	return nullptr;
 }
 
-// Done?
 Value* Interpreter::interpretWhileLoop(AST::WhileLoop * node)
 {
 	enterBlock();
@@ -388,11 +375,11 @@ Value* Interpreter::interpretWhileLoop(AST::WhileLoop * node)
 	{
 		Value* val = interpret(node->getStatement());
 		if (val != nullptr && val->isReturn()) { leaveBlock(); return val; }
-		if (val->isTemp()) delete val;
-		if (condition->isTemp()) delete condition;
+		deleteIfIsTemp(val);
+		deleteIfIsTemp(condition);
 		condition = interpret(node->getCondition());
 	}
-	if (condition->isTemp()) delete condition;
+	deleteIfIsTemp(condition);
 	leaveBlock();
 	return nullptr;
 }
@@ -404,8 +391,8 @@ Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
 	do {
 		Value* val = interpret(node->getStatement());
 		if (val != nullptr && val->isReturn()) { leaveBlock(); return val; }
-		if (val->isTemp()) delete val;
-		if (condition != nullptr && condition->isTemp()) delete condition;
+		deleteIfIsTemp(val);
+		deleteIfIsTemp(condition);
 		condition = interpret(node->getCondition());
 		if (condition->getType() != "bool")
 			throw "condition must be bool";
