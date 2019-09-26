@@ -115,6 +115,9 @@ enum OperatorType
 	OT_IF,
 	OT_ELSE,
 	OT_RETURN,
+	OT_TYPE,
+	OT_INTERFACE,
+	OT_IMPLEMENTS,
 
 	// Misc:
 	OT_SINGLE_QUOTE,				//	'

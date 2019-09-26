@@ -1,13 +1,4 @@
-/*func int Fib = (int n) int {
-	if n <= 1 { 
-		return n 
-	}
-	else {
-		return Fib(n-1) + Fib(n-2)
-	}
-}*/
-
-int Fib(int n) {
+/*int Fib(int n) {
 	if n <= 1 { 
 		return n
 	}
@@ -18,4 +9,8 @@ int Fib(int n) {
 
 for int i = 0 | i < 20 | ++i {
 	Print(Fib(i))
+}*/
+
+type MyType {
+	
 }
