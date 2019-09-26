@@ -1,12 +1,15 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;0->5;0->8;
+0 [label="<StatementBlock>"];0->2;0->5;0->8;0->11;
 2 [label="<Assignment>\n="];2->1;2->3;
-1 [label="<VariableDeclaration>\nint i"];
+1 [label="<VariableDeclaration>\nint x"];
 3 [label="<IntegerLiteral>\n10"];
 5 [label="<Assignment>\n="];5->4;5->6;
-4 [label="<Variable>\ni"];
-6 [label="<IntegerLiteral>\n12"];
-8 [label="<FunctionCall>\n"];8->7;8->9;
-7 [label="<Variable>\nPrint"];
-9 [label="<Variable>\ni"];
+4 [label="<VariableDeclaration>\nint b"];
+6 [label="<IntegerLiteral>\n2"];
+8 [label="<Assignment>\n="];8->7;8->9;
+7 [label="<Variable>\nx"];
+9 [label="<Variable>\nb"];
+11 [label="<FunctionCall>\n"];11->10;11->12;
+10 [label="<Variable>\nPrint"];
+12 [label="<Variable>\nx"];
 }

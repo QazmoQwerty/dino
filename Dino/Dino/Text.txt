@@ -9,6 +9,17 @@
 	}
 }*/
 
-int i = 10
-i = 12
-Print(i)
+//func int Fib = (int n) int {
+	//if n <= 1 { 
+		//return n 
+	//}
+	/*else {
+		//return Fib(n-1) + Fib(n-2)
+	}*/
+//}
+
+//int x = Fib(0)
+int x = 10;
+int b = 2
+x = b;
+Print(x)

@@ -7,34 +7,31 @@ class Value
 private:
 	string _type;
 	bool _isReturn;
+	bool _isTemp;
 public:
 	Value(string type) { _type = type; _isReturn = false; }
 	void setReturn() { _isReturn = true; }
 	bool isReturn() { return _isReturn; }
 	string getType() { return _type; }
+	void setIsTemp() { _isTemp = true; }
+	bool isTemp() { return _isTemp; }
 	virtual string toString() = 0;
 };
 
-class Interpreter
+class PtrValue : public Value
 {
 private:
-	unordered_map<string, Value*> _variables;
-	Value* interpretBinaryOp(AST::BinaryOperation* node);
-	Value* interpretUnaryOp(AST::UnaryOperation* node);
-	Value* interpretIncrement(AST::Increment* node);
-	Value* interpretFuncCall(AST::FunctionCall* node);
-	Value* interpretLiteral(AST::Literal* node);
-	Value* interpretVariable(AST::Variable* node);
-	Value* interpretAssignment(AST::Assignment* node);
-	
-
-	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
-	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
-	Value* interpretIfThenElse(AST::IfThenElse* node);
-	Value* interpretWhileLoop(AST::WhileLoop* node);
-	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
+	Value* _value;
+	string _ptrType;
 public:
-	Value* interpret(AST::Node* node);
+	PtrValue() : Value("ptr") { _value = NULL; _ptrType = ""; }
+	PtrValue(string ptrType) : Value("ptr") { _value = NULL; _ptrType = ptrType; }
+	PtrValue(Value* value) : Value("ptr") { _value = value; _ptrType = value->getType(); }
+	void setValue(Value* value) { _value = value; }
+	Value* getValue() { return _value; }
+	string getPtrType() { return _ptrType; }
+	void setPtrType(string ptrType) { _ptrType = ptrType; }
+	virtual string toString() { return "ptr->" + _value->toString(); };
 };
 
 class IntValue : public Value
@@ -114,4 +111,32 @@ public:
 	}
 	AST::Function* getValue() { return _value; }
 	virtual string toString() { return _value->toString(); };
+};
+
+class Interpreter
+{
+private:
+	vector<unordered_map<string, PtrValue*>> _variables;	// index represents scope, string represents variable name
+	int _scope;
+
+	Value* interpretBinaryOp(AST::BinaryOperation* node);
+	Value* interpretUnaryOp(AST::UnaryOperation* node);
+	Value* interpretIncrement(AST::Increment* node);
+	Value* interpretFuncCall(AST::FunctionCall* node);
+	Value* interpretLiteral(AST::Literal* node);
+	Value* interpretVariable(AST::Variable* node);
+	Value* interpretAssignment(AST::Assignment* node);
+	
+	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
+	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
+	Value* interpretIfThenElse(AST::IfThenElse* node);
+	Value* interpretWhileLoop(AST::WhileLoop* node);
+	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
+
+	int currentScope() { return _variables.size() - 1; }
+	void enterBlock() { _variables.push_back(unordered_map<string, PtrValue*>()); }
+	void leaveBlock();
+public:
+	Value* interpret(AST::Node* node);
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, PtrValue*>()); }
 };
