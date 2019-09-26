@@ -237,30 +237,31 @@ namespace AST
 		Expression* getExpression() { return _expression; }
 	};
 
-	class BinaryOperation;
 	class TypeDeclaration : public Statement
 	{
-		Identificator _typeId;	// Temporary
+		Identificator _name;	// Temporary
 		vector<Identificator> _modifiers;
 		vector<Identificator> _interfaces;
 		vector<VariableDeclaration*> _variableDeclarations;
-		vector<BinaryOperation*> _functionDeclarations;
+		vector<Assignment*> _functionDeclarations;
 
 	public:
-		TypeDeclaration() : Statement() {};
+		TypeDeclaration();
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
-		virtual string toString() { return "<TypeDeclaration>\n" + _typeId.name; };
+		virtual string toString() { return "<TypeDeclaration>\n" + _name.name; };
 		virtual vector<Node*> getChildren();
 
+		Identificator getName() { return _name; }
 		vector<Identificator> getModifiers() { return _modifiers; };
 		vector<Identificator> getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
-		vector<BinaryOperation*> getFunctionDDeclarations() { return _functionDeclarations; }
+		vector<Assignment*> getFunctionDDeclarations() { return _functionDeclarations; }
 
+		void setName(Identificator id) { _name = id; }
 		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
 		void addInterface(Identificator interface) { _interfaces.push_back(interface); }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
-		void addFunctionDeclaration(BinaryOperation* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
+		void addFunctionDeclaration(Assignment* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 	};
 
 	/********************** Expressions **********************/

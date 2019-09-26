@@ -225,6 +225,38 @@ AST::Node * Parser::std(Token * token)
 			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 			return op;
 		}
+
+		if (ot->_operator._type == OT_TYPE)
+		{
+			auto decl = new AST::TypeDeclaration();
+			if (peekToken()->_type == TT_IDENTIFIER)
+				decl->setName({ nextToken()->_data });
+			else throw "could not parse type declaration";
+			//if (isOperator(peekToken(), OT_IMPLEMENTS)) // TODO
+			eatLineBreak();
+			if (!eatOperator(OT_CURLY_BRACES_OPEN))
+				throw "could not parse type declaration";
+			eatLineBreak();
+			while (!eatOperator(OT_CURLY_BRACES_CLOSE))
+			{
+				auto temp = parse();
+				if (!temp->isStatement())
+					throw "could not parse type declaration";
+				switch (dynamic_cast<AST::Statement*>(temp)->getStatementType())
+				{
+				case(ST_VARIABLE_DECLARATION):
+					decl->addVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(temp));
+					break;
+				case(ST_ASSIGNMENT):
+					decl->addFunctionDeclaration(dynamic_cast<AST::Assignment*>(temp));
+					break;
+				default:
+					break;
+				}
+				eatLineBreak();
+			}
+			return decl;
+		}
 	}
 	return NULL;
 }
@@ -402,9 +434,15 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				do
 				{
 					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
-					if (declaration->isStatement() && dynamic_cast<AST::Statement*>(declaration)->getStatementType() == ST_VARIABLE_DECLARATION)	// why is the commented out code here?
+					if (declaration != nullptr && declaration->isStatement() && 
+						dynamic_cast<AST::Statement*>(declaration)->getStatementType() == ST_VARIABLE_DECLARATION)
 						func->addParameter(dynamic_cast<AST::VariableDeclaration*>(declaration));
-					else throw "for's decleration statement failed";
+					else
+					{
+						_index--;
+						break;
+					}
+					//else throw "for's decleration statement failed";
 				} while (eatOperator(OT_COMMA));
 				
 				if (!eatOperator(OT_PARENTHESIS_CLOSE))

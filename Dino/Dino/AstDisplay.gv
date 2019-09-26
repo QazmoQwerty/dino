@@ -1,4 +1,14 @@
 digraph G {
 0 [label="<StatementBlock>"];0->1;
-1 [label="<VariableDeclaration>\ntype MyType"];
+1 [label="<TypeDeclaration>
+MyType"];1->2;1->3;1->5;
+2 [label="<VariableDeclaration>\nint x"];
+3 [label="<VariableDeclaration>\nstring str"];
+5 [label="<Assignment>\n="];5->4;5->6;
+4 [label="<VariableDeclaration>\nfunc int Foo"];
+6 [label="<FunctionLiteral>
+int"];6->7;
+7 [label="<StatementBlock>"];7->8;
+8 [label="<UnaryOperatorStatement>\nreturn"];8->9;
+9 [label="<IntegerLiteral>\n2"];
 }

@@ -42,6 +42,8 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_ELSE,
 		OT_FOR,
 		OT_RETURN,
+		OT_TYPE,
+		OT_INTERFACE,
 	};
 	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
 }
