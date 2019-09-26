@@ -19,7 +19,8 @@
 //}
 
 //int x = Fib(0)
-int x = 10;
+int x = 10
 int b = 2
-x = b;
-Print(x)
+x = b
+b = 3
+Print(x + b, b, x + x)

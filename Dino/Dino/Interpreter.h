@@ -9,29 +9,14 @@ private:
 	bool _isReturn;
 	bool _isTemp;
 public:
-	Value(string type) { _type = type; _isReturn = false; }
+	Value(string type) { _type = type; _isReturn = false; _isTemp = true; }
 	void setReturn() { _isReturn = true; }
 	bool isReturn() { return _isReturn; }
 	string getType() { return _type; }
 	void setIsTemp() { _isTemp = true; }
+	void setNotTemp() { _isTemp = false; }
 	bool isTemp() { return _isTemp; }
 	virtual string toString() = 0;
-};
-
-class PtrValue : public Value
-{
-private:
-	Value* _value;
-	string _ptrType;
-public:
-	PtrValue() : Value("ptr") { _value = NULL; _ptrType = ""; }
-	PtrValue(string ptrType) : Value("ptr") { _value = NULL; _ptrType = ptrType; }
-	PtrValue(Value* value) : Value("ptr") { _value = value; _ptrType = value->getType(); }
-	void setValue(Value* value) { _value = value; }
-	Value* getValue() { return _value; }
-	string getPtrType() { return _ptrType; }
-	void setPtrType(string ptrType) { _ptrType = ptrType; }
-	virtual string toString() { return "ptr->" + _value->toString(); };
 };
 
 class IntValue : public Value
@@ -116,7 +101,7 @@ public:
 class Interpreter
 {
 private:
-	vector<unordered_map<string, PtrValue*>> _variables;	// index represents scope, string represents variable name
+	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
 	int _scope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
@@ -134,9 +119,9 @@ private:
 	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
 
 	int currentScope() { return _variables.size() - 1; }
-	void enterBlock() { _variables.push_back(unordered_map<string, PtrValue*>()); }
+	void enterBlock() { _variables.push_back(unordered_map<string, Value*>()); }
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, PtrValue*>()); }
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); }
 };
