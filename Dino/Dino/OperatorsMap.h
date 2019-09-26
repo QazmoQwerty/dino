@@ -2,10 +2,12 @@
 
 #include <vector>
 #include <unordered_map>
+#include "TypeEnums.h"
 #include "Token.h"
 
 using std::vector;
 using std::string;
+using std::pair;
 using std::unordered_map;
 
 class OperatorsMap
@@ -20,7 +22,16 @@ public:
 	/*
 		Funtion returns map with an operator string as the key, and the corresponding OperatorType as the value.
 	*/
-	static const unordered_map<string, OperatorType>& getOperators();
+	static const unordered_map<string, Operator>& getOperators();
+	static const unordered_map<string, Operator>& getWordOperators();
+
+	static bool isWord(OperatorType type);
+	static bool isUnary(OperatorType type);
+	static bool isBinary(OperatorType type);
+	static bool isAssignment(OperatorType type);
+
+	static pair<const string, Operator> getOperatorByDefinition(OperatorType operatorType);
 private:
-	static unordered_map<string, OperatorType> _map;
+	static unordered_map<string, Operator> _map;
+	static unordered_map<string, Operator> _wordsMap;
 };

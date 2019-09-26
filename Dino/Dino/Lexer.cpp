@@ -10,7 +10,6 @@ void Lexer::setup()
 {
 	_map[' '] = _map['\t'] = _map['\r'] = CT_WHITESPACE;
 	_map['\n'] = CT_NEWLINE;
-	_map[';'] = CT_LINE_BREAK;
 	_map['_'] = CT_LETTER;
 	for (char c = 'a'; c <= 'z'; c++)
 		_map[c] = CT_LETTER;
@@ -21,6 +20,7 @@ void Lexer::setup()
 	for (auto c : OperatorsMap::getOperators())
 		for (unsigned int i = 0; i < c.first.length(); i++)
 			_map[c.first[i]] = CT_OPERATOR;
+	_map['|'] = CT_LINE_BREAK;
 }
 
 /*
@@ -145,10 +145,10 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 			OperatorToken * temp = new struct OperatorToken;
 			temp->_data = token->_data;
 			temp->_type = TT_OPERATOR;
-			temp->_operatorType = OperatorsMap::getOperators().find(temp->_data)->second;
+			temp->_operator = OperatorsMap::getOperators().find(temp->_data)->second;
 			temp->_line = line;
 
-			if (temp->_operatorType == OT_SINGLE_QUOTE || temp->_operatorType == OT_DOUBLE_QUOTE)	// Character
+			if (temp->_operator._type == OT_SINGLE_QUOTE || temp->_operator._type == OT_DOUBLE_QUOTE)	// Character
 			{
 				char c = temp->_data[0];
 				temp->_data = "";
@@ -171,14 +171,14 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 				index++;
 
 				delete token;
-				token = (temp->_operatorType == OT_SINGLE_QUOTE) ?
+				token = (temp->_operator._type == OT_SINGLE_QUOTE) ?
 					createCharacterLiteralToken(temp->_data, line) :
 					token = createStringLiteralToken(temp->_data, line);
 				delete temp;
 			}
 			else
 			{
-				if (temp->_operatorType == OT_SINGLE_LINE_COMMENT)
+				if (temp->_operator._type == OT_SINGLE_LINE_COMMENT)
 				{
 					temp->_data = "";
 					while (index < str.length() && str[index] != SINGLE_LINE_COMMENT_END)
@@ -187,7 +187,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 					temp->_type = TT_SINGLE_LINE_COMMENT;
 					line++;
 				}
-				else if (temp->_operatorType == OT_MULTI_LINE_COMMENT_OPEN)
+				else if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)
 				{
 					temp->_data = "";
 					while (index + 1 < str.length() && string() + str[index] + str[index + 1] != MULTI_LINE_COMMENT_END)
@@ -206,19 +206,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 		}
 
 		case CT_UNKNOWN:
-			throw DinoException("internal lexer error", ET_LEXER, line);
+			throw DinoException("internal lexer error", EXT_LEXER, line);
 	}
 	return token;
-}
-
-/*
-	Gets an OperatorType and searches _map for the corresponding operator string.
-	NOTE: Unused function, might get deleted in the future.
-*/
-pair<const string, OperatorType> Lexer::getOperatorByDefinition(OperatorType operatorType)
-{
-	for (auto t : OperatorsMap::getOperators())
-		if (t.second == operatorType)
-			return t;
-	return pair<const string, OperatorType>("", OT_UNKNOWN);
 }

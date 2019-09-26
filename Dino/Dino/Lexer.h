@@ -36,5 +36,4 @@ public:
 private:
 	static unordered_map<char, CharType> _map;
 	static Token * getToken(string str, unsigned int & index, int & line);
-	static pair<const string, OperatorType> getOperatorByDefinition(OperatorType operatorType);
 };

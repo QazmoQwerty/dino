@@ -6,6 +6,8 @@
 #include "TypeEnums.h"
 
 #define ESCAPE_CHAR '\\'
+#define LEFT_TO_RIGHT 1
+#define RIGHT_TO_LEFT 2
 
 using std::string;
 
@@ -19,14 +21,24 @@ struct Token
 	int _line;
 };
 
+typedef struct Operator
+{
+	OperatorType _type;
+	string _str;
+	unsigned char _associativity;
+	int _precedence; // higher value means higher precedence.
+} Operator;
+
 /*
 	Struct that represents operator tokens.
 	NOTE: _type MUST be "TT_OPERATOR".
 */
 struct OperatorToken : public Token
 {
-	OperatorType _operatorType;
+	Operator _operator;
 };
+
+
 
 /*
 	Struct that represents literal tokens.

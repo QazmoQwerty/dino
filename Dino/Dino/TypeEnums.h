@@ -11,7 +11,6 @@ enum TokenType
 	TT_LINE_BREAK,
 	TT_IDENTIFIER,
 	TT_LITERAL,
-	TT_WORD_OPERATOR,
 	TT_SINGLE_LINE_COMMENT,
 	TT_MULTI_LINE_COMMENT,
 	TT_UNKNOWN,
@@ -27,6 +26,7 @@ enum LiteralType
 	LT_FRACTION,
 	LT_CHARACTER,
 	LT_STRING,
+	LT_FUNCTION,
 	LT_NULL,
 	LT_UNKNOWN,
 };
@@ -59,6 +59,7 @@ enum OperatorType
 	OT_MODULUS,						//	%
 	OT_INCREMENT,					//	++
 	OT_DECREMENT,					//	--
+	OT_EXPONENTIATION,				//	^^
 
 	// Relational Operators:
 	OT_EQUAL,						//	==
@@ -107,6 +108,14 @@ enum OperatorType
 	OT_MULTI_LINE_COMMENT_OPEN,		//	/*
 	OT_MULTI_LINE_COMMENT_CLOSE,	//	*/
 	
+	// Words:
+	OT_WHILE,
+	OT_DO,
+	OT_FOR,
+	OT_IF,
+	OT_ELSE,
+	OT_RETURN,
+
 	// Misc:
 	OT_SINGLE_QUOTE,				//	'
 	OT_DOUBLE_QUOTE,				//	"
@@ -114,23 +123,8 @@ enum OperatorType
 	OT_COMMA,						//	,
 	OT_COLON,						//	:
 	OT_ESCAPE,						//	\ 
+	OT_EOF,
 	OT_UNKNOWN,
-};
-
-/*
-	Types of word operator the preparser identifies.
-	NOTE: (very) incomplete.
-*/
-enum WordOperatorType
-{
-	WOT_IF,
-	WOT_FOR,
-	WOT_WHILE,
-
-	WOT_RETURN,
-
-	WOT_PUBLIC,
-	WOT_PRIVATE,
 };
 
 /*
@@ -138,6 +132,52 @@ enum WordOperatorType
 */
 enum ExceptionType
 {
-	ET_GENERAL,
-	ET_LEXER,
+	EXT_GENERAL,
+	EXT_LEXER,
+};
+
+enum VariableType
+{
+	VT_BOOLEAN,
+	VT_INTEGER,
+	VT_FRACTION,
+	VT_CHARACTER,
+	VT_STRING,
+	VT_CUSTOM,
+	VT_NULL,
+	VT_UNKNOWN,
+};
+
+enum StatementType
+{
+	ST_STATEMENT_BLOCK,
+	ST_IF_THEN_ELSE,
+	ST_WHILE_LOOP,
+	ST_DO_WHILE_LOOP,
+	ST_VARIABLE_DECLARATION,
+	ST_UNARY_OPERATION,
+	ST_FUNCTION_DECLARATION,
+	ST_ASSIGNMENT,
+	ST_FUNCTION_CALL,
+	ST_INCREMENT,
+	ST_UNKNOWN,
+};
+
+enum ExpressionType
+{
+	ET_VARIABLE_DECLARATION,
+	ET_INCREMENT,
+	ET_ASSIGNMENT,
+	ET_BINARY_OPERATION,
+	ET_UNARY_OPERATION,
+	ET_FUNCTION_CALL,
+	ET_VARIABLE,
+	ET_CONDITIONAL_EXPRESSION,
+	ET_LITERAL,
+	ET_UNKNOWN,
+};
+
+enum VariableModifier
+{
+
 };
