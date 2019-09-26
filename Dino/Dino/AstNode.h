@@ -247,15 +247,15 @@ namespace AST
 
 	public:
 		TypeDeclaration();
-		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
-		virtual string toString() { return "<TypeDeclaration>\n" + _name.name; };
+		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual string toString() { return "<TypeDeclaration>\\n" + _name.name; };
 		virtual vector<Node*> getChildren();
 
 		Identificator getName() { return _name; }
 		vector<Identificator> getModifiers() { return _modifiers; };
 		vector<Identificator> getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
-		vector<Assignment*> getFunctionDDeclarations() { return _functionDeclarations; }
+		vector<Assignment*> getFunctionDeclarations() { return _functionDeclarations; }
 
 		void setName(Identificator id) { _name = id; }
 		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }

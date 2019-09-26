@@ -22,6 +22,8 @@ Value* Interpreter::interpret(AST::Node * node)
 				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
 			case(ST_VARIABLE_DECLARATION):
 				return interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
+			case(ST_TYPE_DECLARATION):
+				interpretTypeDeclaration(dynamic_cast<AST::TypeDeclaration*>(node));
 				break;
 			case (ST_FUNCTION_CALL):
 				return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
@@ -131,9 +133,20 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 
 Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 {	
-	Value* leftVal = interpret(node->getLeft());
-	Value* rightVal = interpret(node->getRight());
 	Value* ret = nullptr;
+	Value* leftVal = interpret(node->getLeft());
+
+	if (node->getOperator()._type == OT_PERIOD)
+	{
+		if (_types.count(leftVal->getType()) == 0)
+			throw "type doesn't exist";
+		if (node->getRight()->getExpressionType() != ET_VARIABLE)
+			throw "right of '.' operator must be a variable name";
+		string varName = dynamic_cast<AST::Variable*>(node->getRight())->getVarId().name;
+		return ((TypeValue*)leftVal)->getVariable(varName);
+	}
+
+	Value* rightVal = interpret(node->getRight());
 	if (leftVal->getType() != rightVal->getType())
 		throw "different types invalid";
 	switch (node->getOperator()._type)
@@ -299,6 +312,36 @@ Value * Interpreter::interpretVariable(AST::Variable * node)
 	throw "variable does not exist";
 }
 
+void Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
+{
+	TypeDefinition typeDef;
+	typeDef._name = node->getName().name;
+	typeDef._variables = unordered_map<string, VariableTypeDefinition>();
+	for (auto decl : node->getVariableDeclarations())
+	{
+		VariableTypeDefinition vtd;
+		for (auto modifier : decl->getModifiers())
+			vtd.modifiers.push_back(modifier.name);
+		vtd.type = decl->getVarType().name;
+		//string varName = decl->getVarId().name;
+		typeDef._variables[decl->getVarId().name] = vtd;
+	}
+	for (auto funcDecl : node->getFunctionDeclarations())
+	{
+
+		if (funcDecl->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
+			throw "TODO - proper error";
+		auto varDecl = dynamic_cast<AST::VariableDeclaration*>(funcDecl->getLeft());
+		string funcName = varDecl->getVarId().name;
+		if (funcDecl->getRight()->getExpressionType() != ET_LITERAL ||
+			dynamic_cast<AST::Literal*>(funcDecl->getRight())->getLiteralType() != LT_FUNCTION)
+			throw "cannot assign non function value to function";
+
+		typeDef._functions[funcName] = new FuncValue((AST::Function*)funcDecl->getRight());
+	}
+	_types[typeDef._name] = typeDef;
+}
+
 Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * node)
 {
 	
@@ -339,7 +382,8 @@ Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * nod
 		else if (type == "frac")	val = new FracValue();
 		else if (type == "string")	val = new StringValue();
 		else if (type == "char")	val = new CharValue();
-		else throw "custom types are not implemented yet.";
+		else if (_types.count(type)) val = new TypeValue(type, _types);
+		else throw "type does not exist";
 	}
 	val->setNotTemp();
 	return val;
@@ -450,7 +494,9 @@ TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &typ
 
 Value * TypeValue::getVariable(string name)	// no public/private modifiers yet
 {
-	if (_variables.count(name) == 0)
-		throw "variable does not exist";
-	return _variables[name];
+	if (_typeDefinition._functions.count(name))
+		return _typeDefinition._functions[name];
+	if (_variables.count(name))
+		return _variables[name];
+	throw "variable does not exist";
 }

@@ -108,7 +108,7 @@ struct TypeDefinition
 {
 	string _name;
 	unordered_map<string, VariableTypeDefinition> _variables;
-	//unordered_map<string, FuncValue*> _functions;
+	unordered_map<string, FuncValue*> _functions;
 } typedef TypeDefinition;
 
 class TypeValue : public Value
@@ -142,6 +142,8 @@ private:
 	Value* interpretVariable(AST::Variable* node);
 	Value* interpretAssignment(AST::Assignment* node);
 
+
+	void interpretTypeDeclaration(AST::TypeDeclaration* node);
 	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
 	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
 	Value* interpretIfThenElse(AST::IfThenElse* node);
