@@ -3,7 +3,7 @@
 #include <sstream> 
 
 #include "Lexer.h"
-#include "Preparser.h"
+#include "Preprocessor.h"
 #include "AstNode.h"
 #include "AstToFile.h"
 #include "Parser.h"
@@ -21,7 +21,7 @@ int main()
 	try
 	{
 		auto lexed = Lexer::lex(str);
-		auto vec = Preparser::Preparse(lexed);
+		auto vec = Preprocessor::preprocess(lexed);
 
 		/*for (auto i : vec)
 			printToken(i);*/

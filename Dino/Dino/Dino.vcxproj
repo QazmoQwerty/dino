@@ -122,7 +122,7 @@
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="OperatorsMap.h" />
     <ClInclude Include="Parser.h" />
-    <ClInclude Include="Preparser.h" />
+    <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="TypeEnums.h" />
   </ItemGroup>
@@ -133,7 +133,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="OperatorsMap.cpp" />
     <ClCompile Include="Parser.cpp" />
-    <ClCompile Include="Preparser.cpp" />
+    <ClCompile Include="Preprocessor.cpp" />
     <ClCompile Include="Token.cpp" />
   </ItemGroup>
   <ItemGroup>
