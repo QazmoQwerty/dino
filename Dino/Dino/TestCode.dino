@@ -10,8 +10,8 @@ for int i = 0 | i < 20 | ++i {
 }*/
 
 type Rectangle {
-	int h
-	int w
+	public int h
+	public int w
 
 	int Area() {
 		return this.h * this.w

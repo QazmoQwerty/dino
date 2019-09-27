@@ -106,11 +106,17 @@ struct VariableTypeDefinition
 	vector<string> modifiers;
 } typedef VariableTypeDefinition;
 
+struct FunctionDefinition
+{
+	FuncValue* value;
+	vector<string> modifiers;
+} typedef FunctionDefinition;
+
 struct TypeDefinition
 {
 	string _name;
 	unordered_map<string, VariableTypeDefinition> _variables;
-	unordered_map<string, FuncValue*> _functions;
+	unordered_map<string, FunctionDefinition> _functions;
 } typedef TypeDefinition;
 
 class TypeValue : public Value
@@ -142,7 +148,7 @@ public:
 	Value* getValue() { return _value; }
 };
 
-
+bool hasModifier(vector<string> &modifiers, string modifier);
 
 class Interpreter
 {

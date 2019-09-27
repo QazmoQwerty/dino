@@ -389,7 +389,9 @@ void Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
 		thisVarDecl->setType({ typeDef._name });
 		thisVarDecl->setVarId({ "this" });
 		funcLit->addParameterToStart(thisVarDecl);
-		typeDef._functions[funcName] = new FuncValue(funcLit);
+		for (auto modifier : varDecl->getModifiers())
+			typeDef._functions[funcName].modifiers.push_back(modifier.name);
+		typeDef._functions[funcName].value = new FuncValue(funcLit);
 	}
 	_types[typeDef._name] = typeDef;
 }
@@ -513,6 +515,7 @@ Value * Interpreter::copyValue(Value * val)
 	else throw "cannot copy type that does not exist";
 }
 
+
 TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &types) : Value(typeName), _types(types)
 {
 	_variables = unordered_map<string, Value*>();
@@ -535,28 +538,36 @@ TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &typ
 	}
 }
 
-/*void TypeValue::setVariable(string name, Value * val) // no public/private modifiers yet
-{
-	if (_variables.count(name) == 0)
-		throw "variable does not exist";
-	Value* v = _variables[name];
-	string type = val->getType();
-	if (type != v->getType())
-		throw "incompatible "
-	//if (type == "bool")	BoolValue(((BoolValue*)val)->getValue());
-	//else if (type == "int")		return new IntValue(((IntValue*)val)->getValue());
-	//else if (type == "frac")	return new FracValue(((FracValue*)val)->getValue());
-	//else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
-	//else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
-}*/
-
 Value * TypeValue::getVariable(string name)	// no public/private modifiers yet
 {
 	if (_typeDefinition._functions.count(name))
-		return _typeDefinition._functions[name];
+	{
+		bool isPublic = false;
+		if (hasModifier(_typeDefinition._functions[name].modifiers, "public") ||
+			(!hasModifier(_typeDefinition._functions[name].modifiers, "private")
+			&& 'A' <= name[0] && name[0] <= 'Z'))
+			isPublic = true;	// if modifiers has public (or doesn't have private and name is uppercase)
+		if (isPublic)
+			return _typeDefinition._functions[name].value;
+		else throw "function is private";
+	}
 	if (_variables.count(name))
-		return _variables[name];
+	{
+		bool isPublic = false;
+		if (hasModifier(_typeDefinition._variables[name].modifiers, "public") ||
+			(!hasModifier(_typeDefinition._variables[name].modifiers, "private")
+				&& 'A' <= name[0] && name[0] <= 'Z'))
+			isPublic = true;	// if modifiers has public (or doesn't have private and name is uppercase)
+		if (isPublic)
+			return _variables[name];
+		else throw "variable is private";
+	}
 	throw "variable does not exist";
+}
+
+bool hasModifier(vector<string> &modifiers, string modifier)
+{
+	return std::find(modifiers.begin(), modifiers.end(), modifier) != modifiers.end();
 }
 
 bool TypeValue::hasVariable(string name)
