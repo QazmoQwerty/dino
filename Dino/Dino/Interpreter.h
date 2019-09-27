@@ -1,6 +1,8 @@
 #pragma once
 #include "AstNode.h"
 #include <algorithm>
+#include <stack>
+using std::stack;
 
 class Value
 {
@@ -98,10 +100,61 @@ public:
 	virtual string toString() { return _value->toString(); };
 };
 
+struct VariableTypeDefinition
+{
+	string type;
+	vector<string> modifiers;
+} typedef VariableTypeDefinition;
+
+struct FunctionDefinition
+{
+	FuncValue* value;
+	vector<string> modifiers;
+} typedef FunctionDefinition;
+
+struct TypeDefinition
+{
+	string _name;
+	unordered_map<string, VariableTypeDefinition> _variables;
+	unordered_map<string, FunctionDefinition> _functions;
+} typedef TypeDefinition;
+
+class TypeValue : public Value
+{
+private:
+	unordered_map<string, TypeDefinition> &_types;
+	TypeDefinition _typeDefinition;
+	unordered_map<string, Value*> _variables;
+public:
+	TypeValue(string typeName, unordered_map<string, TypeDefinition> &types);
+	virtual string toString() { return std::to_string(NULL); };
+
+	//void setVariable(string name, Value* val);
+	Value* getVariable(string name);
+	bool hasVariable(string name);
+};
+
+class PtrValue : public Value
+{
+private:
+	string _ptrType;
+	Value* _value;
+public:
+	PtrValue(string ptrType, Value* value) : Value("ptr") { _ptrType = ptrType; _value = value; }
+	virtual string toString() { return (_value) ? _value->toString() : "nullptr"; }
+	void setPtrType(string ptrType) { _ptrType = ptrType; }
+	void setValue(Value* value) { _value = value; }
+	string getPtrType() { return _ptrType; }
+	Value* getValue() { return _value; }
+};
+
+bool hasModifier(vector<string> &modifiers, string modifier);
+
 class Interpreter
 {
 private:
 	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
+	unordered_map<string, TypeDefinition> _types;
 	int _scope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
@@ -111,7 +164,9 @@ private:
 	Value* interpretLiteral(AST::Literal* node);
 	Value* interpretVariable(AST::Variable* node);
 	Value* interpretAssignment(AST::Assignment* node);
-	
+
+
+	void interpretTypeDeclaration(AST::TypeDeclaration* node);
 	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
 	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
 	Value* interpretIfThenElse(AST::IfThenElse* node);
@@ -124,5 +179,5 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); }
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); }
 };

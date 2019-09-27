@@ -21,7 +21,7 @@ namespace AST
 	{
 		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
 	public:
-		Node(unsigned int nodeId) { _nodeId = nodeId; };
+		//Node(unsigned int nodeId) { _nodeId = nodeId; };
 		Node() { _nodeId = _idCount++; };
 		const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
 		virtual bool isStatement() = 0;
@@ -33,7 +33,7 @@ namespace AST
 	class Statement : virtual public Node
 	{
 	public:
-		Statement(unsigned int nodeId) : Node(nodeId) {};
+		//Statement(unsigned int nodeId) : Node(nodeId) {};
 		Statement() : Node() {};
 		virtual bool isStatement() { return true; };
 		virtual bool isExpression() { return false; };
@@ -44,7 +44,7 @@ namespace AST
 	class Expression : virtual public Node
 	{
 	public:
-		Expression(unsigned int nodeId) : Node(nodeId) {};
+		//Expression(unsigned int nodeId) : Node(nodeId) {};
 		Expression() : Node() {};
 		virtual bool isStatement() { return false; };
 		virtual bool isExpression() { return true; };
@@ -55,13 +55,10 @@ namespace AST
 	class ExpressionStatement : public Expression, public Statement
 	{
 	public:
-		ExpressionStatement(unsigned int nodeId) : Expression(nodeId) {};
+		//ExpressionStatement(unsigned int nodeId) : Expression(nodeId) {};
 		ExpressionStatement() : Expression() {};
 		virtual bool isStatement() { return true; };
 		virtual bool isExpression() { return true; };
-
-		//virtual StatementType getStatementType() = 0;
-		//virtual ExpressionType getExpressionType() = 0;
 	};
 
 	/***************** ExpressionStatements *****************/
@@ -69,11 +66,11 @@ namespace AST
 	class Assignment : public ExpressionStatement
 	{
 		Operator _operator;
-		Expression* _left;	// Temporary
+		Expression* _left;
 		Expression* _right;
 
 	public:
-		Assignment(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		//Assignment(unsigned int nodeId) : ExpressionStatement(nodeId) {};
 		Assignment() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; };
 		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; };
@@ -95,7 +92,7 @@ namespace AST
 		Expression* _expression;
 
 	public:
-		Increment(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		//Increment(unsigned int nodeId) : ExpressionStatement(nodeId) {};
 		Increment() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_INCREMENT; };
 		virtual ExpressionType getExpressionType() { return ET_INCREMENT; };
@@ -110,23 +107,20 @@ namespace AST
 
 	class FunctionCall : public ExpressionStatement
 	{
-		//Identificator _functionId;	// Temporary
 		Expression* _functionId;
 		vector<Expression*> _parameters;
 
 	public:
-		FunctionCall(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		//FunctionCall(unsigned int nodeId) : ExpressionStatement(nodeId) {};
 		FunctionCall() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\n"/* + _functionId.name*/; };
 		virtual vector<Node*> getChildren();
 
-		//void setFunctionId(Identificator funcId) { _functionId = funcId; }
 		void setFunctionId(Expression* funcId) { _functionId = funcId; }
 		void addParameter(Expression* parameter) { _parameters.push_back(parameter); }
 
-		//Identificator getFunctionId() { return _functionId; }
 		Expression* getFunctionId() { return _functionId; }
 		vector<Expression*> getParameters() { return _parameters; }
 	};
@@ -138,7 +132,7 @@ namespace AST
 		vector<Identificator> _modifiers; // public, static, reactive, etc.
 
 	public:
-		VariableDeclaration(unsigned int nodeId) : ExpressionStatement(nodeId) {};
+		//VariableDeclaration(unsigned int nodeId) : ExpressionStatement(nodeId) {};
 		VariableDeclaration() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
@@ -164,7 +158,7 @@ namespace AST
 	{
 		vector<Statement*> _statements;
 	public:
-		StatementBlock(unsigned int nodeId) : Statement(nodeId) {};
+		//StatementBlock(unsigned int nodeId) : Statement(nodeId) {};
 		StatementBlock() : Statement() {};
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		virtual string toString() { return "<StatementBlock>"; };
@@ -180,7 +174,7 @@ namespace AST
 		Statement* _elseBranch;
 
 	public:
-		IfThenElse(unsigned int nodeId) : Statement(nodeId) {};
+		//IfThenElse(unsigned int nodeId) : Statement(nodeId) {};
 		IfThenElse() : Statement() {};
 		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
 		virtual string toString() { return "<IfThenElse>"; };
@@ -201,7 +195,7 @@ namespace AST
 		Statement* _statement;
 
 	public:
-		WhileLoop(unsigned int nodeId) : Statement(nodeId) {};
+		//WhileLoop(unsigned int nodeId) : Statement(nodeId) {};
 		WhileLoop() : Statement() {};
 		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
@@ -217,7 +211,7 @@ namespace AST
 	class DoWhileLoop : public WhileLoop
 	{
 	public:
-		DoWhileLoop(unsigned int nodeId) : WhileLoop(nodeId) {};
+		//DoWhileLoop(unsigned int nodeId) : WhileLoop(nodeId) {};
 		DoWhileLoop() : WhileLoop() {};
 		virtual StatementType getStatementType() { return ST_DO_WHILE_LOOP; };
 		virtual string toString() { return "<Do>"; };
@@ -230,7 +224,7 @@ namespace AST
 		Expression* _expression;
 
 	public:
-		UnaryOperationStatement(unsigned int nodeId) : Statement(nodeId) {};
+		//UnaryOperationStatement(unsigned int nodeId) : Statement(nodeId) {};
 		UnaryOperationStatement() : Statement() {};
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
 		virtual string toString() { return string() + "<UnaryOperatorStatement>\\n" + _operator._str; };
@@ -243,6 +237,33 @@ namespace AST
 		Expression* getExpression() { return _expression; }
 	};
 
+	class TypeDeclaration : public Statement
+	{
+		Identificator _name;	// Temporary
+		vector<Identificator> _modifiers;
+		vector<Identificator> _interfaces;
+		vector<VariableDeclaration*> _variableDeclarations;
+		vector<Assignment*> _functionDeclarations;
+
+	public:
+		TypeDeclaration();
+		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual string toString() { return "<TypeDeclaration>\\n" + _name.name; };
+		virtual vector<Node*> getChildren();
+
+		Identificator getName() { return _name; }
+		vector<Identificator> getModifiers() { return _modifiers; };
+		vector<Identificator> getInterfaces() { return _interfaces; }
+		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
+		vector<Assignment*> getFunctionDeclarations() { return _functionDeclarations; }
+
+		void setName(Identificator id) { _name = id; }
+		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
+		void addInterface(Identificator interface) { _interfaces.push_back(interface); }
+		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
+		void addFunctionDeclaration(Assignment* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
+	};
+
 	/********************** Expressions **********************/
 
 	class BinaryOperation : public Expression
@@ -252,7 +273,7 @@ namespace AST
 		Expression* _right;
 
 	public:
-		BinaryOperation(unsigned int nodeId) : Expression(nodeId) {};
+		//BinaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		BinaryOperation() : Expression() {};
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; };
 		virtual string toString() { return string() + "<BinaryOperator>\\n" + _operator._str; };
@@ -273,7 +294,7 @@ namespace AST
 		Expression* _expression;
 
 	public:
-		UnaryOperation(unsigned int nodeId) : Expression(nodeId) {};
+		//UnaryOperation(unsigned int nodeId) : Expression(nodeId) {};
 		UnaryOperation() : Expression() {};
 		virtual ExpressionType getExpressionType() { return ET_UNARY_OPERATION; };
 		virtual string toString() { return string() + "<UnaryOperator>\\n" + _operator._str; };
@@ -291,12 +312,12 @@ namespace AST
 		Identificator _varId;	// Temporary
 
 	public:
+		//Variable(unsigned int nodeId, Identificator varId) : Expression(nodeId) { _varId = varId; };
+		//Variable(unsigned int nodeId) : Expression(nodeId) {};
+		Variable(Identificator varId) : Expression() { _varId = varId; };
+		Variable() : Expression() {};
 		void setVarId(Identificator varId) { _varId = varId; }
 		Identificator getVarId() { return _varId; }
-		Variable(unsigned int nodeId) : Expression(nodeId) {};
-		Variable() : Expression() {};
-		Variable(unsigned int nodeId, Identificator varId) : Expression(nodeId) { _varId = varId; };
-		Variable(Identificator varId) : Expression() { _varId = varId; };
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE; };
 		virtual string toString() { return "<Variable>\\n" + _varId.name; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
@@ -309,7 +330,7 @@ namespace AST
 		Expression* _elseBranch;
 
 	public:
-		ConditionalExpression(unsigned int nodeId) : Expression(nodeId) {};
+		//ConditionalExpression(unsigned int nodeId) : Expression(nodeId) {};
 		ConditionalExpression() : Expression() {};
 		virtual ExpressionType getExpressionType() { return ET_CONDITIONAL_EXPRESSION; };
 		virtual string toString() { return string() + "<ConditionaExpression>"; };
@@ -329,7 +350,7 @@ namespace AST
 		LiteralType _type;
 
 	public:
-		Literal(unsigned int nodeId, LiteralType type) : Expression(nodeId) { _type = type; };
+		//Literal(unsigned int nodeId, LiteralType type) : Expression(nodeId) { _type = type; };
 		Literal(LiteralType type) : Expression() { _type = type; };
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
@@ -340,7 +361,7 @@ namespace AST
 	{
 		bool _value;
 	public:
-		Boolean(unsigned int nodeId, bool value) : Literal(nodeId, LT_BOOLEAN) { _value = value; }
+		//Boolean(unsigned int nodeId, bool value) : Literal(nodeId, LT_BOOLEAN) { _value = value; }
 		Boolean(bool value) : Literal(LT_BOOLEAN) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
 		bool getValue() { return _value; }
@@ -350,7 +371,7 @@ namespace AST
 	{
 		int _value;
 	public:
-		Integer(unsigned int nodeId, int value) : Literal(nodeId, LT_INTEGER) { _value = value; }
+		//Integer(unsigned int nodeId, int value) : Literal(nodeId, LT_INTEGER) { _value = value; }
 		Integer(int value) : Literal(LT_INTEGER) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
 		int getValue() { return _value; }
@@ -360,7 +381,7 @@ namespace AST
 	{
 		float _value;
 	public:
-		Fraction(unsigned int nodeId, float value) : Literal(nodeId, LT_FRACTION) { _value = value; }
+		//Fraction(unsigned int nodeId, float value) : Literal(nodeId, LT_FRACTION) { _value = value; }
 		Fraction(float value) : Literal(LT_FRACTION) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
 		float getValue() { return _value; }
@@ -370,7 +391,7 @@ namespace AST
 	{
 		char _value;
 	public:
-		Character(unsigned int nodeId, char value) : Literal(nodeId, LT_STRING) { _value = value; }
+		//Character(unsigned int nodeId, char value) : Literal(nodeId, LT_STRING) { _value = value; }
 		Character(char value) : Literal(LT_STRING) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n'" + _value + '\''; };
 		char getValue() { return _value; }
@@ -380,7 +401,7 @@ namespace AST
 	{
 		string _value;
 	public:
-		String(unsigned int nodeId, string value) : Literal(nodeId, LT_STRING) { _value = value; }
+		//String(unsigned int nodeId, string value) : Literal(nodeId, LT_STRING) { _value = value; }
 		String(string value) : Literal(LT_STRING) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n\"" + _value + '"'; };
 		string getValue() { return _value; }
@@ -393,12 +414,13 @@ namespace AST
 		Identificator _returnType;	// Temporary
 
 	public:
-		Function(unsigned int nodeId) : Literal(nodeId, LT_FUNCTION) {}
+		//Function(unsigned int nodeId) : Literal(nodeId, LT_FUNCTION) {}
 		Function() : Literal(LT_FUNCTION) { }
 		virtual string toString() { return string() + "<FunctionLiteral>\n" + _returnType.name; };
 		virtual vector<Node*> getChildren();
 
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
 		void setContent(StatementBlock* content) { _content = content; }
 		void setReturnType(Identificator type) { _returnType = type; }
 
@@ -410,7 +432,7 @@ namespace AST
 	class Null : public Literal
 	{
 	public:
-		Null(unsigned int nodeId) : Literal(nodeId, LT_NULL) {}
+		//Null(unsigned int nodeId) : Literal(nodeId, LT_NULL) {}
 		Null() : Literal(LT_NULL) {}
 		virtual string toString() { return string() + "<IntegerLiteral>\\nnull"; };
 	};

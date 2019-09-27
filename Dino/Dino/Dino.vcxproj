@@ -140,6 +140,10 @@
     <Text Include="DinoSyntax.txt" />
     <Text Include="Text.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="TestCode.cs" />
+    <None Include="TestCode.dino" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

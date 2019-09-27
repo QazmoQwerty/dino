@@ -88,3 +88,22 @@ vector<AST::Node*> AST::UnaryOperationStatement::getChildren()
 	v.push_back(_expression);
 	return v;
 }
+
+vector<AST::Node*> AST::TypeDeclaration::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _variableDeclarations)
+		v.push_back(i);
+	for (auto i : _functionDeclarations)
+		v.push_back(i);
+	return v;
+}
+
+AST::TypeDeclaration::TypeDeclaration() : Statement()
+{
+	_name = { "" };
+	_modifiers = vector<Identificator>();
+	_interfaces = vector<Identificator>();
+	_variableDeclarations = vector<VariableDeclaration*>();
+	_functionDeclarations = vector<Assignment*>();
+}
