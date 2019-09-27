@@ -11,7 +11,7 @@
 
 int main() 
 {
-	std::ifstream t("Text.txt"/* "DinoSyntax.txt"*/);
+	std::ifstream t("TestCode.dino"/* "DinoSyntax.txt"*/);
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();

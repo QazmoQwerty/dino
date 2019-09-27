@@ -1,6 +1,8 @@
 #pragma once
 #include "AstNode.h"
 #include <algorithm>
+#include <stack>
+using std::stack;
 
 class Value
 {
@@ -147,7 +149,7 @@ class Interpreter
 private:
 	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
 	unordered_map<string, TypeDefinition> _types;
-	TypeValue* _thisPtr;
+	stack<TypeValue*> _thisPtr;
 	int _scope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
@@ -172,5 +174,5 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); _thisPtr = nullptr; }
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); _thisPtr = stack<TypeValue*>(); }
 };

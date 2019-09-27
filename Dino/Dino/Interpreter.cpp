@@ -253,19 +253,49 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 		return NULL;
 	}
 	enterBlock();
-	Value* val = interpret(node->getFunctionId());
+	Value* thisPtr = nullptr;
+	Value* val = nullptr;
+	if (node->getFunctionId()->getExpressionType() == ET_BINARY_OPERATION &&
+		dynamic_cast<AST::BinaryOperation*>(node->getFunctionId())->getOperator()._type == OT_PERIOD)
+	{
+		auto tempNode = dynamic_cast<AST::BinaryOperation*>(node->getFunctionId());
+		thisPtr = interpret(tempNode->getLeft());
+
+		Value* left = nullptr;
+		if (thisPtr->getType() == "ptr")
+			left = ((PtrValue*)thisPtr)->getValue();
+		else left = thisPtr;
+		if (_types.count(left->getType()) == 0)
+			throw "type doesn't exist";
+		if (tempNode->getRight()->getExpressionType() != ET_VARIABLE)
+			throw "right of '.' operator must be a variable name";
+		string varName = dynamic_cast<AST::Variable*>(tempNode->getRight())->getVarId().name;
+		val = ((TypeValue*)left)->getVariable(varName);
+		//Value* leftTemp = interpret
+	}
+	else val = interpret(node->getFunctionId());
 	if (val->getType() != "func")
 		throw "cannot invoke non-function!";
 	auto func = ((FuncValue*)val);
 	auto values = node->getParameters();
 	auto params = func->getValue()->getParameters();
 
-	if (params.size() != values.size())
+	bool isMethod = false;
+	if (params.size() != 0 && params[0]->getVarId().name == "this")
+	{
+		isMethod = true;
+		if (params.size() != values.size() + 1)
+			throw "Incorrect number of parameter inputs";
+	}
+	else if (params.size() != values.size())
 		throw "Incorrect number of parameter inputs";
 
 	for (unsigned int i = 0; i < params.size(); i++)
 	{
-		Value* rvalue = interpret(values[i]);
+		Value* rvalue = nullptr;
+		if (i == 0 && isMethod)
+			rvalue = thisPtr;
+		else rvalue = interpret(values[isMethod ? i - 1 : i]);
 		Value* lvalue = interpret(params[i]);
 
 		string name = params[i]->getVarId().name;
@@ -273,10 +303,10 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 			throw "Incompatible function inputs";
 		
 		string type = lvalue->getType();
-		if (type == "int")		((IntValue*)lvalue)->setValue(((IntValue*)rvalue)->getValue());
+		if (type == "int")			((IntValue*)lvalue)->setValue(((IntValue*)rvalue)->getValue());
 		else if (type == "bool")	((BoolValue*)lvalue)->setValue(((BoolValue*)rvalue)->getValue());
 		else if (type == "frac")	((FracValue*)lvalue)->setValue(((FracValue*)rvalue)->getValue());
-		else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
+		else if (type == "string")  ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
 		else if (type == "char")	((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
 		else if (type == "func")	((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
 		else if (type == "ptr") 

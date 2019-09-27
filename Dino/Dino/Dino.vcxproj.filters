@@ -83,4 +83,12 @@
       <Filter>Test Code Examples</Filter>
     </Text>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="TestCode.cs">
+      <Filter>Test Code Examples</Filter>
+    </None>
+    <None Include="TestCode.dino">
+      <Filter>Test Code Examples</Filter>
+    </None>
+  </ItemGroup>
 </Project>
