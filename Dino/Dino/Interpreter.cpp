@@ -245,11 +245,13 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
 		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "Print") 
 	{
-		for (auto i : node->getParameters()) 
+		for (unsigned int i = 0; i < node->getParameters().size(); i++) 
 		{
-			Value* val = interpret(i);
-			std::cout << val->toString() << std::endl;
+			Value* val = interpret(node->getParameters()[i]);
+			std::cout << val->toString();
+			if (i != node->getParameters().size() - 1) std::cout << " ";
 		}
+		std::cout << std::endl;
 		return NULL;
 	}
 	enterBlock();
@@ -343,13 +345,19 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 Value * Interpreter::interpretVariable(AST::Variable * node)
 {
 	string name = node->getVarId().name;
-	//if (_thisPtr != nullptr && _thisPtr->hasVariable(name))
-	//	return _thisPtr->getVariable(name);
 	for (int scope = currentScope(); scope >= 0; scope--)
-	{
 		if (_variables[scope].count(name))
 			return _variables[scope][name];
+
+	for (int scope = currentScope(); scope >= 0; scope--)
+	{
+		if (_variables[scope].count("this"))
+		{
+			try { return ((TypeValue*)((PtrValue*)_variables[scope]["this"])->getValue())->getVariable(name); }
+			catch (exception)  { throw "variable does not exist"; }
+		}
 	}
+
 	throw "variable does not exist";
 }
 

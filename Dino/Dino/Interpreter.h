@@ -149,7 +149,6 @@ class Interpreter
 private:
 	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
 	unordered_map<string, TypeDefinition> _types;
-	stack<TypeValue*> _thisPtr;
 	int _scope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
@@ -174,5 +173,5 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); _thisPtr = stack<TypeValue*>(); }
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); }
 };
