@@ -52,28 +52,22 @@ Value* Interpreter::interpret(AST::Node * node)
 	}
 	else
 	{
-	//auto expression = (AST::Expression*)node;
-	auto expression = dynamic_cast<AST::Expression*>(node);
-	switch (expression->getExpressionType())
-	{
-	case (ET_BINARY_OPERATION):
-		return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
-	case (ET_UNARY_OPERATION):
-		return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
-	case (ET_CONDITIONAL_EXPRESSION):
-		break;
-		/*case (ET_FUNCTION_CALL):
-			interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
-			break;*/
-	case (ET_LITERAL):
-		return interpretLiteral(dynamic_cast<AST::Literal*>(node));
-		break;
-	case (ET_VARIABLE):
-		return interpretVariable(dynamic_cast<AST::Variable*>(node));
-		break;
-	default:
-		break;
-	}
+		auto expression = dynamic_cast<AST::Expression*>(node);
+		switch (expression->getExpressionType())
+		{
+		case (ET_BINARY_OPERATION):
+			return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
+		case (ET_UNARY_OPERATION):
+			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
+		case (ET_CONDITIONAL_EXPRESSION):
+			throw "conditional expression are not supported yet";
+		case (ET_LITERAL):
+			return interpretLiteral(dynamic_cast<AST::Literal*>(node));
+		case (ET_VARIABLE):
+			return interpretVariable(dynamic_cast<AST::Variable*>(node));
+		default:
+			break;
+		}
 	}
 
 	return NULL;
@@ -103,6 +97,8 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 			else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
 			else if (type == "char") ((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
 			else if (type == "func") ((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
+			else if (type == "ptr") ((PtrValue*)lvalue)->setValue(((PtrValue*)rvalue)->getValue());
+			//else throw "type does not exist";
 			break;
 		case (OT_ASSIGN_ADD):
 			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() + ((IntValue*)rvalue)->getValue());
@@ -138,12 +134,16 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 
 	if (node->getOperator()._type == OT_PERIOD)
 	{
-		if (_types.count(leftVal->getType()) == 0)
+		Value* left = nullptr;
+		if (leftVal->getType() == "ptr")
+			left = ((PtrValue*)leftVal)->getValue();
+		else left = leftVal;
+		if (_types.count(left->getType()) == 0)
 			throw "type doesn't exist";
 		if (node->getRight()->getExpressionType() != ET_VARIABLE)
 			throw "right of '.' operator must be a variable name";
 		string varName = dynamic_cast<AST::Variable*>(node->getRight())->getVarId().name;
-		return ((TypeValue*)leftVal)->getVariable(varName);
+		return ((TypeValue*)left)->getVariable(varName);
 	}
 
 	Value* rightVal = interpret(node->getRight());
@@ -279,6 +279,15 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 		else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
 		else if (type == "char")	((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
 		else if (type == "func")	((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
+		else if (type == "ptr") 
+		{
+			((PtrValue*)lvalue)->setValue(((PtrValue*)rvalue)->getValue());
+		}
+		else if (_types.count(type))
+		{
+			//std::cout << "warning: garbage collection does not exist yet!" << std::endl;
+			//lvalue = rvalue;
+		}
 		else throw "custom types are not supported yet";
 	}
 	Value* ret = interpret(func->getValue()->getContent());
@@ -304,6 +313,8 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 Value * Interpreter::interpretVariable(AST::Variable * node)
 {
 	string name = node->getVarId().name;
+	//if (_thisPtr != nullptr && _thisPtr->hasVariable(name))
+	//	return _thisPtr->getVariable(name);
 	for (int scope = currentScope(); scope >= 0; scope--)
 	{
 		if (_variables[scope].count(name))
@@ -328,7 +339,6 @@ void Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
 	}
 	for (auto funcDecl : node->getFunctionDeclarations())
 	{
-
 		if (funcDecl->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
 			throw "TODO - proper error";
 		auto varDecl = dynamic_cast<AST::VariableDeclaration*>(funcDecl->getLeft());
@@ -336,8 +346,12 @@ void Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
 		if (funcDecl->getRight()->getExpressionType() != ET_LITERAL ||
 			dynamic_cast<AST::Literal*>(funcDecl->getRight())->getLiteralType() != LT_FUNCTION)
 			throw "cannot assign non function value to function";
-
-		typeDef._functions[funcName] = new FuncValue((AST::Function*)funcDecl->getRight());
+		auto funcLit = (AST::Function*)funcDecl->getRight();
+		auto thisVarDecl = new AST::VariableDeclaration();
+		thisVarDecl->setType({ typeDef._name });
+		thisVarDecl->setVarId({ "this" });
+		funcLit->addParameterToStart(thisVarDecl);
+		typeDef._functions[funcName] = new FuncValue(funcLit);
 	}
 	_types[typeDef._name] = typeDef;
 }
@@ -371,9 +385,10 @@ Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * nod
 	if (std::find_if(std::begin(modifiers), std::end(modifiers),
 		[](AST::Identificator id) { return id.name == "func"; }) != std::end(modifiers))	// check if "modifiers" has "func" in it
 	{
-		if (type == "bool" || type == "int" || type == "frac" || type == "string" || type == "char" || type == "void")
+		if (type == "bool" || type == "int" || type == "frac" || type == "string" || type == "char" || type == "void" || _types.count(type))
 			val = new FuncValue(type);
-		else throw "custom types are not implemented yet.";
+		else throw "type does not exist";
+		//else throw "custom types are not implemented yet.";
 	}
 	else
 	{
@@ -382,10 +397,13 @@ Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * nod
 		else if (type == "frac")	val = new FracValue();
 		else if (type == "string")	val = new StringValue();
 		else if (type == "char")	val = new CharValue();
-		else if (_types.count(type)) val = new TypeValue(type, _types);
+		else if (_types.count(type)) val = new PtrValue(type, new TypeValue(type, _types));
+		//else if (_types.count(type)) val = new TypeValue(type, _types);
 		else throw "type does not exist";
 	}
 	val->setNotTemp();
+	if (val->getType() == "ptr" && ((PtrValue*)val)->getValue())
+		((PtrValue*)val)->getValue()->setNotTemp();
 	return val;
 }
 
@@ -453,7 +471,8 @@ Value * Interpreter::copyValue(Value * val)
 	else if (type == "frac")	return new FracValue(((FracValue*)val)->getValue());
 	else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
 	else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
-	return nullptr;
+	else if (type == "ptr")		return new PtrValue(((PtrValue*)val)->getPtrType(), ((PtrValue*)val)->getValue());
+	else throw "cannot copy type that does not exist";
 }
 
 TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &types) : Value(typeName), _types(types)
@@ -473,6 +492,7 @@ TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &typ
 		else if (_types.count(i.second.type)) 
 			var = new TypeValue(i.second.type, _types);
 		else throw "nonexistant type";
+		var->setNotTemp();
 		_variables[i.first] = var;
 	}
 }
@@ -499,4 +519,9 @@ Value * TypeValue::getVariable(string name)	// no public/private modifiers yet
 	if (_variables.count(name))
 		return _variables[name];
 	throw "variable does not exist";
+}
+
+bool TypeValue::hasVariable(string name)
+{
+	return _typeDefinition._functions.count(name) || _variables.count(name);
 }

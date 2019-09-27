@@ -420,6 +420,7 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
 		void setContent(StatementBlock* content) { _content = content; }
 		void setReturnType(Identificator type) { _returnType = type; }
 

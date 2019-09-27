@@ -123,6 +123,21 @@ public:
 
 	//void setVariable(string name, Value* val);
 	Value* getVariable(string name);
+	bool hasVariable(string name);
+};
+
+class PtrValue : public Value
+{
+private:
+	string _ptrType;
+	Value* _value;
+public:
+	PtrValue(string ptrType, Value* value) : Value("ptr") { _ptrType = ptrType; _value = value; }
+	virtual string toString() { return (_value) ? _value->toString() : "nullptr"; }
+	void setPtrType(string ptrType) { _ptrType = ptrType; }
+	void setValue(Value* value) { _value = value; }
+	string getPtrType() { return _ptrType; }
+	Value* getValue() { return _value; }
 };
 
 
@@ -132,6 +147,7 @@ class Interpreter
 private:
 	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
 	unordered_map<string, TypeDefinition> _types;
+	TypeValue* _thisPtr;
 	int _scope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
@@ -156,5 +172,5 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); }
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); _thisPtr = nullptr; }
 };
