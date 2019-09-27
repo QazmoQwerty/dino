@@ -1,7 +1,7 @@
 
-#include "Preparser.h"
+#include "Preprocessor.h"
 
-vector<Token*>& Preparser::Preparse(vector<Token*> tokens)
+vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 {
 	auto preparsedTokens = new vector<Token*>();
 

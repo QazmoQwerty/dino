@@ -115,6 +115,9 @@ enum OperatorType
 	OT_IF,
 	OT_ELSE,
 	OT_RETURN,
+	OT_TYPE,
+	OT_INTERFACE,
+	OT_IMPLEMENTS,
 
 	// Misc:
 	OT_SINGLE_QUOTE,				//	'
@@ -160,6 +163,7 @@ enum StatementType
 	ST_ASSIGNMENT,
 	ST_FUNCTION_CALL,
 	ST_INCREMENT,
+	ST_TYPE_DECLARATION,
 	ST_UNKNOWN,
 };
 
