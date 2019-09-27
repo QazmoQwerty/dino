@@ -143,7 +143,7 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 		if (node->getRight()->getExpressionType() != ET_VARIABLE)
 			throw "right of '.' operator must be a variable name";
 		string varName = dynamic_cast<AST::Variable*>(node->getRight())->getVarId().name;
-		return ((TypeValue*)left)->getVariable(varName);
+		return ((TypeValue*)left)->getVariable(varName, _currentNamespace.top());
 	}
 
 	Value* rightVal = interpret(node->getRight());
@@ -272,7 +272,7 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 		if (tempNode->getRight()->getExpressionType() != ET_VARIABLE)
 			throw "right of '.' operator must be a variable name";
 		string varName = dynamic_cast<AST::Variable*>(tempNode->getRight())->getVarId().name;
-		val = ((TypeValue*)left)->getVariable(varName);
+		val = ((TypeValue*)left)->getVariable(varName, _currentNamespace.top());
 		//Value* leftTemp = interpret
 	}
 	else val = interpret(node->getFunctionId());
@@ -295,8 +295,11 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 	for (unsigned int i = 0; i < params.size(); i++)
 	{
 		Value* rvalue = nullptr;
-		if (i == 0 && isMethod)
+		if (i == 0 && isMethod) 
+		{
+			_currentNamespace.push(((PtrValue*)thisPtr)->getPtrType());
 			rvalue = thisPtr;
+		}
 		else rvalue = interpret(values[isMethod ? i - 1 : i]);
 		Value* lvalue = interpret(params[i]);
 
@@ -324,6 +327,7 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 	}
 	Value* ret = interpret(func->getValue()->getContent());
 	leaveBlock();
+	if (isMethod) _currentNamespace.pop();
 	return ret;
 }
 
@@ -353,7 +357,7 @@ Value * Interpreter::interpretVariable(AST::Variable * node)
 	{
 		if (_variables[scope].count("this"))
 		{
-			try { return ((TypeValue*)((PtrValue*)_variables[scope]["this"])->getValue())->getVariable(name); }
+			try { return ((TypeValue*)((PtrValue*)_variables[scope]["this"])->getValue())->getVariable(name, _currentNamespace.top()); }
 			catch (exception)  { throw "variable does not exist"; }
 		}
 	}
@@ -538,28 +542,20 @@ TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &typ
 	}
 }
 
-Value * TypeValue::getVariable(string name)	// no public/private modifiers yet
+Value * TypeValue::getVariable(string name, string scope)	// no public/private modifiers yet
 {
 	if (_typeDefinition._functions.count(name))
 	{
-		bool isPublic = false;
-		if (hasModifier(_typeDefinition._functions[name].modifiers, "public") ||
-			(!hasModifier(_typeDefinition._functions[name].modifiers, "private")
-			&& 'A' <= name[0] && name[0] <= 'Z'))
-			isPublic = true;	// if modifiers has public (or doesn't have private and name is uppercase)
-		if (isPublic)
-			return _typeDefinition._functions[name].value;
+		if (scope == _typeDefinition._name || hasModifier(_typeDefinition._functions[name].modifiers, "public") ||
+			(!hasModifier(_typeDefinition._functions[name].modifiers, "private") && 'A' <= name[0] && name[0] <= 'Z'))
+			return _typeDefinition._functions[name].value;	// if modifiers has public (or doesn't have private and name is uppercase)
 		else throw "function is private";
 	}
 	if (_variables.count(name))
 	{
-		bool isPublic = false;
-		if (hasModifier(_typeDefinition._variables[name].modifiers, "public") ||
-			(!hasModifier(_typeDefinition._variables[name].modifiers, "private")
-				&& 'A' <= name[0] && name[0] <= 'Z'))
-			isPublic = true;	// if modifiers has public (or doesn't have private and name is uppercase)
-		if (isPublic)
-			return _variables[name];
+		if (scope == _typeDefinition._name || hasModifier(_typeDefinition._variables[name].modifiers, "public") ||
+			(!hasModifier(_typeDefinition._variables[name].modifiers, "private") && 'A' <= name[0] && name[0] <= 'Z'))
+			return _variables[name];	// if modifiers has public (or doesn't have private and name is uppercase)
 		else throw "variable is private";
 	}
 	throw "variable does not exist";

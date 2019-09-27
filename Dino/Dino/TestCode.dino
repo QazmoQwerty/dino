@@ -10,8 +10,8 @@ for int i = 0 | i < 20 | ++i {
 }*/
 
 type Rectangle {
-	public int h
-	public int w
+	int h
+	int w
 
 	int Area() {
 		return this.h * this.w
@@ -19,20 +19,22 @@ type Rectangle {
 	void Show() {
 		Print("height:", h, "width:", w)
 	}
-	void Enlarge(int n) {
-		h += n
+	void Enlarge(int n) { 
+		h += n 
 		w += n
+	}
+	void SetVars(int h, int w) {
+		this.h = h
+		this.w = w
 	}
 }
 
 Rectangle CreateSquare(int len) {
 	Rectangle rec
-	rec.h = rec.w = len
+	rec.SetVars(len, len)
 	return rec
 }
 
 Rectangle rec = CreateSquare(2)
-rec.h = 1
-rec.w = 1
 rec.Enlarge(2)
 rec.Show()

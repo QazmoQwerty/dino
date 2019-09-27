@@ -130,7 +130,7 @@ public:
 	virtual string toString() { return std::to_string(NULL); };
 
 	//void setVariable(string name, Value* val);
-	Value* getVariable(string name);
+	Value* getVariable(string name, string scope);
 	bool hasVariable(string name);
 };
 
@@ -155,6 +155,7 @@ class Interpreter
 private:
 	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
 	unordered_map<string, TypeDefinition> _types;
+	stack<string> _currentNamespace;
 	int _scope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
@@ -179,5 +180,6 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); }
+	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); 
+	_currentNamespace = stack<string>(); _currentNamespace.push(""); }
 };
