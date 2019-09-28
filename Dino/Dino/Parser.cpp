@@ -517,7 +517,7 @@ AST::Node * Parser::nud(Token * token)
 				else if (eatOperator(OT_COLON))
 				{
 					while (eatLineBreak());
-					AST::Node* n = parse();
+					AST::Node* n = parse(10);
 					if (n && n->isStatement())
 					{
 						auto content = new AST::StatementBlock();
@@ -529,6 +529,7 @@ AST::Node * Parser::nud(Token * token)
 				else throw "missing function literal body";
 				
 				func->setReturnType(returnType);
+				while (eatLineBreak());
 				return func;
 			}
 			
@@ -647,7 +648,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				while (!eatOperator(OT_PARENTHESIS_CLOSE))
 				{
 					auto exp = parse(10);
-					if (!exp->isExpression())
+					if (exp && !exp->isExpression())
 						throw "Could not convert from Node* to Expression*";
 					funcCall->addParameter(dynamic_cast<AST::Expression*>(exp));
 					if (isOperator(peekToken(), OT_COMMA))
