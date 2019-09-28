@@ -115,9 +115,11 @@ enum OperatorType
 	OT_IF,
 	OT_ELSE,
 	OT_UNLESS,
+	OT_IS,
 	OT_RETURN,
 	OT_TYPE,
 	OT_INTERFACE,
+	OT_NAMESPACE,
 	OT_IMPLEMENTS,
 
 	// Misc:

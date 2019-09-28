@@ -82,11 +82,45 @@ vector<AST::Node*> AST::Function::getChildren()
 	return v;
 }
 
+string AST::InterfaceDeclaration::toString()
+{
+	string str = "<InterfaceDeclaration>\\n" + _name.name;
+	for (unsigned int i = 0; i < _implements.size(); i++)
+	{
+		if (i == 0) str += " is ";
+		str += _implements[i].name;
+		if (i < _implements.size() - 1)
+			str += ", ";
+	}
+	return str;
+}
+
+vector<AST::Node*> AST::InterfaceDeclaration::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _declarations)
+		v.push_back(i);
+	return v;
+}
+
 vector<AST::Node*> AST::UnaryOperationStatement::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_expression);
 	return v;
+}
+
+string AST::TypeDeclaration::toString()
+{
+	string str = "<TypeDeclaration>\\n" + _name.name;
+	for (unsigned int i = 0; i < _interfaces.size(); i++)
+	{
+		if (i == 0) str += " is ";
+		str += _interfaces[i].name;
+		if (i < _interfaces.size() - 1)
+			str += ", ";
+	}
+	return str;
 }
 
 vector<AST::Node*> AST::TypeDeclaration::getChildren()
@@ -106,4 +140,12 @@ AST::TypeDeclaration::TypeDeclaration() : Statement()
 	_interfaces = vector<Identificator>();
 	_variableDeclarations = vector<VariableDeclaration*>();
 	_functionDeclarations = vector<Assignment*>();
+}
+
+AST::InterfaceDeclaration::InterfaceDeclaration()
+{
+	_name = { "" };
+	_modifiers = vector<Identificator>();
+	_implements = vector<Identificator>();
+	_declarations = vector<VariableDeclaration*>();
 }

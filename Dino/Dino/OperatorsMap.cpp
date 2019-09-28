@@ -20,6 +20,7 @@ bool OperatorsMap::isWord(OperatorType type)
 		OT_LOGICAL_NOT,
 		OT_TYPE,
 		OT_INTERFACE,
+		OT_NAMESPACE,
 		OT_IMPLEMENTS,
 	};
 	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);
@@ -41,6 +42,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_IF,
 		OT_ELSE,
 		OT_UNLESS,
+		OT_IS,
 		OT_FOR,
 		OT_RETURN,
 		OT_TYPE,
@@ -169,8 +171,10 @@ void OperatorsMap::setup()
 	_wordsMap["type"] = { OT_TYPE, "type", NULL, NULL };
 	_wordsMap["implements"] = { OT_IMPLEMENTS, "implements", NULL, NULL };
 	_wordsMap["interface"] = { OT_INTERFACE, "interface", NULL, NULL };
+	_wordsMap["namespace"] = { OT_NAMESPACE, "namespace", NULL, NULL };
 
 	_wordsMap["not"]	=	{ OT_LOGICAL_NOT,			"not",	RIGHT_TO_LEFT,		130 };
 	_wordsMap["and"]	=	{ OT_LOGICAL_AND,			"and",	LEFT_TO_RIGHT,		40 };
 	_wordsMap["or"]		=	{ OT_LOGICAL_OR,			"or",	LEFT_TO_RIGHT,		30 };
+	_wordsMap["is"] =	{ OT_IS, "is", NULL, NULL };
 }

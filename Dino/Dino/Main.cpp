@@ -22,15 +22,15 @@ int main()
 	{
 		auto lexed = Lexer::lex(str);
 		auto vec = Preprocessor::preprocess(lexed);
-
+		
 		//for (auto i : vec) printToken(i);
 
 		Parser p = Parser(vec);
 		AST::Node* ast = p.parseBlock();
 		astToFile("AstDisplay.gv", ast);
 
-		Interpreter i;
-		i.interpret(ast);
+		//Interpreter i;
+		//i.interpret(ast);
 	} 
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }

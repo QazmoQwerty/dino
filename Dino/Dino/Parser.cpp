@@ -245,8 +245,6 @@ AST::Node * Parser::std(Token * token)
 			return node;
 		}
 
-		/**************/
-
 		if (ot->_operator._type == OT_UNLESS)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();
@@ -274,9 +272,6 @@ AST::Node * Parser::std(Token * token)
 			return node;
 		}
 
-		/*********/
-
-
 		if (ot->_operator._type == OT_RETURN)
 		{
 			auto op = new AST::UnaryOperationStatement();
@@ -294,7 +289,15 @@ AST::Node * Parser::std(Token * token)
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName({ nextToken()->_data });
 			else throw "could not parse type declaration";
-			//if (isOperator(peekToken(), OT_IMPLEMENTS)) // TODO
+
+			if (eatOperator(OT_IS))
+				do
+				{
+					if (peekToken()->_type != TT_IDENTIFIER)
+						throw "could not parse interface declaration, incorrect use of 'is' operator";
+					decl->addInterface({ nextToken()->_data });
+				} while (eatOperator(OT_COMMA));
+
 			eatLineBreak();
 			if (!eatOperator(OT_CURLY_BRACES_OPEN))
 				throw "could not parse type declaration";
@@ -315,6 +318,39 @@ AST::Node * Parser::std(Token * token)
 				default:
 					break;
 				}
+				eatLineBreak();
+			}
+			return decl;
+		}
+
+		if (ot->_operator._type == OT_INTERFACE)
+		{
+			auto decl = new AST::InterfaceDeclaration();
+			if (peekToken()->_type == TT_IDENTIFIER)
+				decl->setName({ nextToken()->_data });
+			else throw "could not parse type declaration";
+			eatLineBreak();
+			if (eatOperator(OT_IS)) 
+				do 
+				{
+					if (peekToken()->_type != TT_IDENTIFIER)
+						throw "could not parse interface declaration, incorrect use of 'is' operator";
+					decl->addImplements({ nextToken()->_data });
+				} while (eatOperator(OT_COMMA));
+
+			eatLineBreak();
+			if (!eatOperator(OT_CURLY_BRACES_OPEN))
+				throw "could not parse interface declaration";
+			eatLineBreak();
+			while (!eatOperator(OT_CURLY_BRACES_CLOSE))
+			{
+				auto temp = parse();
+				if (!temp->isStatement())
+					throw "could not parse interface declaration body";
+
+				if (dynamic_cast<AST::Statement*>(temp)->getStatementType() != ST_VARIABLE_DECLARATION)
+					throw "body of interface declaration may contain only declarations";
+				else decl->addDeclaration(dynamic_cast<AST::VariableDeclaration*>(temp));
 				eatLineBreak();
 			}
 			return decl;

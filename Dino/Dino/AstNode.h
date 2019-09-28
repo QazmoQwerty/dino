@@ -237,6 +237,30 @@ namespace AST
 		Expression* getExpression() { return _expression; }
 	};
 
+	class InterfaceDeclaration : public Statement
+	{
+		Identificator _name;	// Temporary
+		vector<Identificator> _modifiers;
+		vector<Identificator> _implements;
+		vector<VariableDeclaration*> _declarations;
+
+	public:
+		InterfaceDeclaration();
+		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual string toString();
+		virtual vector<Node*> getChildren();
+
+		Identificator getName() { return _name; }
+		vector<Identificator> getModifiers() { return _modifiers; };
+		vector<Identificator> getImplements() { return _implements; }
+		vector<VariableDeclaration*> getDeclarations() { return _declarations; }
+
+		void setName(Identificator id) { _name = id; }
+		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
+		void addImplements(Identificator interface) { _implements.push_back(interface); }
+		void addDeclaration(VariableDeclaration* declaration) { _declarations.push_back(declaration); }
+	};
+
 	class TypeDeclaration : public Statement
 	{
 		Identificator _name;	// Temporary
@@ -248,7 +272,7 @@ namespace AST
 	public:
 		TypeDeclaration();
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
-		virtual string toString() { return "<TypeDeclaration>\\n" + _name.name; };
+		virtual string toString();
 		virtual vector<Node*> getChildren();
 
 		Identificator getName() { return _name; }
