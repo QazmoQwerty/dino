@@ -146,6 +146,7 @@ void OperatorsMap::setup()
 	_map["?="]	=	{ OT_ASSIGN_BITWISE_OR,		"?=",	RIGHT_TO_LEFT,		20 };
 	_map["^="]	=	{ OT_ASSIGN_BITWISE_XOR,	"^=",	RIGHT_TO_LEFT,		20 };
 	_map[","]	=	{ OT_COMMA,					",",	LEFT_TO_RIGHT,		10 };
+	_map[":"]	=	{ OT_COLON,					":",	LEFT_TO_RIGHT,		NULL };
 
 	// Non-parser related operators:
 	_map["//"]	=	{ OT_SINGLE_LINE_COMMENT,		"//",	NULL,		NULL };

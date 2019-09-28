@@ -83,11 +83,18 @@ AST::Node * Parser::std(Token * token)
 				node->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw "could not convert from Node* to Expression*";
 
-			while (peekToken()->_type == TT_LINE_BREAK)
-				nextToken();
+			while (eatLineBreak());
 
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
+					node->setStatement(dynamic_cast<AST::Statement*>(n));
+				else throw "inner content of while statement must be a statement!";
+			}
 			else throw "could not parse while loop";
 
 			return node;
@@ -132,10 +139,19 @@ AST::Node * Parser::std(Token * token)
 			while (peekToken()->_type == TT_LINE_BREAK)
 				nextToken();
 
-			AST::StatementBlock *innerBlock = new AST::StatementBlock();
+			AST::StatementBlock *innerBlock = nullptr;
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				innerBlock = parseBlock(OT_CURLY_BRACES_CLOSE);
-			else throw "could not parse while loop";
+			else if (eatOperator(OT_COLON))
+			{
+				innerBlock = new AST::StatementBlock();
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
+					innerBlock->addStatement(dynamic_cast<AST::Statement*>(n));
+				else throw "inner content of a for loop's statement must be a statement!";
+			}
+			else throw "could not parse for loop's statement";
 
 			for (AST::Node* increment : increments)
 				if (increment->isStatement())
@@ -152,13 +168,21 @@ AST::Node * Parser::std(Token * token)
 		{
 			AST::DoWhileLoop * node = new AST::DoWhileLoop();
 
-			while (peekToken()->_type == TT_LINE_BREAK)
-				nextToken();
+			while (eatLineBreak());
 
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				node->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
-			else throw "could not do parse while loop";
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
+					node->setStatement(dynamic_cast<AST::Statement*>(n));
+				else throw "inner content of do-while statement must be a statement!";
+			}
+			else throw "could not do parse do-while loop";
 
+			while (eatLineBreak());
 			if (!eatOperator(OT_WHILE))
 				throw "Missing 'while' in do-while statement.";
 
@@ -182,12 +206,17 @@ AST::Node * Parser::std(Token * token)
 			while (peekToken()->_type == TT_LINE_BREAK)
 				nextToken();
 
-			if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
-			{
-				nextToken();
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				node->setThenBranch(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
+					node->setThenBranch(dynamic_cast<AST::Statement*>(n));
+				else throw "inner content of if statement must be a statement!";
 			}
-			else throw "could not parse while loop";
+			else throw "could not then part of if statement";
 
 			bool b = false;
 			while (peekToken()->_type == TT_LINE_BREAK)
@@ -199,13 +228,14 @@ AST::Node * Parser::std(Token * token)
 			{
 				AST::Node *p = NULL;
 				if (isOperator(peekToken(), OT_IF))
+					p = parse();
+				else if (eatOperator(OT_COLON))
 				{
+					while (eatLineBreak());
 					p = parse();
 				}
 				else if (eatOperator(OT_CURLY_BRACES_OPEN))
-				{
 					p = parseBlock(OT_CURLY_BRACES_CLOSE);
-				}
 				if (p && p->isStatement())
 					node->setElseBranch(dynamic_cast<AST::Statement*>(p));
 				else throw "else branch must be a statement!";
@@ -347,9 +377,6 @@ AST::Node * Parser::nud(Token * token)
 				// Function literal
 				AST::Identificator returnType = { nextToken()->_data };
 
-				if (!eatOperator(OT_CURLY_BRACES_OPEN))
-					throw "TODO - error";
-
 				auto func = new AST::Function();
 				vector<AST::VariableDeclaration*> vec;
 
@@ -379,7 +406,22 @@ AST::Node * Parser::nud(Token * token)
 
 				for (auto i : vec)
 					func->addParameter(i);
-				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+				if (eatOperator(OT_CURLY_BRACES_OPEN))
+					func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+				else if (eatOperator(OT_COLON))
+				{
+					while (eatLineBreak());
+					AST::Node* n = parse();
+					if (n && n->isStatement())
+					{
+						auto content = new AST::StatementBlock();
+						content->addStatement(dynamic_cast<AST::Statement*>(n));
+						func->setContent(content);
+					}
+					else throw "inner content of function must be a statement!";
+				}
+				else throw "missing function literal body";
+				
 				func->setReturnType(returnType);
 				return func;
 			}
@@ -450,10 +492,23 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 				while (eatLineBreak());
 
-				if (!eatOperator(OT_CURLY_BRACES_OPEN)) 
-					throw "missing function body.";
+				if (eatOperator(OT_CURLY_BRACES_OPEN)) 
+					func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+				else if (eatOperator(OT_COLON))
+				{
+					while (eatLineBreak());
+					AST::Node* n = parse();
+					if (n && n->isStatement())
+					{
+						auto content = new AST::StatementBlock();
+						content->addStatement(dynamic_cast<AST::Statement*>(n));
+						func->setContent(content);
+					}
+					else throw "inner content of function must be a statement!";
+				}
+				else throw "missing function body.";
 
-				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+				
 
 				decl->addModifier({ "func" });
 				assign->setLeft(decl);
