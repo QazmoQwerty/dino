@@ -1,5 +1,5 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;0->12;
+0 [label="<StatementBlock>"];0->2;0->11;0->17;
 2 [label="<Assignment>\n="];2->1;2->4;
 1 [label="<VariableDeclaration>\nfunc void Foo"];
 4 [label="<FunctionLiteral>
@@ -11,7 +11,12 @@ void"];4->3;4->10;
 8 [label="<BinaryOperator>\n+"];8->7;8->9;
 7 [label="<Variable>\ni"];
 9 [label="<IntegerLiteral>\n1"];
-12 [label="<FunctionCall>\n"];12->11;12->13;
-11 [label="<Variable>\nFoo"];
-13 [label="<IntegerLiteral>\n2"];
+11 [label="<IfThenElse>"];11->12;11->4294967295;11->14;
+12 [label="<IntegerLiteral>\n1"];
+14 [label="<FunctionCall>\n"];14->13;14->15;
+13 [label="<Variable>\nPrint"];
+15 [label="<IntegerLiteral>\n"A""];
+17 [label="<FunctionCall>\n"];17->16;17->18;
+16 [label="<Variable>\nFoo"];
+18 [label="<IntegerLiteral>\n2"];
 }

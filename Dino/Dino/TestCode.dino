@@ -42,5 +42,9 @@ rec.Show()*/
 func void Foo = (int i) void: Print(i + 1)
 
 //void Foo(int i): Print(i + 1)
+/*if false {}
+else: Print("else")*/
+unless true:
+	Print("A")
 
 Foo(2)

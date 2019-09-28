@@ -40,6 +40,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_DO,
 		OT_IF,
 		OT_ELSE,
+		OT_UNLESS,
 		OT_FOR,
 		OT_RETURN,
 		OT_TYPE,
@@ -162,6 +163,7 @@ void OperatorsMap::setup()
 	_wordsMap["do"] = { OT_DO, "do", NULL, NULL };
 	_wordsMap["if"] = { OT_IF, "if", NULL, NULL };
 	_wordsMap["else"] = { OT_ELSE, "else", NULL, NULL };
+	_wordsMap["unless"] = { OT_UNLESS, "unless", NULL, NULL };
 	_wordsMap["return"] = { OT_RETURN, "return", NULL, NULL };
 
 	_wordsMap["type"] = { OT_TYPE, "type", NULL, NULL };

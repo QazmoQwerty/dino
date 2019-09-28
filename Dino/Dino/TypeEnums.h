@@ -114,6 +114,7 @@ enum OperatorType
 	OT_FOR,
 	OT_IF,
 	OT_ELSE,
+	OT_UNLESS,
 	OT_RETURN,
 	OT_TYPE,
 	OT_INTERFACE,

@@ -245,6 +245,38 @@ AST::Node * Parser::std(Token * token)
 			return node;
 		}
 
+		/**************/
+
+		if (ot->_operator._type == OT_UNLESS)
+		{
+			AST::IfThenElse * node = new AST::IfThenElse();
+			AST::Node* inner = parse();
+
+			if (inner && inner->isExpression())
+				node->setCondition(dynamic_cast<AST::Expression*>(inner));
+			else throw "could not convert from Node* to Expression*";
+
+			while (peekToken()->_type == TT_LINE_BREAK)
+				nextToken();
+
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				node->setElseBranch(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
+					node->setElseBranch(dynamic_cast<AST::Statement*>(n));
+				else throw "inner content of if statement must be a statement!";
+			}
+			else throw "could not then part of if statement";
+
+			return node;
+		}
+
+		/*********/
+
+
 		if (ot->_operator._type == OT_RETURN)
 		{
 			auto op = new AST::UnaryOperationStatement();
