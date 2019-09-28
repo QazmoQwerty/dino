@@ -476,6 +476,6 @@ namespace AST
 	public:
 		//Null(unsigned int nodeId) : Literal(nodeId, LT_NULL) {}
 		Null() : Literal(LT_NULL) {}
-		virtual string toString() { return string() + "<IntegerLiteral>\\nnull"; };
+		virtual string toString() { return string() + "<NullLiteral>"; };
 	};
 }

@@ -247,3 +247,13 @@ LiteralToken<bool> * createBooleanLiteralToken(string data, int line)
 	else throw DinoException("Invalid boolean literal", EXT_LEXER, line);
 	return temp;
 }
+
+LiteralToken<bool>* createNullLiteralToken(int line)
+{
+	LiteralToken<bool> * temp = new struct LiteralToken<bool>;
+	temp->_data = "null";
+	temp->_line = line;
+	temp->_type = TT_LITERAL;
+	temp->_literalType = LT_NULL;
+	return temp;
+}

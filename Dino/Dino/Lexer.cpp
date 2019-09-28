@@ -121,6 +121,12 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 				delete token;
 				token = booleanToken;
 			}
+			else if (token->_data == "null")
+			{
+				Token * nullToken = createNullLiteralToken(line);
+				delete token;
+				token = nullToken;
+			}
 			else
 			{
 				token->_type = TT_IDENTIFIER;

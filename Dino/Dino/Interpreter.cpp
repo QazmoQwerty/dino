@@ -138,6 +138,8 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 		if (leftVal->getType() == "ptr")
 			left = ((PtrValue*)leftVal)->getValue();
 		else left = leftVal;
+		if (left == nullptr)
+			throw "nullptr exception";
 		if (_types.count(left->getType()) == 0)
 			throw "type doesn't exist";
 		if (node->getRight()->getExpressionType() != ET_VARIABLE)
@@ -153,6 +155,11 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 	{
 		case (OT_EQUAL):
 			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() == ((BoolValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") ret = new BoolValue(((FracValue*)leftVal)->getValue() == ((FracValue*)rightVal)->getValue());
+			if (leftVal->getType() == "char") ret = new BoolValue(((CharValue*)leftVal)->getValue() == ((CharValue*)rightVal)->getValue());
+			if (leftVal->getType() == "string") ret = new BoolValue(((StringValue*)leftVal)->getValue() == ((StringValue*)rightVal)->getValue());
+			if (leftVal->getType() == "ptr") ret = new BoolValue(((PtrValue*)leftVal)->getValue() == ((PtrValue*)rightVal)->getValue());
 			break;
 		case (OT_SMALLER):
 			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
@@ -193,11 +200,20 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 	}
 	deleteIfIsTemp(leftVal);
 	deleteIfIsTemp(rightVal);
+	if (ret == nullptr)
+		throw "unsupported binary operator";
 	return ret;
 }
 
 Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 {
+	if (node->getOperator()._type == OT_NEW && node->getExpression()->getExpressionType() == ET_VARIABLE)
+	{
+		TypeValue* t = new TypeValue(dynamic_cast<AST::Variable*>(node->getExpression())->getVarId().name, _types);
+		t->setNotTemp();
+		return new PtrValue(t->getType(), t);
+	}
+
 	Value* val = interpret(node->getExpression());
 	Value* ret = nullptr;
 	switch (node->getOperator()._type)
@@ -335,14 +351,14 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 {
 	switch (node->getLiteralType())
 	{
-	case (LT_BOOLEAN):	 return new BoolValue(((AST::Boolean*)node)->getValue());
-	case (LT_INTEGER):	 return new IntValue(((AST::Boolean*)node)->getValue());
-	case (LT_CHARACTER): return new CharValue(((AST::Character*)node)->getValue());
-	case (LT_STRING):	 return new StringValue(((AST::String*)node)->getValue());
-	case (LT_FRACTION):  return new FracValue(((AST::Fraction*)node)->getValue());
-	case (LT_FUNCTION):  return new FuncValue((AST::Function*)node);
-	default: return nullptr;
-	//case (LT_NULL): break;
+		case (LT_BOOLEAN):	 return new BoolValue(((AST::Boolean*)node)->getValue());
+		case (LT_INTEGER):	 return new IntValue(((AST::Boolean*)node)->getValue());
+		case (LT_CHARACTER): return new CharValue(((AST::Character*)node)->getValue());
+		case (LT_STRING):	 return new StringValue(((AST::String*)node)->getValue());
+		case (LT_FRACTION):  return new FracValue(((AST::Fraction*)node)->getValue());
+		case (LT_FUNCTION):  return new FuncValue((AST::Function*)node);
+		case (LT_NULL):		 return new PtrValue("null", NULL);
+		default: return nullptr;
 	}
 }
 
@@ -405,13 +421,23 @@ Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * no
 	
 	switch (node->getOperator()._type)
 	{
-	case (OT_RETURN):
+		case (OT_RETURN):
 		{
 			Value* val = interpret(node->getExpression());
 			Value* copy = copyValue(val);
 			copy->setReturn();
 			deleteIfIsTemp(val);
 			return copy;
+		}
+		case(OT_DELETE):
+		{
+			Value* val = interpret(node->getExpression());
+			if (val->getType() == "ptr") 
+			{
+				delete ((PtrValue*)val)->getValue();
+				((PtrValue*)val)->setValue(NULL);
+			}
+			else throw "cannot delete non-pointer value";
 		}
 	}
 	return NULL;
@@ -441,7 +467,7 @@ Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * nod
 		else if (type == "frac")	val = new FracValue();
 		else if (type == "string")	val = new StringValue();
 		else if (type == "char")	val = new CharValue();
-		else if (_types.count(type)) val = new PtrValue(type, new TypeValue(type, _types));
+		else if (_types.count(type)) val = new PtrValue(type, NULL);
 		//else if (_types.count(type)) val = new TypeValue(type, _types);
 		else throw "type does not exist";
 	}
@@ -519,6 +545,7 @@ Value * Interpreter::copyValue(Value * val)
 	else throw "cannot copy type that does not exist";
 }
 
+/******* OUTSIDE OF INTERPRETER CLASS *****/
 
 TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &types) : Value(typeName), _types(types)
 {
@@ -534,8 +561,8 @@ TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &typ
 		else if (i.second.type == "char") var = new CharValue();
 		else if (i.second.type == "frac") var = new FracValue();
 		else if (i.second.type == "string") var = new StringValue();
-		else if (_types.count(i.second.type)) 
-			var = new TypeValue(i.second.type, _types);
+		else if (_types.count(i.second.type)) var = nullptr;
+			//var = new TypeValue(i.second.type, _types);
 		else throw "nonexistant type";
 		var->setNotTemp();
 		_variables[i.first] = var;

@@ -126,3 +126,9 @@ LiteralToken<int> * createIntegerLiteralToken(string data, int line);
 	NOTE: if input is not "false" or "true" an exception will be thrown.
 */
 LiteralToken<bool> * createBooleanLiteralToken(string data, int line);
+
+/*
+	Gets an input string and the current line number.
+	Function creates and returns a LiteralToken with type LT_NULL based on the input.
+*/
+LiteralToken<bool> * createNullLiteralToken(int line);

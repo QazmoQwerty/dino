@@ -74,7 +74,6 @@ AST::Node * Parser::std(Token * token)
 	if (token->_type == TT_OPERATOR && OperatorsMap::isUnary(((OperatorToken*)token)->_operator._type))
 	{
 		auto ot = ((OperatorToken*)token);
-
 		if (ot->_operator._type == OT_WHILE)
 		{
 			AST::WhileLoop * node = new AST::WhileLoop();
@@ -99,7 +98,6 @@ AST::Node * Parser::std(Token * token)
 
 			return node;
 		}
-
 		if (ot->_operator._type == OT_FOR)
 		{
 			AST::StatementBlock *node = new AST::StatementBlock();
@@ -163,7 +161,6 @@ AST::Node * Parser::std(Token * token)
 			node->addStatement(whileNode);
 			return node;
 		}
-
 		if (ot->_operator._type == OT_DO)
 		{
 			AST::DoWhileLoop * node = new AST::DoWhileLoop();
@@ -193,7 +190,6 @@ AST::Node * Parser::std(Token * token)
 
 			return node;
 		}
-
 		if (ot->_operator._type == OT_IF)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();
@@ -244,7 +240,6 @@ AST::Node * Parser::std(Token * token)
 
 			return node;
 		}
-
 		if (ot->_operator._type == OT_UNLESS)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();
@@ -271,18 +266,6 @@ AST::Node * Parser::std(Token * token)
 
 			return node;
 		}
-
-		if (ot->_operator._type == OT_RETURN)
-		{
-			auto op = new AST::UnaryOperationStatement();
-			op->setOperator(ot->_operator);
-			int prec = ot->_operator._precedence;
-			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
-			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
-			return op;
-		}
-
 		if (ot->_operator._type == OT_TYPE)
 		{
 			auto decl = new AST::TypeDeclaration();
@@ -322,7 +305,6 @@ AST::Node * Parser::std(Token * token)
 			}
 			return decl;
 		}
-
 		if (ot->_operator._type == OT_INTERFACE)
 		{
 			auto decl = new AST::InterfaceDeclaration();
@@ -355,7 +337,6 @@ AST::Node * Parser::std(Token * token)
 			}
 			return decl;
 		}
-
 		if (ot->_operator._type == OT_NAMESPACE)
 		{
 			auto decl = new AST::NamespaceDeclaration();
@@ -390,6 +371,16 @@ AST::Node * Parser::std(Token * token)
 			else throw "could not then part of if statement";
 
 			return node;*/
+		}
+		if (ot->_operator._type == OT_DELETE || ot->_operator._type == OT_RETURN)
+		{
+			auto op = new AST::UnaryOperationStatement();
+			op->setOperator(ot->_operator);
+			int prec = ot->_operator._precedence;
+			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
+			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
 		}
 	}
 	return NULL;

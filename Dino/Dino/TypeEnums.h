@@ -117,10 +117,12 @@ enum OperatorType
 	OT_UNLESS,
 	OT_IS,
 	OT_RETURN,
+	OT_DELETE,
 	OT_TYPE,
 	OT_INTERFACE,
 	OT_NAMESPACE,
 	OT_IMPLEMENTS,
+	OT_NEW,
 
 	// Misc:
 	OT_SINGLE_QUOTE,				//	'
