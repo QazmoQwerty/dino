@@ -246,7 +246,7 @@ namespace AST
 
 	public:
 		InterfaceDeclaration();
-		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
@@ -286,6 +286,24 @@ namespace AST
 		void addInterface(Identificator interface) { _interfaces.push_back(interface); }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(Assignment* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
+	};
+
+	class NamespaceDeclaration : public Statement
+	{
+		Identificator _name;	// Temporary
+		Statement* _statement;
+
+	public:
+		NamespaceDeclaration() { _name.name = ""; };
+		virtual StatementType getStatementType() { return ST_NAMESPACE_DECLARATION; };
+		virtual string toString() { return "<NamespaceDeclaration>\\n" + _name.name; };
+		virtual vector<Node*> getChildren();
+
+		Identificator getName() { return _name; }
+		Statement* getStatement() { return _statement; }
+
+		void setName(Identificator id) { _name = id; }
+		void setStatement(Statement* statement) { _statement = statement; }
 	};
 
 	/********************** Expressions **********************/
@@ -427,7 +445,7 @@ namespace AST
 	public:
 		//String(unsigned int nodeId, string value) : Literal(nodeId, LT_STRING) { _value = value; }
 		String(string value) : Literal(LT_STRING) { _value = value; }
-		virtual string toString() { return string() + "<IntegerLiteral>\\n\"" + _value + '"'; };
+		virtual string toString() { return string() + "<IntegerLiteral>\\n" + _value; };
 		string getValue() { return _value; }
 	};
 

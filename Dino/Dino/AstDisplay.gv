@@ -1,15 +1,17 @@
 digraph G {
-0 [label="<StatementBlock>"];0->1;0->4;
-1 [label="<InterfaceDeclaration>\nFoo is Iterable"];1->2;1->3;
-2 [label="<VariableDeclaration>\nstring Name"];
-3 [label="<VariableDeclaration>\nfunc int Bar"];
-4 [label="<TypeDeclaration>\nBar is Foo"];4->5;4->7;
-5 [label="<VariableDeclaration>\nstring name"];
-7 [label="<Assignment>\n="];7->6;7->8;
-6 [label="<VariableDeclaration>\nfunc int Bar"];
-8 [label="<FunctionLiteral>
-int"];8->11;
-11 [label="<StatementBlock>"];11->9;
-9 [label="<UnaryOperatorStatement>\nreturn"];9->10;
-10 [label="<IntegerLiteral>\n10"];
+0 [label="<StatementBlock>"];0->1;
+1 [label="<NamespaceDeclaration>\nMyName"];1->2;
+2 [label="<StatementBlock>"];2->3;2->6;
+3 [label="<InterfaceDeclaration>\nFoo is Iterable"];3->4;3->5;
+4 [label="<VariableDeclaration>\nstring Name"];
+5 [label="<VariableDeclaration>\nfunc int Bar"];
+6 [label="<TypeDeclaration>\nBar is Foo"];6->7;6->9;
+7 [label="<VariableDeclaration>\nstring name"];
+9 [label="<Assignment>\n="];9->8;9->10;
+8 [label="<VariableDeclaration>\nfunc int Bar"];
+10 [label="<FunctionLiteral>
+int"];10->13;
+13 [label="<StatementBlock>"];13->11;
+11 [label="<UnaryOperatorStatement>\nreturn"];11->12;
+12 [label="<IntegerLiteral>\n10"];
 }

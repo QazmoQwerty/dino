@@ -149,3 +149,10 @@ AST::InterfaceDeclaration::InterfaceDeclaration()
 	_implements = vector<Identificator>();
 	_declarations = vector<VariableDeclaration*>();
 }
+
+vector<AST::Node*> AST::NamespaceDeclaration::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_statement);
+	return v;
+}

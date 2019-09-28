@@ -39,13 +39,15 @@ Rectangle rec = CreateSquare(2)
 rec.Enlarge(2)
 rec.Show()*/
 
-interface Foo is Iterable {
-	string Name
-	func int Bar
-}
+namespace MyName {
+	interface Foo is Iterable {
+		string Name
+		func int Bar
+	}
 
-type Bar is Foo {
-	string name
+	type Bar is Foo {
+		string name
 
-	int Bar(): return 10
+		int Bar(): return 10
+	}	
 }
