@@ -1,17 +1,67 @@
 digraph G {
-0 [label="<StatementBlock>"];0->1;
-1 [label="<NamespaceDeclaration>\nMyName"];1->2;
-2 [label="<StatementBlock>"];2->3;2->6;
-3 [label="<InterfaceDeclaration>\nFoo is Iterable"];3->4;3->5;
-4 [label="<VariableDeclaration>\nstring Name"];
-5 [label="<VariableDeclaration>\nfunc int Bar"];
-6 [label="<TypeDeclaration>\nBar is Foo"];6->7;6->9;
-7 [label="<VariableDeclaration>\nstring name"];
-9 [label="<Assignment>\n="];9->8;9->10;
-8 [label="<VariableDeclaration>\nfunc int Bar"];
-10 [label="<FunctionLiteral>
-int"];10->13;
-13 [label="<StatementBlock>"];13->11;
-11 [label="<UnaryOperatorStatement>\nreturn"];11->12;
-12 [label="<IntegerLiteral>\n10"];
+0 [label="<StatementBlock>"];0->2;0->23;0->43;0->53;
+2 [label="<Assignment>\n="];2->1;2->3;
+1 [label="<VariableDeclaration>\nfunc void LoopI"];
+3 [label="<FunctionLiteral>
+void"];3->4;3->5;3->6;3->7;
+4 [label="<VariableDeclaration>\nint from"];
+5 [label="<VariableDeclaration>\nint to"];
+6 [label="<VariableDeclaration>\nfunc void ref"];
+7 [label="<StatementBlock>"];7->8;
+8 [label="<StatementBlock>"];8->10;8->12;
+10 [label="<Assignment>\n="];10->9;10->11;
+9 [label="<VariableDeclaration>\nint i"];
+11 [label="<Variable>\nfrom"];
+12 [label="<While>"];12->14;12->18;
+14 [label="<BinaryOperator>\n<"];14->13;14->15;
+13 [label="<Variable>\ni"];
+15 [label="<Variable>\nto"];
+18 [label="<StatementBlock>"];18->20;18->16;
+20 [label="<FunctionCall>\n"];20->19;20->21;
+19 [label="<Variable>\nref"];
+21 [label="<Variable>\ni"];
+16 [label="<Increment>\n++"];16->17;
+17 [label="<Variable>\ni"];
+23 [label="<Assignment>\n="];23->22;23->24;
+22 [label="<VariableDeclaration>\nfunc void Loop"];
+24 [label="<FunctionLiteral>
+void"];24->25;24->26;24->27;24->28;
+25 [label="<VariableDeclaration>\nint from"];
+26 [label="<VariableDeclaration>\nint to"];
+27 [label="<VariableDeclaration>\nfunc void ref"];
+28 [label="<StatementBlock>"];28->29;
+29 [label="<StatementBlock>"];29->31;29->33;
+31 [label="<Assignment>\n="];31->30;31->32;
+30 [label="<VariableDeclaration>\nint i"];
+32 [label="<Variable>\nfrom"];
+33 [label="<While>"];33->35;33->39;
+35 [label="<BinaryOperator>\n<"];35->34;35->36;
+34 [label="<Variable>\ni"];
+36 [label="<Variable>\nto"];
+39 [label="<StatementBlock>"];39->41;39->37;
+41 [label="<FunctionCall>\n"];41->40;
+40 [label="<Variable>\nref"];
+37 [label="<Increment>\n++"];37->38;
+38 [label="<Variable>\ni"];
+43 [label="<FunctionCall>\n"];43->42;43->44;43->45;43->47;
+42 [label="<Variable>\nLoopI"];
+44 [label="<IntegerLiteral>\n0"];
+45 [label="<IntegerLiteral>\n5"];
+47 [label="<FunctionLiteral>
+void"];47->46;47->48;
+46 [label="<VariableDeclaration>\nint i"];
+48 [label="<StatementBlock>"];48->50;
+50 [label="<FunctionCall>\n"];50->49;50->51;
+49 [label="<Variable>\nPrint"];
+51 [label="<Variable>\ni"];
+53 [label="<FunctionCall>\n"];53->52;53->54;53->55;53->56;
+52 [label="<Variable>\nLoop"];
+54 [label="<IntegerLiteral>\n0"];
+55 [label="<IntegerLiteral>\n4"];
+56 [label="<FunctionLiteral>
+void"];56->57;
+57 [label="<StatementBlock>"];57->59;
+59 [label="<FunctionCall>\n"];59->58;59->60;
+58 [label="<Variable>\nPrint"];
+60 [label="<IntegerLiteral>\n4"];
 }

@@ -474,6 +474,8 @@ AST::Node * Parser::nud(Token * token)
 		{
 			
 			AST::Node* inner = parse();
+			if (inner == nullptr)
+				_index--;
 			if (!eatOperator(OT_PARENTHESIS_CLOSE))
 				throw "')' missing";
 			if (peekToken()->_type == TT_IDENTIFIER)
@@ -485,7 +487,7 @@ AST::Node * Parser::nud(Token * token)
 				vector<AST::VariableDeclaration*> vec;
 
 				AST::Node* temp = inner;
-				while (temp->isExpression() && dynamic_cast<AST::Expression*>(temp)->getExpressionType() == ET_BINARY_OPERATION)
+				while (temp && temp->isExpression() && dynamic_cast<AST::Expression*>(temp)->getExpressionType() == ET_BINARY_OPERATION)
 				{
 					auto bo = dynamic_cast<AST::BinaryOperation*>(temp);
 					if (bo->getOperator()._type == OT_COMMA)
@@ -501,7 +503,7 @@ AST::Node * Parser::nud(Token * token)
 					temp = bo->getLeft();
 					delete bo;
 				}
-				if (temp->isStatement())
+				if (temp && temp->isStatement())
 					if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
 						vec.push_back(dynamic_cast<AST::VariableDeclaration*>(temp));
 					else throw "TODO - error msg";

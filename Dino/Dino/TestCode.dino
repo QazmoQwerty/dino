@@ -1,13 +1,11 @@
 /*int Fib(int n) {
-	if n <= 1 { 
+	if n <= 1:
 		return n
-	}
 	return Fib(n-1) + Fib(n-2) 
 }
 
-for int i = 0 | i < 20 | ++i {
-	Print(Fib(i))
-}*/
+for int i = 0 | i < 14 | ++i:
+	Print(Fib(i))*/
 
 /*type Rectangle {
 	int h
@@ -39,7 +37,7 @@ Rectangle rec = CreateSquare(2)
 rec.Enlarge(2)
 rec.Show()*/
 
-namespace MyName {
+/*namespace MyName {
 	interface Foo is Iterable {
 		string Name
 		func int Bar
@@ -50,4 +48,22 @@ namespace MyName {
 
 		int Bar(): return 10
 	}	
+}*/
+
+void LoopI(int from, int to, func void ref) {
+	for int i = from | i < to | ++i:
+		ref(i)
 }
+
+void Loop(int from, int to, func void ref) {
+	for int i = from | i < to | ++i:
+		ref()
+}
+
+LoopI(0, 5, (int i) void { 
+	Print(i)
+})
+
+Loop(0, 4, () void { 
+	Print("4")
+})
