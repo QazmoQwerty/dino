@@ -84,6 +84,9 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 		
 		string type = lvalue->getType();
 
+		if (rvalue == nullptr)
+			throw "right of assignment must be a value";
+
 		if (type != rvalue->getType())
 			throw "different types invalid";
 
@@ -161,6 +164,14 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			if (leftVal->getType() == "string") ret = new BoolValue(((StringValue*)leftVal)->getValue() == ((StringValue*)rightVal)->getValue());
 			if (leftVal->getType() == "ptr") ret = new BoolValue(((PtrValue*)leftVal)->getValue() == ((PtrValue*)rightVal)->getValue());
 			break;
+		case (OT_NOT_EQUAL):
+			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() != ((IntValue*)rightVal)->getValue());
+			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() != ((BoolValue*)rightVal)->getValue());
+			if (leftVal->getType() == "frac") ret = new BoolValue(((FracValue*)leftVal)->getValue() != ((FracValue*)rightVal)->getValue());
+			if (leftVal->getType() == "char") ret = new BoolValue(((CharValue*)leftVal)->getValue() != ((CharValue*)rightVal)->getValue());
+			if (leftVal->getType() == "string") ret = new BoolValue(((StringValue*)leftVal)->getValue() != ((StringValue*)rightVal)->getValue());
+			if (leftVal->getType() == "ptr") ret = new BoolValue(((PtrValue*)leftVal)->getValue() != ((PtrValue*)rightVal)->getValue());
+			break;
 		case (OT_SMALLER):
 			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
 			break;
@@ -175,6 +186,9 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 			break;
 		case (OT_LOGICAL_AND):
 			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() && ((BoolValue*)rightVal)->getValue());
+			break;
+		case (OT_LOGICAL_OR):
+			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() || ((BoolValue*)rightVal)->getValue());
 			break;
 		case(OT_ADD):
 			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
@@ -259,7 +273,7 @@ Value * Interpreter::interpretIncrement(AST::Increment * node)
 Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 {
 	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
-		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "Print") 
+		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "PrintLn") 
 	{
 		for (unsigned int i = 0; i < node->getParameters().size(); i++) 
 		{
@@ -268,6 +282,17 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 			if (i != node->getParameters().size() - 1) std::cout << " ";
 		}
 		std::cout << std::endl;
+		return NULL;
+	}
+	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
+		&& ((AST::Variable*)node->getFunctionId())->getVarId().name == "Print")
+	{
+		for (unsigned int i = 0; i < node->getParameters().size(); i++)
+		{
+			Value* val = interpret(node->getParameters()[i]);
+			std::cout << val->toString();
+			if (i != node->getParameters().size() - 1) std::cout << " ";
+		}
 		return NULL;
 	}
 	enterBlock();
@@ -561,7 +586,7 @@ TypeValue::TypeValue(string typeName, unordered_map<string, TypeDefinition> &typ
 		else if (i.second.type == "char") var = new CharValue();
 		else if (i.second.type == "frac") var = new FracValue();
 		else if (i.second.type == "string") var = new StringValue();
-		else if (_types.count(i.second.type)) var = nullptr;
+		else if (_types.count(i.second.type)) var = new PtrValue(i.second.type, NULL);
 			//var = new TypeValue(i.second.type, _types);
 		else throw "nonexistant type";
 		var->setNotTemp();

@@ -90,5 +90,8 @@
     <None Include="TestCode.dino">
       <Filter>Test Code Examples</Filter>
     </None>
+    <None Include="DinoCodeExamples\LinkedList.dino">
+      <Filter>Test Code Examples</Filter>
+    </None>
   </ItemGroup>
 </Project>
