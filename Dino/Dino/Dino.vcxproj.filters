@@ -48,6 +48,9 @@
     <ClInclude Include="Preprocessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="InterpreterValues.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Lexer.cpp">
@@ -72,6 +75,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Preprocessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InterpreterValues.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
