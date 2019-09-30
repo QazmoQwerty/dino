@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 		std::cout << "-noRun (stops the interpreter from executing the program)" << std::endl << std::endl;
 	}
 
-	showLexerOutput = !cmdOptionExists(argv, argv + argc, "-showlex");
+	showLexerOutput = cmdOptionExists(argv, argv + argc, "-showlex");
 	outputAstFile = !cmdOptionExists(argv, argv + argc, "-noAst");
 	executeInterpret = !cmdOptionExists(argv, argv + argc, "-noRun");
 
