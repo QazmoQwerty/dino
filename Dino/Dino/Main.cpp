@@ -35,13 +35,13 @@ int main(int argc, char *argv[])
 		std::cout << "-noRun (stops the interpreter from executing the program)" << std::endl << std::endl;
 	}
 
-	showLexerOutput = cmdOptionExists(argv, argv + argc, "-showlex");
+	showLexerOutput = !cmdOptionExists(argv, argv + argc, "-showlex");
 	outputAstFile = !cmdOptionExists(argv, argv + argc, "-noAst");
 	executeInterpret = !cmdOptionExists(argv, argv + argc, "-noRun");
 
 	try {
 		if (argc <= 1)
-			t = std::ifstream("DinoCodeExamples/LinkedList.dino");
+			t = std::ifstream("DinoCodeExamples/Test.dino");
 		else t = std::ifstream(argv[1]);
 	}
 	catch (exception e) {

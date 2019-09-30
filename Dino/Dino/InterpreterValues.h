@@ -55,7 +55,7 @@ public:
 	CharValue(char value) : Value("char") { _value = value; }
 	void setValue(char value) { _value = value; }
 	char getValue() { return _value; }
-	virtual string toString() { return std::to_string(_value); };
+	virtual string toString() { return string() + _value; };
 };
 
 class StringValue : public Value
@@ -79,7 +79,7 @@ public:
 	BoolValue(bool value) : Value("bool") { _value = value; }
 	void setValue(bool value) { _value = value; }
 	bool getValue() { return _value; }
-	virtual string toString() { return std::to_string(_value); };
+	virtual string toString() { return _value ? "true" : "false"; };
 };
 
 class FuncValue : public Value

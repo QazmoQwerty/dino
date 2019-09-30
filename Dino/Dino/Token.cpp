@@ -112,11 +112,11 @@ string getSpecialCharConstant(char secondChar)
 		case 'b':
 			return "\b";
 		case 'n':
-			return "\b";
+			return "\n";
 		case 't':
-			return "\b";
+			return "\t";
 		case 'v':
-			return "\b";
+			return "\v";
 		case '"':
 			return "\"";
 		case '\'':
@@ -124,7 +124,7 @@ string getSpecialCharConstant(char secondChar)
 		case '\\':
 			return "\\";
 		default:
-			return string() + secondChar;	// no special character fount
+			return string() + secondChar;	// no special character found
 	}
 }
 
