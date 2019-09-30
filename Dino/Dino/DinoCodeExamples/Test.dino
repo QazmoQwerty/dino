@@ -1,0 +1,12 @@
+
+void Main() {
+	int y = 0
+	int x = 3
+	Test(4)
+}
+
+void Test(int x) {
+	PrintLn(x, y)
+}
+
+Main()

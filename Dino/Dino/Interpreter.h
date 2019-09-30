@@ -156,7 +156,7 @@ private:
 	vector<unordered_map<string, Value*>> _variables;	// index represents scope, string represents variable name
 	unordered_map<string, TypeDefinition> _types;
 	stack<string> _currentNamespace;
-	int _scope;
+	stack<int> _currentMinScope;
 
 	Value* interpretBinaryOp(AST::BinaryOperation* node);
 	Value* interpretUnaryOp(AST::UnaryOperation* node);
@@ -180,6 +180,12 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { _scope = 0; _variables.push_back(unordered_map<string, Value*>()); _types = unordered_map<string, TypeDefinition>(); 
-	_currentNamespace = stack<string>(); _currentNamespace.push(""); }
+	Interpreter() { 
+		_variables.push_back(unordered_map<string, Value*>()); 
+		_types = unordered_map<string, TypeDefinition>(); 
+		_currentNamespace = stack<string>(); 
+		_currentNamespace.push(""); 
+		_currentMinScope = stack<int>();
+		_currentMinScope.push(0);
+	}
 };

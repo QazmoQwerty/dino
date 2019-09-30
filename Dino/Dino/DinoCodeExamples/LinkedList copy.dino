@@ -25,62 +25,62 @@ type ListNode {
 	
 	void SetData(int data): this.data = data
 	void SetNext(ListNode next): this.next = next
-	int GetData(): return data
+	int GetData(): return this.data
 
 	ListNode GetNext(int index) {
 		if index == 0:
 			return this
-		if next == null:
+		if this.next == null:
 			PrintLn("List index out of bounds")
-		return next.GetNext(index - 1)
+		return this.next.GetNext(index - 1)
 	}
 
 	LinkedList Insert(int index, int data) {
 		if index == 0:
 			return CreateNode(data, this)
-		if next == null:
+		if this.next == null:
 			PrintLn("List index out of bounds")
-		else if next.next == null and index == 2:
-			next.next = CreateNode(data, null)
-		else: next = next.Insert(index - 1, data)
+		else if this.next.next == null and index == 2:
+			this.next.next = CreateNode(data, null)
+		else: this.next = this.next.Insert(index - 1, data)
 		return this
 	}
 
 	int Size() {
-		if next == null: return 1
-		return 1 + next.Size()
+		if this.next == null: return 1
+		return 1 + this.next.Size()
 	}
 
 	void InsertAtEnd(int data) {
-		if next == null:
-			next = CreateNode(data, null)
-		else: next.InsertAtEnd(data)
+		if this.next == null:
+			this.next = CreateNode(data, null)
+		else: this.next.InsertAtEnd(data)
 	}
 
 	void Show() {
-		Print(data)
-		if next != null:  {
+		Print(this.data)
+		if this.next != null:  {
 			Print(", ")
-			next.Show()
+			this.next.Show()
 		}
 	}
 
 	void DeleteChildren() {
-		unless next == null {
-			next.DeleteChildren()
-			delete next
+		unless this.next == null {
+			this.next.DeleteChildren()
+			delete this.next
 		}
 	}
 
 	void Remove(int index) {
-		if next == null or index <= 0:
+		if this.next == null or index <= 0:
 			Print("index out of bounds")
 		else if index == 1 {
-			ListNode temp = next 
-			next = next.next
+			ListNode temp = this.next 
+			this.next = this.next.next
 			delete temp
 		}
-		else: next.Remove(index - 1)
+		else: this.next.Remove(index - 1)
 	}
 }
 
@@ -90,45 +90,45 @@ type LinkedList {
 	int GetValue(int index): return first.GetNext(index)
 
 	int Size() {
-		if first == null:
+		if this.first == null:
 			return 0
-		return first.Size()
+		return this.first.Size()
 	}
 
 	void Insert(int index, int data) {
-		if first == null:
-			first = CreateNode(data, null)
-		else: first = first.Insert(index, data)
+		if this.first == null:
+			this.first = CreateNode(data, null)
+		else: this.first = this.first.Insert(index, data)
 	}
 
-	void InsertAtFront(int data): first = CreateNode(data, first)
+	void InsertAtFront(int data): this.first = CreateNode(data, first)
 
 	void InsertAtBack(int data) {
-		if first == null:
-			first = CreateNode(data, null)
-		else: first.InsertAtEnd(data)		
+		if this.first == null:
+			this.first = CreateNode(data, null)
+		else: this.first.InsertAtEnd(data)		
 	}
 
 	void Remove(int index) {
 		if index == 0 {
-			ListNode temp = first
-			first = first.GetNext(1)
+			ListNode temp = this.first
+			this.first = this.first.GetNext(1)
 			delete temp
 		}
-		else: first.Remove(index)
+		else: this.first.Remove(index)
 	}
 
 	void Show() {
 		Print("[")
-		unless first == null:
-			first.Show()
+		unless this.first == null:
+			this.first.Show()
 		PrintLn("]")
 	}
 
 	void Clear() {
-		unless first == null {
-			first.DeleteChildren()
-			delete first
+		unless this.first == null {
+			this.first.DeleteChildren()
+			delete this.first
 		}
 	}
 }

@@ -366,8 +366,10 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 		}
 		else throw "custom types are not supported yet";
 	}
+	_currentMinScope.push(currentScope());
 	Value* ret = interpret(func->getValue()->getContent());
 	leaveBlock();
+	_currentMinScope.pop();
 	if (isMethod) _currentNamespace.pop();
 	return ret;
 }
@@ -390,11 +392,14 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 Value * Interpreter::interpretVariable(AST::Variable * node)
 {
 	string name = node->getVarId().name;
-	for (int scope = currentScope(); scope >= 0; scope--)
+	
+	for (int scope = currentScope(); scope >= _currentMinScope.top(); scope--)
 		if (_variables[scope].count(name))
 			return _variables[scope][name];
+	if (_currentMinScope.top() != 0 && _variables[0].count(name))
+		return _variables[0][name];	// _variables[0] is for global variables
 
-	for (int scope = currentScope(); scope >= 0; scope--)
+	for (int scope = currentScope(); scope >= _currentMinScope.top(); scope--)
 	{
 		if (_variables[scope].count("this"))
 		{
