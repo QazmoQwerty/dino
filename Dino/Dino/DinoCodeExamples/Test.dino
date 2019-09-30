@@ -11,6 +11,5 @@
 
 //Main()
 
-for int i = 0 | i < 10 | ++i:
-	Print(i)
-Print(i)
+PrintL("wow")
+Print("\naaa\naaa\naaa")

@@ -405,7 +405,7 @@ namespace AST
 	public:
 		//Boolean(unsigned int nodeId, bool value) : Literal(nodeId, LT_BOOLEAN) { _value = value; }
 		Boolean(bool value) : Literal(LT_BOOLEAN) { _value = value; }
-		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
+		virtual string toString() { return string() + "<BoolLiteral>\\n" + std::to_string(_value); };
 		bool getValue() { return _value; }
 	};
 
@@ -425,17 +425,17 @@ namespace AST
 	public:
 		//Fraction(unsigned int nodeId, float value) : Literal(nodeId, LT_FRACTION) { _value = value; }
 		Fraction(float value) : Literal(LT_FRACTION) { _value = value; }
-		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
+		virtual string toString() { return string() + "<FracLiteral>\\n" + std::to_string(_value); };
 		float getValue() { return _value; }
 	};
-
+	
 	class Character : public Literal
 	{
 		char _value;
 	public:
 		//Character(unsigned int nodeId, char value) : Literal(nodeId, LT_STRING) { _value = value; }
-		Character(char value) : Literal(LT_STRING) { _value = value; }
-		virtual string toString() { return string() + "<IntegerLiteral>\\n'" + _value + '\''; };
+		Character(char value) : Literal(LT_CHARACTER) { _value = value; }
+		virtual string toString() { return string() + "<CharLiteral>\\n'" + _value + '\''; };
 		char getValue() { return _value; }
 	};
 
@@ -445,7 +445,7 @@ namespace AST
 	public:
 		//String(unsigned int nodeId, string value) : Literal(nodeId, LT_STRING) { _value = value; }
 		String(string value) : Literal(LT_STRING) { _value = value; }
-		virtual string toString() { return string() + "<IntegerLiteral>\\n" + _value; };
+		virtual string toString() { return string() + "<StringLiteral>\\n" + _value; };
 		string getValue() { return _value; }
 	};
 

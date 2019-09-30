@@ -450,7 +450,7 @@ AST::Node * Parser::nud(Token * token)
 		{
 			case (LT_BOOLEAN): return new AST::Boolean(((LiteralToken<bool>*)token)->_value);
 			case (LT_INTEGER): return new AST::Integer(((LiteralToken<int>*)token)->_value);
-			case (LT_STRING): return new AST::String(((LiteralToken<string>*)token)->_value);
+			case (LT_STRING):  return new AST::String(((LiteralToken<string>*)token)->_value);
 			case (LT_CHARACTER): return new AST::Character(((LiteralToken<char>*)token)->_value);
 			case (LT_FRACTION): return new AST::Fraction(((LiteralToken<float>*)token)->_value);
 			case (LT_NULL): return new AST::Null();
