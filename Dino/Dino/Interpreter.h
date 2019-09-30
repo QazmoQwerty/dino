@@ -180,12 +180,5 @@ private:
 	void leaveBlock();
 public:
 	Value* interpret(AST::Node* node);
-	Interpreter() { 
-		_variables.push_back(unordered_map<string, Value*>()); 
-		_types = unordered_map<string, TypeDefinition>(); 
-		_currentNamespace = stack<string>(); 
-		_currentNamespace.push(""); 
-		_currentMinScope = stack<int>();
-		_currentMinScope.push(0);
-	}
+	Interpreter() { _currentNamespace.push(""); _currentMinScope.push(0); }
 };

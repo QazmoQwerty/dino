@@ -488,7 +488,7 @@ Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration* node
 
 Value* Interpreter::interpretIfThenElse(AST::IfThenElse* node)
 {
-	enterBlock();
+	//enterBlock();
 	Value* condition = interpret(node->getCondition());
 	if (condition->getType() != "bool")
 		throw "condition must be bool";
@@ -498,7 +498,7 @@ Value* Interpreter::interpretIfThenElse(AST::IfThenElse* node)
 		val = interpret(node->getThenBranch());
 	else val = interpret(node->getElseBranch());
 
-	leaveBlock();
+	//leaveBlock();
 	deleteIfIsTemp(condition);
 	if (val != nullptr && val->isReturn()) return val;
 	deleteIfIsTemp(val);
@@ -508,7 +508,7 @@ Value* Interpreter::interpretIfThenElse(AST::IfThenElse* node)
 
 Value* Interpreter::interpretWhileLoop(AST::WhileLoop* node)
 {
-	enterBlock();
+	//enterBlock();
 	Value* condition = interpret(node->getCondition());
 	if (condition->getType() != "bool")
 		throw "condition must be bool";
@@ -521,13 +521,13 @@ Value* Interpreter::interpretWhileLoop(AST::WhileLoop* node)
 		condition = interpret(node->getCondition());
 	}
 	deleteIfIsTemp(condition);
-	leaveBlock();
+	//leaveBlock();
 	return nullptr;
 }
 
 Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop* node)
 {
-	enterBlock();
+	//enterBlock();
 	Value* condition = nullptr;
 	do {
 		Value* val = interpret(node->getStatement());
@@ -538,18 +538,23 @@ Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop* node)
 		if (condition->getType() != "bool")
 			throw "condition must be bool";
 	} while (((BoolValue*)condition)->getValue());
-	leaveBlock();
+	//leaveBlock();
 	return nullptr;
 }
 
 Value * Interpreter::interpretStatementBlock(AST::StatementBlock * node)
 {
+	enterBlock();
 	for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
 	{
 		Value* val = interpret(i);
-		if (val != nullptr && val->isReturn())
+		if (val != nullptr && val->isReturn()) 
+		{
+			leaveBlock();
 			return val;
+		}
 	}
+	leaveBlock();
 	return nullptr;
 }
 
