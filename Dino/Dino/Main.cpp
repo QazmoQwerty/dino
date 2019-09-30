@@ -9,9 +9,45 @@
 #include "Parser.h"
 #include "Interpreter.h"
 
-int main() 
+char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
-	std::ifstream t(/*"TestCode.dino"*/"DinoCodeExamples/LinkedList.dino" /*"DinoSyntax.txt"*/);
+	char ** itr = std::find(begin, end, option);
+	if (itr != end && ++itr != end)
+		return *itr;
+	return 0;
+}
+
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+	return std::find(begin, end, option) != end;
+}	
+
+int main(int argc, char *argv[])
+{
+	std::ifstream t;
+	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true;
+
+	if (cmdOptionExists(argv, argv + argc, "-help"))
+	{
+		std::cout << "Dino.exe [filepath] [args]" << std::endl;
+		std::cout << "-showlex (prints out the output of the lexer)" << std::endl;
+		std::cout << "-noAst (stops the program from outputting a .gv file of the AST)" << std::endl;
+		std::cout << "-noRun (stops the interpreter from executing the program)" << std::endl << std::endl;
+	}
+
+	showLexerOutput = cmdOptionExists(argv, argv + argc, "-showlex");
+	outputAstFile = !cmdOptionExists(argv, argv + argc, "-noAst");
+	executeInterpret = !cmdOptionExists(argv, argv + argc, "-noRun");
+
+	try {
+		if (argc <= 1)
+			t = std::ifstream("DinoCodeExamples/LinkedList.dino");
+		else t = std::ifstream(argv[1]);
+	}
+	catch (exception e) {
+		std::cout << e.what() << std::endl;
+		exit(0);
+	}
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
@@ -23,17 +59,25 @@ int main()
 		auto lexed = Lexer::lex(str);
 		auto vec = Preprocessor::preprocess(lexed);
 		
-		//for (auto i : vec) printToken(i);
+		if (showLexerOutput)
+			for (auto i : vec) printToken(i);
 
 		Parser p = Parser(vec);
 		AST::Node* ast = p.parseBlock();
-		astToFile("AstDisplay.gv", ast);
 
-		Interpreter i;
-		i.interpret(ast);
+		if (outputAstFile)
+			astToFile("AstDisplay.gv", ast);
+
+		
+		if (executeInterpret) 
+		{
+			Interpreter i;
+			i.interpret(ast);
+		}
 	} 
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }
 
-	system("pause");
+	if (argc <= 1)
+		system("pause");
 }
