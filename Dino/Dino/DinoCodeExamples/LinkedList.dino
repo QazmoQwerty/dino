@@ -3,18 +3,18 @@ void Main() {
 	LinkedList list = new LinkedList
 	for int i = 0 | i < 10 | ++i:
 		list.InsertAtBack(i)
-	PrintLn("Original:")
+	Print("Original:")
 	list.Show()
 	list.Insert(4, 444)
-	PrintLn()
-	PrintLn("After Insert(4, 444):")
+	Print()
+	Print("After Insert(4, 444):")
 	list.Show()
-	PrintLn()
-	PrintLn("After Remove(4):")
+	Print()
+	Print("After Remove(4):")
 	list.Remove(4)
 	list.Show()
-	PrintLn()
-	PrintLn("After Clear():")
+	Print()
+	Print("After Clear():")
 	list.Clear()
 	list.Show()
 }
@@ -31,7 +31,7 @@ type ListNode {
 		if index == 0:
 			return this
 		if next == null:
-			PrintLn("List index out of bounds")
+			Print("List index out of bounds")
 		return next.GetNext(index - 1)
 	}
 
@@ -39,7 +39,7 @@ type ListNode {
 		if index == 0:
 			return CreateNode(data, this)
 		if next == null:
-			PrintLn("List index out of bounds")
+			Print("List index out of bounds")
 		else if next.next == null and index == 2:
 			next.next = CreateNode(data, null)
 		else: next = next.Insert(index - 1, data)
@@ -58,9 +58,9 @@ type ListNode {
 	}
 
 	void Show() {
-		Print(data)
+		PrintL(data)
 		if next != null:  {
-			Print(", ")
+			PrintL(", ")
 			next.Show()
 		}
 	}
@@ -74,7 +74,7 @@ type ListNode {
 
 	void Remove(int index) {
 		if next == null or index <= 0:
-			Print("index out of bounds")
+			PrintL("index out of bounds")
 		else if index == 1 {
 			ListNode temp = next 
 			next = next.next
@@ -119,10 +119,10 @@ type LinkedList {
 	}
 
 	void Show() {
-		Print("[")
+		PrintL("[")
 		unless first == null:
 			first.Show()
-		PrintLn("]")
+		Print("]")
 	}
 
 	void Clear() {
