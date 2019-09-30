@@ -18,6 +18,7 @@ Value * Interpreter::copyValue(Value * val)
 	else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
 	else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
 	else if (type == "ptr")		return new PtrValue(((PtrValue*)val)->getPtrType(), ((PtrValue*)val)->getValue());
+	else if (type == "func")	return new FuncValue(((FuncValue*)val)->getValue());
 	else throw "cannot copy type that does not exist";
 }
 
@@ -26,88 +27,87 @@ Value* Interpreter::interpret(AST::Node * node)
 	if (node == nullptr)
 		return NULL;
 
-	if (node->isStatement())
-		switch (dynamic_cast<AST::Statement*>(node)->getStatementType())
-		{
-			case(ST_ASSIGNMENT):				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
-			case(ST_VARIABLE_DECLARATION):		return interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
-			case(ST_TYPE_DECLARATION):			return interpretTypeDeclaration(dynamic_cast<AST::TypeDeclaration*>(node));
-			case (ST_FUNCTION_CALL):			return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
-			case(ST_IF_THEN_ELSE):				return interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
-			case(ST_STATEMENT_BLOCK):			return interpretStatementBlock(dynamic_cast<AST::StatementBlock*>(node));
-			case(ST_WHILE_LOOP):				return interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
-			case(ST_INCREMENT):					return interpretIncrement(dynamic_cast<AST::Increment*>(node));
-			case(ST_DO_WHILE_LOOP):				return interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
-			case(ST_UNARY_OPERATION):			return interpretUnaryOpStatement(dynamic_cast<AST::UnaryOperationStatement*>(node));
-		}
+	if (node->isStatement()) switch (dynamic_cast<AST::Statement*>(node)->getStatementType())
+	{
+		case(ST_ASSIGNMENT):				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
+		case(ST_VARIABLE_DECLARATION):		return interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
+		case(ST_TYPE_DECLARATION):			return interpretTypeDeclaration(dynamic_cast<AST::TypeDeclaration*>(node));
+		case (ST_FUNCTION_CALL):			return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
+		case(ST_IF_THEN_ELSE):				return interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
+		case(ST_STATEMENT_BLOCK):			return interpretStatementBlock(dynamic_cast<AST::StatementBlock*>(node));
+		case(ST_WHILE_LOOP):				return interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
+		case(ST_INCREMENT):					return interpretIncrement(dynamic_cast<AST::Increment*>(node));
+		case(ST_DO_WHILE_LOOP):				return interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
+		case(ST_UNARY_OPERATION):			return interpretUnaryOpStatement(dynamic_cast<AST::UnaryOperationStatement*>(node));
+	}
 	else switch (dynamic_cast<AST::Expression*>(node)->getExpressionType())
-		{
-			case (ET_BINARY_OPERATION):			return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
-			case (ET_UNARY_OPERATION):			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
-			case (ET_CONDITIONAL_EXPRESSION):	throw "conditional expression are not supported yet";
-			case (ET_LITERAL):					return interpretLiteral(dynamic_cast<AST::Literal*>(node));
-			case (ET_VARIABLE):					return interpretVariable(dynamic_cast<AST::Variable*>(node));
-		}
+	{
+		case (ET_BINARY_OPERATION):			return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
+		case (ET_UNARY_OPERATION):			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
+		case (ET_CONDITIONAL_EXPRESSION):	throw "conditional expression are not supported yet";
+		case (ET_LITERAL):					return interpretLiteral(dynamic_cast<AST::Literal*>(node));
+		case (ET_VARIABLE):					return interpretVariable(dynamic_cast<AST::Variable*>(node));
+	}
 
 	return NULL;
 }
 
+#define defineEqualAOP(valType) (((valType*)lvalue)->setValue(((valType*)rvalue)->getValue()))
+#define defineAOP(valType, op) (((valType*)lvalue)->setValue(((valType*)lvalue)->getValue() op ((valType*)rvalue)->getValue()))
+
 Value * Interpreter::interpretAssignment(AST::Assignment * node)
 {
-	// TODO - should return copy of lvalue, not a reference to it
-	Value* ret = nullptr;
-	if (OperatorsMap::isAssignment(node->getOperator()._type))
+	if (!OperatorsMap::isAssignment(node->getOperator()._type))
+		throw "";
+	Value* rvalue = interpret(node->getRight());
+	Value* lvalue = interpret(node->getLeft());
+
+	string type = lvalue->getType();
+
+	if (rvalue == nullptr)
+		throw "right of assignment must be a value";
+
+	if (type != rvalue->getType())
+		throw "different types invalid";
+
+	switch (node->getOperator()._type)
 	{
-		Value* rvalue = interpret(node->getRight());
-		Value* lvalue = interpret(node->getLeft());
-		
-		string type = lvalue->getType();
-
-		if (rvalue == nullptr)
-			throw "right of assignment must be a value";
-
-		if (type != rvalue->getType())
-			throw "different types invalid";
-
-		
-		switch (node->getOperator()._type)
-		{
 		case (OT_ASSIGN_EQUAL):
-			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)rvalue)->getValue());
-			else if (type == "bool") ((BoolValue*)lvalue)->setValue(((BoolValue*)rvalue)->getValue());
-			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)rvalue)->getValue());
-			else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)rvalue)->getValue());
-			else if (type == "char") ((CharValue*)lvalue)->setValue(((CharValue*)rvalue)->getValue());
-			else if (type == "func") ((FuncValue*)lvalue)->setValue(((FuncValue*)rvalue)->getValue());
-			else if (type == "ptr") ((PtrValue*)lvalue)->setValue(((PtrValue*)rvalue)->getValue());
-			//else throw "type does not exist";
+			if (type == "int")		defineEqualAOP(IntValue);
+			else if (type == "bool")	defineEqualAOP(BoolValue);
+			else if (type == "frac")	defineEqualAOP(FracValue);
+			else if (type == "string")	defineEqualAOP(StringValue);
+			else if (type == "char")	defineEqualAOP(CharValue);
+			else if (type == "func")	defineEqualAOP(FuncValue);
+			else if (type == "ptr")		defineEqualAOP(PtrValue);
 			break;
 		case (OT_ASSIGN_ADD):
-			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() + ((IntValue*)rvalue)->getValue());
-			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() + ((FracValue*)rvalue)->getValue());
-			else if (type == "string") ((StringValue*)lvalue)->setValue(((StringValue*)lvalue)->getValue() + ((StringValue*)rvalue)->getValue());
+			if (type == "int")		defineAOP(IntValue, +);
+			else if (type == "frac")	defineAOP(FracValue, +);
+			else if (type == "string")	defineAOP(StringValue, +);
 			break;
 		case (OT_ASSIGN_SUBTRACT):
-			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() - ((IntValue*)rvalue)->getValue());
-			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() - ((FracValue*)rvalue)->getValue());
+			if (type == "int")		defineAOP(IntValue, -);
+			else if (type == "frac")	defineAOP(FracValue, -);
 			break;
 		case (OT_ASSIGN_MULTIPLY):
-			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() * ((IntValue*)rvalue)->getValue());
-			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() * ((FracValue*)rvalue)->getValue());
+			if (type == "int")		defineAOP(IntValue, *);
+			else if (type == "frac")	defineAOP(FracValue, *);
 			break;
 		case (OT_ASSIGN_DIVIDE):
-			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() / ((IntValue*)rvalue)->getValue());
-			else if (type == "frac") ((FracValue*)lvalue)->setValue(((FracValue*)lvalue)->getValue() / ((FracValue*)rvalue)->getValue());
+			if (type == "int")		defineAOP(IntValue, / );
+			else if (type == "frac")	defineAOP(FracValue, / );
 			break;
 		case (OT_ASSIGN_MODULUS):
-			if		(type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() % ((IntValue*)rvalue)->getValue());
+			if (type == "int") ((IntValue*)lvalue)->setValue(((IntValue*)lvalue)->getValue() % ((IntValue*)rvalue)->getValue());
 			break;
-		}
-		deleteIfIsTemp(rvalue);
-		return lvalue;
 	}
-	return ret;
+	deleteIfIsTemp(rvalue);
+	return copyValue(lvalue);
+	return nullptr;
 }
+
+#define defineBOP(retType, argType, op) (new retType(((argType*)leftVal)->getValue() op ((argType*)rightVal)->getValue()))
 
 Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 {	
@@ -133,61 +133,74 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 	Value* rightVal = interpret(node->getRight());
 	if (leftVal->getType() != rightVal->getType())
 		throw "different types invalid";
+	string type = leftVal->getType();
 	switch (node->getOperator()._type)
 	{
 		case (OT_EQUAL):
-			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() == ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() == ((BoolValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") ret = new BoolValue(((FracValue*)leftVal)->getValue() == ((FracValue*)rightVal)->getValue());
-			if (leftVal->getType() == "char") ret = new BoolValue(((CharValue*)leftVal)->getValue() == ((CharValue*)rightVal)->getValue());
-			if (leftVal->getType() == "string") ret = new BoolValue(((StringValue*)leftVal)->getValue() == ((StringValue*)rightVal)->getValue());
-			if (leftVal->getType() == "ptr") ret = new BoolValue(((PtrValue*)leftVal)->getValue() == ((PtrValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(BoolValue, IntValue, ==);
+			else if (type == "bool")	ret = defineBOP(BoolValue, BoolValue, == );
+			else if (type == "frac")	ret = defineBOP(BoolValue, FracValue, == );
+			else if (type == "char")	ret = defineBOP(BoolValue, CharValue, == );
+			else if (type == "string")	ret = defineBOP(BoolValue, StringValue, == );
+			else if (type == "ptr")		ret = defineBOP(BoolValue, PtrValue, == );
 			break;
 		case (OT_NOT_EQUAL):
-			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() != ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() != ((BoolValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") ret = new BoolValue(((FracValue*)leftVal)->getValue() != ((FracValue*)rightVal)->getValue());
-			if (leftVal->getType() == "char") ret = new BoolValue(((CharValue*)leftVal)->getValue() != ((CharValue*)rightVal)->getValue());
-			if (leftVal->getType() == "string") ret = new BoolValue(((StringValue*)leftVal)->getValue() != ((StringValue*)rightVal)->getValue());
-			if (leftVal->getType() == "ptr") ret = new BoolValue(((PtrValue*)leftVal)->getValue() != ((PtrValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(BoolValue, IntValue, != );
+			else if (type == "bool")	ret = defineBOP(BoolValue, BoolValue, != );
+			else if (type == "frac")	ret = defineBOP(BoolValue, FracValue, != );
+			else if (type == "char")	ret = defineBOP(BoolValue, CharValue, != );
+			else if (type == "string")	ret = defineBOP(BoolValue, StringValue, != );
+			else if (type == "ptr")		ret = defineBOP(BoolValue, PtrValue, != );
 			break;
 		case (OT_SMALLER):
-			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() < ((IntValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(BoolValue, IntValue, < );
+			else if (type == "frac")	ret = defineBOP(BoolValue, FracValue, < );
+			else if (type == "char")	ret = defineBOP(BoolValue, CharValue, < );
+			else if (type == "string")	ret = defineBOP(BoolValue, StringValue, < );
 			break;
 		case (OT_SMALLER_EQUAL):
-			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() <= ((IntValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(BoolValue, IntValue, <= );
+			else if (type == "frac")	ret = defineBOP(BoolValue, FracValue, <= );
+			else if (type == "char")	ret = defineBOP(BoolValue, CharValue, <= );
+			else if (type == "string")	ret = defineBOP(BoolValue, StringValue, <= );
 			break;
 		case (OT_GREATER):
-			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() > ((IntValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(BoolValue, IntValue, > );
+			else if (type == "frac")	ret = defineBOP(BoolValue, FracValue, > );
+			else if (type == "char")	ret = defineBOP(BoolValue, CharValue, > );
+			else if (type == "string")	ret = defineBOP(BoolValue, StringValue, > );
 			break;
 		case (OT_GREATER_EQUAL):
-			if (leftVal->getType() == "int") ret = new BoolValue(((IntValue*)leftVal)->getValue() >= ((IntValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(BoolValue, IntValue, >= );
+			else if (type == "frac")	ret = defineBOP(BoolValue, FracValue, >= );
+			else if (type == "char")	ret = defineBOP(BoolValue, CharValue, >= );
+			else if (type == "string")	ret = defineBOP(BoolValue, StringValue, >= );
 			break;
 		case (OT_LOGICAL_AND):
-			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() && ((BoolValue*)rightVal)->getValue());
+			if		(type == "bool")	ret = defineBOP(BoolValue, BoolValue, && );
 			break;
 		case (OT_LOGICAL_OR):
-			if (leftVal->getType() == "bool") ret = new BoolValue(((BoolValue*)leftVal)->getValue() || ((BoolValue*)rightVal)->getValue());
+			if		(type == "bool")	ret = defineBOP(BoolValue, BoolValue, ||);
 			break;
 		case(OT_ADD):
-			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() + ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() + ((FracValue*)rightVal)->getValue());
-			if (leftVal->getType() == "string") ret = new StringValue(((StringValue*)leftVal)->getValue() + ((StringValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(IntValue, IntValue, + );
+			else if (type == "frac")	ret = defineBOP(FracValue, FracValue, + );
+			else if (type == "string")	ret = defineBOP(StringValue, StringValue, + );
 			break;
 		case(OT_SUBTRACT):
-			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() - ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() - ((FracValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(IntValue, IntValue, - );
+			else if (type == "frac")	ret = defineBOP(FracValue, FracValue, - );
 			break;
 		case(OT_MULTIPLY):
-			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() * ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() * ((FracValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(IntValue, IntValue, * );
+			else if (type == "frac")	ret = defineBOP(FracValue, FracValue, * );
 			break;
 		case(OT_DIVIDE):
-			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() / ((IntValue*)rightVal)->getValue());
-			if (leftVal->getType() == "frac") ret = new FracValue(((FracValue*)leftVal)->getValue() / ((FracValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(IntValue, IntValue, / );
+			else if (type == "frac")	ret = defineBOP(FracValue, FracValue, / );
 			break;
 		case(OT_MODULUS):
-			if (leftVal->getType() == "int") ret = new IntValue(((IntValue*)leftVal)->getValue() % ((IntValue*)rightVal)->getValue());
+			if		(type == "int")		ret = defineBOP(IntValue, IntValue, % );
 			break;
 		default: throw "unsupported binary operator";
 	}
