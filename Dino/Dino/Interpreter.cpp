@@ -9,66 +9,45 @@ void Interpreter::leaveBlock()
 	_variables.pop_back();
 }
 
+Value * Interpreter::copyValue(Value * val)
+{
+	string type = val->getType();
+	if (type == "bool")	return new BoolValue(((BoolValue*)val)->getValue());
+	else if (type == "int")		return new IntValue(((IntValue*)val)->getValue());
+	else if (type == "frac")	return new FracValue(((FracValue*)val)->getValue());
+	else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
+	else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
+	else if (type == "ptr")		return new PtrValue(((PtrValue*)val)->getPtrType(), ((PtrValue*)val)->getValue());
+	else throw "cannot copy type that does not exist";
+}
+
 Value* Interpreter::interpret(AST::Node * node)
 {
 	if (node == nullptr)
 		return NULL;
+
 	if (node->isStatement())
-	{
-		auto statement = dynamic_cast<AST::Statement*>(node);
-		switch (statement->getStatementType())
+		switch (dynamic_cast<AST::Statement*>(node)->getStatementType())
 		{
-			case(ST_ASSIGNMENT):
-				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
-			case(ST_VARIABLE_DECLARATION):
-				return interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
-			case(ST_TYPE_DECLARATION):
-				interpretTypeDeclaration(dynamic_cast<AST::TypeDeclaration*>(node));
-				break;
-			case (ST_FUNCTION_CALL):
-				return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
-			case(ST_IF_THEN_ELSE):
-				return interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
-			case(ST_STATEMENT_BLOCK):
-				for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
-				{
-					Value* val = interpret(i);
-					if (val != nullptr && val->isReturn())
-						return val;
-				}
-				break;
-			case(ST_WHILE_LOOP):
-				return interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
-				break;
-			case(ST_INCREMENT):
-				return interpretIncrement(dynamic_cast<AST::Increment*>(node));
-				break;
-			case(ST_DO_WHILE_LOOP):
-				return interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
-				break;
-			case(ST_UNARY_OPERATION):
-				return interpretUnaryOpStatement(dynamic_cast<AST::UnaryOperationStatement*>(node));
+			case(ST_ASSIGNMENT):				return interpretAssignment(dynamic_cast<AST::Assignment*>(node));
+			case(ST_VARIABLE_DECLARATION):		return interpretVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(node));
+			case(ST_TYPE_DECLARATION):			return interpretTypeDeclaration(dynamic_cast<AST::TypeDeclaration*>(node));
+			case (ST_FUNCTION_CALL):			return interpretFuncCall(dynamic_cast<AST::FunctionCall*>(node));
+			case(ST_IF_THEN_ELSE):				return interpretIfThenElse(dynamic_cast<AST::IfThenElse*>(node));
+			case(ST_STATEMENT_BLOCK):			return interpretStatementBlock(dynamic_cast<AST::StatementBlock*>(node));
+			case(ST_WHILE_LOOP):				return interpretWhileLoop(dynamic_cast<AST::WhileLoop*>(node));
+			case(ST_INCREMENT):					return interpretIncrement(dynamic_cast<AST::Increment*>(node));
+			case(ST_DO_WHILE_LOOP):				return interpretDoWhileLoop(dynamic_cast<AST::DoWhileLoop*>(node));
+			case(ST_UNARY_OPERATION):			return interpretUnaryOpStatement(dynamic_cast<AST::UnaryOperationStatement*>(node));
 		}
-	}
-	else
-	{
-		auto expression = dynamic_cast<AST::Expression*>(node);
-		switch (expression->getExpressionType())
+	else switch (dynamic_cast<AST::Expression*>(node)->getExpressionType())
 		{
-		case (ET_BINARY_OPERATION):
-			return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
-		case (ET_UNARY_OPERATION):
-			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
-		case (ET_CONDITIONAL_EXPRESSION):
-			throw "conditional expression are not supported yet";
-		case (ET_LITERAL):
-			return interpretLiteral(dynamic_cast<AST::Literal*>(node));
-		case (ET_VARIABLE):
-			return interpretVariable(dynamic_cast<AST::Variable*>(node));
-		default:
-			break;
+			case (ET_BINARY_OPERATION):			return interpretBinaryOp(dynamic_cast<AST::BinaryOperation*>(node));
+			case (ET_UNARY_OPERATION):			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
+			case (ET_CONDITIONAL_EXPRESSION):	throw "conditional expression are not supported yet";
+			case (ET_LITERAL):					return interpretLiteral(dynamic_cast<AST::Literal*>(node));
+			case (ET_VARIABLE):					return interpretVariable(dynamic_cast<AST::Variable*>(node));
 		}
-	}
 
 	return NULL;
 }
@@ -411,7 +390,7 @@ Value * Interpreter::interpretVariable(AST::Variable * node)
 	throw "variable does not exist";
 }
 
-void Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
+Value* Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
 {
 	TypeDefinition typeDef;
 	typeDef._name = node->getName().name;
@@ -444,11 +423,11 @@ void Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
 		typeDef._functions[funcName].value = new FuncValue(funcLit);
 	}
 	_types[typeDef._name] = typeDef;
+	return nullptr;
 }
 
-Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * node)
+Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement* node)
 {
-	
 	switch (node->getOperator()._type)
 	{
 		case (OT_RETURN):
@@ -473,7 +452,7 @@ Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement * no
 	return NULL;
 }
 
-Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * node)
+Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration* node)
 {
 	string type = node->getVarType().name;
 	string name = node->getVarId().name;
@@ -507,7 +486,7 @@ Value * Interpreter::interpretVariableDeclaration(AST::VariableDeclaration * nod
 	return val;
 }
 
-Value* Interpreter::interpretIfThenElse(AST::IfThenElse * node)
+Value* Interpreter::interpretIfThenElse(AST::IfThenElse* node)
 {
 	enterBlock();
 	Value* condition = interpret(node->getCondition());
@@ -527,7 +506,7 @@ Value* Interpreter::interpretIfThenElse(AST::IfThenElse * node)
 	return nullptr;
 }
 
-Value* Interpreter::interpretWhileLoop(AST::WhileLoop * node)
+Value* Interpreter::interpretWhileLoop(AST::WhileLoop* node)
 {
 	enterBlock();
 	Value* condition = interpret(node->getCondition());
@@ -546,7 +525,7 @@ Value* Interpreter::interpretWhileLoop(AST::WhileLoop * node)
 	return nullptr;
 }
 
-Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
+Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop* node)
 {
 	enterBlock();
 	Value* condition = nullptr;
@@ -563,16 +542,15 @@ Value* Interpreter::interpretDoWhileLoop(AST::DoWhileLoop * node)
 	return nullptr;
 }
 
-Value * Interpreter::copyValue(Value * val)
+Value * Interpreter::interpretStatementBlock(AST::StatementBlock * node)
 {
-	string type = val->getType();
-	if		(type == "bool")	return new BoolValue(((BoolValue*)val)->getValue());
-	else if (type == "int")		return new IntValue(((IntValue*)val)->getValue());
-	else if (type == "frac")	return new FracValue(((FracValue*)val)->getValue());
-	else if (type == "string")	return new StringValue(((StringValue*)val)->getValue());
-	else if (type == "char")	return new CharValue(((CharValue*)val)->getValue());
-	else if (type == "ptr")		return new PtrValue(((PtrValue*)val)->getPtrType(), ((PtrValue*)val)->getValue());
-	else throw "cannot copy type that does not exist";
+	for (auto i : (dynamic_cast<AST::StatementBlock*>(node))->getChildren())
+	{
+		Value* val = interpret(i);
+		if (val != nullptr && val->isReturn())
+			return val;
+	}
+	return nullptr;
 }
 
 /******* OUTSIDE OF INTERPRETER CLASS *****/

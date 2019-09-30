@@ -166,8 +166,8 @@ private:
 	Value* interpretVariable(AST::Variable* node);
 	Value* interpretAssignment(AST::Assignment* node);
 
-
-	void interpretTypeDeclaration(AST::TypeDeclaration* node);
+	Value* interpretStatementBlock(AST::StatementBlock* node);
+	Value* interpretTypeDeclaration(AST::TypeDeclaration* node);
 	Value* interpretUnaryOpStatement(AST::UnaryOperationStatement* node);
 	Value* interpretVariableDeclaration(AST::VariableDeclaration* node);
 	Value* interpretIfThenElse(AST::IfThenElse* node);
