@@ -58,7 +58,7 @@ Value* Interpreter::interpret(AST::Node * node)
 Value * Interpreter::interpretAssignment(AST::Assignment * node)
 {
 	if (!OperatorsMap::isAssignment(node->getOperator()._type))
-		throw "";
+		throw "Operator is not assignment!";
 	Value* rvalue = interpret(node->getRight());
 	Value* lvalue = interpret(node->getLeft());
 
