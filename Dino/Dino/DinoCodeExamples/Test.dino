@@ -11,11 +11,20 @@
 
 //Main()
 
-int x {
+type MyType {
+	int test
+	int Foo(): return test
+
+	int Test {
+		get: return test
+	}
+}
+
+/*int x {
 	get {
 		return 10
 	}
 	set {
 		y = 2
 	}
-}
+}*/

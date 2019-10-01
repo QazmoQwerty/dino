@@ -1,5 +1,16 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;
-2 [label="<PropertyDeclaration>"];2->1;2->4294967295;2->4294967295;
-1 [label="<VariableDeclaration>\nint x"];
+0 [label="<StatementBlock>"];0->1;
+1 [label="<TypeDeclaration>\nMyType"];1->2;1->4;1->10;
+2 [label="<VariableDeclaration>\nint test"];
+4 [label="<Assignment>\n="];4->3;4->5;
+3 [label="<VariableDeclaration>\nfunc int Foo"];
+5 [label="<FunctionLiteral>
+int"];5->8;
+8 [label="<StatementBlock>"];8->6;
+6 [label="<UnaryOperatorStatement>\nreturn"];6->7;
+7 [label="<Variable>\ntest"];
+10 [label="<PropertyDeclaration>"];10->9;10->11;10->4294967295;
+9 [label="<VariableDeclaration>\nint Test"];
+11 [label="<UnaryOperatorStatement>\nreturn"];11->12;
+12 [label="<Variable>\ntest"];
 }

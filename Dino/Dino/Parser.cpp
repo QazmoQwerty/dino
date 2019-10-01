@@ -298,10 +298,11 @@ AST::Node * Parser::std(Token * token)
 				case(ST_ASSIGNMENT):
 					decl->addFunctionDeclaration(dynamic_cast<AST::Assignment*>(temp));
 					break;
-				default:
+				case(ST_PROPERTY_DECLARATION):
+					decl->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(temp));
 					break;
 				}
-				eatLineBreak();
+				while(eatLineBreak());
 			}
 			return decl;
 		}

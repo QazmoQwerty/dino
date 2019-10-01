@@ -130,6 +130,8 @@ vector<AST::Node*> AST::TypeDeclaration::getChildren()
 		v.push_back(i);
 	for (auto i : _functionDeclarations)
 		v.push_back(i);
+	for (auto i : _propertyDeclarations)
+		v.push_back(i);
 	return v;
 }
 

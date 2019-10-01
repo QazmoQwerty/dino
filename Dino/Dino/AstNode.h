@@ -261,6 +261,7 @@ namespace AST
 		void addDeclaration(VariableDeclaration* declaration) { _declarations.push_back(declaration); }
 	};
 
+	class PropertyDeclaration;
 	class TypeDeclaration : public Statement
 	{
 		Identificator _name;	// Temporary
@@ -268,6 +269,7 @@ namespace AST
 		vector<Identificator> _interfaces;
 		vector<VariableDeclaration*> _variableDeclarations;
 		vector<Assignment*> _functionDeclarations;
+		vector<PropertyDeclaration*> _propertyDeclarations;
 
 	public:
 		TypeDeclaration();
@@ -280,12 +282,14 @@ namespace AST
 		vector<Identificator> getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
 		vector<Assignment*> getFunctionDeclarations() { return _functionDeclarations; }
+		vector<PropertyDeclaration*> getPropertyDeclarations() { return _propertyDeclarations; }
 
 		void setName(Identificator id) { _name = id; }
 		void addModifier(Identificator modifier) { _modifiers.push_back(modifier); }
 		void addInterface(Identificator interface) { _interfaces.push_back(interface); }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(Assignment* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
+		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
 	};
 
 	class NamespaceDeclaration : public Statement
