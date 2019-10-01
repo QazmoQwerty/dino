@@ -348,29 +348,6 @@ AST::Node * Parser::std(Token * token)
 				decl->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
 			else throw "could now parse namespace definition";
 			return decl;
-			/*AST::IfThenElse * node = new AST::IfThenElse();
-			AST::Node* inner = parse();
-
-			if (inner && inner->isExpression())
-				node->setCondition(dynamic_cast<AST::Expression*>(inner));
-			else throw "could not convert from Node* to Expression*";
-
-			while (peekToken()->_type == TT_LINE_BREAK)
-				nextToken();
-
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
-				node->setElseBranch(parseBlock(OT_CURLY_BRACES_CLOSE));
-			else if (eatOperator(OT_COLON))
-			{
-				while (eatLineBreak());
-				AST::Node* n = parse();
-				if (n && n->isStatement())
-					node->setElseBranch(dynamic_cast<AST::Statement*>(n));
-				else throw "inner content of if statement must be a statement!";
-			}
-			else throw "could not then part of if statement";
-
-			return node;*/
 		}
 		if (ot->_operator._type == OT_DELETE || ot->_operator._type == OT_RETURN)
 		{
@@ -409,35 +386,78 @@ AST::Node * Parser::nud(Token * token)
 				node->setVarId(varId);
 				nextToken();
 			}
-			/*if (isOperator(peekToken(), OT_PARENTHESIS_OPEN))	// function declaration
+
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
 			{
-				node->addModifier({ "func" });
-				auto func = new AST::Function();
+				// Propery declaration: 
+				auto decl = new AST::PropertyDeclaration(node);
 
-				while (!eatOperator(OT_PARENTHESIS_CLOSE))
-				{
-					auto param = parse(10);
-					//if (!exp->isExpression())
-					//	throw "Could not convert from Node* to Expression*";
-					if (param == NULL)
-						break;
-					if (!param->isStatement() || (dynamic_cast<AST::Statement*>(param))->getStatementType() != ST_VARIABLE_DECLARATION)
-						throw "could not convert to VariableDeclaration";
-					func->addParameter(dynamic_cast<AST::VariableDeclaration*>(param));
-					peekToken();
-					eatOperator(OT_COMMA);
+				while (eatLineBreak());
+
+				if (eatOperator(OT_GET)) {
+					if (eatOperator(OT_CURLY_BRACES_OPEN))
+						decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+					else if (eatOperator(OT_COLON))
+					{
+						while (eatLineBreak());
+						AST::Node* n = parse();
+						if (n && n->isStatement())
+							decl->setGet(dynamic_cast<AST::Statement*>(n));
+						else throw "inner content of get statement must be a statement!";
+					}
+					else throw "could not parse get operator";
+
+					while (eatLineBreak());
+					if (eatOperator(OT_SET)) {
+						if (eatOperator(OT_CURLY_BRACES_OPEN))
+							decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+						else if (eatOperator(OT_COLON))
+						{
+							while (eatLineBreak());
+							AST::Node* n = parse();
+							if (n && n->isStatement())
+								decl->setSet(dynamic_cast<AST::Statement*>(n));
+							else throw "inner content of set statement must be a statement!";
+						}
+						else throw "could not parse set operator";
+					}
 				}
-				nextToken(OT_PARENTHESIS_CLOSE);
-				if (!eatOperator(OT_CURLY_BRACES_OPEN))
-					throw "function has no body";
-				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
 
-				auto bo = new AST::BinaryOperation();
-				bo->setOperator(OperatorsMap::getOperatorByDefinition(OT_ASSIGN_EQUAL).second);
-				bo->setLeft((AST::Expression*)node); //eew
-				bo->setRight(func);
-				return bo;
-			}*/
+				else if (eatOperator(OT_SET)) {
+					if (eatOperator(OT_CURLY_BRACES_OPEN))
+						decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
+					else if (eatOperator(OT_COLON))
+					{
+						while (eatLineBreak());
+						AST::Node* n = parse();
+						if (n && n->isStatement())
+							decl->setSet(dynamic_cast<AST::Statement*>(n));
+						else throw "inner content of set statement must be a statement!";
+					}
+					else throw "could not parse set operator";
+
+					while (eatLineBreak());
+					if (eatOperator(OT_GET)) {
+						if (eatOperator(OT_CURLY_BRACES_OPEN))
+							decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+						else if (eatOperator(OT_COLON))
+						{
+							while (eatLineBreak());
+							AST::Node* n = parse();
+							if (n && n->isStatement())
+								decl->setGet(dynamic_cast<AST::Statement*>(n));
+							else throw "inner content of set statement must be a statement!";
+						}
+						else throw "could not parse set operator";
+					}
+				}
+
+				while (eatLineBreak());
+				if (!eatOperator(OT_CURLY_BRACES_CLOSE))
+					throw "'}' expected";
+
+				return decl;
+			}
 
 			return node;
 		}
@@ -557,6 +577,79 @@ AST::Node * Parser::nud(Token * token)
 
 AST::Node * Parser::led(AST::Node * left, Token * token)
 {
+	if (left->isStatement() && dynamic_cast<AST::Statement*>(left)->getStatementType() == ST_VARIABLE_DECLARATION
+		&& token->_type == TT_OPERATOR && isOperator(token, OT_CURLY_BRACES_OPEN))
+	{
+		// Propery declaration: 
+		auto decl = new AST::PropertyDeclaration(dynamic_cast<AST::VariableDeclaration*>(left));
+
+		while (eatLineBreak());
+
+		if (eatOperator(OT_GET)) {
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
+					decl->setGet(dynamic_cast<AST::Statement*>(n));
+				else throw "inner content of get statement must be a statement!";
+			}
+			else throw "could not parse get operator";
+
+			while (eatLineBreak());
+			if (eatOperator(OT_SET)) {
+				if (eatOperator(OT_CURLY_BRACES_OPEN))
+					decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+				else if (eatOperator(OT_COLON))
+				{
+					while (eatLineBreak());
+					AST::Node* n = parse();
+					if (n && n->isStatement())
+						decl->setSet(dynamic_cast<AST::Statement*>(n));
+					else throw "inner content of set statement must be a statement!";
+				}
+				else throw "could not parse set operator";
+			}
+		}
+		
+		else if (eatOperator(OT_SET)) {
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
+					decl->setSet(dynamic_cast<AST::Statement*>(n));
+				else throw "inner content of set statement must be a statement!";
+			}
+			else throw "could not parse set operator";
+
+			while (eatLineBreak());
+			if (eatOperator(OT_GET)) {
+				if (eatOperator(OT_CURLY_BRACES_OPEN))
+					decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+				else if (eatOperator(OT_COLON))
+				{
+					while (eatLineBreak());
+					AST::Node* n = parse();
+					if (n && n->isStatement())
+						decl->setGet(dynamic_cast<AST::Statement*>(n));
+					else throw "inner content of set statement must be a statement!";
+				}
+				else throw "could not parse set operator";
+			}
+		}
+
+		while (eatLineBreak());
+		if (!eatOperator(OT_CURLY_BRACES_CLOSE))
+			throw "'}' expected";
+
+		return decl;
+	}
+
 	if (token->_type == TT_OPERATOR && OperatorsMap::isBinary(((OperatorToken*)token)->_operator._type))
 	{
 		auto ot = ((OperatorToken*)token);

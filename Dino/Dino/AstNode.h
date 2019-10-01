@@ -306,6 +306,23 @@ namespace AST
 		void setStatement(Statement* statement) { _statement = statement; }
 	};
 
+	class PropertyDeclaration : public Statement {
+	private:
+		VariableDeclaration* _decl;
+		Statement* _get;
+		Statement* _set;
+	public:
+		PropertyDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
+		virtual string toString() { return "<PropertyDeclaration>"; };
+		virtual vector<Node*> getChildren();
+
+		void setGet(Statement* get) { _get = get; }
+		void setSet(Statement* set) { _set = set; }
+		Statement* getGet() { return _get; }
+		Statement* getSet() { return _set; }
+	};
+
 	/********************** Expressions **********************/
 
 	class BinaryOperation : public Expression

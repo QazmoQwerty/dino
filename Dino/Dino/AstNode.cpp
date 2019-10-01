@@ -156,3 +156,12 @@ vector<AST::Node*> AST::NamespaceDeclaration::getChildren()
 	v.push_back(_statement);
 	return v;
 }
+
+vector<AST::Node*> AST::PropertyDeclaration::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_decl);
+	v.push_back(_get);
+	v.push_back(_set);
+	return v;
+}

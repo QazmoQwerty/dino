@@ -11,5 +11,11 @@
 
 //Main()
 
-PrintL("wow")
-Print("\naaa\naaa\naaa")
+int x {
+	get {
+		return 10
+	}
+	set {
+		y = 2
+	}
+}
