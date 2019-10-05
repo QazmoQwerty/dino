@@ -9,6 +9,17 @@ void Interpreter::leaveBlock()
 	_variables.pop_back();
 }
 
+Value * Interpreter::evaluateProperty(Value * val)
+{
+	PropertyValue* pv = (PropertyValue*)val;
+	if (pv->getGet() == nullptr)
+		throw "property has no getter";
+	Value* ret = interpret(pv->getGet());
+	if (ret && ret->isReturn())
+		return ret;
+	else throw "getter must return a value!";
+}
+
 Value * Interpreter::copyValue(Value * val)
 {
 	string type = val->getType();
@@ -62,10 +73,25 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 	Value* rvalue = interpret(node->getRight());
 	Value* lvalue = interpret(node->getLeft());
 
+	if (lvalue->getType() == "property")
+	{
+		throw "property lvalues are not supported at the moment.";
+		/*PropertyValue* propVal = (PropertyValue*)lvalue;
+		propVal->getSet();
+		if (node->getOperator()._type == OT_ASSIGN_EQUAL)
+		{
+
+		}
+		else throw "only = assignment operator is currently supported for property lvalues.";*/
+	}
+
 	string type = lvalue->getType();
 
 	if (rvalue == nullptr)
 		throw "right of assignment must be a value";
+
+	if (rvalue->getType() == "property")
+		rvalue = evaluateProperty(rvalue);
 
 	if (type != rvalue->getType())
 		throw "different types invalid";
@@ -131,6 +157,12 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 	}
 
 	Value* rightVal = interpret(node->getRight());
+
+	if (rightVal->getType() == "property")
+		rightVal = evaluateProperty(rightVal);
+	if (leftVal->getType() == "property")
+		leftVal = evaluateProperty(leftVal);
+
 	if (leftVal->getType() != rightVal->getType())
 		throw "different types invalid";
 	string type = leftVal->getType();
@@ -221,6 +253,10 @@ Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 	}
 
 	Value* val = interpret(node->getExpression());
+
+	if (val->getType() == "property")
+		val = evaluateProperty(val);
+
 	Value* ret = nullptr;
 	switch (node->getOperator()._type)
 	{ 
@@ -270,6 +306,8 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 		for (unsigned int i = 0; i < node->getParameters().size(); i++) 
 		{
 			Value* val = interpret(node->getParameters()[i]);
+			if (val->getType() == "property")
+				val = evaluateProperty(val);
 			std::cout << val->toString();
 			if (i != node->getParameters().size() - 1) std::cout << " ";
 		}
@@ -282,6 +320,8 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 		for (unsigned int i = 0; i < node->getParameters().size(); i++)
 		{
 			Value* val = interpret(node->getParameters()[i]);
+			if (val->getType() == "property")
+				val = evaluateProperty(val);
 			std::cout << val->toString();
 			if (i != node->getParameters().size() - 1) std::cout << " ";
 		}
@@ -337,6 +377,10 @@ Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 		Value* lvalue = interpret(params[i]);
 
 		string name = params[i]->getVarId().name;
+
+		if (rvalue->getType() == "property")
+			rvalue = evaluateProperty(rvalue);
+
 		if (lvalue->getType() != rvalue->getType())
 			throw "Incompatible function inputs";
 		
@@ -410,6 +454,14 @@ Value* Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
 		vtd.type = decl->getVarType().name;
 		typeDef._variables[decl->getVarId().name] = vtd;
 	}
+	for (auto propDecl : node->getPropertyDeclarations())
+	{
+		PropertyDefinition propDef;
+		for (auto modifier : propDecl->getVarDecl()->getModifiers())
+			propDef.modifiers.push_back(modifier.name);
+		propDef.value = new PropertyValue(propDecl->getSet(), propDecl->getGet(), propDecl->getVarDecl()->getVarType().name);
+		typeDef._properties[propDecl->getVarDecl()->getVarId().name] = propDef;
+	}
 	for (auto funcDecl : node->getFunctionDeclarations())
 	{
 		if (funcDecl->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
@@ -434,19 +486,22 @@ Value* Interpreter::interpretTypeDeclaration(AST::TypeDeclaration * node)
 
 Value * Interpreter::interpretUnaryOpStatement(AST::UnaryOperationStatement* node)
 {
+	Value* val = interpret(node->getExpression());
+
+	if (val->getType() == "property")
+		val = evaluateProperty(val);
+
 	switch (node->getOperator()._type)
 	{
 		case (OT_RETURN):
 		{
-			Value* val = interpret(node->getExpression());
 			Value* copy = copyValue(val);
 			copy->setReturn();
 			deleteIfIsTemp(val);
 			return copy;
 		}
 		case(OT_DELETE):
-		{
-			Value* val = interpret(node->getExpression());
+		{	
 			if (val->getType() == "ptr") 
 			{
 				delete ((PtrValue*)val)->getValue();

@@ -92,8 +92,23 @@ public:
 	FuncValue(string returnType) : Value("func") { _returnType = returnType; _value = NULL; }
 	FuncValue(AST::Function* value) : Value("func") { _value = value; _returnType = value->getReturnType().name; }
 	void setValue(AST::Function* value);
+	string getReturnType() { return _returnType; }
 	AST::Function* getValue() { return _value; }
 	virtual string toString() { return _value->toString(); };
+};
+
+class PropertyValue : public Value
+{
+private:
+	string _returnType;
+	AST::Statement* _get;
+	AST::Statement* _set;
+public:
+	PropertyValue(AST::Statement* set, AST::Statement* get, string returnType) : Value("property") { _set = set; _get = get; _returnType = returnType; }
+	AST::Statement* getGet() { return _get; }
+	AST::Statement* getSet() { return _set; }
+	string getReturnType() { return _returnType; }
+	virtual string toString() { return "<propertyTODO>"; };
 };
 
 struct VariableTypeDefinition
@@ -108,10 +123,17 @@ struct FunctionDefinition
 	vector<string> modifiers;
 } typedef FunctionDefinition;
 
+struct PropertyDefinition 
+{
+	PropertyValue* value;
+	vector<string> modifiers;
+} typedef PropertyDefinition;
+
 struct TypeDefinition
 {
 	string _name;
 	unordered_map<string, VariableTypeDefinition> _variables;
+	unordered_map<string, PropertyDefinition> _properties;
 	unordered_map<string, FunctionDefinition> _functions;
 } typedef TypeDefinition;
 

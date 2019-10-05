@@ -261,7 +261,24 @@ namespace AST
 		void addDeclaration(VariableDeclaration* declaration) { _declarations.push_back(declaration); }
 	};
 
-	class PropertyDeclaration;
+	class PropertyDeclaration : public Statement {
+	private:
+		VariableDeclaration* _decl;
+		Statement* _get;
+		Statement* _set;
+	public:
+		PropertyDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
+		virtual string toString() { return "<PropertyDeclaration>"; };
+		virtual vector<Node*> getChildren();
+
+		void setGet(Statement* get) { _get = get; }
+		void setSet(Statement* set) { _set = set; }
+		Statement* getGet() { return _get; }
+		Statement* getSet() { return _set; }
+		VariableDeclaration* getVarDecl() { return _decl; }
+	};
+
 	class TypeDeclaration : public Statement
 	{
 		Identificator _name;	// Temporary
@@ -308,23 +325,6 @@ namespace AST
 
 		void setName(Identificator id) { _name = id; }
 		void setStatement(Statement* statement) { _statement = statement; }
-	};
-
-	class PropertyDeclaration : public Statement {
-	private:
-		VariableDeclaration* _decl;
-		Statement* _get;
-		Statement* _set;
-	public:
-		PropertyDeclaration(VariableDeclaration* decl) { _decl = decl; };
-		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
-		virtual string toString() { return "<PropertyDeclaration>"; };
-		virtual vector<Node*> getChildren();
-
-		void setGet(Statement* get) { _get = get; }
-		void setSet(Statement* set) { _set = set; }
-		Statement* getGet() { return _get; }
-		Statement* getSet() { return _set; }
 	};
 
 	/********************** Expressions **********************/

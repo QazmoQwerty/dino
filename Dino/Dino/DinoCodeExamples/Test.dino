@@ -13,12 +13,34 @@
 
 type MyType {
 	int test
-	int Foo(): return test
+	int Foo(): return Test2
 
-	int Test {
+	void Bar(int x): test = x
+
+	int Test2 {
 		get: return test
+		//set: test = value
+	}
+
+	int Num1 {
+		get: return 1
+	}
+	int Num2 {
+		get: return 2
+	}
+	int Num3 {
+		get: return 3
+	}
+
+	bool Bat {
+		get: return true	
 	}
 }
+
+Print("INT")
+MyType temp = new MyType
+temp.Bar(10)
+int m = temp.Num1
 
 /*int x {
 	get {
