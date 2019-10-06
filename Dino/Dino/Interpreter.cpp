@@ -14,7 +14,22 @@ Value * Interpreter::evaluateProperty(Value * val)
 	PropertyValue* pv = (PropertyValue*)val;
 	if (pv->getGet() == nullptr)
 		throw "property has no getter";
+
+	if (pv->getThisPtr() == nullptr) {
+		Value* ret = interpret(pv->getGet());
+		if (ret && ret->isReturn())
+			return ret;
+		else throw "getter must return a value!";
+	}
+	
+	enterBlock();
+	_variables[currentScope()]["this"] = pv->getThisPtr();
+	_currentMinScope.push(currentScope());
+	_currentNamespace.push(((PtrValue*)pv->getThisPtr())->getPtrType());	// TODO - make this safe
 	Value* ret = interpret(pv->getGet());
+	_currentNamespace.pop();
+	_currentMinScope.pop();
+	leaveBlock();
 	if (ret && ret->isReturn())
 		return ret;
 	else throw "getter must return a value!";
@@ -153,7 +168,10 @@ Value* Interpreter::interpretBinaryOp(AST::BinaryOperation * node)
 		if (node->getRight()->getExpressionType() != ET_VARIABLE)
 			throw "right of '.' operator must be a variable name";
 		string varName = dynamic_cast<AST::Variable*>(node->getRight())->getVarId().name;
-		return ((TypeValue*)left)->getVariable(varName, _currentNamespace.top());
+		Value* ret = ((TypeValue*)left)->getVariable(varName, _currentNamespace.top());
+		if (ret->getType() == "property")
+			((PropertyValue*)ret)->setThisPtr(copyValue(leftVal));	// set thisPtr to point at leftVal (the pointer to the left hand expression)
+		return ret;
 	}
 
 	Value* rightVal = interpret(node->getRight());

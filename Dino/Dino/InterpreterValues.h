@@ -101,6 +101,7 @@ class PropertyValue : public Value
 {
 private:
 	string _returnType;
+	Value* _thisPtr;
 	AST::Statement* _get;
 	AST::Statement* _set;
 public:
@@ -108,7 +109,9 @@ public:
 	AST::Statement* getGet() { return _get; }
 	AST::Statement* getSet() { return _set; }
 	string getReturnType() { return _returnType; }
+	Value* getThisPtr() { return _thisPtr; }
 	virtual string toString() { return "<propertyTODO>"; };
+	void setThisPtr(Value* thisPtr) { _thisPtr = thisPtr; }
 };
 
 struct VariableTypeDefinition

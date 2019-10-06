@@ -1,52 +1,26 @@
 
-/*void Main() {
-	int y = 0
-	int x = 3
-	Test(4)
-}*/
-
-/*void Test(int x) {
-	PrintLn(x, y)
-}*/
-
-//Main()
-
 type MyType {
-	int test
-	int Foo(): return Test2
+	int num1
+	int num2
 
-	void Bar(int x): test = x
+	void SetVals(int a, int b) { num1 = a | num2 = b }
 
-	int Test2 {
-		get: return test
-		//set: test = value
-	}
-
-	int Num1 {
-		get: return 1
-	}
-	int Num2 {
-		get: return 2
-	}
-	int Num3 {
-		get: return 3
-	}
-
-	bool Bat {
-		get: return true	
+	int Test { 
+		get: return num1 + num2 
 	}
 }
 
-Print("INT")
-MyType temp = new MyType
-temp.Bar(10)
-int m = temp.Num1
+void Test() {
+	Print(10)
+}
 
-/*int x {
-	get {
-		return 10
-	}
-	set {
-		y = 2
-	}
-}*/
+void Main() {
+	int i = 0
+	Test()
+	MyType temp = new MyType
+	temp.SetVals(4, 5)
+	Print(temp.Test)
+	delete temp
+}
+
+Main()
