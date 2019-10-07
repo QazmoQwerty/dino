@@ -31,6 +31,13 @@ Value * TypeValue::getVariable(string name, string scope)	// no public/private m
 			return _typeDefinition._functions[name].value;	// if modifiers has public (or doesn't have private and name is uppercase)
 		else throw "function is private";
 	}
+	if (_typeDefinition._properties.count(name))
+	{
+		if (scope == _typeDefinition._name || hasModifier(_typeDefinition._properties[name].modifiers, "public") ||
+			(!hasModifier(_typeDefinition._properties[name].modifiers, "private") && 'A' <= name[0] && name[0] <= 'Z'))
+			return _typeDefinition._properties[name].value;	// if modifiers has public (or doesn't have private and name is uppercase)
+		else throw "property is private";
+	}
 	if (_variables.count(name))
 	{
 		if (scope == _typeDefinition._name || hasModifier(_typeDefinition._variables[name].modifiers, "public") ||

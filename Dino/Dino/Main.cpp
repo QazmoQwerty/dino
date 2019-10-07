@@ -33,9 +33,10 @@ int main(int argc, char *argv[])
 		std::cout << "-showlex (prints out the output of the lexer)" << std::endl;
 		std::cout << "-noAst (stops the program from outputting a .gv file of the AST)" << std::endl;
 		std::cout << "-noRun (stops the interpreter from executing the program)" << std::endl << std::endl;
+		return 0;
 	}
 
-	showLexerOutput = !cmdOptionExists(argv, argv + argc, "-showlex");
+	showLexerOutput = cmdOptionExists(argv, argv + argc, "-showlex");
 	outputAstFile = !cmdOptionExists(argv, argv + argc, "-noAst");
 	executeInterpret = !cmdOptionExists(argv, argv + argc, "-noRun");
 

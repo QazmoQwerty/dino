@@ -23,9 +23,15 @@ type ListNode {
 	int data
 	ListNode next
 	
-	void SetData(int data): this.data = data
-	void SetNext(ListNode next): this.next = next
-	int GetData(): return data
+	int Data {
+		get: return data
+		set: data = value
+	}
+
+	ListNode Next {
+		get: return next
+		set: next = value
+	}
 
 	ListNode GetNext(int index) {
 		if index == 0:
@@ -112,7 +118,7 @@ type LinkedList {
 	void Remove(int index) {
 		if index == 0 {
 			ListNode temp = first
-			first = first.GetNext(1)
+			first = first.Next
 			delete temp
 		}
 		else: first.Remove(index)
@@ -135,8 +141,8 @@ type LinkedList {
 
 ListNode CreateNode(int data, ListNode next) {
 	ListNode node = new ListNode
-	node.SetData(data)
-	node.SetNext(next)
+	node.Data = data
+	node.Next = next
 	return node
 }
 

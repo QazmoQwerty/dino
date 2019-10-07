@@ -1,15 +1,41 @@
 
-/*void Main() {
-	int y = 0
-	int x = 3
-	Test(4)
-}*/
+// type MyType {
+// 	int num1
+// 	int num2
 
-/*void Test(int x) {
-	PrintLn(x, y)
-}*/
+// 	void Foo(): Print(num1)
 
-//Main()
+// 	void SetVals(int a, int b) { num1 = a | num2 = b }
+// 	void ShowVals(): Print(num1, "\b,", num2)
 
-PrintL("wow")
-Print("\naaa\naaa\naaa")
+// 	int Test { 
+// 		get: return num1 + num2
+// 		set {
+// 			if value < 100: Print("didn't pass min")
+// 			else: num1 = num2 = value
+// 		}
+// 	}
+// }
+
+// void Test() {
+// 	Print(10)
+// }
+
+// void Main() {
+// 	Test()
+// 	MyType temp = new MyType
+// 	temp.SetVals(4, 5)
+// 	Print(temp.Test)
+// 	int x = temp.Test
+// 	Print(x)
+// 	Print("---------", 100 + 100 + 100)
+// 	temp.Test = 1000
+// 	temp.Foo()
+// 	temp.ShowVals()
+// 	delete temp
+// }
+
+// Main()
+
+int x = 1000
+Print(x)
