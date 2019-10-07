@@ -457,7 +457,7 @@ Value * Interpreter::interpretLiteral(AST::Literal * node)
 	switch (node->getLiteralType())
 	{
 		case (LT_BOOLEAN):	 return new BoolValue(((AST::Boolean*)node)->getValue());
-		case (LT_INTEGER):	 return new IntValue(((AST::Boolean*)node)->getValue());
+		case (LT_INTEGER):	 return new IntValue(((AST::Integer*)node)->getValue());
 		case (LT_CHARACTER): return new CharValue(((AST::Character*)node)->getValue());
 		case (LT_STRING):	 return new StringValue(((AST::String*)node)->getValue());
 		case (LT_FRACTION):  return new FracValue(((AST::Fraction*)node)->getValue());
