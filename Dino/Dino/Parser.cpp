@@ -411,7 +411,7 @@ AST::Node * Parser::nud(Token * token)
 					while (eatLineBreak());
 					if (eatOperator(OT_SET)) {
 						if (eatOperator(OT_CURLY_BRACES_OPEN))
-							decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+							decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
 						else if (eatOperator(OT_COLON))
 						{
 							while (eatLineBreak());

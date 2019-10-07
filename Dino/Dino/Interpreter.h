@@ -28,6 +28,7 @@ private:
 	Value* interpretDoWhileLoop(AST::DoWhileLoop* node);
 
 	Value* evaluateProperty(Value* val);
+	Value* callSetter(PropertyValue* lvalue, Value* rvalue);
 	Value* copyValue(Value* val);
 	int currentScope() { return _variables.size() - 1; }
 	void enterBlock() { _variables.push_back(unordered_map<string, Value*>()); }

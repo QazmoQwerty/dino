@@ -35,6 +35,36 @@ Value * Interpreter::evaluateProperty(Value * val)
 	else throw "getter must return a value!";
 }
 
+Value * Interpreter::callSetter(PropertyValue * lvalue, Value * rvalue)
+{
+
+	if (lvalue->getSet() == nullptr)
+		throw "property has no setter";
+	enterBlock();
+	Value* rcopy = copyValue(rvalue);
+	rcopy->setNotTemp();
+	_variables[currentScope()]["value"] = rcopy;
+	if (lvalue->getThisPtr() == nullptr) {
+		Value* ret = interpret(lvalue->getSet());
+		if (ret && ret->isReturn()) 
+		{
+			leaveBlock();
+			return ret;
+		}
+		else throw "getter must return a value!";
+	}
+
+	_variables[currentScope()]["this"] = lvalue->getThisPtr();
+	_currentMinScope.push(currentScope());
+	_currentNamespace.push(((PtrValue*)lvalue->getThisPtr())->getPtrType());	// TODO - make this safe
+	Value* ret = interpret(lvalue->getSet());
+	_currentNamespace.pop();
+	_currentMinScope.pop();
+	leaveBlock();
+	return copyValue(rvalue);
+	return nullptr;
+}
+
 Value * Interpreter::copyValue(Value * val)
 {
 	string type = val->getType();
@@ -88,17 +118,8 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 	Value* rvalue = interpret(node->getRight());
 	Value* lvalue = interpret(node->getLeft());
 
-	if (lvalue->getType() == "property")
-	{
-		throw "property lvalues are not supported at the moment.";
-		/*PropertyValue* propVal = (PropertyValue*)lvalue;
-		propVal->getSet();
-		if (node->getOperator()._type == OT_ASSIGN_EQUAL)
-		{
-
-		}
-		else throw "only = assignment operator is currently supported for property lvalues.";*/
-	}
+	if (lvalue == nullptr)
+		throw "left of assignment must be a value";
 
 	string type = lvalue->getType();
 
@@ -107,6 +128,14 @@ Value * Interpreter::interpretAssignment(AST::Assignment * node)
 
 	if (rvalue->getType() == "property")
 		rvalue = evaluateProperty(rvalue);
+
+	if (lvalue->getType() == "property")
+	{
+		//throw "property lvalues are not supported at the moment.";
+		if (node->getOperator()._type == OT_ASSIGN_EQUAL)
+			return callSetter((PropertyValue*)lvalue, rvalue);
+		else throw "only = assignment operator is currently supported for property lvalues.";
+	}
 
 	if (type != rvalue->getType())
 		throw "different types invalid";

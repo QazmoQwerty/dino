@@ -3,10 +3,18 @@ type MyType {
 	int num1
 	int num2
 
+	void Foo(): Print(num1)
+
 	void SetVals(int a, int b) { num1 = a | num2 = b }
+	void ShowVals(): Print(num1, "\b,", num2)
 
 	int Test { 
-		get: return num1 + num2 
+		get: return num1 + num2
+		set {
+			Print("Setting", value)
+			num1 = value
+			num2 = value * 2
+		}
 	}
 }
 
@@ -15,11 +23,16 @@ void Test() {
 }
 
 void Main() {
-	int i = 0
 	Test()
 	MyType temp = new MyType
 	temp.SetVals(4, 5)
 	Print(temp.Test)
+	int x = temp.Test
+	Print(x)
+	Print("---------")
+	temp.Test = 10
+	temp.Foo()
+	temp.ShowVals()
 	delete temp
 }
 
