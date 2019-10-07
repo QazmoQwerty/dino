@@ -17,6 +17,13 @@ namespace AST
 		string name;
 	} Identificator;
 
+	class Type 
+	{
+	private:
+		Identificator _typeName;
+		vector<VariableModifier> _modifiers;
+	};
+
 	class Node
 	{
 		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
