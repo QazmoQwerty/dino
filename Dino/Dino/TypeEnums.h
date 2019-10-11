@@ -27,6 +27,7 @@ enum LiteralType
 	LT_CHARACTER,
 	LT_STRING,
 	LT_FUNCTION,
+	LT_TYPE,
 	LT_NULL,
 	LT_UNKNOWN,
 };

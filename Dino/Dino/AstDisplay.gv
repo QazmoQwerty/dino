@@ -1,9 +1,5 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;0->5;
-2 [label="<Assignment>\n="];2->1;2->3;
-1 [label="<VariableDeclaration>\nint x"];
-3 [label="<IntegerLiteral>\n1000"];
-5 [label="<FunctionCall>\n"];5->4;5->6;
-4 [label="<Variable>\nPrint"];
-6 [label="<Variable>\nx"];
+0 [label="<StatementBlock>"];0->2;
+2 [label="<Assignment>\n="];2->1;2->4294967295;
+1 [label="<Variable>\nx"];
 }

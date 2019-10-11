@@ -60,7 +60,6 @@ AST::Node * Parser::parse(int lastPrecedence)
 	return left;
 }
 
-
 /*
 	Returns the relevant operator precedence if token is an operator, otherwise returns 0.
 */
@@ -368,17 +367,18 @@ AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
 	{
-		AST::Identificator varId;
-		varId.name = token->_data;
+		//if (isOperator())
 
+
+		/*
 		if (peekToken()->_type == TT_IDENTIFIER)
 		{
+			AST::Type varType;
+			varType._typeName = token->_data;
 			auto node = new AST::VariableDeclaration();
-			node->setType(varId);
-			varId.name = peekToken()->_data;
-			node->setVarId(varId);
-			nextToken();
-
+			node->setType(varType);
+			node->setVarId(nextToken()->_data);
+			
 			while (peekToken()->_type == TT_IDENTIFIER)
 			{
 				node->addModifier(node->getVarType());
@@ -462,8 +462,8 @@ AST::Node * Parser::nud(Token * token)
 
 			return node;
 		}
-
-		return new AST::Variable(varId);
+		*/
+		return new AST::Variable(token->_data);
 	}
 	if (token->_type == TT_LITERAL)
 	{
@@ -493,7 +493,8 @@ AST::Node * Parser::nud(Token * token)
 			if (peekToken()->_type == TT_IDENTIFIER)
 			{
 				// Function literal
-				AST::Identificator returnType = { nextToken()->_data };
+				AST::Type returnType; 
+				returnType._typeName = nextToken()->_data;
 
 				auto func = new AST::Function();
 				vector<AST::VariableDeclaration*> vec;
@@ -651,6 +652,13 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		return decl;
 	}
 
+	if (left->isExpression() && token->_type == TT_IDENTIFIER)
+	{
+		// variable declaration
+
+
+	}
+
 	if (token->_type == TT_OPERATOR && OperatorsMap::isBinary(((OperatorToken*)token)->_operator._type))
 	{
 		auto ot = ((OperatorToken*)token);
@@ -702,9 +710,9 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 				
 
-				decl->addModifier({ "func" });
+				//decl->addModifier({ "func" });
 				assign->setLeft(decl);
-				func->setReturnType(decl->getVarType());
+				//func->setReturnType(decl->getVarType());	TODO - set return type...
 				assign->setRight(func);
 				assign->setOperator(OperatorsMap::getOperatorByDefinition(OT_ASSIGN_EQUAL).second);
 				
