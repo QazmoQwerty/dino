@@ -46,6 +46,50 @@ enum CharType
 	CT_UNKNOWN,
 };
 
+
+
+//enum BinaryOperator {
+//	OT_IS,
+//};
+//
+//enum KeywordType {
+//	OT_WHILE,
+//	OT_DO,
+//	OT_FOR,
+//	OT_IF,
+//	OT_ELSE,
+//	OT_UNLESS,
+//	
+//	
+//	OT_DELETE,
+//	OT_TYPE,
+//	OT_INTERFACE,
+//	OT_NAMESPACE,
+//	OT_IMPLEMENTS,
+//	
+//	OT_GET,
+//	OT_SET,
+//};
+//
+//enum PrefixOperator {
+//	PRE_POSITIVE,					//	+
+//	PRE_NEGATIVE,					//	-
+//	PRE_PREFIX_AT,					//	@
+//	PRE_REFERENCE,					//	&
+//	PRE_INCREMENT,					//	++
+//	PRE_DECREMENT,					//	--
+//	PRE_RETURN,
+//	PRE_NEW,
+//};
+//
+//enum PostfixOperator {
+//
+//	// Postfix:
+//	POST_INCREMENT,			//	++
+//	POST_DECREMENT,			//	--
+//	POST_AT,					//	@
+//};
+
 /*
 	Types of operators the lexer proccesses.
 	Probably incomplete.
@@ -72,7 +116,7 @@ enum OperatorType
 
 	// Bitwise Operators:
 	OT_BITWISE_AND,					//	&
-	OT_BITWISE_OR,					//	|
+	OT_BITWISE_OR,					//	?
 	OT_BITWISE_XOR,					//	^
 	OT_BITWISE_NOT,					//	~
 	OT_BITWISE_SHIFT_LEFT,			//	<<
@@ -108,7 +152,7 @@ enum OperatorType
 	OT_SINGLE_LINE_COMMENT,			//	//
 	OT_MULTI_LINE_COMMENT_OPEN,		//	/*
 	OT_MULTI_LINE_COMMENT_CLOSE,	//	*/
-	
+
 	// Words:
 	OT_WHILE,
 	OT_DO,
@@ -128,6 +172,7 @@ enum OperatorType
 	OT_SET,
 
 	// Misc:
+	OT_AT,							//	@
 	OT_SINGLE_QUOTE,				//	'
 	OT_DOUBLE_QUOTE,				//	"
 	OT_PERIOD,						//	.

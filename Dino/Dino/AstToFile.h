@@ -9,13 +9,21 @@ using std::ofstream;
 
 string astToString(AST::Node* node)
 {
+	static int nullCount = -1;
 	if (node == NULL || node == nullptr)
 		return "";
 	stringstream ss;
 	int id = node->getNodeId();
 	ss << id << " [label=\"" << node->toString() << "\"];";
-	for (auto child : node->getChildren())
-		ss << id << "->" << child->getNodeId() << ';';
+	for (auto child : node->getChildren()) 
+	{
+		if (child == NULL) 
+		{
+			ss << id << "->" << nullCount << ';';
+			ss << nullCount-- << " [label=\"<NULL>\"];";
+		}
+		else ss << id << "->" << child->getNodeId() << ';';
+	}
 	ss << '\n';
 	for (auto child : node->getChildren())
 		ss << astToString(child);

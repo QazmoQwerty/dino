@@ -131,7 +131,7 @@ namespace AST
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
 		virtual string toString() {
-			return "<VariableDeclaration>\\n TODO " + _varId;
+			return "<VariableDeclaration>\\n" + _varId;
 		};
 		virtual vector<Node*> getChildren();
 
@@ -249,26 +249,49 @@ namespace AST
 		Expression* getExpression() { return _expression; }
 	};
 
+	class FunctionDeclaration : public Statement
+	{
+	private:
+		VariableDeclaration* _decl;
+		vector<VariableDeclaration*> _parameters;
+		StatementBlock* _content;
+
+	public:
+		FunctionDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
+		virtual string toString() { return "<FunctionDeclaration>\\n"; };
+		virtual vector<Node*> getChildren();
+
+		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
+		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
+		void setContent(StatementBlock* content) { _content = content; }
+
+		VariableDeclaration* getVarDecl() { return _decl; }
+		vector<VariableDeclaration*> getParameters() { return _parameters; }
+		StatementBlock* getContent() { return _content; }
+	};
+
 	class InterfaceDeclaration : public Statement
 	{
 		string _name;
-		vector<string> _modifiers;
+		//vector<string> _modifiers;
 		vector<string> _implements;
 		vector<VariableDeclaration*> _declarations;
 
 	public:
 		InterfaceDeclaration();
-		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
+		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
 		string getName() { return _name; }
-		vector<string> getModifiers() { return _modifiers; };
+		//vector<string> getModifiers() { return _modifiers; };
 		vector<string> getImplements() { return _implements; }
 		vector<VariableDeclaration*> getDeclarations() { return _declarations; }
 
 		void setName(string id) { _name = id; }
-		void addModifier(string modifier) { _modifiers.push_back(modifier); }
+		//void addModifier(string modifier) { _modifiers.push_back(modifier); }
 		void addImplements(string interface) { _implements.push_back(interface); }
 		void addDeclaration(VariableDeclaration* declaration) { _declarations.push_back(declaration); }
 	};
@@ -294,10 +317,10 @@ namespace AST
 	class TypeDeclaration : public Statement
 	{
 		string _name;
-		vector<string> _modifiers;
+		//vector<string> _modifiers;
 		vector<string> _interfaces;
 		vector<VariableDeclaration*> _variableDeclarations;
-		vector<Assignment*> _functionDeclarations;
+		vector<FunctionDeclaration*> _functionDeclarations;
 		vector<PropertyDeclaration*> _propertyDeclarations;
 
 	public:
@@ -307,17 +330,17 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		string getName() { return _name; }
-		vector<string> getModifiers() { return _modifiers; };
+		//vector<string> getModifiers() { return _modifiers; };
 		vector<string> getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
-		vector<Assignment*> getFunctionDeclarations() { return _functionDeclarations; }
+		vector<FunctionDeclaration*> getFunctionDeclarations() { return _functionDeclarations; }
 		vector<PropertyDeclaration*> getPropertyDeclarations() { return _propertyDeclarations; }
 
 		void setName(string id) { _name = id; }
-		void addModifier(string modifier) { _modifiers.push_back(modifier); }
+		//void addModifier(string modifier) { _modifiers.push_back(modifier); }
 		void addInterface(string interface) { _interfaces.push_back(interface); }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
-		void addFunctionDeclaration(Assignment* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
+		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
 	};
 
@@ -366,18 +389,21 @@ namespace AST
 	{
 		Operator _operator;
 		Expression* _expression;
+		bool _isPostfix;
 
 	public:
-		UnaryOperation() : Expression() {};
+		UnaryOperation() : Expression() { _isPostfix = false; };
 		virtual ExpressionType getExpressionType() { return ET_UNARY_OPERATION; };
-		virtual string toString() { return string() + "<UnaryOperator>\\n" + _operator._str; };
+		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "")+ "UnaryOperator>\\n" + _operator._str; };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
 		void setExpression(Expression* expression) { _expression = expression; }
+		void setIsPostfix(bool isPostfix) { _isPostfix = isPostfix; }
 
 		Operator getOperator() { return _operator; }
 		Expression* getExpression() { return _expression; }
+		bool isPostfix() { return _isPostfix; }
 	};
 
 	class Variable : public Expression
@@ -474,21 +500,21 @@ namespace AST
 	{
 		vector<VariableDeclaration*> _parameters;
 		StatementBlock* _content;
-		Type _returnType;
+		Expression* _returnType;
 
 	public:
 		Function() : Literal(LT_FUNCTION) { }
-		virtual string toString() { return string() + "<FunctionLiteral>\n" + _returnType._typeName; };
+		virtual string toString() { return string() + "<FunctionLiteral>"; };
 		virtual vector<Node*> getChildren();
 
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
 		void setContent(StatementBlock* content) { _content = content; }
-		void setReturnType(Type type) { _returnType = type; }
+		void setReturnType(Expression* type) { _returnType = type; }
 
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
 		StatementBlock* getContent() { return _content; }
-		Type getReturnType() { return _returnType; }
+		Expression* getReturnType() { return _returnType; }
 	};
 
 	class TypeLiteral : public Literal

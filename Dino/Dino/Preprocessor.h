@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <stack>
 #include <unordered_map>
 #include <string>
 #include <iostream>
@@ -11,6 +12,7 @@ using std::vector;
 using std::string;
 using std::pair;
 using std::unordered_map;
+using std::stack;
 
 /*
 	The Preprocessor gets a vector of tokens, and cleans it up to make the Parser's job easier.

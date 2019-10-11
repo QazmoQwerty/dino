@@ -1,5 +1,13 @@
 digraph G {
-0 [label="<StatementBlock>"];0->2;
-2 [label="<Assignment>\n="];2->1;2->4294967295;
-1 [label="<Variable>\nx"];
+0 [label="<StatementBlock>"];0->1;0->6;
+1 [label="<IfThenElse>"];1->2;1->4;1->-1;-1 [label="<NULL>"];
+2 [label="<Variable>\na"];
+4 [label="<Assignment>\n="];4->3;4->5;
+3 [label="<Variable>\nx"];
+5 [label="<IntegerLiteral>\n1"];
+6 [label="<IfThenElse>"];6->7;6->9;6->-2;-2 [label="<NULL>"];
+7 [label="<Variable>\nb"];
+9 [label="<Assignment>\n="];9->8;9->10;
+8 [label="<Variable>\nx"];
+10 [label="<IntegerLiteral>\n2"];
 }

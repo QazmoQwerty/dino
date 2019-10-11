@@ -76,6 +76,7 @@ vector<AST::Node*> AST::ConditionalExpression::getChildren()
 vector<AST::Node*> AST::Function::getChildren()
 {
 	vector<Node*> v;
+	v.push_back(_returnType);
 	for (auto i : _parameters)
 		v.push_back(i);
 	v.push_back(_content);
@@ -138,16 +139,16 @@ vector<AST::Node*> AST::TypeDeclaration::getChildren()
 AST::TypeDeclaration::TypeDeclaration() : Statement()
 {
 	_name = { "" };
-	_modifiers = vector<string>();
+	//_modifiers = vector<string>();
 	_interfaces = vector<string>();
 	_variableDeclarations = vector<VariableDeclaration*>();
-	_functionDeclarations = vector<Assignment*>();
+	_functionDeclarations = vector<FunctionDeclaration*>();
 }
 
 AST::InterfaceDeclaration::InterfaceDeclaration()
 {
 	_name = { "" };
-	_modifiers = vector<string>();
+	//_modifiers = vector<string>();
 	_implements = vector<string>();
 	_declarations = vector<VariableDeclaration*>();
 }
@@ -173,4 +174,14 @@ vector<AST::Node*> AST::VariableDeclaration::getChildren()
 	vector<Node*> vec;
 	vec.push_back(_type);
 	return vec;
+}
+
+vector<AST::Node*> AST::FunctionDeclaration::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_decl);
+	for (auto i : _parameters)
+		v.push_back(i);
+	v.push_back(_content);
+	return v;
 }

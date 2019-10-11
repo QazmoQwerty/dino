@@ -1,1 +1,11 @@
-x = if 12 == 13: x = 3
+//x = 12 == 13 
+//x = 3 * 12  
+
+//y = x++ * &z
+//auto x = (int a) int[1]: return 10
+/*int[1] a(int[] a, int8@@ y) {
+    return 10
+} */
+
+if a: x = 1
+if b: x = 2
