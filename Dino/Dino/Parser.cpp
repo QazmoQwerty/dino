@@ -49,11 +49,18 @@ AST::Node * Parser::parse(int lastPrecedence)
 {
 	Token* tok = nextToken();
 
+	if (isOperator(tok, OT_EOF) || isOperator(tok, OT_PARENTHESIS_CLOSE) || isOperator(tok, OT_CURLY_BRACES_OPEN))
+	{
+		_index--;
+		return NULL;
+	}
+
 	AST::Node* left = std(tok);
 	if (left) return left;
 
 	left = nud(tok);
 	if (left == NULL) return NULL;
+
 
 	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) &&
 		(peekToken()->_type == TT_IDENTIFIER || precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence))
@@ -120,7 +127,7 @@ AST::Node * Parser::std(Token * token)
 				do
 				{
 					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
-					if (declaration->isStatement()/* && declaration->getNodeId()*/)	// why is the commented out code here?
+					if (declaration->isStatement())
 						node->addStatement(dynamic_cast<AST::Statement*>(declaration));
 					else throw "for's decleration statement failed";
 				} while (eatOperator(OT_COMMA));
@@ -402,23 +409,34 @@ AST::Node * Parser::nud(Token * token)
 	if (isOperator(token, OT_PARENTHESIS_OPEN))
 	{
 		AST::Node* inner = parse();
-		if (inner == nullptr)
-			_index--;
 		if (!eatOperator(OT_PARENTHESIS_CLOSE))
 			throw "')' missing";
-		if (peekToken()->_type == TT_IDENTIFIER)
+		// Function literal
+		if (peekToken()->_type == TT_IDENTIFIER && (inner == nullptr || inner->isExpression()))
 		{
-			// Function literal
-			AST::Node* temp = parse();
-			if (!temp->isExpression())
-				throw "type specifier must be an expression";
-			AST::Expression* returnType = dynamic_cast<AST::Expression*>(temp);
-
+			// make sure inner is a nullptr OR VariableDeclaration OR ExpressionList of VariableDeclaration
+			if (inner != nullptr)
+				switch (dynamic_cast<AST::Expression*>(inner)->getExpressionType())	
+				{ 	
+					case (ET_LIST):
+						for (auto i : dynamic_cast<AST::ExpressionList*>(inner)->getExpressions())
+							if (i->getExpressionType() != ET_VARIABLE_DECLARATION)
+								return inner;
+					case(ET_VARIABLE_DECLARATION): break;
+					default: return inner;
+				}
 			auto func = new AST::Function();
+			if (inner != nullptr)
+				func->addParameter(inner);
+			AST::Node* returnType = parse();
+			if (!returnType->isExpression())
+				throw "type specifier must be an expression";
+			func->setReturnType(dynamic_cast<AST::Expression*>(returnType));
+
 			vector<AST::VariableDeclaration*> vec;
 
-			temp = inner;
-			while (temp && temp->isExpression() && dynamic_cast<AST::Expression*>(temp)->getExpressionType() == ET_BINARY_OPERATION)
+			//temp = inner;
+			/*while (temp && temp->isExpression() && dynamic_cast<AST::Expression*>(temp)->getExpressionType() == ET_BINARY_OPERATION)
 			{
 				auto bo = dynamic_cast<AST::BinaryOperation*>(temp);
 				if (bo->getOperator()._type == OT_COMMA)
@@ -429,17 +447,19 @@ AST::Node * Parser::nud(Token * token)
 				temp = bo->getLeft();
 				delete bo;
 			}
-			if (temp && temp->isStatement())
+			if (temp && temp->isExpression())
 				if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
 					vec.push_back(dynamic_cast<AST::VariableDeclaration*>(temp));
 				else throw "TODO - error msg";
 
-			std::reverse(vec.begin(), vec.end());
+			std::reverse(vec.begin(), vec.end());*/
 
-			for (auto i : vec)
-				func->addParameter(i);
+			/*for (auto i : vec)
+				func->addParameter(i);*/
+
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+
 			else if (eatOperator(OT_COLON))
 			{
 				while (eatLineBreak());
@@ -454,7 +474,6 @@ AST::Node * Parser::nud(Token * token)
 			}
 			else throw "missing function literal body";
 
-			func->setReturnType(returnType);
 			while (eatLineBreak());
 			return func;
 		}
@@ -564,13 +583,14 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			auto decl = new AST::FunctionDeclaration(varDecl);
 			if (!eatOperator(OT_PARENTHESIS_CLOSE))
 			{
-				do {
+				decl->addParameter(parse());
+				/*do {
 					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
 					if (declaration != nullptr && declaration->isStatement()
 						&& dynamic_cast<AST::Statement*>(declaration)->getStatementType() == ST_VARIABLE_DECLARATION)
 						decl->addParameter(dynamic_cast<AST::VariableDeclaration*>(declaration));
 					else throw "only variable declarations are legal in function declaration parenthesis section.";
-				} while (eatOperator(OT_COMMA));
+				} while (eatOperator(OT_COMMA));*/
 				if (!eatOperator(OT_PARENTHESIS_CLOSE))
 					throw "missing ')'";
 			}
@@ -593,6 +613,30 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		}
 
 		return varDecl;
+	}
+
+	if (isOperator(token, OT_COMMA))
+	{
+		if (left->isExpression())
+		{
+			auto list = new AST::ExpressionList();
+			list->addExpression(dynamic_cast<AST::Expression*>(left));
+			auto node = parse(precedence(token, BINARY));
+			if (node->isExpression())
+				list->addExpression(dynamic_cast<AST::Expression*>(node));
+			else throw "ExpressionList must be all expressions!";
+			return list;
+		}
+		else
+		{
+			auto list = new AST::StatementList();
+			list->addStatement(dynamic_cast<AST::Statement*>(left));
+			auto node = parse(precedence(token, BINARY));
+			if (node->isExpression())
+				list->addStatement(dynamic_cast<AST::Statement*>(node));
+			else throw "StatementList must be all statements!";
+			return list;
+		}
 	}
 
 	if (fromCategory(token, BINARY))

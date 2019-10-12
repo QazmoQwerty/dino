@@ -143,6 +143,20 @@ namespace AST
 		vector<VariableModifier> getModifiers() { return _modifiers; }
 	};
 
+	/*class ExpressionStatementList : public ExpressionStatement
+	{
+		vector<ExpressionStatement*> _expStatements;
+	public:
+		ExpressionStatementList() : ExpressionStatement() {};
+		virtual StatementType getStatementType() { return ST_EXP_STATEMENT_LIST; };
+		virtual ExpressionType getExpressionType() { return ET_EXP_STATEMENT_LIST; };
+		virtual string toString() { return "<ExpressionStatementList>"; };
+		virtual vector<Node*> getChildren();
+
+		void addStatement(ExpressionStatement* expStatement) { _expStatements.push_back(expStatement); }
+		vector<ExpressionStatement*> getExpressionStatements() { return _expStatements; }
+	};*/
+
 	/*class VariableDeclaration : public ExpressionStatement
 	{
 		string _varId;
@@ -263,7 +277,7 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
-		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void addParameter(Node* parameter);
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
 		void setContent(StatementBlock* content) { _content = content; }
 
@@ -369,7 +383,33 @@ namespace AST
 		void setStatement(Statement* statement) { _statement = statement; }
 	};
 
+	class StatementList : public Statement
+	{
+		vector<Statement*> _statements;
+	public:
+		StatementList() : Statement() {};
+		virtual StatementType getStatementType() { return ST_LIST; };
+		virtual string toString() { return "<StatementList>"; };
+		virtual vector<Node*> getChildren();
+
+		void addStatement(Statement* statement);
+		vector<Statement*> getStatements() { return _statements; }
+	};
+
 	/********************** Expressions **********************/
+
+	class ExpressionList : public Expression
+	{
+		vector<Expression*> _expressions;
+	public:
+		ExpressionList() : Expression() {};
+		virtual ExpressionType getExpressionType() { return ET_LIST; };
+		virtual string toString() { return "<ExpressionList>"; };
+		virtual vector<Node*> getChildren();
+
+		void addExpression(Expression* expression);
+		vector<Expression*> getExpressions() { return _expressions; }
+	};
 
 	class BinaryOperation : public Expression
 	{
@@ -514,7 +554,7 @@ namespace AST
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
 		virtual vector<Node*> getChildren();
 
-		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void addParameter(Node* parameter);
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
 		void setContent(StatementBlock* content) { _content = content; }
 		void setReturnType(Expression* type) { _returnType = type; }
@@ -524,7 +564,7 @@ namespace AST
 		Expression* getReturnType() { return _returnType; }
 	};
 
-	class TypeLiteral : public Literal
+	/*class TypeLiteral : public Literal
 	{
 		Type _type;
 	public:
@@ -532,7 +572,7 @@ namespace AST
 		virtual string toString() { return string() + "<TypeLiteral>\\n" + _type._typeName; };
 		Type getType() { return _type; }
 		void setType(Type type) { _type = type; }
-	};
+	};*/
 
 	class Null : public Literal
 	{

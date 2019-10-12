@@ -9,8 +9,9 @@
 
 //auto x = new int[A.Size(b)]
 
-interface A is B {
-    int C
-    auto D
-    char Foo(int a)
-}
+/*(int, char) Foo():
+    return 10, 'c'*/
+x = (int a, int b) int, int: return 10
+
+//int Foo(int a, int b):
+   // return a + b

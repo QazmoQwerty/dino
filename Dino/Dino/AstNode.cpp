@@ -83,6 +83,29 @@ vector<AST::Node*> AST::Function::getChildren()
 	return v;
 }
 
+void AST::Function::addParameter(Node * parameter)
+{
+	if (!parameter->isExpression())
+		throw "function declaration parameter must contain only variable declarations";
+	auto exp = dynamic_cast<Expression*>(parameter);
+	switch (exp->getExpressionType())
+	{
+	case(ET_VARIABLE_DECLARATION):
+		_parameters.push_back(dynamic_cast<VariableDeclaration*>(exp));
+		break;
+	case(ET_LIST):
+		for (auto i : dynamic_cast<ExpressionList*>(exp)->getExpressions())
+		{
+			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
+				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
+			else throw "all expressions whithin function definition must be variable declarations";
+		}
+		break;
+	default:
+		throw "all expressions whithin function definition must be variable declarations";
+	}
+}
+
 string AST::InterfaceDeclaration::toString()
 {
 	string str = "<InterfaceDeclaration>\\n" + _name;
@@ -185,3 +208,66 @@ vector<AST::Node*> AST::FunctionDeclaration::getChildren()
 	v.push_back(_content);
 	return v;
 }
+
+void AST::FunctionDeclaration::addParameter(Node * parameter)
+{
+	if (!parameter->isExpression())
+		throw "function declaration parameter must contain only variable declarations";
+	auto exp = dynamic_cast<Expression*>(parameter);
+	switch (exp->getExpressionType())
+	{
+	case(ET_VARIABLE_DECLARATION):
+		_parameters.push_back(dynamic_cast<VariableDeclaration*>(exp));
+		break;
+	case(ET_LIST):
+		for (auto i : dynamic_cast<ExpressionList*>(exp)->getExpressions())
+		{
+			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
+				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
+			else throw "all expressions whithin function definition must be variable declarations";
+		}
+		break;
+	default:
+		throw "all expressions whithin function definition must be variable declarations";
+	}
+}
+
+vector<AST::Node*> AST::ExpressionList::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _expressions)
+		v.push_back(i);
+	return v;
+}
+
+void AST::ExpressionList::addExpression(Expression * expression)
+{
+	if (expression->getExpressionType() == ET_LIST)
+		for (auto i : dynamic_cast<AST::ExpressionList*>(expression)->getExpressions())
+			_expressions.push_back(i);
+	else _expressions.push_back(expression);
+}
+
+vector<AST::Node*> AST::StatementList::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _statements)
+		v.push_back(i);
+	return v;
+}
+
+void AST::StatementList::addStatement(Statement * statement)
+{
+	if (statement->getStatementType() == ST_LIST)
+		for (auto i : dynamic_cast<AST::StatementList*>(statement)->getStatements())
+			_statements.push_back(i);
+	else _statements.push_back(statement);
+}
+
+//vector<AST::Node*> AST::ExpressionStatementList::getChildren()
+//{
+//	vector<Node*> v;
+//	for (auto i : _expStatements)
+//		v.push_back(i);
+//	return v;
+//}
