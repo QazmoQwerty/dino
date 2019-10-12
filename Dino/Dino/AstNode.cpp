@@ -99,7 +99,9 @@ string AST::InterfaceDeclaration::toString()
 vector<AST::Node*> AST::InterfaceDeclaration::getChildren()
 {
 	vector<Node*> v;
-	for (auto i : _declarations)
+	for (auto i : _properties)
+		v.push_back(i);
+	for (auto i : _functions)
 		v.push_back(i);
 	return v;
 }
@@ -149,8 +151,6 @@ AST::InterfaceDeclaration::InterfaceDeclaration()
 {
 	_name = { "" };
 	//_modifiers = vector<string>();
-	_implements = vector<string>();
-	_declarations = vector<VariableDeclaration*>();
 }
 
 vector<AST::Node*> AST::NamespaceDeclaration::getChildren()

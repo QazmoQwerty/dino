@@ -258,7 +258,7 @@ namespace AST
 
 	public:
 		FunctionDeclaration(VariableDeclaration* decl) { _decl = decl; };
-		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
+		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>\\n"; };
 		virtual vector<Node*> getChildren();
 
@@ -277,23 +277,30 @@ namespace AST
 		string _name;
 		//vector<string> _modifiers;
 		vector<string> _implements;
-		vector<VariableDeclaration*> _declarations;
+		vector<VariableDeclaration*> _properties;
+		vector<FunctionDeclaration*> _functions;
 
 	public:
 		InterfaceDeclaration();
-		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
+		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
 		string getName() { return _name; }
 		//vector<string> getModifiers() { return _modifiers; };
 		vector<string> getImplements() { return _implements; }
-		vector<VariableDeclaration*> getDeclarations() { return _declarations; }
+		vector<VariableDeclaration*> getProperties() { return _properties; }
+		vector<FunctionDeclaration*> getFunctions() { return _functions; }
 
 		void setName(string id) { _name = id; }
 		//void addModifier(string modifier) { _modifiers.push_back(modifier); }
 		void addImplements(string interface) { _implements.push_back(interface); }
-		void addDeclaration(VariableDeclaration* declaration) { _declarations.push_back(declaration); }
+		void addProperty(VariableDeclaration* property) { _properties.push_back(property); }
+		void addFunction(FunctionDeclaration* function) { 
+			if (function && function->getContent())
+				throw "functions inside interfaces must not have a body!";
+			_functions.push_back(function); 
+		}
 	};
 
 	class PropertyDeclaration : public Statement {

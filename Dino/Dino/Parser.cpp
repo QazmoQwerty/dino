@@ -324,7 +324,7 @@ AST::Node * Parser::std(Token * token)
 			auto decl = new AST::InterfaceDeclaration();
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName({ nextToken()->_data });
-			else throw "could not parse type declaration";
+			else throw "could not parse interface declaration";
 			eatLineBreak();
 			if (eatOperator(OT_IS)) 
 				do 
@@ -344,9 +344,11 @@ AST::Node * Parser::std(Token * token)
 				if (!temp->isStatement())
 					throw "could not parse interface declaration body";
 
-				if (dynamic_cast<AST::Statement*>(temp)->getStatementType() != ST_VARIABLE_DECLARATION)
-					throw "body of interface declaration may contain only declarations";
-				else decl->addDeclaration(dynamic_cast<AST::VariableDeclaration*>(temp));
+				if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
+					decl->addProperty(dynamic_cast<AST::VariableDeclaration*>(temp));
+				else if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_FUNCTION_DECLARATION)
+					decl->addFunction(dynamic_cast<AST::FunctionDeclaration*>(temp));
+				else throw "body of interface declaration may contain only declarations";
 				eatLineBreak();
 			}
 			return decl;
@@ -586,7 +588,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				}
 				else throw "inner content of function must be a statement!";
 			}
-			else throw "missing function body.";
+			else decl->setContent(NULL);
 			return decl;
 		}
 

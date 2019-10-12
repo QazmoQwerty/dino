@@ -7,6 +7,10 @@
     return 10
 } */
 
-auto x = new int[A.Size(b)]
+//auto x = new int[A.Size(b)]
 
-Type v = new Type(10)
+interface A is B {
+    int C
+    auto D
+    char Foo(int a)
+}
