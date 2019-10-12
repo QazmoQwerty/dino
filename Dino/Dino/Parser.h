@@ -23,7 +23,8 @@ public:
 	AST::Node* parse(int lastPrecedence);
 	AST::StatementBlock* parseBlock() { return parseBlock(OT_EOF); };
 	AST::StatementBlock* parseBlock(OperatorType expected);
-	int precedence(Token* token);
+	//int precedence(Token* token);
+	int precedence(Token* token, int category);
 private:
 
 	bool isOperator(Token * token, OperatorType type) { return token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == type; };

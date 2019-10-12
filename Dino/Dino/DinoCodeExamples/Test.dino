@@ -1,41 +1,22 @@
+//x = 12 == 13 
+//x = 3 * 12  
 
-// type MyType {
-// 	int num1
-// 	int num2
+//y = x++ * &z
+//auto x = (int a) int[1]: return 10
+/*int[1] a(int[] a, int8@@ y) {
+    return 10
+} */
 
-// 	void Foo(): Print(num1)
+//auto x = new int[A.Size(b)]
 
-// 	void SetVals(int a, int b) { num1 = a | num2 = b }
-// 	void ShowVals(): Print(num1, "\b,", num2)
+type A is B {
+    int a
+    int b
+    (int, int) Foo(int a):
+        return this.a, a * b
 
-// 	int Test { 
-// 		get: return num1 + num2
-// 		set {
-// 			if value < 100: Print("didn't pass min")
-// 			else: num1 = num2 = value
-// 		}
-// 	}
-// }
-
-// void Test() {
-// 	Print(10)
-// }
-
-// void Main() {
-// 	Test()
-// 	MyType temp = new MyType
-// 	temp.SetVals(4, 5)
-// 	Print(temp.Test)
-// 	int x = temp.Test
-// 	Print(x)
-// 	Print("---------", 100 + 100 + 100)
-// 	temp.Test = 1000
-// 	temp.Foo()
-// 	temp.ShowVals()
-// 	delete temp
-// }
-
-// Main()
-
-int x = 1000
-Print(x)
+    (int, int) Bar {
+        get: return a, b
+        set: a, b = value
+    }
+}

@@ -7,7 +7,7 @@
 #include "AstNode.h"
 #include "AstToFile.h"
 #include "Parser.h"
-#include "Interpreter.h"
+//#include "Interpreter.h"
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
@@ -70,11 +70,11 @@ int main(int argc, char *argv[])
 			astToFile("AstDisplay.gv", ast);
 
 		
-		if (executeInterpret) 
+		/*if (executeInterpret) 
 		{
 			Interpreter i;
 			i.interpret(ast);
-		}
+		}*/
 	} 
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }

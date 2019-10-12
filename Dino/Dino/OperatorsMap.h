@@ -10,6 +10,13 @@ using std::string;
 using std::pair;
 using std::unordered_map;
 
+#define SPECIAL 0
+#define BINARY	0b0001
+#define PREFIX	0b0010
+#define POSTFIX	0b0100
+//#define KEYWORD	0b1000
+#define NONE -1
+
 class OperatorsMap
 {
 public:
@@ -28,6 +35,7 @@ public:
 	static bool isWord(OperatorType type);
 	static bool isUnary(OperatorType type);
 	static bool isBinary(OperatorType type);
+	static bool isKeyword(Operator op);
 	static bool isAssignment(OperatorType type);
 
 	static pair<const string, Operator> getOperatorByDefinition(OperatorType operatorType);

@@ -49,29 +49,49 @@ AST::Node * Parser::parse(int lastPrecedence)
 {
 	Token* tok = nextToken();
 
+	if (isOperator(tok, OT_EOF) || isOperator(tok, OT_PARENTHESIS_CLOSE) || isOperator(tok, OT_CURLY_BRACES_OPEN))
+	{
+		_index--;
+		return NULL;
+	}
+
 	AST::Node* left = std(tok);
 	if (left) return left;
 
 	left = nud(tok);
 	if (left == NULL) return NULL;
 
-	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) && precedence(peekToken()) > lastPrecedence)
+
+	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) &&
+		(peekToken()->_type == TT_IDENTIFIER || precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence))
 		left = led(left, nextToken());
 	return left;
 }
 
 
+#define fromCategory(tok, cat) precedence(tok, cat) != NONE
+
 /*
-	Returns the relevant operator precedence if token is an operator, otherwise returns 0.
+	Returns the relevant operator precedence from the selected category(s) if token is an operator, otherwise returns NULL.
 */
-int Parser::precedence(Token * token)
+int Parser::precedence(Token * token, int category)
 {
-	return (token->_type == TT_OPERATOR) ? ((OperatorToken*)token)->_operator._precedence : 0;
+	if (token->_type != TT_OPERATOR)
+		return NULL;
+	auto op = ((OperatorToken*)token)->_operator;
+	switch (category) {
+		case(BINARY):	return op._binaryPrecedence;
+		case(PREFIX):	return op._prefixPrecedence;
+		case(POSTFIX):	return op._postfixPrecedence;
+		case(BINARY | POSTFIX):	return op._binaryPrecedence != NONE ? op._binaryPrecedence : op._postfixPrecedence;
+		default:		return NULL;
+	}
+	
 }
 
 AST::Node * Parser::std(Token * token)
 {
-	if (token->_type == TT_OPERATOR && OperatorsMap::isUnary(((OperatorToken*)token)->_operator._type))
+	if (token->_type == TT_OPERATOR && OperatorsMap::isKeyword(((OperatorToken*)token)->_operator))
 	{
 		auto ot = ((OperatorToken*)token);
 		if (ot->_operator._type == OT_WHILE)
@@ -106,8 +126,8 @@ AST::Node * Parser::std(Token * token)
 			{
 				do
 				{
-					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
-					if (declaration->isStatement()/* && declaration->getNodeId()*/)	// why is the commented out code here?
+					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
+					if (declaration->isStatement())
 						node->addStatement(dynamic_cast<AST::Statement*>(declaration));
 					else throw "for's decleration statement failed";
 				} while (eatOperator(OT_COMMA));
@@ -128,7 +148,7 @@ AST::Node * Parser::std(Token * token)
 			vector<AST::Node *> increments;
 			do
 			{
-				AST::Node *increment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
+				AST::Node *increment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
 				if (increment->getNodeId())
 					increments.push_back(increment);
 				else throw "for's decleration statement failed";
@@ -270,21 +290,21 @@ AST::Node * Parser::std(Token * token)
 		{
 			auto decl = new AST::TypeDeclaration();
 			if (peekToken()->_type == TT_IDENTIFIER)
-				decl->setName({ nextToken()->_data });
+				decl->setName(nextToken()->_data);
 			else throw "could not parse type declaration";
 
 			if (eatOperator(OT_IS))
 				do
 				{
 					if (peekToken()->_type != TT_IDENTIFIER)
-						throw "could not parse interface declaration, incorrect use of 'is' operator";
-					decl->addInterface({ nextToken()->_data });
+						throw "could not parse type declaration, incorrect use of 'is' operator";
+					decl->addInterface(nextToken()->_data);
 				} while (eatOperator(OT_COMMA));
 
-			eatLineBreak();
+			while (eatLineBreak());
 			if (!eatOperator(OT_CURLY_BRACES_OPEN))
 				throw "could not parse type declaration";
-			eatLineBreak();
+			while (eatLineBreak());
 			while (!eatOperator(OT_CURLY_BRACES_CLOSE))
 			{
 				auto temp = parse();
@@ -295,8 +315,8 @@ AST::Node * Parser::std(Token * token)
 				case(ST_VARIABLE_DECLARATION):
 					decl->addVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(temp));
 					break;
-				case(ST_ASSIGNMENT):
-					decl->addFunctionDeclaration(dynamic_cast<AST::Assignment*>(temp));
+				case(ST_FUNCTION_DECLARATION):	// TODO - should be AST::FunctionDeclaration (nonexistant type atm)
+					decl->addFunctionDeclaration(dynamic_cast<AST::FunctionDeclaration*>(temp));
 					break;
 				case(ST_PROPERTY_DECLARATION):
 					decl->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(temp));
@@ -311,7 +331,7 @@ AST::Node * Parser::std(Token * token)
 			auto decl = new AST::InterfaceDeclaration();
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName({ nextToken()->_data });
-			else throw "could not parse type declaration";
+			else throw "could not parse interface declaration";
 			eatLineBreak();
 			if (eatOperator(OT_IS)) 
 				do 
@@ -331,9 +351,11 @@ AST::Node * Parser::std(Token * token)
 				if (!temp->isStatement())
 					throw "could not parse interface declaration body";
 
-				if (dynamic_cast<AST::Statement*>(temp)->getStatementType() != ST_VARIABLE_DECLARATION)
-					throw "body of interface declaration may contain only declarations";
-				else decl->addDeclaration(dynamic_cast<AST::VariableDeclaration*>(temp));
+				if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
+					decl->addProperty(dynamic_cast<AST::VariableDeclaration*>(temp));
+				else if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_FUNCTION_DECLARATION)
+					decl->addFunction(dynamic_cast<AST::FunctionDeclaration*>(temp));
+				else throw "body of interface declaration may contain only declarations";
 				eatLineBreak();
 			}
 			return decl;
@@ -354,9 +376,10 @@ AST::Node * Parser::std(Token * token)
 		{
 			auto op = new AST::UnaryOperationStatement();
 			op->setOperator(ot->_operator);
-			int prec = ot->_operator._precedence;
-			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			//int prec = precedence(ot);
+			//if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
+			//try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			try { op->setExpression(dynamic_cast<AST::Expression*>(parse())); }
 			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 			return op;
 		}
@@ -368,102 +391,7 @@ AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
 	{
-		AST::Identificator varId;
-		varId.name = token->_data;
-
-		if (peekToken()->_type == TT_IDENTIFIER)
-		{
-			auto node = new AST::VariableDeclaration();
-			node->setType(varId);
-			varId.name = peekToken()->_data;
-			node->setVarId(varId);
-			nextToken();
-
-			while (peekToken()->_type == TT_IDENTIFIER)
-			{
-				node->addModifier(node->getVarType());
-				node->setType(node->getVarId());
-				varId.name = peekToken()->_data;
-				node->setVarId(varId);
-				nextToken();
-			}
-
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
-			{
-				// Propery declaration: 
-				auto decl = new AST::PropertyDeclaration(node);
-
-				while (eatLineBreak());
-
-				if (eatOperator(OT_GET)) {
-					if (eatOperator(OT_CURLY_BRACES_OPEN))
-						decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
-					else if (eatOperator(OT_COLON))
-					{
-						while (eatLineBreak());
-						AST::Node* n = parse();
-						if (n && n->isStatement())
-							decl->setGet(dynamic_cast<AST::Statement*>(n));
-						else throw "inner content of get statement must be a statement!";
-					}
-					else throw "could not parse get operator";
-
-					while (eatLineBreak());
-					if (eatOperator(OT_SET)) {
-						if (eatOperator(OT_CURLY_BRACES_OPEN))
-							decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
-						else if (eatOperator(OT_COLON))
-						{
-							while (eatLineBreak());
-							AST::Node* n = parse();
-							if (n && n->isStatement())
-								decl->setSet(dynamic_cast<AST::Statement*>(n));
-							else throw "inner content of set statement must be a statement!";
-						}
-						else throw "could not parse set operator";
-					}
-				}
-
-				else if (eatOperator(OT_SET)) {
-					if (eatOperator(OT_CURLY_BRACES_OPEN))
-						decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
-					else if (eatOperator(OT_COLON))
-					{
-						while (eatLineBreak());
-						AST::Node* n = parse();
-						if (n && n->isStatement())
-							decl->setSet(dynamic_cast<AST::Statement*>(n));
-						else throw "inner content of set statement must be a statement!";
-					}
-					else throw "could not parse set operator";
-
-					while (eatLineBreak());
-					if (eatOperator(OT_GET)) {
-						if (eatOperator(OT_CURLY_BRACES_OPEN))
-							decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
-						else if (eatOperator(OT_COLON))
-						{
-							while (eatLineBreak());
-							AST::Node* n = parse();
-							if (n && n->isStatement())
-								decl->setGet(dynamic_cast<AST::Statement*>(n));
-							else throw "inner content of set statement must be a statement!";
-						}
-						else throw "could not parse set operator";
-					}
-				}
-
-				while (eatLineBreak());
-				if (!eatOperator(OT_CURLY_BRACES_CLOSE))
-					throw "'}' expected";
-
-				return decl;
-			}
-
-			return node;
-		}
-
-		return new AST::Variable(varId);
+		return new AST::Variable(token->_data);
 	}
 	if (token->_type == TT_LITERAL)
 	{
@@ -478,157 +406,90 @@ AST::Node * Parser::nud(Token * token)
 			default: return NULL;	// TODO - proper error system
 		}
 	}
-	if (token->_type == TT_OPERATOR && OperatorsMap::isUnary(((OperatorToken*)token)->_operator._type))
+	if (isOperator(token, OT_PARENTHESIS_OPEN))
+	{
+		AST::Node* inner = parse();
+		if (!eatOperator(OT_PARENTHESIS_CLOSE))
+			throw "')' missing";
+		// Function literal
+		if (peekToken()->_type == TT_IDENTIFIER && (inner == nullptr || inner->isExpression()))
+		{
+			// make sure inner is a nullptr OR VariableDeclaration OR ExpressionList of VariableDeclaration
+			if (inner != nullptr)
+				switch (dynamic_cast<AST::Expression*>(inner)->getExpressionType())	
+				{ 	
+					case (ET_LIST):
+						for (auto i : dynamic_cast<AST::ExpressionList*>(inner)->getExpressions())
+							if (i->getExpressionType() != ET_VARIABLE_DECLARATION)
+								return inner;
+					case(ET_VARIABLE_DECLARATION): break;
+					default: return inner;
+				}
+			auto func = new AST::Function();
+			if (inner != nullptr)
+				func->addParameter(inner);
+			AST::Node* returnType = parse();
+			if (!returnType->isExpression())
+				throw "type specifier must be an expression";
+			func->setReturnType(dynamic_cast<AST::Expression*>(returnType));
+
+			vector<AST::VariableDeclaration*> vec;
+
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse(10);
+				if (n && n->isStatement())
+				{
+					auto content = new AST::StatementBlock();
+					content->addStatement(dynamic_cast<AST::Statement*>(n));
+					func->setContent(content);
+				}
+				else throw "inner content of function must be a statement!";
+			}
+			else throw "missing function literal body";
+
+			while (eatLineBreak());
+			return func;
+		}
+
+		return inner;
+	}
+	if (fromCategory(token, PREFIX))
 	{
 		auto ot = ((OperatorToken*)token);
-
-		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
-		{
-			
-			AST::Node* inner = parse();
-			if (inner == nullptr)
-				_index--;
-			if (!eatOperator(OT_PARENTHESIS_CLOSE))
-				throw "')' missing";
-			if (peekToken()->_type == TT_IDENTIFIER)
-			{
-				// Function literal
-				AST::Identificator returnType = { nextToken()->_data };
-
-				auto func = new AST::Function();
-				vector<AST::VariableDeclaration*> vec;
-
-				AST::Node* temp = inner;
-				while (temp && temp->isExpression() && dynamic_cast<AST::Expression*>(temp)->getExpressionType() == ET_BINARY_OPERATION)
-				{
-					auto bo = dynamic_cast<AST::BinaryOperation*>(temp);
-					if (bo->getOperator()._type == OT_COMMA)
-						if (bo->getRight()->isStatement() && dynamic_cast<AST::Statement*>(bo->getRight())->getStatementType() == ST_VARIABLE_DECLARATION)
-							vec.push_back(dynamic_cast<AST::VariableDeclaration*>(bo->getRight()));
-						else throw "TODO - error msg";
-
-					/*if (bo->getLeft()->isStatement())
-						if (dynamic_cast<AST::Statement*>(bo->getLeft())->getStatementType() == ST_VARIABLE_DECLARATION)
-							vec.push_back(dynamic_cast<AST::VariableDeclaration*>(bo->getLeft()));
-						else throw "TODO - error msg";*/
-
-					temp = bo->getLeft();
-					delete bo;
-				}
-				if (temp && temp->isStatement())
-					if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
-						vec.push_back(dynamic_cast<AST::VariableDeclaration*>(temp));
-					else throw "TODO - error msg";
-
-				std::reverse(vec.begin(), vec.end());
-
-				for (auto i : vec)
-					func->addParameter(i);
-				if (eatOperator(OT_CURLY_BRACES_OPEN))
-					func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
-				else if (eatOperator(OT_COLON))
-				{
-					while (eatLineBreak());
-					AST::Node* n = parse(10);
-					if (n && n->isStatement())
-					{
-						auto content = new AST::StatementBlock();
-						content->addStatement(dynamic_cast<AST::Statement*>(n));
-						func->setContent(content);
-					}
-					else throw "inner content of function must be a statement!";
-				}
-				else throw "missing function literal body";
-				
-				func->setReturnType(returnType);
-				while (eatLineBreak());
-				return func;
-			}
-			
-			return inner;
-		}
-		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
-		{
-			AST::Node* inner = parseBlock(OT_CURLY_BRACES_CLOSE);
-			nextToken(OT_CURLY_BRACES_CLOSE);
-			return inner;
-		}
-		if (ot->_operator._type == OT_INCREMENT || ot->_operator._type == OT_DECREMENT)
-		{
-			auto op = new AST::Increment();
-			op->setOperator(ot->_operator);
-			int prec = ot->_operator._precedence;
-			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
-			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
-			return op;
-		}
-
 		auto op = new AST::UnaryOperation();
 		op->setOperator(ot->_operator);
-		int prec = ot->_operator._precedence;
+		int prec = precedence(ot, PREFIX);
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
 		try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 		return op;
-		
 	}
-	return NULL; // Error
+	throw "nud could not find an option";
 }
 
 AST::Node * Parser::led(AST::Node * left, Token * token)
 {
-	if (left->isStatement() && dynamic_cast<AST::Statement*>(left)->getStatementType() == ST_VARIABLE_DECLARATION
-		&& token->_type == TT_OPERATOR && isOperator(token, OT_CURLY_BRACES_OPEN))
+	// variable declaration
+	if (left->isExpression() && token->_type == TT_IDENTIFIER)
 	{
-		// Propery declaration: 
-		auto decl = new AST::PropertyDeclaration(dynamic_cast<AST::VariableDeclaration*>(left));
+		auto varDecl = new AST::VariableDeclaration();
+		varDecl->setType(dynamic_cast<AST::Expression*>(left));
+		varDecl->setVarId(token->_data);
 
-		while (eatLineBreak());
+		// Property declaration
+		if (eatOperator(OT_CURLY_BRACES_OPEN))
+		{
+			
 
-		if (eatOperator(OT_GET)) {
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
-				decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
-			else if (eatOperator(OT_COLON))
-			{
-				while (eatLineBreak());
-				AST::Node* n = parse();
-				if (n && n->isStatement())
-					decl->setGet(dynamic_cast<AST::Statement*>(n));
-				else throw "inner content of get statement must be a statement!";
-			}
-			else throw "could not parse get operator";
+			auto decl = new AST::PropertyDeclaration(varDecl);
 
 			while (eatLineBreak());
-			if (eatOperator(OT_SET)) {
-				if (eatOperator(OT_CURLY_BRACES_OPEN))
-					decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
-				else if (eatOperator(OT_COLON))
-				{
-					while (eatLineBreak());
-					AST::Node* n = parse();
-					if (n && n->isStatement())
-						decl->setSet(dynamic_cast<AST::Statement*>(n));
-					else throw "inner content of set statement must be a statement!";
-				}
-				else throw "could not parse set operator";
-			}
-		}
-		
-		else if (eatOperator(OT_SET)) {
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
-				decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
-			else if (eatOperator(OT_COLON))
-			{
-				while (eatLineBreak());
-				AST::Node* n = parse();
-				if (n && n->isStatement())
-					decl->setSet(dynamic_cast<AST::Statement*>(n));
-				else throw "inner content of set statement must be a statement!";
-			}
-			else throw "could not parse set operator";
 
-			while (eatLineBreak());
 			if (eatOperator(OT_GET)) {
 				if (eatOperator(OT_CURLY_BRACES_OPEN))
 					decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
@@ -638,94 +499,130 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 					AST::Node* n = parse();
 					if (n && n->isStatement())
 						decl->setGet(dynamic_cast<AST::Statement*>(n));
-					else throw "inner content of set statement must be a statement!";
+					else throw "inner content of get statement must be a statement!";
 				}
-				else throw "could not parse set operator";
-			}
-		}
+				else throw "could not parse get operator";
 
-		while (eatLineBreak());
-		if (!eatOperator(OT_CURLY_BRACES_CLOSE))
-			throw "'}' expected";
-
-		return decl;
-	}
-
-	if (token->_type == TT_OPERATOR && OperatorsMap::isBinary(((OperatorToken*)token)->_operator._type))
-	{
-		auto ot = ((OperatorToken*)token);
-
-		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
-		{	
-			if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE_DECLARATION)
-			{
-				// Function declaration
 				while (eatLineBreak());
-				auto decl = dynamic_cast<AST::VariableDeclaration*>(left);
-				auto assign = new AST::Assignment();
-				auto func = new AST::Function;
-				
-				do
-				{
-					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._precedence);
-					if (declaration != nullptr && declaration->isStatement() && 
-						dynamic_cast<AST::Statement*>(declaration)->getStatementType() == ST_VARIABLE_DECLARATION)
-						func->addParameter(dynamic_cast<AST::VariableDeclaration*>(declaration));
-					else
+				if (eatOperator(OT_SET)) {
+					if (eatOperator(OT_CURLY_BRACES_OPEN))
+						decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
+					else if (eatOperator(OT_COLON))
 					{
-						_index--;
-						break;
+						while (eatLineBreak());
+						AST::Node* n = parse();
+						if (n && n->isStatement())
+							decl->setSet(dynamic_cast<AST::Statement*>(n));
+						else throw "inner content of set statement must be a statement!";
 					}
-					//else throw "for's decleration statement failed";
-				} while (eatOperator(OT_COMMA));
-				
-				if (!eatOperator(OT_PARENTHESIS_CLOSE))
-					throw "missing ')'";
+					else throw "could not parse set operator";
+				}
+			}
 
-				while (eatLineBreak());
-
-				if (eatOperator(OT_CURLY_BRACES_OPEN)) 
-					func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else if (eatOperator(OT_SET)) {
+				if (eatOperator(OT_CURLY_BRACES_OPEN))
+					decl->setSet(parseBlock(OT_CURLY_BRACES_CLOSE));
 				else if (eatOperator(OT_COLON))
 				{
 					while (eatLineBreak());
 					AST::Node* n = parse();
 					if (n && n->isStatement())
+						decl->setSet(dynamic_cast<AST::Statement*>(n));
+					else throw "inner content of set statement must be a statement!";
+				}
+				else throw "could not parse set operator";
+
+				while (eatLineBreak());
+				if (eatOperator(OT_GET)) {
+					if (eatOperator(OT_CURLY_BRACES_OPEN))
+						decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
+					else if (eatOperator(OT_COLON))
 					{
-						auto content = new AST::StatementBlock();
-						content->addStatement(dynamic_cast<AST::Statement*>(n));
-						func->setContent(content);
+						while (eatLineBreak());
+						AST::Node* n = parse();
+						if (n && n->isStatement())
+							decl->setGet(dynamic_cast<AST::Statement*>(n));
+						else throw "inner content of set statement must be a statement!";
 					}
-					else throw "inner content of function must be a statement!";
+					else throw "could not parse set operator";
 				}
-				else throw "missing function body.";
-
-				
-
-				decl->addModifier({ "func" });
-				assign->setLeft(decl);
-				func->setReturnType(decl->getVarType());
-				assign->setRight(func);
-				assign->setOperator(OperatorsMap::getOperatorByDefinition(OT_ASSIGN_EQUAL).second);
-				
-				return assign;
 			}
-			/*if (left->isExpression() && dynamic_cast<AST::Expression*>(left)->getExpressionType() == ET_VARIABLE)
+
+			while (eatLineBreak());
+			if (!eatOperator(OT_CURLY_BRACES_CLOSE))
+				throw "'}' expected";
+
+			return decl;
+		}
+
+		// Function declaration
+		if (eatOperator(OT_PARENTHESIS_OPEN))
+		{
+			auto decl = new AST::FunctionDeclaration(varDecl);
+			if (!eatOperator(OT_PARENTHESIS_CLOSE))
 			{
-				auto funcCall = new AST::FunctionCall();
-				auto varId = dynamic_cast<AST::Variable*>(left)->getVarId();	// this line needs to be split into two parts for some wierd reason
-				funcCall->setFunctionId(varId);
-				while (!eatOperator(OT_PARENTHESIS_CLOSE))
+				decl->addParameter(parse());
+				/*do {
+					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
+					if (declaration != nullptr && declaration->isStatement()
+						&& dynamic_cast<AST::Statement*>(declaration)->getStatementType() == ST_VARIABLE_DECLARATION)
+						decl->addParameter(dynamic_cast<AST::VariableDeclaration*>(declaration));
+					else throw "only variable declarations are legal in function declaration parenthesis section.";
+				} while (eatOperator(OT_COMMA));*/
+				if (!eatOperator(OT_PARENTHESIS_CLOSE))
+					throw "missing ')'";
+			}
+			if (eatOperator(OT_CURLY_BRACES_OPEN))
+				decl->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
+			else if (eatOperator(OT_COLON))
+			{
+				while (eatLineBreak());
+				AST::Node* n = parse();
+				if (n && n->isStatement())
 				{
-					auto exp = parse(10);
-					if (!exp->isExpression())
-						throw "Could not convert from Node* to Expression*";
-					funcCall->addParameter(dynamic_cast<AST::Expression*>(exp));
-					if (isOperator(peekToken(), OT_COMMA))
-						nextToken();
+					auto content = new AST::StatementBlock();
+					content->addStatement(dynamic_cast<AST::Statement*>(n));
+					decl->setContent(content);
 				}
-				return funcCall;
-			}*/
+				else throw "inner content of function must be a statement!";
+			}
+			else decl->setContent(NULL);
+			return decl;
+		}
+
+		return varDecl;
+	}
+
+	if (isOperator(token, OT_COMMA))
+	{
+		if (left->isExpression())
+		{
+			auto list = new AST::ExpressionList();
+			list->addExpression(dynamic_cast<AST::Expression*>(left));
+			auto node = parse(precedence(token, BINARY));
+			if (node->isExpression())
+				list->addExpression(dynamic_cast<AST::Expression*>(node));
+			else throw "ExpressionList must be all expressions!";
+			return list;
+		}
+		else
+		{
+			auto list = new AST::StatementList();
+			list->addStatement(dynamic_cast<AST::Statement*>(left));
+			auto node = parse(precedence(token, BINARY));
+			if (node->isExpression())
+				list->addStatement(dynamic_cast<AST::Statement*>(node));
+			else throw "StatementList must be all statements!";
+			return list;
+		}
+	}
+
+	if (fromCategory(token, BINARY))
+	{
+		auto ot = ((OperatorToken*)token);
+
+		if (ot->_operator._type == OT_PARENTHESIS_OPEN)
+		{	
 			if (left->isExpression())
 			{
 				auto funcCall = new AST::FunctionCall();
@@ -747,7 +644,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		{
 			auto op = new AST::Assignment();
 			op->setOperator(ot->_operator);
-			int prec = ot->_operator._precedence;
+			int prec = precedence(ot, BINARY);
 			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
 			try { op->setLeft(dynamic_cast<AST::Expression*>(left)); }
 			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
@@ -758,22 +655,42 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		auto op = new AST::BinaryOperation();
 		op->setOperator(ot->_operator);
-		int prec = ot->_operator._precedence;
+		int prec = precedence(ot, BINARY);
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
 		try { op->setLeft(dynamic_cast<AST::Expression*>(left)); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+
+
+		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
+		{
+			prec = 0;
+			if (eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+			{
+				op->setRight(NULL);
+				return op;
+			}
+		}
+
 		try { op->setRight(dynamic_cast<AST::Expression*>(parse(prec))); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 
-		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
-			nextToken(OT_SQUARE_BRACKETS_CLOSE); // TODO - should be "parseBlock"
+		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN && eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+			nextToken(OT_SQUARE_BRACKETS_CLOSE); // TODO - should be "parseBlock" (should it???)
 
 		return op;
 	}
 
-	if (token->_type == TT_OPERATOR && (((OperatorToken*)token)->_operator._type == OT_INCREMENT || ((OperatorToken*)token)->_operator._type == OT_DECREMENT))
-		throw "postfix increment/decrement is not supported yet.";
+	if (fromCategory(token, POSTFIX)) 
+	{
+		auto op = new AST::UnaryOperation();
+		op->setIsPostfix(true);
+		op->setOperator(((OperatorToken*)token)->_operator);
+		int prec = precedence(token, POSTFIX);
+		if (op->getOperator()._associativity == RIGHT_TO_LEFT) prec--;
+		try { op->setExpression(dynamic_cast<AST::Expression*>(left)); }
+		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+		return op;
+	}
 
 	throw "led could not find an option";
-	return NULL;	// Error
 }
