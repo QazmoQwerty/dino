@@ -637,10 +637,14 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 
 
-		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN && eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
 		{
-			op->setRight(NULL);
-			return op;
+			prec = 0;
+			if (eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+			{
+				op->setRight(NULL);
+				return op;
+			}
 		}
 
 		try { op->setRight(dynamic_cast<AST::Expression*>(parse(prec))); }

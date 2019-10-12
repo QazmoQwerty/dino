@@ -7,5 +7,6 @@
     return 10
 } */
 
-if a: x = 1
-if b: x = 2
+auto x = new int[A.Size(b)]
+
+Type v = new Type(10)
