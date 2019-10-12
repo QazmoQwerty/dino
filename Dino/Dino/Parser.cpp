@@ -435,28 +435,6 @@ AST::Node * Parser::nud(Token * token)
 
 			vector<AST::VariableDeclaration*> vec;
 
-			//temp = inner;
-			/*while (temp && temp->isExpression() && dynamic_cast<AST::Expression*>(temp)->getExpressionType() == ET_BINARY_OPERATION)
-			{
-				auto bo = dynamic_cast<AST::BinaryOperation*>(temp);
-				if (bo->getOperator()._type == OT_COMMA)
-					if (bo->getRight()->isStatement() && dynamic_cast<AST::Statement*>(bo->getRight())->getStatementType() == ST_VARIABLE_DECLARATION)
-						vec.push_back(dynamic_cast<AST::VariableDeclaration*>(bo->getRight()));
-					else throw "TODO - error msg";
-
-				temp = bo->getLeft();
-				delete bo;
-			}
-			if (temp && temp->isExpression())
-				if (dynamic_cast<AST::Statement*>(temp)->getStatementType() == ST_VARIABLE_DECLARATION)
-					vec.push_back(dynamic_cast<AST::VariableDeclaration*>(temp));
-				else throw "TODO - error msg";
-
-			std::reverse(vec.begin(), vec.end());*/
-
-			/*for (auto i : vec)
-				func->addParameter(i);*/
-
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				func->setContent(parseBlock(OT_CURLY_BRACES_CLOSE));
 

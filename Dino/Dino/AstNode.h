@@ -383,7 +383,8 @@ namespace AST
 		void setStatement(Statement* statement) { _statement = statement; }
 	};
 
-	class StatementList : public Statement
+	// not in use currently, might get deleted in the future.
+	class StatementList : public Statement	
 	{
 		vector<Statement*> _statements;
 	public:

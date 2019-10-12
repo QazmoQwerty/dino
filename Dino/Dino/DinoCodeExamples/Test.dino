@@ -9,9 +9,14 @@
 
 //auto x = new int[A.Size(b)]
 
-/*(int, char) Foo():
-    return 10, 'c'*/
-x = (int a, int b) int, int: return 10
+type A is B {
+    int a
+    int b
+    (int, int) Foo(int a):
+        return this.a, a * b
 
-//int Foo(int a, int b):
-   // return a + b
+    (int, int) Bar {
+        get: return a, b
+        set: a, b = value
+    }
+}
