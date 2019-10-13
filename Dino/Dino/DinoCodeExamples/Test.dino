@@ -58,7 +58,13 @@ void Main() {
 
 //int[][] a = int[1][2]
 
-int[,] b = int[1, 2]
+//int[,] b = int[1, 2]
+
+/*auto a = [
+    [a, b],
+    [b, c],
+]*/
+int[,] a
 
 // if a is true {
 //     b()

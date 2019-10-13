@@ -45,7 +45,7 @@ AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 	return block;
 }
 
-#define fromCategory(tok, cat) precedence(tok, cat) != NONE
+#define fromCategory(tok, cat) (tok->_type == TT_OPERATOR && precedence(tok, cat) != NONE)
 
 /*
 	Returns the relevant operator precedence from the selected category(s) if token is an operator, otherwise returns NULL.
@@ -74,7 +74,7 @@ AST::Node * Parser::parse(int lastPrecedence)
 		_index--;
 		return NULL;
 	}
-
+		
 	AST::Node* left = std(tok);
 	if (left) return left;
 
@@ -489,6 +489,11 @@ AST::Node * Parser::nud(Token * token)
 				op->setExpression(NULL);
 				return op;
 			}
+			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			if (eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+				return op;
+			else throw "missing ']'";
 		}
 		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
 		{
@@ -498,13 +503,19 @@ AST::Node * Parser::nud(Token * token)
 				op->setExpression(NULL);
 				return op;
 			}
+			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			if (eatOperator(OT_CURLY_BRACES_CLOSE))
+				return op;
+			else throw "missing '}'";
 		}
 
 		try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 		return op;
 	}
-	throw "nud could not find an option";
+	//throw "nud could not find an option";
+	return NULL;
 }
 
 AST::Node * Parser::led(AST::Node * left, Token * token)
