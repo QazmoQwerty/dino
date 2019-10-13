@@ -271,3 +271,10 @@ void AST::StatementList::addStatement(Statement * statement)
 //		v.push_back(i);
 //	return v;
 //}
+
+vector<AST::Node*> AST::UnaryAssignment::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
+	return v;
+}

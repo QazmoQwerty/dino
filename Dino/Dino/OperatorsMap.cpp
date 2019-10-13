@@ -133,13 +133,6 @@ pair<const string, Operator> OperatorsMap::getOperatorByDefinition(OperatorType 
 */
 void OperatorsMap::setup()
 {
-	/*
-		TODO - operators to add: 
-		  - different operators for pre/post-fix increment/decrement ("++"/"--"), since they have differenc precedence and associativity
-		  - special comparison operators (like ".==.")
-		  - do we need operators for backslash ("\") and colon (":")?
-	*/
-
 	_map = unordered_map<string, Operator>();
 	_wordsMap = unordered_map<string, Operator>();
 

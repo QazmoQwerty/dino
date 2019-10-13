@@ -12,12 +12,12 @@ namespace AST
 {
 	static int _idCount = 0;
 
-	typedef struct Type
+	/*typedef struct Type
 	{
 		vector<string> _prefixModifiers;
 		string _typeName;
 		vector<string> _postfixModifiers;
-	} Type;
+	} Type;*/
 
 	class Node
 	{
@@ -141,6 +141,28 @@ namespace AST
 		string getVarId() { return _varId; }
 		Expression* getVarType() { return _type; }
 		vector<VariableModifier> getModifiers() { return _modifiers; }
+	};
+
+	class UnaryAssignment : public ExpressionStatement	// could clean up code by making this a subclass of UnaryOperation
+	{
+		Operator _operator;
+		Expression* _expression;
+		bool _isPostfix;
+
+	public:
+		UnaryAssignment() : ExpressionStatement() { _isPostfix = false; };
+		virtual ExpressionType getExpressionType() { return ET_UNARY_ASSIGNMENT; };
+		virtual StatementType getStatementType() { return ST_UNARY_ASSIGNMENT; };
+		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "") + "UnaryAssignment>\\n" + _operator._str; };
+		virtual vector<Node*> getChildren();
+
+		void setOperator(Operator op) { _operator = op; }
+		void setExpression(Expression* expression) { _expression = expression; }
+		void setIsPostfix(bool isPostfix) { _isPostfix = isPostfix; }
+
+		Operator getOperator() { return _operator; }
+		Expression* getExpression() { return _expression; }
+		bool isPostfix() { return _isPostfix; }
 	};
 
 	/*class ExpressionStatementList : public ExpressionStatement

@@ -45,30 +45,6 @@ AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 	return block;
 }
 
-AST::Node * Parser::parse(int lastPrecedence)
-{
-	Token* tok = nextToken();
-
-	if (isOperator(tok, OT_EOF) || isOperator(tok, OT_PARENTHESIS_CLOSE) || isOperator(tok, OT_CURLY_BRACES_OPEN))
-	{
-		_index--;
-		return NULL;
-	}
-
-	AST::Node* left = std(tok);
-	if (left) return left;
-
-	left = nud(tok);
-	if (left == NULL) return NULL;
-
-
-	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) &&
-		(peekToken()->_type == TT_IDENTIFIER || precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence))
-		left = led(left, nextToken());
-	return left;
-}
-
-
 #define fromCategory(tok, cat) precedence(tok, cat) != NONE
 
 /*
@@ -87,6 +63,28 @@ int Parser::precedence(Token * token, int category)
 		default:		return NULL;
 	}
 	
+}
+
+AST::Node * Parser::parse(int lastPrecedence)
+{
+	Token* tok = nextToken();
+
+	if (isOperator(tok, OT_EOF) || isOperator(tok, OT_PARENTHESIS_CLOSE) || isOperator(tok, OT_CURLY_BRACES_CLOSE) || isOperator(tok, OT_SQUARE_BRACKETS_CLOSE))
+	{
+		_index--;
+		return NULL;
+	}
+
+	AST::Node* left = std(tok);
+	if (left) return left;
+
+	left = nud(tok);
+	if (left == NULL) return NULL;
+
+	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN) &&
+		(peekToken()->_type == TT_IDENTIFIER || precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence))
+		left = led(left, nextToken());
+	return left;
 }
 
 AST::Node * Parser::std(Token * token)
@@ -122,7 +120,7 @@ AST::Node * Parser::std(Token * token)
 		{
 			AST::StatementBlock *node = new AST::StatementBlock();
 
-			if (!eatLineBreak())
+			/*if (!eatLineBreak())
 			{
 				do
 				{
@@ -131,11 +129,18 @@ AST::Node * Parser::std(Token * token)
 						node->addStatement(dynamic_cast<AST::Statement*>(declaration));
 					else throw "for's decleration statement failed";
 				} while (eatOperator(OT_COMMA));
-			}
+			}*/
+
+			// currently "for a = 1, b = 2 | true | a++" wouldn't work, since the comma has a higher precedence than an assignment
+			AST::Node* declaration = parse();
+			if (declaration->isStatement())
+				node->addStatement(dynamic_cast<AST::Statement*>(declaration));
+			else throw "for's decleration statement failed";
+
 			AST::WhileLoop * whileNode = new AST::WhileLoop();
 
 			if (!eatLineBreak())
-				throw "miss part 2 of for";
+				throw "missing part 2 of for";
 
 			AST::Node* inner = parse();
 			if (inner->isExpression())
@@ -143,12 +148,13 @@ AST::Node * Parser::std(Token * token)
 			else throw "could not convert from Node* to Expression*";
 
 			if (!eatLineBreak())
-				throw "miss 3rd part of for loop";
+				throw "missing 3rd part of for loop";
 
 			vector<AST::Node *> increments;
 			do
 			{
-				AST::Node *increment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
+				//AST::Node *increment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
+				AST::Node *increment = parse();
 				if (increment->getNodeId())
 					increments.push_back(increment);
 				else throw "for's decleration statement failed";
@@ -219,8 +225,7 @@ AST::Node * Parser::std(Token * token)
 				node->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw "could not convert from Node* to Expression*";
 
-			while (peekToken()->_type == TT_LINE_BREAK)
-				nextToken();
+			while (eatLineBreak());
 
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				node->setThenBranch(parseBlock(OT_CURLY_BRACES_CLOSE));
@@ -461,10 +466,40 @@ AST::Node * Parser::nud(Token * token)
 	if (fromCategory(token, PREFIX))
 	{
 		auto ot = ((OperatorToken*)token);
+		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT))
+		{
+			auto op = new AST::UnaryAssignment();
+			op->setOperator(ot->_operator);
+			int prec = precedence(ot, PREFIX);
+			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
+			try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
+		}
 		auto op = new AST::UnaryOperation();
 		op->setOperator(ot->_operator);
 		int prec = precedence(ot, PREFIX);
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
+
+		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
+		{
+			prec = 0;
+			if (eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+			{
+				op->setExpression(NULL);
+				return op;
+			}
+		}
+		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
+		{
+			prec = 0;
+			if (eatOperator(OT_CURLY_BRACES_CLOSE))
+			{
+				op->setExpression(NULL);
+				return op;
+			}
+		}
+
 		try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 		return op;
@@ -474,8 +509,7 @@ AST::Node * Parser::nud(Token * token)
 
 AST::Node * Parser::led(AST::Node * left, Token * token)
 {
-	// variable declaration
-	if (left->isExpression() && token->_type == TT_IDENTIFIER)
+	if (left->isExpression() && token->_type == TT_IDENTIFIER)	// variable declaration
 	{
 		auto varDecl = new AST::VariableDeclaration();
 		varDecl->setType(dynamic_cast<AST::Expression*>(left));
@@ -592,7 +626,6 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		return varDecl;
 	}
-
 	if (isOperator(token, OT_COMMA))
 	{
 		if (left->isExpression())
@@ -600,6 +633,8 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			auto list = new AST::ExpressionList();
 			list->addExpression(dynamic_cast<AST::Expression*>(left));
 			auto node = parse(precedence(token, BINARY));
+			if (node == nullptr)
+				return list;
 			if (node->isExpression())
 				list->addExpression(dynamic_cast<AST::Expression*>(node));
 			else throw "ExpressionList must be all expressions!";
@@ -616,7 +651,6 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			return list;
 		}
 	}
-
 	if (fromCategory(token, BINARY))
 	{
 		auto ot = ((OperatorToken*)token);
@@ -679,9 +713,19 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 		return op;
 	}
-
 	if (fromCategory(token, POSTFIX)) 
 	{
+		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT)) 
+		{
+			auto op = new AST::UnaryAssignment();
+			op->setIsPostfix(true);
+			op->setOperator(((OperatorToken*)token)->_operator);
+			int prec = precedence(token, POSTFIX);
+			if (op->getOperator()._associativity == RIGHT_TO_LEFT) prec--;
+			try { op->setExpression(dynamic_cast<AST::Expression*>(left)); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			return op;
+		}
 		auto op = new AST::UnaryOperation();
 		op->setIsPostfix(true);
 		op->setOperator(((OperatorToken*)token)->_operator);
@@ -691,6 +735,5 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 		return op;
 	}
-
 	throw "led could not find an option";
 }

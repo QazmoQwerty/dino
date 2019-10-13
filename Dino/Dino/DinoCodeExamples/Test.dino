@@ -9,14 +9,64 @@
 
 //auto x = new int[A.Size(b)]
 
-type A is B {
-    int a
-    int b
-    (int, int) Foo(int a):
-        return this.a, a * b
+// type A is B {
+//     int a
+//     int b
+//     (int, int) Foo(int a):
+//         return this.a, a * b
 
-    (int, int) Bar {
-        get: return a, b
-        set: a, b = value
+//     (int, int) Bar {
+//         get: return a, b
+//         set: a, b = value
+//     }
+// }
+
+/*interface Comparable {
+    bool Equals(Comparable other)
+}
+
+interface Shape is Comparable {
+    int Area
+    void Enlarge(int n)
+}
+
+type Rectangle is Shape {
+    int height
+    int width
+
+    void Enlarge(int n) {
+        height += n
+        width += n
+        //return
+    }
+
+    int Area {
+        get: return height * width
+    }
+
+    bool Equals(Comparable other) {
+        return other is Rectangle and Rectangle(other).Area == Area
     }
 }
+
+void Main() {
+    auto shapes = new Shape[10]
+    //for int i = 0 | i < shapes.Length - 1 | i++:
+        if shapes[i] == shapes[i + 1]:
+            Print(i, "and", i + 1, "are equal!")
+}*/
+
+//int[][] a = int[1][2]
+
+int[,] b = int[1, 2]
+
+// if a is true {
+//     b()
+//     a = []
+//     b = [
+//         "WOW", 
+//         name, 
+//         b,
+//     ]
+    
+// }

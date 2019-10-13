@@ -206,6 +206,7 @@ enum VariableType
 
 enum StatementType
 {
+	ST_UNARY_ASSIGNMENT,
 	ST_STATEMENT_BLOCK,
 	ST_IF_THEN_ELSE,
 	ST_WHILE_LOOP,
@@ -227,6 +228,7 @@ enum StatementType
 
 enum ExpressionType
 {
+	ET_UNARY_ASSIGNMENT,
 	ET_VARIABLE_DECLARATION,
 	ET_INCREMENT,
 	ET_EXP_STATEMENT_LIST,
