@@ -253,7 +253,7 @@ AST::Node * Parser::std(Token * token)
 					node->setThenBranch(dynamic_cast<AST::Statement*>(n));
 				else throw DinoException("expected a statement.", EXT_GENERAL, n->getLine());
 			}
-			else throw DinoException("could not then part of if statement.", EXT_GENERAL, node->getLine());
+			else throw DinoException("expected a block statement.", EXT_GENERAL, peekToken()->_line);
 
 			bool b = false;
 			while (peekToken()->_type == TT_LINE_BREAK)
