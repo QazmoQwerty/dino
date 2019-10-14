@@ -25,7 +25,7 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 int main(int argc, char *argv[])
 {
 	std::ifstream t;
-	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true;
+	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
 
 	if (cmdOptionExists(argv, argv + argc, "-help"))
 	{
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 		AST::Node* ast = p.parseBlock();
 
 		if (outputAstFile)
-			astToFile("AstDisplay.gv", ast);
+			astToFile("AstDisplay.gv", ast, showLineAST);
 
 		
 		/*if (executeInterpret) 

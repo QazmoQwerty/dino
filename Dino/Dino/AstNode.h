@@ -22,9 +22,12 @@ namespace AST
 	class Node
 	{
 		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
+		int _line;
 	public:
 		Node() { _nodeId = _idCount++; };
+		void setLine(int line) { _line = line; }
 		const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		const int getLine() const { return _line; }
 		virtual bool isStatement() = 0;
 		virtual bool isExpression() = 0;
 		virtual string toString() = 0;

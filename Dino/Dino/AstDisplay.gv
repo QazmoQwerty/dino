@@ -1,6 +1,31 @@
 digraph G {
 0 [label="<StatementBlock>"];0->3;
-3 [label="<VariableDeclaration>\na"];3->2;
-2 [label="<BinaryOperator>\n["];2->1;2->-1;-1 [label="<NULL>"];
-1 [label="<Variable>\nint"];
+3 [label="<FunctionDeclaration>\n"];3->2;3->4;
+2 [label="<VariableDeclaration>\nMain"];2->1;
+1 [label="<Variable>\nvoid"];
+4 [label="<StatementBlock>"];4->6;4->10;4->16;
+6 [label="<FunctionCall>\n"];6->5;6->7;
+5 [label="<Variable>\nPrint"];
+7 [label="<StringLiteral>\nEnter command buffer: "];
+10 [label="<Assignment>\n="];10->9;10->12;
+9 [label="<VariableDeclaration>\nbuf"];9->8;
+8 [label="<Variable>\nstring"];
+12 [label="<FunctionCall>\n"];12->11;
+11 [label="<Variable>\nInput"];
+16 [label="<Assignment>\n="];16->15;16->17;
+15 [label="<VariableDeclaration>\nmemory"];15->14;
+14 [label="<BinaryOperator>\n["];14->13;14->-1;-1 [label="<NULL>"];
+13 [label="<Variable>\nint"];
+17 [label="<UnaryOperator>\n{"];17->35;
+35 [label="<ExpressionList>"];35->18;35->20;35->22;35->24;35->26;35->28;35->30;35->32;35->34;35->36;
+18 [label="<IntegerLiteral>\n0"];
+20 [label="<IntegerLiteral>\n0"];
+22 [label="<IntegerLiteral>\n0"];
+24 [label="<IntegerLiteral>\n0"];
+26 [label="<IntegerLiteral>\n0"];
+28 [label="<IntegerLiteral>\n0"];
+30 [label="<IntegerLiteral>\n0"];
+32 [label="<IntegerLiteral>\n0"];
+34 [label="<IntegerLiteral>\n0"];
+36 [label="<IntegerLiteral>\n0"];
 }

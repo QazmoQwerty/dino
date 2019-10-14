@@ -7,14 +7,17 @@
 using std::stringstream;
 using std::ofstream;
 
-string astToString(AST::Node* node)
+string astToString(AST::Node* node, bool showLine)
 {
 	static int nullCount = -1;
 	if (node == NULL || node == nullptr)
 		return "";
 	stringstream ss;
 	int id = node->getNodeId();
-	ss << id << " [label=\"" << node->toString() << "\"];";
+	int line = node->getLine();
+	if (showLine)
+		ss << id << " [label=\"line " << line << "\n" << node->toString() << "\"];";
+	else ss << id << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren()) 
 	{
 		if (child == NULL) 
@@ -26,16 +29,16 @@ string astToString(AST::Node* node)
 	}
 	ss << '\n';
 	for (auto child : node->getChildren())
-		ss << astToString(child);
+		ss << astToString(child, showLine);
 	return ss.str();
 }
 
-void astToFile(string filename, AST::Node* ast)
+void astToFile(string filename, AST::Node* ast, bool showLine)
 {
 	ofstream file;
 	file.open(filename);
 	file << "digraph G {\n";
-	file << astToString(ast);
+	file << astToString(ast, showLine);
 	file << '}';
 	file.close();
 }

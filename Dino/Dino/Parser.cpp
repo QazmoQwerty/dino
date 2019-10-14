@@ -24,6 +24,9 @@ Token * Parser::nextToken(OperatorType expected)
 AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 {
 	auto block = new AST::StatementBlock();
+	if (peekToken())
+		block->setLine(peekToken()->_line);
+	else block->setLine(-1);
 	while (peekToken() && !eatOperator(expected))
 	{
 		if (peekToken()->_type == TT_LINE_BREAK)
@@ -95,6 +98,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_WHILE)
 		{
 			AST::WhileLoop * node = new AST::WhileLoop();
+			node->setLine(token->_line);
 			AST::Node* inner = parse();
 			if (inner->isExpression())
 				node->setCondition(dynamic_cast<AST::Expression*>(inner));
@@ -119,6 +123,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_FOR)
 		{
 			AST::StatementBlock *node = new AST::StatementBlock();
+			node->setLine(token->_line);
 
 			/*if (!eatLineBreak())
 			{
@@ -138,6 +143,7 @@ AST::Node * Parser::std(Token * token)
 			else throw "for's decleration statement failed";
 
 			AST::WhileLoop * whileNode = new AST::WhileLoop();
+			whileNode->setLine(token->_line);
 
 			if (!eatLineBreak())
 				throw "missing part 2 of for";
@@ -169,6 +175,7 @@ AST::Node * Parser::std(Token * token)
 			else if (eatOperator(OT_COLON))
 			{
 				innerBlock = new AST::StatementBlock();
+				innerBlock->setLine(token->_line);
 				while (eatLineBreak());
 				AST::Node* n = parse();
 				if (n && n->isStatement())
@@ -190,6 +197,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_DO)
 		{
 			AST::DoWhileLoop * node = new AST::DoWhileLoop();
+			node->setLine(token->_line);
 
 			while (eatLineBreak());
 
@@ -219,6 +227,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_IF)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();
+			node->setLine(token->_line);
 			AST::Node* inner = parse();
 
 			if (inner && inner->isExpression())
@@ -268,6 +277,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_UNLESS)
 		{
 			AST::IfThenElse * node = new AST::IfThenElse();
+			node->setLine(token->_line);
 			AST::Node* inner = parse();
 
 			if (inner && inner->isExpression())
@@ -294,6 +304,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_TYPE)
 		{
 			auto decl = new AST::TypeDeclaration();
+			decl->setLine(token->_line);
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName(nextToken()->_data);
 			else throw "could not parse type declaration";
@@ -334,6 +345,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_INTERFACE)
 		{
 			auto decl = new AST::InterfaceDeclaration();
+			decl->setLine(token->_line);
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName({ nextToken()->_data });
 			else throw "could not parse interface declaration";
@@ -368,6 +380,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_NAMESPACE)
 		{
 			auto decl = new AST::NamespaceDeclaration();
+			decl->setLine(token->_line);
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName({ nextToken()->_data });
 			else throw "could now parse namespace definition";
@@ -380,6 +393,7 @@ AST::Node * Parser::std(Token * token)
 		if (ot->_operator._type == OT_DELETE || ot->_operator._type == OT_RETURN)
 		{
 			auto op = new AST::UnaryOperationStatement();
+			op->setLine(token->_line);
 			op->setOperator(ot->_operator);
 			//int prec = precedence(ot);
 			//if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
@@ -396,20 +410,25 @@ AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
 	{
-		return new AST::Variable(token->_data);
+		auto node = new AST::Variable(token->_data);
+		node->setLine(token->_line);
+		return node;
 	}
 	if (token->_type == TT_LITERAL)
 	{
+		AST::Node* node;
 		switch (((LiteralToken<int>*)token)->_literalType)
 		{
-			case (LT_BOOLEAN): return new AST::Boolean(((LiteralToken<bool>*)token)->_value);
-			case (LT_INTEGER): return new AST::Integer(((LiteralToken<int>*)token)->_value);
-			case (LT_STRING):  return new AST::String(((LiteralToken<string>*)token)->_value);
-			case (LT_CHARACTER): return new AST::Character(((LiteralToken<char>*)token)->_value);
-			case (LT_FRACTION): return new AST::Fraction(((LiteralToken<float>*)token)->_value);
-			case (LT_NULL): return new AST::Null();
+		case (LT_BOOLEAN): node = new AST::Boolean(((LiteralToken<bool>*)token)->_value); break;
+			case (LT_INTEGER): node = new AST::Integer(((LiteralToken<int>*)token)->_value); break;
+			case (LT_STRING):  node = new AST::String(((LiteralToken<string>*)token)->_value); break;
+			case (LT_CHARACTER): node = new AST::Character(((LiteralToken<char>*)token)->_value); break;
+			case (LT_FRACTION): node = new AST::Fraction(((LiteralToken<float>*)token)->_value); break;
+			case (LT_NULL): node = new AST::Null(); break;
 			default: return NULL;	// TODO - proper error system
 		}
+		node->setLine(token->_line);
+		return node;
 	}
 	if (isOperator(token, OT_PARENTHESIS_OPEN))
 	{
@@ -431,6 +450,7 @@ AST::Node * Parser::nud(Token * token)
 					default: return inner;
 				}
 			auto func = new AST::Function();
+			func->setLine(token->_line);
 			if (inner != nullptr)
 				func->addParameter(inner);
 			AST::Node* returnType = parse();
@@ -450,6 +470,7 @@ AST::Node * Parser::nud(Token * token)
 				if (n && n->isStatement())
 				{
 					auto content = new AST::StatementBlock();
+					content->setLine(token->_line);
 					content->addStatement(dynamic_cast<AST::Statement*>(n));
 					func->setContent(content);
 				}
@@ -469,6 +490,7 @@ AST::Node * Parser::nud(Token * token)
 		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT))
 		{
 			auto op = new AST::UnaryAssignment();
+			op->setLine(token->_line);
 			op->setOperator(ot->_operator);
 			int prec = precedence(ot, PREFIX);
 			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
@@ -477,6 +499,7 @@ AST::Node * Parser::nud(Token * token)
 			return op;
 		}
 		auto op = new AST::UnaryOperation();
+		op->setLine(token->_line);
 		op->setOperator(ot->_operator);
 		int prec = precedence(ot, PREFIX);
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
@@ -523,6 +546,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 	if (left->isExpression() && token->_type == TT_IDENTIFIER)	// variable declaration
 	{
 		auto varDecl = new AST::VariableDeclaration();
+		varDecl->setLine(token->_line);
 		varDecl->setType(dynamic_cast<AST::Expression*>(left));
 		varDecl->setVarId(token->_data);
 
@@ -532,6 +556,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			
 
 			auto decl = new AST::PropertyDeclaration(varDecl);
+			decl->setLine(token->_line);
 
 			while (eatLineBreak());
 
@@ -604,6 +629,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		if (eatOperator(OT_PARENTHESIS_OPEN))
 		{
 			auto decl = new AST::FunctionDeclaration(varDecl);
+			decl->setLine(token->_line);
 			if (!eatOperator(OT_PARENTHESIS_CLOSE))
 			{
 				decl->addParameter(parse());
@@ -626,6 +652,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				if (n && n->isStatement())
 				{
 					auto content = new AST::StatementBlock();
+					content->setLine(token->_line);
 					content->addStatement(dynamic_cast<AST::Statement*>(n));
 					decl->setContent(content);
 				}
@@ -642,10 +669,13 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		if (left->isExpression())
 		{
 			auto list = new AST::ExpressionList();
+			list->setLine(token->_line);
 			list->addExpression(dynamic_cast<AST::Expression*>(left));
 			auto node = parse(precedence(token, BINARY));
-			if (node == nullptr)
-				return list;
+			/*if (node == nullptr)
+				return list;*/
+			if (node == NULL)
+				list->addExpression(NULL);
 			if (node->isExpression())
 				list->addExpression(dynamic_cast<AST::Expression*>(node));
 			else throw "ExpressionList must be all expressions!";
@@ -654,6 +684,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		else
 		{
 			auto list = new AST::StatementList();
+			list->setLine(token->_line);
 			list->addStatement(dynamic_cast<AST::Statement*>(left));
 			auto node = parse(precedence(token, BINARY));
 			if (node->isExpression())
@@ -671,6 +702,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			if (left->isExpression())
 			{
 				auto funcCall = new AST::FunctionCall();
+				funcCall->setLine(token->_line);
 				funcCall->setFunctionId(dynamic_cast<AST::Expression*>(left));
 				while (!eatOperator(OT_PARENTHESIS_CLOSE))
 				{
@@ -688,6 +720,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		if (OperatorsMap::isAssignment(ot->_operator._type))
 		{
 			auto op = new AST::Assignment();
+			op->setLine(token->_line);
 			op->setOperator(ot->_operator);
 			int prec = precedence(ot, BINARY);
 			if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
@@ -699,12 +732,12 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		}
 
 		auto op = new AST::BinaryOperation();
+		op->setLine(token->_line);
 		op->setOperator(ot->_operator);
 		int prec = precedence(ot, BINARY);
 		if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
 		try { op->setLeft(dynamic_cast<AST::Expression*>(left)); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
-
 
 		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
 		{
@@ -714,13 +747,30 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 				op->setRight(NULL);
 				return op;
 			}
+			try { op->setRight(dynamic_cast<AST::Expression*>(parse(prec))); }
+			catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
+			if (eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+				return op;
+			else throw "missing ']'";
 		}
+
+
+
+		/*if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN)
+		{
+			prec = 0;
+			if (eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+			{
+				op->setRight(NULL);
+				return op;
+			}
+		}*/
 
 		try { op->setRight(dynamic_cast<AST::Expression*>(parse(prec))); }
 		catch (exception) { throw "Could not convert from Node* to Expression*"; }	// Should be a DinoException in the future
 
-		if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN && eatOperator(OT_SQUARE_BRACKETS_CLOSE))
-			nextToken(OT_SQUARE_BRACKETS_CLOSE); // TODO - should be "parseBlock" (should it???)
+		//if (ot->_operator._type == OT_SQUARE_BRACKETS_OPEN && eatOperator(OT_SQUARE_BRACKETS_CLOSE))
+		//	nextToken(OT_SQUARE_BRACKETS_CLOSE); // TODO - should be "parseBlock" (should it???)
 
 		return op;
 	}
@@ -729,6 +779,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT)) 
 		{
 			auto op = new AST::UnaryAssignment();
+			op->setLine(token->_line);
 			op->setIsPostfix(true);
 			op->setOperator(((OperatorToken*)token)->_operator);
 			int prec = precedence(token, POSTFIX);
@@ -738,6 +789,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			return op;
 		}
 		auto op = new AST::UnaryOperation();
+		op->setLine(token->_line);
 		op->setIsPostfix(true);
 		op->setOperator(((OperatorToken*)token)->_operator);
 		int prec = precedence(token, POSTFIX);
