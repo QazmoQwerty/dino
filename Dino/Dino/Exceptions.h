@@ -18,6 +18,7 @@ public:
 	DinoException(const char* msg, ExceptionType type, int line, const string info = "") :
 		std::exception(msg), _type(type), _line(line), _info(info) {}
 
+	string errorMsg() { return "line " + std::to_string(_line) + ": Error " + std::to_string(_type) + ": " + what(); }
 	ExceptionType getType() const { return _type; }
 	int getLine() const { return _line; }
 	const string getInfo() const { return _info; }

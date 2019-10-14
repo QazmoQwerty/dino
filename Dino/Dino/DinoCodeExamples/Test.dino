@@ -76,12 +76,17 @@ void Main() {
 //     ]
     
 // }
+interface A is B {
+    int a() {
+
+    }
+}
 
 void Main() {
     Print("Enter command buffer: ")
     string buf = Input()
-
-    int[] memory = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    //13 + the()
+    //int[] memory = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 }
 
 // void Main () {

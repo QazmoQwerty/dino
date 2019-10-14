@@ -337,7 +337,7 @@ namespace AST
 		void addProperty(VariableDeclaration* property) { _properties.push_back(property); }
 		void addFunction(FunctionDeclaration* function) { 
 			if (function && function->getContent())
-				throw "functions inside interfaces must not have a body!";
+				throw DinoException("functions inside interfaces may not have a body", EXT_GENERAL, function->getLine());
 			_functions.push_back(function); 
 		}
 	};

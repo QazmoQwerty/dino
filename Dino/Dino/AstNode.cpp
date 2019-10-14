@@ -86,7 +86,7 @@ vector<AST::Node*> AST::Function::getChildren()
 void AST::Function::addParameter(Node * parameter)
 {
 	if (!parameter->isExpression())
-		throw "function declaration parameter must contain only variable declarations";
+		throw DinoException("expected a variable declaration", EXT_GENERAL, parameter->getLine());
 	auto exp = dynamic_cast<Expression*>(parameter);
 	switch (exp->getExpressionType())
 	{
@@ -98,11 +98,11 @@ void AST::Function::addParameter(Node * parameter)
 		{
 			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
 				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
-			else throw "all expressions whithin function definition must be variable declarations";
+			else throw DinoException("expected a variable declaration", EXT_GENERAL, i->getLine());
 		}
 		break;
 	default:
-		throw "all expressions whithin function definition must be variable declarations";
+		throw DinoException("expected a variable declaration", EXT_GENERAL, exp->getLine());
 	}
 }
 
@@ -212,7 +212,7 @@ vector<AST::Node*> AST::FunctionDeclaration::getChildren()
 void AST::FunctionDeclaration::addParameter(Node * parameter)
 {
 	if (!parameter->isExpression())
-		throw "function declaration parameter must contain only variable declarations";
+		throw DinoException("expected a variable declaration", EXT_GENERAL, parameter->getLine());
 	auto exp = dynamic_cast<Expression*>(parameter);
 	switch (exp->getExpressionType())
 	{
@@ -224,11 +224,11 @@ void AST::FunctionDeclaration::addParameter(Node * parameter)
 		{
 			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
 				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
-			else throw "all expressions whithin function definition must be variable declarations";
+			throw DinoException("expected a variable declaration", EXT_GENERAL, i->getLine());
 		}
 		break;
 	default:
-		throw "all expressions whithin function definition must be variable declarations";
+		throw DinoException("expected a variable declaration", EXT_GENERAL, exp->getLine());
 	}
 }
 
