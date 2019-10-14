@@ -77,78 +77,81 @@ void Main() {
     
 // }
 
+int(int) a = x
 
-void Main () {
-    Print("Enter Command Buffer: ")
-    string buf = ReadLine()
 
-    int[] memory = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-    int memPtr = 0
-    Console.ForegroundColor = ConsoleColor.Blue
 
-    for int i = 0 | i < buf.Length | i++ {
-        if buf[i] == ',' {
-            Console.Clear()
-            Print("Provide input: ")
-            string input = Console.ReadLine()
-            memory[memPtr] = System.Convert.ToInt32 (input)
-        }
-        else if buf[i] == '.':
-            Print(memory[memPtr])
-        else if buf[i] == '<':
-            memPtr--
-        else if buf[i] == '>':
-            memPtr++
-        else if buf[i] == '+':
-            memory[memPtr]++
-        else if buf[i] == '-':
-            memory[memPtr]--
-        else if buf[i] == '[':
-            if memory[memPtr] == 0 {
-                int skip = 0
-                int ptr = i + 1
-                while buf[ptr] != ']' or skip > 0 {
-                    if buf [ptr] == '[':
-                        skip += 1
-                    else if buf [ptr] == ']':
-                        skip -= 1
-                    ptr += 1
-                    i = ptr
-                }
-            }
-        else if buf [i] == ']' { 
-            if (memory [memPtr] != 0) {
-                int skip = 0
-                int ptr = i - 1
-                while buf[ptr] != '[' or skip > 0 {
-                    if buf [ptr] == ']':
-                        skip++
-                    else if buf [ptr] == '[':
-                        skip--
-                    ptr--
-                    i = ptr
-                }
-            }
-        }
+// void Main () {
+//     Print("Enter Command Buffer: ")
+//     string buf = ReadLine()
 
-        Console.Clear()
+//     int[] memory = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+//     int memPtr = 0
+//     Console.ForegroundColor = ConsoleColor.Blue
 
-        for int j = 0 | j < memory.Length | j++ {
-            if j == memPtr:
-                Console.ForegroundColor = ConsoleColor.Red
-            else: Console.ForegroundColor = ConsoleColor.Blue
-            Print(memory [j] + " ")
-        }
-        Print("\n")
+//     for int i = 0 | i < buf.Length | i++ {
+//         if buf[i] == ',' {
+//             Console.Clear()
+//             Print("Provide input: ")
+//             string input = Console.ReadLine()
+//             memory[memPtr] = System.Convert.ToInt32 (input)
+//         }
+//         else if buf[i] == '.':
+//             Print(memory[memPtr])
+//         else if buf[i] == '<':
+//             memPtr--
+//         else if buf[i] == '>':
+//             memPtr++
+//         else if buf[i] == '+':
+//             memory[memPtr]++
+//         else if buf[i] == '-':
+//             memory[memPtr]--
+//         else if buf[i] == '[':
+//             if memory[memPtr] == 0 {
+//                 int skip = 0
+//                 int ptr = i + 1
+//                 while buf[ptr] != ']' or skip > 0 {
+//                     if buf [ptr] == '[':
+//                         skip += 1
+//                     else if buf [ptr] == ']':
+//                         skip -= 1
+//                     ptr += 1
+//                     i = ptr
+//                 }
+//             }
+//         else if buf [i] == ']' { 
+//             if (memory [memPtr] != 0) {
+//                 int skip = 0
+//                 int ptr = i - 1
+//                 while buf[ptr] != '[' or skip > 0 {
+//                     if buf [ptr] == ']':
+//                         skip++
+//                     else if buf [ptr] == '[':
+//                         skip--
+//                     ptr--
+//                     i = ptr
+//                 }
+//             }
+//         }
 
-        for int j = 0 | j < buf.Length | j++ {
-            if j == i:
-                Console.ForegroundColor = ConsoleColor.Red
-            else: Console.ForegroundColor = ConsoleColor.Blue
-            Print(buf[j] + " ");
-        }
+//         Console.Clear()
 
-        System.Threading.Thread.Sleep(1000);
-    }
-    Console.ReadLine();
-}
+//         for int j = 0 | j < memory.Length | j++ {
+//             if j == memPtr:
+//                 Console.ForegroundColor = ConsoleColor.Red
+//             else: Console.ForegroundColor = ConsoleColor.Blue
+//             Print(memory [j] + " ")
+//         }
+//         Print("\n")
+
+//         for int j = 0 | j < buf.Length | j++ {
+//             if j == i:
+//                 Console.ForegroundColor = ConsoleColor.Red
+//             else: Console.ForegroundColor = ConsoleColor.Blue
+//             Print(buf[j] + " ");
+//         }
+
+//         System.Threading.Thread.Sleep(1000);
+//     }
+//     Console.ReadLine();
+// }

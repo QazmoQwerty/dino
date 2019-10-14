@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
 	try {
 		if (argc <= 1)
-			t = std::ifstream("DinoCodeExamples/Test.dino");
+			t = std::ifstream("DinoCodeExamples/LinkedList.dino");
 		else t = std::ifstream(argv[1]);
 	}
 	catch (DinoException e) {

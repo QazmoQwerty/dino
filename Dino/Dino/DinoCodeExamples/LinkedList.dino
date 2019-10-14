@@ -65,7 +65,7 @@ type ListNode {
 
 	void Show() {
 		PrintL(data)
-		if next != null:  {
+		if next != null {
 			PrintL(", ")
 			next.Show()
 		}

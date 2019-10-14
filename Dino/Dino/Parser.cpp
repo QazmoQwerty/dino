@@ -29,8 +29,7 @@ AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 	else block->setLine(-1);
 	while (peekToken() && !eatOperator(expected))
 	{
-		if (peekToken()->_type == TT_LINE_BREAK)
-			nextToken();
+		eatLineBreak();
 		if (eatOperator(expected))
 			return block;
 		auto node = parse();
@@ -43,7 +42,7 @@ AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 
 		if (eatOperator(expected))
 			return block;
-		nextToken();
+		eatLineBreak();
 	}
 	return block;
 }
@@ -541,6 +540,9 @@ AST::Node * Parser::nud(Token * token)
 		catch (exception) { throw DinoException("expected an expression", EXT_GENERAL, op->getLine()); }
 		return op;
 	}
+	//if (isOperator())
+	
+	throw DinoException("nud couldn't find an option", EXT_GENERAL, token->_line);
 	return NULL;
 }
 
@@ -677,9 +679,9 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			auto node = parse(precedence(token, BINARY));
 			/*if (node == nullptr)
 				return list;*/
-			if (node == NULL)
+			if (node == nullptr)
 				list->addExpression(NULL);
-			if (node->isExpression())
+			else if (node->isExpression())
 				list->addExpression(dynamic_cast<AST::Expression*>(node));
 			else throw DinoException("ExpressionList may only contain expressions.", EXT_GENERAL, node->getLine());
 			return list;

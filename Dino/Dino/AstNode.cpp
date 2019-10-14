@@ -224,7 +224,7 @@ void AST::FunctionDeclaration::addParameter(Node * parameter)
 		{
 			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
 				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
-			throw DinoException("expected a variable declaration", EXT_GENERAL, i->getLine());
+			else throw DinoException("expected a variable declaration", EXT_GENERAL, i->getLine());
 		}
 		break;
 	default:
@@ -242,7 +242,7 @@ vector<AST::Node*> AST::ExpressionList::getChildren()
 
 void AST::ExpressionList::addExpression(Expression * expression)
 {
-	if (expression->getExpressionType() == ET_LIST)
+	if (expression && expression->getExpressionType() == ET_LIST)
 		for (auto i : dynamic_cast<AST::ExpressionList*>(expression)->getExpressions())
 			_expressions.push_back(i);
 	else _expressions.push_back(expression);
