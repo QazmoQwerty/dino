@@ -170,6 +170,10 @@ enum OperatorType
 	OT_NEW,
 	OT_GET,
 	OT_SET,
+	OT_SWITCH,
+	OT_CASE,
+	OT_DEFAULT,
+
 
 	// Misc:
 	OT_AT,							//	@
@@ -206,6 +210,7 @@ enum VariableType
 
 enum StatementType
 {
+	ST_SWITCH,
 	ST_FOR_LOOP,
 	ST_UNARY_ASSIGNMENT,
 	ST_STATEMENT_BLOCK,
@@ -242,9 +247,4 @@ enum ExpressionType
 	ET_CONDITIONAL_EXPRESSION,
 	ET_LITERAL,
 	ET_UNKNOWN,
-};
-
-enum VariableModifier
-{
-
 };

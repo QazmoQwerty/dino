@@ -251,30 +251,6 @@ void AST::ExpressionList::addExpression(Expression * expression)
 	else _expressions.push_back(expression);
 }
 
-vector<AST::Node*> AST::StatementList::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _statements)
-		v.push_back(i);
-	return v;
-}
-
-void AST::StatementList::addStatement(Statement * statement)
-{
-	if (statement->getStatementType() == ST_LIST)
-		for (auto i : dynamic_cast<AST::StatementList*>(statement)->getStatements())
-			_statements.push_back(i);
-	else _statements.push_back(statement);
-}
-
-//vector<AST::Node*> AST::ExpressionStatementList::getChildren()
-//{
-//	vector<Node*> v;
-//	for (auto i : _expStatements)
-//		v.push_back(i);
-//	return v;
-//}
-
 vector<AST::Node*> AST::UnaryAssignment::getChildren()
 {
 	vector<Node*> v;
@@ -290,4 +266,10 @@ vector<AST::Node*> AST::ForLoop::getChildren()
 	v.push_back(_increment);
 	v.push_back(_statement);
 	return v;
+}
+
+vector<AST::Node*> AST::SwitchCase::getChildren()
+{
+	// TODO
+	return vector<Node*>();
 }

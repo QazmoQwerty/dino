@@ -192,6 +192,9 @@ AST::Node * Parser::std(Token * token)
 				node->setLine(token->_line);
 				return node;
 			}
+			case(OT_SWITCH): {
+				
+			}
 			case(OT_UNLESS): {
 				auto node = new AST::IfThenElse();
 				node->setCondition(parseExpression());

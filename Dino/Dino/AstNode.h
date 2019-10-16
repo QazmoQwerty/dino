@@ -125,7 +125,6 @@ namespace AST
 
 	class VariableDeclaration : public ExpressionStatement
 	{
-		vector<VariableModifier> _modifiers;
 		Expression* _type;
 		string _varId;
 
@@ -140,10 +139,8 @@ namespace AST
 
 		void setVarId(string varId) { _varId = varId; }
 		void setType(Expression* type) { _type = type; }
-		void addModifier(VariableModifier modifier) { _modifiers.push_back(modifier); }
 		string getVarId() { return _varId; }
 		Expression* getVarType() { return _type; }
-		vector<VariableModifier> getModifiers() { return _modifiers; }
 	};
 
 	class UnaryAssignment : public ExpressionStatement	// could clean up code by making this a subclass of UnaryOperation
@@ -167,46 +164,6 @@ namespace AST
 		Expression* getExpression() { return _expression; }
 		bool isPostfix() { return _isPostfix; }
 	};
-
-	/*class ExpressionStatementList : public ExpressionStatement
-	{
-		vector<ExpressionStatement*> _expStatements;
-	public:
-		ExpressionStatementList() : ExpressionStatement() {};
-		virtual StatementType getStatementType() { return ST_EXP_STATEMENT_LIST; };
-		virtual ExpressionType getExpressionType() { return ET_EXP_STATEMENT_LIST; };
-		virtual string toString() { return "<ExpressionStatementList>"; };
-		virtual vector<Node*> getChildren();
-
-		void addStatement(ExpressionStatement* expStatement) { _expStatements.push_back(expStatement); }
-		vector<ExpressionStatement*> getExpressionStatements() { return _expStatements; }
-	};*/
-
-	/*class VariableDeclaration : public ExpressionStatement
-	{
-		string _varId;
-		Type _type;
-
-	public:
-		VariableDeclaration() : ExpressionStatement() {};
-		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
-		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
-		virtual string toString() {
-			string str = "<VariableDeclaration>\\n";
-			for (auto s : _type._prefixModifiers)
-				str += s + ' ';
-			str += _type._typeName;
-			for (auto s : _type._postfixModifiers)
-				str += s;
-			return str + ' ' + _varId;
-		};
-		virtual vector<Node*> getChildren() { return vector<Node*>(); };
-
-		void setVarId(string varId) { _varId = varId; }
-		void setType(Type type) { _type = type; }
-		string getVarId() { return _varId; }
-		Type getVarType() { return _type; }
-	};*/
 
 	/********************** Statements **********************/
 
@@ -241,6 +198,32 @@ namespace AST
 		Expression* getCondition() { return _condition; }
 		Statement* getThenBranch() { return _thenBranch; }
 		Statement* getElseBranch() { return _elseBranch; }
+	};
+
+
+	typedef struct CaseClause {
+		Expression* _expression;
+		Statement* _statement;
+	} CaseClause;
+
+	class SwitchCase : public Statement
+	{
+		Expression* _expression;
+		vector<CaseClause> _cases;
+		Statement* _default;
+
+	public:
+		SwitchCase() : Statement() {};
+		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
+		virtual string toString() { return "<Switch>"; };
+		virtual vector<Node*> getChildren();
+
+		void setCondition(Expression* expression) { _expression = expression; }
+		void addCase(Expression* expression, Statement* statement) { _cases.push_back({ expression, statement }); }
+		void setDefault(Statement* statement) { _default = statement; }
+		Expression* getExpression() { return _expression; }
+		vector<CaseClause> getCases() { return _cases; }
+		Statement* getDefault() { return _default; }
 	};
 
 	class WhileLoop : public Statement
@@ -430,20 +413,6 @@ namespace AST
 
 		void setName(string id) { _name = id; }
 		void setStatement(Statement* statement) { _statement = statement; }
-	};
-
-	// not in use currently, might get deleted in the future.
-	class StatementList : public Statement	
-	{
-		vector<Statement*> _statements;
-	public:
-		StatementList() : Statement() {};
-		virtual StatementType getStatementType() { return ST_LIST; };
-		virtual string toString() { return "<StatementList>"; };
-		virtual vector<Node*> getChildren();
-
-		void addStatement(Statement* statement);
-		vector<Statement*> getStatements() { return _statements; }
 	};
 
 	/********************** Expressions **********************/
