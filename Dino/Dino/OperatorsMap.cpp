@@ -119,6 +119,9 @@ pair<const string, Operator> OperatorsMap::getOperatorByDefinition(OperatorType 
 	for (auto t : OperatorsMap::getOperators())
 		if (t.second._type == operatorType)
 			return t;
+	for (auto t : OperatorsMap::getWordOperators())
+		if (t.second._type == operatorType)
+			return t;
 	return pair<const string, Operator>("", { OT_UNKNOWN, "", NULL, NULL });
 }
 

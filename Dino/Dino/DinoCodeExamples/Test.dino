@@ -77,9 +77,23 @@ void Main() {
     
 // }
 
-int(int) a = x
+interface a is b {
+    int x 
+    int y()
+}
 
+type A is B, C {
 
+    int A {
+
+    }
+
+    int b
+
+    string b() {
+        return "wow"
+    }
+}
 
 // void Main () {
 //     Print("Enter Command Buffer: ")

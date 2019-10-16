@@ -243,7 +243,7 @@ namespace AST
 		Statement* getElseBranch() { return _elseBranch; }
 	};
 
-	class WhileLoop : public Statement	// Add 'for' as a seperate class?
+	class WhileLoop : public Statement
 	{
 		Expression* _condition;
 		Statement* _statement;
@@ -259,6 +259,30 @@ namespace AST
 
 		Expression* getCondition() { return _condition; }
 		Statement* getStatement() { return _statement; }
+	};
+
+	class ForLoop : public Statement
+	{
+		Statement* _begin;
+		Expression* _condition;
+		Statement* _increment;
+		Statement* _statement;
+
+	public:
+		ForLoop() : Statement() {};
+		virtual StatementType getStatementType() { return ST_FOR_LOOP; };
+		virtual string toString() { return "<For>"; };
+		virtual vector<Node*> getChildren();
+
+		void setCondition(Expression* condition) { _condition = condition; }
+		void setStatement(Statement* statement) { _statement = statement; }
+		void setBegin(Statement* begin) { _begin = begin; }
+		void setIncrement(Statement* increment) { _increment = increment; }
+
+		Expression* getCondition() { return _condition; }
+		Statement* getStatement() { return _statement; }
+		Statement* getBegin() { return _begin; }
+		Statement* getIncrement() { return _increment; }
 	};
 
 	class DoWhileLoop : public WhileLoop

@@ -206,6 +206,7 @@ enum VariableType
 
 enum StatementType
 {
+	ST_FOR_LOOP,
 	ST_UNARY_ASSIGNMENT,
 	ST_STATEMENT_BLOCK,
 	ST_IF_THEN_ELSE,

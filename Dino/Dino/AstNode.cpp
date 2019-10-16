@@ -278,3 +278,13 @@ vector<AST::Node*> AST::UnaryAssignment::getChildren()
 	v.push_back(_expression);
 	return v;
 }
+
+vector<AST::Node*> AST::ForLoop::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_begin);
+	v.push_back(_condition);
+	v.push_back(_increment);
+	v.push_back(_statement);
+	return v;
+}

@@ -47,6 +47,70 @@ AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 	return block;
 }
 
+void Parser::expectLineBreak()
+{
+	if (!eatLineBreak())
+		throw DinoException("expected a line break", EXT_GENERAL, peekToken()->_line);
+}
+
+void Parser::expectOperator(OperatorType ot)
+{
+	if (!eatOperator(ot)) 
+	{
+		string errorMsg = "expected '" + OperatorsMap::getOperatorByDefinition(ot).second._str + "'";
+		throw DinoException(errorMsg.c_str(), EXT_GENERAL, peekToken()->_line);
+	}
+}
+
+string Parser::expectIdentifier()
+{
+	if (peekToken()->_type == TT_IDENTIFIER)
+		return nextToken()->_data;
+	else throw DinoException("expected an identifier.", EXT_GENERAL, peekToken()->_line);
+}
+
+vector<string> Parser::expectIdentifierList()
+{
+	vector<string> v;
+	v.push_back(expectIdentifier());
+	while (eatOperator(OT_COMMA));
+		v.push_back(expectIdentifier());
+	return v;
+}
+
+AST::Statement * Parser::parseStatement()
+{
+	/*if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
+		return NULL;*/
+	AST::Node* node = parse();
+	if (node == nullptr || node->isStatement())
+		return dynamic_cast<AST::Statement*>(node);
+	else throw DinoException("expected a statement", EXT_GENERAL, node->getLine());
+}
+
+AST::Expression * Parser::parseExpression()
+{
+	AST::Node* node = parse();
+	if (node != nullptr && node->isExpression())
+		return dynamic_cast<AST::Expression*>(node);
+	else throw DinoException("expected an expression", EXT_GENERAL, node->getLine());
+}
+
+AST::Statement * Parser::parseInnerBlock()
+{
+	if (eatOperator(OT_CURLY_BRACES_OPEN))
+		return parseBlock(OT_CURLY_BRACES_CLOSE);
+	else if (eatOperator(OT_COLON))
+	{
+		//while (eatLineBreak());
+		AST::Node* n = parse();
+		if (n && n->isStatement())
+			return dynamic_cast<AST::Statement*>(n);
+		else throw DinoException("expected a statement.", EXT_GENERAL, n->getLine());
+	}
+	else throw DinoException("expected a block statement.", EXT_GENERAL, peekToken()->_line);
+}
+
 #define fromCategory(tok, cat) (tok->_type == TT_OPERATOR && precedence(tok, cat) != NONE)
 
 /*
@@ -69,13 +133,12 @@ int Parser::precedence(Token * token, int category)
 
 AST::Node * Parser::parse(int lastPrecedence)
 {
-	Token* tok = nextToken();
-
-	if (isOperator(tok, OT_EOF) || isOperator(tok, OT_PARENTHESIS_CLOSE) || isOperator(tok, OT_CURLY_BRACES_CLOSE) || isOperator(tok, OT_SQUARE_BRACKETS_CLOSE))
-	{
-		_index--;
+	if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_SQUARE_BRACKETS_CLOSE)
+		|| isOperator(peekToken(), OT_PARENTHESIS_CLOSE) || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE) 
+		|| isOperator(peekToken(), OT_EOF) || isOperator(peekToken(), OT_COLON))
 		return NULL;
-	}
+
+	Token* tok = nextToken();
 		
 	AST::Node* left = std(tok);
 	if (left) return left;
@@ -96,7 +159,12 @@ AST::Node * Parser::std(Token * token)
 		auto ot = ((OperatorToken*)token);
 		if (ot->_operator._type == OT_WHILE)
 		{
-			AST::WhileLoop * node = new AST::WhileLoop();
+			auto node = new AST::WhileLoop();
+			node->setCondition(parseExpression());
+			node->setStatement(parseInnerBlock());
+			node->setLine(token->_line);
+			return node;
+			/*AST::WhileLoop * node = new AST::WhileLoop();
 			node->setLine(token->_line);
 			AST::Node* inner = parse();
 			if (inner->isExpression())
@@ -118,91 +186,30 @@ AST::Node * Parser::std(Token * token)
 
 			else throw DinoException("could not parse while loop.", EXT_GENERAL, node->getLine());
 
-			return node;
+			return node;*/
 		}
 		if (ot->_operator._type == OT_FOR)
 		{
-			AST::StatementBlock *node = new AST::StatementBlock();
+			auto node = new AST::ForLoop();
+			node->setBegin(parseStatement());
+			expectLineBreak();
+			node->setCondition(parseExpression());
+			expectLineBreak();
+			node->setIncrement(parseStatement());
+			node->setStatement(parseInnerBlock());
 			node->setLine(token->_line);
-
-			/*if (!eatLineBreak())
-			{
-				do
-				{
-					AST::Node *declaration = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
-					if (declaration->isStatement())
-						node->addStatement(dynamic_cast<AST::Statement*>(declaration));
-					else throw "for's decleration statement failed";
-				} while (eatOperator(OT_COMMA));
-			}*/
-
-			// currently "for a = 1, b = 2 | true | a++" wouldn't work, since the comma has a higher precedence than an assignment
-			AST::Node* declaration = parse();
-			if (declaration->isStatement())
-				node->addStatement(dynamic_cast<AST::Statement*>(declaration));
-			else throw DinoException("for's declaration statement failed.", EXT_GENERAL, declaration->getLine());
-
-			AST::WhileLoop * whileNode = new AST::WhileLoop();
-			whileNode->setLine(token->_line);
-
-			if (!eatLineBreak())
-				throw DinoException("missing conditional of for loop.", EXT_GENERAL, whileNode->getLine());
-
-			AST::Node* inner = parse();
-			if (inner->isExpression())
-				whileNode->setCondition(dynamic_cast<AST::Expression*>(inner));
-			else throw DinoException("could not convert from Node* to Expression*.", EXT_GENERAL, inner->getLine());
-
-			if (!eatLineBreak())
-				throw DinoException("missing 3rd part of for loop.", EXT_GENERAL, whileNode->getLine());
-
-			//vector<AST::Node *> increments;
-			//do
-			//{
-			//	//AST::Node *increment = parse(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
-			//	AST::Node *increment = parse();
-			//	if (increment->getNodeId())
-			//		increments.push_back(increment);
-			//	else throw "for's decleration statement failed";
-			//} while (eatOperator(OT_COMMA));
-
-			vector<AST::Statement *> increments;
-			do { 
-				AST::Node* n = parse();
-				if (n == nullptr || n->isStatement())
-					increments.push_back(dynamic_cast<AST::Statement*>(n)); 
-				else throw DinoException("third part of for loop must be a statement", EXT_GENERAL, whileNode->getLine());
-			} 
-			while (eatOperator(OT_COMMA));
-
-			while (eatLineBreak());
-
-			AST::StatementBlock *innerBlock = nullptr;
-			if (eatOperator(OT_CURLY_BRACES_OPEN))
-				innerBlock = parseBlock(OT_CURLY_BRACES_CLOSE);
-			else if (eatOperator(OT_COLON))
-			{
-				innerBlock = new AST::StatementBlock();
-				innerBlock->setLine(token->_line);
-				while (eatLineBreak());
-				AST::Node* n = parse();
-				if (n && n->isStatement())
-					innerBlock->addStatement(dynamic_cast<AST::Statement*>(n));
-				else throw DinoException("inner content of a for loop's statement must be a statement.", EXT_GENERAL, n->getLine());
-			}
-			else throw DinoException("expected a statement", EXT_GENERAL, whileNode->getLine());
-
-			for (auto increment : increments)
-				innerBlock->addStatement(dynamic_cast<AST::Statement*>(increment));
-
-			whileNode->setStatement(innerBlock);
-
-			node->addStatement(whileNode);
 			return node;
 		}
 		if (ot->_operator._type == OT_DO)
 		{
-			AST::DoWhileLoop * node = new AST::DoWhileLoop();
+			auto node = new AST::DoWhileLoop();
+			node->setStatement(parseInnerBlock());
+			skipLineBreaks();
+			expectOperator(OT_WHILE);
+			node->setCondition(parseExpression());
+			node->setLine(token->_line);
+			return node;
+			/*AST::DoWhileLoop * node = new AST::DoWhileLoop();
 			node->setLine(token->_line);
 
 			while (eatLineBreak());
@@ -228,11 +235,19 @@ AST::Node * Parser::std(Token * token)
 				node->setCondition(dynamic_cast<AST::Expression*>(inner));
 			else throw DinoException("could not convert from Node* to Expression*.", EXT_GENERAL, inner->getLine());
 
-			return node;
+			return node;*/
 		}
 		if (ot->_operator._type == OT_IF)
 		{
-			AST::IfThenElse * node = new AST::IfThenElse();
+			auto node = new AST::IfThenElse();
+			node->setCondition(parseExpression());
+			node->setThenBranch(parseInnerBlock());
+			skipLineBreaks();
+			if (eatOperator(OT_ELSE))
+				node->setElseBranch(isOperator(peekToken(), OT_IF) ? dynamic_cast<AST::IfThenElse*>(parse()) : parseInnerBlock());
+			node->setLine(token->_line);
+			return node;	
+			/*AST::IfThenElse * node = new AST::IfThenElse();
 			node->setLine(token->_line);
 			AST::Node* inner = parse();
 
@@ -278,11 +293,16 @@ AST::Node * Parser::std(Token * token)
 			}
 			else if (b) _index--;
 
-			return node;
+			return node;*/
 		}
 		if (ot->_operator._type == OT_UNLESS)
 		{
-			AST::IfThenElse * node = new AST::IfThenElse();
+			auto node = new AST::IfThenElse();
+			node->setCondition(parseExpression());
+			node->setElseBranch(parseInnerBlock());
+			node->setLine(token->_line);
+			return node;
+			/*AST::IfThenElse * node = new AST::IfThenElse();
 			node->setLine(token->_line);
 			AST::Node* inner = parse();
 
@@ -304,13 +324,37 @@ AST::Node * Parser::std(Token * token)
 			}
 			else throw DinoException("missing inner statement.", EXT_GENERAL, node->getLine());
 
-			return node;
+			return node;*/
 		}
 		if (ot->_operator._type == OT_TYPE)
 		{
-			auto decl = new AST::TypeDeclaration();
-			decl->setLine(token->_line);
-			if (peekToken()->_type == TT_IDENTIFIER)
+			auto node = new AST::TypeDeclaration();
+			node->setName(expectIdentifier());
+			if (eatOperator(OT_IS))
+			{
+				node->addInterface(expectIdentifier());
+				while (eatOperator(OT_COMMA))
+					node->addInterface(expectIdentifier());
+			}
+			expectOperator(OT_CURLY_BRACES_OPEN);
+			while (!eatOperator(OT_CURLY_BRACES_CLOSE))
+			{
+				auto decl = parse();
+				if (!decl->isStatement())
+					throw DinoException("expected a statement.", EXT_GENERAL, decl->getLine());
+				switch (dynamic_cast<AST::Statement*>(decl)->getStatementType())
+				{
+					case(ST_VARIABLE_DECLARATION): node->addVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
+					case(ST_FUNCTION_DECLARATION): node->addFunctionDeclaration(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
+					case(ST_PROPERTY_DECLARATION): node->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
+					default: throw DinoException("expected a variable, property or function declaration", EXT_GENERAL, decl->getLine());
+				}
+				skipLineBreaks();
+			}
+			node->setLine(token->_line);
+			return node;
+
+			/*if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName(nextToken()->_data);
 			else throw DinoException("could not parse type declaration.", EXT_GENERAL, decl->getLine());
 
@@ -341,11 +385,36 @@ AST::Node * Parser::std(Token * token)
 				}
 				while(eatLineBreak());
 			}
-			return decl;
+			return decl;*/
 		}
 		if (ot->_operator._type == OT_INTERFACE)
 		{
-			auto decl = new AST::InterfaceDeclaration();
+			auto node = new AST::InterfaceDeclaration();
+			node->setName(expectIdentifier());
+			if (eatOperator(OT_IS))
+			{
+				node->addImplements(expectIdentifier());
+				while (eatOperator(OT_COMMA))
+					node->addImplements(expectIdentifier());
+			}
+			expectOperator(OT_CURLY_BRACES_OPEN);
+			while (!eatOperator(OT_CURLY_BRACES_CLOSE))
+			{
+				auto decl = parse();
+				if (!decl->isStatement())
+					throw DinoException("expected a statement.", EXT_GENERAL, decl->getLine());
+				switch (dynamic_cast<AST::Statement*>(decl)->getStatementType())
+				{
+				case(ST_VARIABLE_DECLARATION): node->addProperty(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
+				case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
+				default: throw DinoException("expected a property or function declaration", EXT_GENERAL, decl->getLine());
+				}
+				skipLineBreaks();
+			}
+			node->setLine(token->_line);
+			return node;
+
+			/*auto decl = new AST::InterfaceDeclaration();
 			decl->setLine(token->_line);
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName({ nextToken()->_data });
@@ -377,11 +446,17 @@ AST::Node * Parser::std(Token * token)
 				else throw DinoException("body of interface declaration may contain only declarations.", EXT_GENERAL, temp->getLine());
 				eatLineBreak();
 			}
-			return decl;
+			return decl;*/
 		}
 		if (ot->_operator._type == OT_NAMESPACE)
 		{
-			auto decl = new AST::NamespaceDeclaration();
+			auto node = new AST::NamespaceDeclaration();
+			node->setName(expectIdentifier());
+			node->setStatement(parseInnerBlock());	// technically incorrect, should only accept declarations
+			node->setLine(token->_line);
+			return node;
+
+			/*auto decl = new AST::NamespaceDeclaration();
 			decl->setLine(token->_line);
 			if (peekToken()->_type == TT_IDENTIFIER)
 				decl->setName({ nextToken()->_data });
@@ -390,18 +465,14 @@ AST::Node * Parser::std(Token * token)
 			if (eatOperator(OT_CURLY_BRACES_OPEN))
 				decl->setStatement(parseBlock(OT_CURLY_BRACES_CLOSE));
 			else throw DinoException("'{' expected.", EXT_GENERAL, peekToken()->_line);
-			return decl;
+			return decl;*/
 		}
 		if (ot->_operator._type == OT_DELETE || ot->_operator._type == OT_RETURN)
 		{
 			auto op = new AST::UnaryOperationStatement();
-			op->setLine(token->_line);
 			op->setOperator(ot->_operator);
-			//int prec = precedence(ot);
-			//if (ot->_operator._associativity == RIGHT_TO_LEFT) prec--;
-			//try { op->setExpression(dynamic_cast<AST::Expression*>(parse(prec))); }
-			try { op->setExpression(dynamic_cast<AST::Expression*>(parse())); }
-			catch (exception) { throw DinoException("expected an expression.", EXT_GENERAL, peekToken()->_line); }
+			op->setExpression(parseExpression());
+			op->setLine(token->_line);
 			return op;
 		}
 	}
@@ -609,7 +680,10 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 
 				while (eatLineBreak());
 				if (eatOperator(OT_GET)) {
-					if (eatOperator(OT_CURLY_BRACES_OPEN))
+
+					decl->setGet(parseInnerBlock());
+
+					/*if (eatOperator(OT_CURLY_BRACES_OPEN))
 						decl->setGet(parseBlock(OT_CURLY_BRACES_CLOSE));
 					else if (eatOperator(OT_COLON))
 					{
@@ -619,7 +693,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 							decl->setGet(dynamic_cast<AST::Statement*>(n));
 						else throw DinoException("expected a statement", EXT_GENERAL, n->getLine());
 					}
-					else throw DinoException("expected a block statement", EXT_GENERAL, peekToken()->_line);
+					else throw DinoException("expected a block statement", EXT_GENERAL, peekToken()->_line);*/
 				}
 			}
 
