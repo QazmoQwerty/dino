@@ -72,9 +72,8 @@ bool OperatorsMap::isBinary(OperatorType type)
 
 bool OperatorsMap::isKeyword(Operator op)
 {
-	return op._binaryPrecedence == NONE && op._prefixPrecedence == NONE && op._postfixPrecedence == NONE;
-
-	/*OperatorType keywordTypes[] = {
+	//return op._binaryPrecedence == NONE && op._prefixPrecedence == NONE && op._postfixPrecedence == NONE;
+	OperatorType keywordTypes[] = {
 		OT_WHILE,
 		OT_FOR,
 		OT_DO,
@@ -89,7 +88,7 @@ bool OperatorsMap::isKeyword(Operator op)
 		OT_GET,
 		OT_SET,
 	};
-	return std::find(std::begin(keywordTypes), std::end(keywordTypes), type) != std::end(keywordTypes);*/
+	return std::find(std::begin(keywordTypes), std::end(keywordTypes), op._type) != std::end(keywordTypes);
 }
 
 bool OperatorsMap::isAssignment(OperatorType type)
@@ -167,6 +166,7 @@ void OperatorsMap::setup()
 	_wordsMap["and"] = { OT_LOGICAL_AND,		"and",	LEFT_TO_RIGHT,		40,		NONE,	NONE };
 	_wordsMap["or"] = { OT_LOGICAL_OR,			"or",	LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[","]	= { OT_COMMA,					",",	LEFT_TO_RIGHT,		20,		NONE,	NONE };
+	_wordsMap["if"] = { OT_IF,					"if",	LEFT_TO_RIGHT,		15,		NONE,	NONE };
 	_map["="]	= { OT_ASSIGN_EQUAL,			"=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["+="]	= { OT_ASSIGN_ADD,				"+=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["-="]	= { OT_ASSIGN_SUBTRACT,			"-=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
@@ -198,7 +198,7 @@ void OperatorsMap::setup()
 	_wordsMap["while"]	= { OT_WHILE,	"while",	KEYWORD };
 	_wordsMap["for"]	= { OT_FOR,		"for",		KEYWORD };
 	_wordsMap["do"]		= { OT_DO,		"do",		KEYWORD };
-	_wordsMap["if"]		= { OT_IF,		"if",		KEYWORD };
+	//_wordsMap["if"]		= { OT_IF,		"if",		KEYWORD };
 	_wordsMap["else"]	= { OT_ELSE,	"else",		KEYWORD };
 	_wordsMap["unless"] = { OT_UNLESS,	"unless",	KEYWORD };
 	_wordsMap["return"] = { OT_RETURN,	"return",	KEYWORD };

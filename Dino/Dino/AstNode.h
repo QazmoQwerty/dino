@@ -107,20 +107,20 @@ namespace AST
 	class FunctionCall : public ExpressionStatement
 	{
 		Expression* _functionId;
-		vector<Expression*> _parameters;
+		Expression* _parameters;
 
 	public:
 		FunctionCall() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
-		virtual string toString() { return string() + "<FunctionCall>\\n"/* + _functionId.name*/; };
+		virtual string toString() { return string() + "<FunctionCall>\\n"; };
 		virtual vector<Node*> getChildren();
 
 		void setFunctionId(Expression* funcId) { _functionId = funcId; }
-		void addParameter(Expression* parameter) { _parameters.push_back(parameter); }
+		void setParameters(Expression* parameters) { _parameters = parameters; }
 
 		Expression* getFunctionId() { return _functionId; }
-		vector<Expression*> getParameters() { return _parameters; }
+		Expression* getParameters() { return _parameters; }
 	};
 
 	class VariableDeclaration : public ExpressionStatement
@@ -317,7 +317,7 @@ namespace AST
 	private:
 		VariableDeclaration* _decl;
 		vector<VariableDeclaration*> _parameters;
-		StatementBlock* _content;
+		Statement* _content;
 
 	public:
 		FunctionDeclaration(VariableDeclaration* decl) { _decl = decl; };
@@ -328,11 +328,11 @@ namespace AST
 		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
 		void addParameter(Node* parameter);
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
-		void setContent(StatementBlock* content) { _content = content; }
+		void setContent(Statement* content) { _content = content; }
 
 		VariableDeclaration* getVarDecl() { return _decl; }
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
-		StatementBlock* getContent() { return _content; }
+		Statement* getContent() { return _content; }
 	};
 
 	class InterfaceDeclaration : public Statement
@@ -596,7 +596,7 @@ namespace AST
 	class Function : public Literal
 	{
 		vector<VariableDeclaration*> _parameters;
-		StatementBlock* _content;
+		Statement* _content;
 		Expression* _returnType;
 
 	public:
@@ -604,13 +604,13 @@ namespace AST
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
 		virtual vector<Node*> getChildren();
 
-		void addParameter(Node* parameter);
+		void addParameters(Expression* parameters);
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
-		void setContent(StatementBlock* content) { _content = content; }
+		void setContent(Statement* content) { _content = content; }
 		void setReturnType(Expression* type) { _returnType = type; }
 
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
-		StatementBlock* getContent() { return _content; }
+		Statement* getContent() { return _content; }
 		Expression* getReturnType() { return _returnType; }
 	};
 

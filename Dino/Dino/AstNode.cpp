@@ -59,8 +59,7 @@ vector<AST::Node*> AST::FunctionCall::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_functionId);
-	for (auto i : _parameters)
-		v.push_back(i);
+	v.push_back(_parameters);
 	return v;
 }
 
@@ -83,11 +82,13 @@ vector<AST::Node*> AST::Function::getChildren()
 	return v;
 }
 
-void AST::Function::addParameter(Node * parameter)
+void AST::Function::addParameters(Expression * parameters)
 {
-	if (!parameter->isExpression())
-		throw DinoException("expected a variable declaration", EXT_GENERAL, parameter->getLine());
-	auto exp = dynamic_cast<Expression*>(parameter);
+	if (parameters == nullptr)
+		return;
+	if (!parameters->isExpression())
+		throw DinoException("expected a variable declaration", EXT_GENERAL, parameters->getLine());
+	auto exp = dynamic_cast<Expression*>(parameters);
 	switch (exp->getExpressionType())
 	{
 	case(ET_VARIABLE_DECLARATION):
@@ -211,6 +212,8 @@ vector<AST::Node*> AST::FunctionDeclaration::getChildren()
 
 void AST::FunctionDeclaration::addParameter(Node * parameter)
 {
+	if (parameter == nullptr)
+		return;
 	if (!parameter->isExpression())
 		throw DinoException("expected a variable declaration", EXT_GENERAL, parameter->getLine());
 	auto exp = dynamic_cast<Expression*>(parameter);

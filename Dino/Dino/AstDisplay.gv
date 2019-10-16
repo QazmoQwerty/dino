@@ -1,21 +1,12 @@
 digraph G {
-0 [label="<StatementBlock>"];0->1;0->7;
-1 [label="<InterfaceDeclaration>\na is b"];1->3;1->6;
-3 [label="<VariableDeclaration>\nx"];3->2;
-2 [label="<Variable>\nint"];
-6 [label="<FunctionDeclaration>\n"];6->5;6->-1;-1 [label="<NULL>"];
-5 [label="<VariableDeclaration>\ny"];5->4;
+0 [label="<StatementBlock>"];0->1;
+1 [label="<IfThenElse>"];1->3;1->9;1->-1;-1 [label="<NULL>"];
+3 [label="<BinaryOperator>\nis"];3->2;3->5;
+2 [label="<Variable>\na"];
+5 [label="<FunctionCall>\n"];5->4;5->7;
 4 [label="<Variable>\nint"];
-7 [label="<TypeDeclaration>\nA is B, C"];7->12;7->15;7->10;
-12 [label="<VariableDeclaration>\nb"];12->11;
-11 [label="<Variable>\nint"];
-15 [label="<FunctionDeclaration>\n"];15->14;15->16;
-14 [label="<VariableDeclaration>\nb"];14->13;
-13 [label="<Variable>\nstring"];
-16 [label="<StatementBlock>"];16->17;
-17 [label="<UnaryOperatorStatement>\nreturn"];17->18;
-18 [label="<StringLiteral>\nwow"];
-10 [label="<PropertyDeclaration>"];10->9;10->-2;-2 [label="<NULL>"];10->-3;-3 [label="<NULL>"];
-9 [label="<VariableDeclaration>\nA"];9->8;
+7 [label="<ExpressionList>"];7->6;7->8;
+6 [label="<Variable>\nint"];
 8 [label="<Variable>\nint"];
+9 [label="<StatementBlock>"];
 }

@@ -61,11 +61,11 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 		}
 		preparsedTokens->push_back(token);
 	}
-	Token* t = new Token();
+	/*Token* t = new Token();
 	t->_data = "|";
 	t->_line = preparsedTokens->back()->_line + 1;
 	t->_type = TT_LINE_BREAK;
-	preparsedTokens->push_back(t);
+	preparsedTokens->push_back(t);*/
 	auto eof = new OperatorToken;
 	eof->_data = "EOF";
 	eof->_type = TT_OPERATOR;

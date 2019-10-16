@@ -16,24 +16,25 @@ public:
 	Token* getToken(unsigned int index);
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
-	Token* nextToken(OperatorType expected);
 	
 
-	AST::Node* parse() { return parse(0); };
-	AST::Node* parse(int lastPrecedence);
-	AST::StatementBlock* parseBlock() { return parseBlock(OT_EOF); };
-	AST::StatementBlock* parseBlock(OperatorType expected);
+	AST::Node* parse(int lastPrecedence = 0);
+	AST::StatementBlock* parseBlock(OperatorType expected = OT_EOF);
 
 	void expectLineBreak();
 	void expectOperator(OperatorType ot);
 	string expectIdentifier();
 	vector<string> expectIdentifierList();
 
+	AST::Expression* convertToExpression(AST::Node* node);
+	AST::Statement* convertToStatement(AST::Node* node);
+
 	AST::Statement* parseStatement();
-	AST::Expression* parseExpression();
+	AST::Expression* parseExpression(int precedence = 0);
+	AST::Expression* parseOptionalExpression(int precedence = 0);
 	AST::Statement* parseInnerBlock();
-	//int precedence(Token* token);
 	int precedence(Token* token, int category);
+	int leftPrecedence(OperatorToken* token, int category);
 private:
 
 	bool isOperator(Token * token, OperatorType type) { return token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == type; };
