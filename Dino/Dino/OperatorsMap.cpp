@@ -155,7 +155,7 @@ void OperatorsMap::setup()
 	_map["+"]	= { OT_ADD,						"+",	LEFT_TO_RIGHT,		110,	140,	NONE };
 	_map["-"]	= { OT_SUBTRACT,				"-",	LEFT_TO_RIGHT,		110,	140,	NONE };
 	_map["<<"]	= { OT_BITWISE_SHIFT_LEFT,		"<<",	LEFT_TO_RIGHT,		100,	100,	NONE };
-	_map[">>"]	= { OT_BITWISE_SHIFT_RIGHT,		"<<",	LEFT_TO_RIGHT,		100,	100,	NONE };
+	_map[">>"]	= { OT_BITWISE_SHIFT_RIGHT,		">>",	LEFT_TO_RIGHT,		100,	100,	NONE };
 	_wordsMap["is"] = { OT_IS,					"is",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map["<"]	= { OT_SMALLER,					"<",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map["<="]	= { OT_SMALLER_EQUAL,			"<=",	LEFT_TO_RIGHT,		90,		NONE,	NONE };

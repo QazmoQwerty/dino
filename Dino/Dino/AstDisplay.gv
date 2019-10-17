@@ -1,22 +1,10 @@
 digraph G {
-0 [label="<StatementBlock>"];0->1;0->5;
-1 [label="<InterfaceDeclaration>\nB"];1->4;
-4 [label="<FunctionDeclaration>\n"];4->3;4->-1;-1 [label="<NULL>"];
-3 [label="<VariableDeclaration>\nBar"];3->2;
-2 [label="<Variable>\nint"];
-5 [label="<TypeDeclaration>\nA"];5->7;5->10;5->15;
-7 [label="<VariableDeclaration>\nnum"];7->6;
-6 [label="<Variable>\nint"];
-10 [label="<PropertyDeclaration>"];10->9;10->11;10->-2;-2 [label="<NULL>"];
-9 [label="<VariableDeclaration>\nProp"];9->8;
-8 [label="<Variable>\nint"];
-11 [label="<UnaryOperatorStatement>\nreturn"];11->12;
-12 [label="<Variable>\nnum"];
-15 [label="<PropertyDeclaration>"];15->14;15->-3;-3 [label="<NULL>"];15->16;
-14 [label="<VariableDeclaration>\nProp2"];14->13;
-13 [label="<Variable>\nint"];
-16 [label="<StatementBlock>"];16->18;
-18 [label="<Assignment>\n="];18->17;18->19;
-17 [label="<Variable>\na"];
-19 [label="<Variable>\nb"];
+0 [label="<StatementBlock>"];0->2;0->7;
+2 [label="<Assignment>\n="];2->1;2->4;
+1 [label="<Variable>\nx"];
+4 [label="<BinaryOperator>\n×"];4->3;4->5;
+3 [label="<IntegerLiteral>\n4"];
+5 [label="<IntegerLiteral>\n5"];
+7 [label="<PostfixUnaryAssignment>\n++"];7->6;
+6 [label="<Variable>\nx"];
 }

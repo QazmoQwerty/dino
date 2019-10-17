@@ -129,9 +129,9 @@ int Parser::leftPrecedence(OperatorToken * token, int category)
 
 AST::Node * Parser::parse(int lastPrecedence)
 {
-	if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_SQUARE_BRACKETS_CLOSE)
+	if (   peekToken()->_type == TT_LINE_BREAK		     || isOperator(peekToken(), OT_SQUARE_BRACKETS_CLOSE)
 		|| isOperator(peekToken(), OT_PARENTHESIS_CLOSE) || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE) 
-		|| isOperator(peekToken(), OT_EOF) || isOperator(peekToken(), OT_COLON))
+		|| isOperator(peekToken(), OT_EOF)				 || isOperator(peekToken(), OT_COLON))
 		return NULL;
 
 	Token* tok = nextToken();
