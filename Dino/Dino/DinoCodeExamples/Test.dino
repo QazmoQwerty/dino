@@ -20,6 +20,20 @@
 //         return x + 10
 // }
 
+interface B:
+    int Bar() 
+
+type A {
+    int num
+
+    int Prop: get:
+        return num
+
+    int Prop2: set {
+        a = b
+    }
+}
+
 // switch A.Area() {
 //     case a {
 //         x += 10

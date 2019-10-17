@@ -210,7 +210,7 @@ AST::Node * Parser::std(Token * token)
 						node->setDefault(parseInnerBlock());
 					else throw DinoException("expected 'case' or 'default'", EXT_GENERAL, peekToken()->_line);
 
-					if (!eatOperator(OT_CURLY_BRACES_CLOSE))
+					if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
 						expectLineBreak();
 				}
 				node->setLine(token->_line);
@@ -257,8 +257,7 @@ AST::Node * Parser::std(Token * token)
 					while (eatOperator(OT_COMMA))
 						node->addImplements(expectIdentifier());
 				}
-				expectOperator(OT_CURLY_BRACES_OPEN);
-				while (!eatOperator(OT_CURLY_BRACES_CLOSE))
+				if (eatOperator(OT_COLON))
 				{
 					auto decl = parseStatement();
 					switch (decl->getStatementType())
@@ -267,7 +266,21 @@ AST::Node * Parser::std(Token * token)
 					case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
 					default: throw DinoException("expected property or function declaration", EXT_GENERAL, decl->getLine());
 					}
-					skipLineBreaks();
+				}
+				else {
+					expectOperator(OT_CURLY_BRACES_OPEN);
+					while (!eatOperator(OT_CURLY_BRACES_CLOSE))
+					{
+						auto decl = parseStatement();
+						switch (decl->getStatementType())
+						{
+						case(ST_VARIABLE_DECLARATION): node->addProperty(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
+						case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
+						default: throw DinoException("expected property or function declaration", EXT_GENERAL, decl->getLine());
+						}
+						if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
+							expectLineBreak();
+					}
 				}
 				node->setLine(token->_line);
 				return node;
@@ -394,6 +407,17 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		varDecl->setVarId(token->_data);
 
 		// Property declaration
+		if (eatOperator(OT_COLON))
+		{
+			auto decl = new AST::PropertyDeclaration(varDecl);
+			if (eatOperator(OT_GET))
+				decl->setGet(parseInnerBlock());
+			else if (eatOperator(OT_SET))
+				decl->setSet(parseInnerBlock());
+			decl->setLine(token->_line);
+			return decl;
+		}
+
 		if (eatOperator(OT_CURLY_BRACES_OPEN))
 		{
 			auto decl = new AST::PropertyDeclaration(varDecl);
@@ -423,7 +447,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			decl->setLine(token->_line);
 			decl->addParameter(parse());
 			expectOperator(OT_PARENTHESIS_CLOSE);
-			if (eatLineBreak()) decl->setContent(NULL);
+			if (peekToken()->_type == TT_LINE_BREAK) decl->setContent(NULL);
 			else decl->setContent(parseInnerBlock());
 			return decl;
 		}
