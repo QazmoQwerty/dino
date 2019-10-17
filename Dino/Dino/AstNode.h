@@ -12,13 +12,6 @@ namespace AST
 {
 	static int _idCount = 0;
 
-	/*typedef struct Type
-	{
-		vector<string> _prefixModifiers;
-		string _typeName;
-		vector<string> _postfixModifiers;
-	} Type;*/
-
 	class Node
 	{
 		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
@@ -324,32 +317,25 @@ namespace AST
 	class InterfaceDeclaration : public Statement
 	{
 		string _name;
-		//vector<string> _modifiers;
 		vector<string> _implements;
 		vector<VariableDeclaration*> _properties;
 		vector<FunctionDeclaration*> _functions;
 
 	public:
-		InterfaceDeclaration();
+		InterfaceDeclaration() {};
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
 		string getName() { return _name; }
-		//vector<string> getModifiers() { return _modifiers; };
 		vector<string> getImplements() { return _implements; }
 		vector<VariableDeclaration*> getProperties() { return _properties; }
 		vector<FunctionDeclaration*> getFunctions() { return _functions; }
 
 		void setName(string id) { _name = id; }
-		//void addModifier(string modifier) { _modifiers.push_back(modifier); }
 		void addImplements(string interface) { _implements.push_back(interface); }
 		void addProperty(VariableDeclaration* property) { _properties.push_back(property); }
-		void addFunction(FunctionDeclaration* function) { 
-			if (function && function->getContent())
-				throw DinoException("functions inside interfaces may not have a body", EXT_GENERAL, function->getLine());
-			_functions.push_back(function); 
-		}
+		void addFunction(FunctionDeclaration* function);
 	};
 
 	class PropertyDeclaration : public Statement {
@@ -373,7 +359,6 @@ namespace AST
 	class TypeDeclaration : public Statement
 	{
 		string _name;
-		//vector<string> _modifiers;
 		vector<string> _interfaces;
 		vector<VariableDeclaration*> _variableDeclarations;
 		vector<FunctionDeclaration*> _functionDeclarations;
@@ -386,14 +371,12 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		string getName() { return _name; }
-		//vector<string> getModifiers() { return _modifiers; };
 		vector<string> getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
 		vector<FunctionDeclaration*> getFunctionDeclarations() { return _functionDeclarations; }
 		vector<PropertyDeclaration*> getPropertyDeclarations() { return _propertyDeclarations; }
 
 		void setName(string id) { _name = id; }
-		//void addModifier(string modifier) { _modifiers.push_back(modifier); }
 		void addInterface(string interface) { _interfaces.push_back(interface); }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
@@ -585,16 +568,6 @@ namespace AST
 		Statement* getContent() { return _content; }
 		Expression* getReturnType() { return _returnType; }
 	};
-
-	/*class TypeLiteral : public Literal
-	{
-		Type _type;
-	public:
-		TypeLiteral() : Literal(LT_TYPE) {}
-		virtual string toString() { return string() + "<TypeLiteral>\\n" + _type._typeName; };
-		Type getType() { return _type; }
-		void setType(Type type) { _type = type; }
-	};*/
 
 	class Null : public Literal
 	{

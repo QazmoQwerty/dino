@@ -130,6 +130,13 @@ vector<AST::Node*> AST::InterfaceDeclaration::getChildren()
 	return v;
 }
 
+void AST::InterfaceDeclaration::addFunction(FunctionDeclaration * function)
+{
+	if (function && function->getContent())
+		throw DinoException("functions inside interfaces may not have a body", EXT_GENERAL, function->getLine());
+	_functions.push_back(function);
+}
+
 vector<AST::Node*> AST::UnaryOperationStatement::getChildren()
 {
 	vector<Node*> v;
@@ -164,17 +171,9 @@ vector<AST::Node*> AST::TypeDeclaration::getChildren()
 
 AST::TypeDeclaration::TypeDeclaration() : Statement()
 {
-	_name = { "" };
-	//_modifiers = vector<string>();
 	_interfaces = vector<string>();
 	_variableDeclarations = vector<VariableDeclaration*>();
 	_functionDeclarations = vector<FunctionDeclaration*>();
-}
-
-AST::InterfaceDeclaration::InterfaceDeclaration()
-{
-	_name = { "" };
-	//_modifiers = vector<string>();
 }
 
 vector<AST::Node*> AST::NamespaceDeclaration::getChildren()
