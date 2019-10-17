@@ -1,7 +1,7 @@
 
 void Main() {
-	LinkedList list = new LinkedList
-	for int i = 0 | i < 10 | ++i:
+	LinkedList list ≡ new LinkedList
+	for int i ≡ 0 | i < 10 | i++:
 		list.InsertAtBack(i)
 	Print("Original:")
 	list.Show()
@@ -25,66 +25,58 @@ type ListNode {
 	
 	int Data {
 		get: return data
-		set: data = value
+		set: data ≡ value
 	}
 
 	ListNode Next {
 		get: return next
-		set: next = value
+		set: next ≡ value
 	}
 
 	ListNode GetNext(int index) {
-		if index == 0:
+		if index = 0:
 			return this
-		if next == null:
+		if next = null:
 			Print("List index out of bounds")
 		return next.GetNext(index - 1)
 	}
 
 	LinkedList Insert(int index, int data) {
-		if index == 0:
+		if index = 0:
 			return CreateNode(data, this)
-		if next == null:
+		if next = null:
 			Print("List index out of bounds")
-		else if next.next == null and index == 2:
-			next.next = CreateNode(data, null)
-		else: next = next.Insert(index - 1, data)
+		else if next.next = null and index = 2:
+			next.next ≡ CreateNode(data, null)
+		else: next ≡ next.Insert(index - 1, data)
 		return this
 	}
 
 	int Size() {
-		if next == null: return 1
+		if next = null: return 1
 		return 1 + next.Size()
 	}
 
 	void InsertAtEnd(int data) {
-		if next == null:
-			next = CreateNode(data, null)
+		if next = null:
+			next ≡ reateNode(data, null)
 		else: next.InsertAtEnd(data)
 	}
 
 	void Show() {
 		PrintL(data)
-		if next != null {
+		if next ≠ null {
 			PrintL(", ")
 			next.Show()
 		}
 	}
 
-	void DeleteChildren() {
-		unless next == null {
-			next.DeleteChildren()
-			delete next
-		}
-	}
-
 	void Remove(int index) {
-		if next == null or index <= 0:
+		if next = null or index ≤ 0:
 			PrintL("index out of bounds")
-		else if index == 1 {
-			ListNode temp = next 
-			next = next.next
-			delete temp
+		else if index = 1 {
+			ListNode temp ≡ next 
+			next ≡ next.next
 		}
 		else: next.Remove(index - 1)
 	}
@@ -96,122 +88,48 @@ type LinkedList {
 	int GetValue(int index): return first.GetNext(index)
 
 	int Size() {
-		if first == null:
+		if first = null:
 			return 0
 		return first.Size()
 	}
 
 	void Insert(int index, int data) {
-		if first == null:
-			first = CreateNode(data, null)
-		else: first = first.Insert(index, data)
+		if first = null:
+			first ≡ CreateNode(data, null)
+		else: first ≡ first.Insert(index, data)
 	}
 
-	void InsertAtFront(int data): first = CreateNode(data, first)
+	void InsertAtFront(int data): first ≡ CreateNode(data, first)
 
 	void InsertAtBack(int data) {
-		if first == null:
-			first = CreateNode(data, null)
+		if first = null:
+			first ≡ CreateNode(data, null)
 		else: first.InsertAtEnd(data)		
 	}
 
 	void Remove(int index) {
-		if index == 0 {
-			ListNode temp = first
-			first = first.Next
-			delete temp
+		if index = 0 {
+			ListNode temp ≡ first
+			first ≡ first.Next
 		}
 		else: first.Remove(index)
 	}
 
 	void Show() {
 		PrintL("[")
-		unless first == null:
+		unless first = null:
 			first.Show()
 		Print("]")
 	}
 
-	void Clear() {
-		unless first == null {
-			first.DeleteChildren()
-			delete first
-		}
-	}
+	void Clear(): first ≡ null
 }
 
 ListNode CreateNode(int data, ListNode next) {
-	ListNode node = new ListNode
-	node.Data = data
-	node.Next = next
+	ListNode node ≡ new ListNode
+	node.Data ≡ data
+	node.Next ≡ next
 	return node
 }
 
 Main()
-
-// switch {
-//     case x ≤ 1:
-//         return 1
-//     case x = 2:
-//         return 2
-//     case x ≠ 3:
-//         return 3
-// }
-
-// switch A.Area() {
-//     case a {
-//         x += 10
-//         return x
-//     }
-//     case b:
-//         return 10
-//     default {
-//         return x + 10
-//     }
-// }
-
-// if C == 0:
-//     H = null
-// else if V == r:
-//     H = (g - b) / C
-// else if V == g:
-//     H = (b - r) / C + 2
-// else:
-//     H = (r - g) / C + 4
-
-
-// switch {
-//     case a == 1 {
-//         x += 10
-//         return x
-//     }
-//     case b == 2:
-//         return 10
-//     int i = 0
-//     default:
-//         return x + 10
-// }
-
-// interface B:
-//     int Bar() 
-
-// type A {
-//     int num
-
-//     int Prop: get:
-//         return num
-
-//     int Prop2: set {
-//         a = b
-//     }
-// }
-
-// x = 2 → x ≡ 4
-
-// x ≤ 1 → return 1
-// x = 2 → return 2
-// x ≠ 3 → return 3
-
-// return 3 if x ≠ 3
-
-if x = 3:
-    x ≡ 4
