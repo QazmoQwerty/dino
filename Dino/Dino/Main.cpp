@@ -9,6 +9,8 @@
 #include "Parser.h"
 //#include "Interpreter.h"
 
+#include <Windows.h>
+
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
 	char ** itr = std::find(begin, end, option);
@@ -52,6 +54,8 @@ int main(int argc, char *argv[])
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
+	//SetConsoleOutputCP(65001);
+	//std::cout << str << std::endl;
 
 	OperatorsMap::setup();
 	Lexer::setup();

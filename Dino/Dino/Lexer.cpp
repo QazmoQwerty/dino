@@ -140,13 +140,14 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 		{
 			while (index < str.length() && _map[str[index]] == CT_OPERATOR)
 			{
-				string newOp = token->_data + str[index];
+				token->_data += str[index++];	// this solution might be a problem in the future
+				/*string newOp = token->_data + str[index];
 				if (OperatorsMap::getOperators().count(newOp))
 				{
 					token->_data = newOp;
 					index++;
 				}
-				else break;
+				else break;*/
 			}
 			OperatorToken * temp = new struct OperatorToken;
 			temp->_data = token->_data;

@@ -1,4 +1,4 @@
-#include "OperatorsMap.h"
+﻿#include "OperatorsMap.h"
 
 unordered_map<string, Operator> OperatorsMap::_map;
 unordered_map<string, Operator> OperatorsMap::_wordsMap;
@@ -148,9 +148,12 @@ void OperatorsMap::setup()
 	_map["@"]	= { OT_AT,						"@",	RIGHT_TO_LEFT,		NONE,	140,	140  };
 	_map["~"]	= { OT_BITWISE_NOT,				"~",	RIGHT_TO_LEFT,		NONE,	130,	NONE };
 	_wordsMap["not"] = { OT_LOGICAL_NOT,		"not",	RIGHT_TO_LEFT,		NONE,	130,	NONE };
+	_map[u8"¬"] = { OT_LOGICAL_NOT,				"not",	RIGHT_TO_LEFT,		NONE,	130,	NONE };
 	_wordsMap["new"] = { OT_NEW,				"new",	RIGHT_TO_LEFT,		NONE,	130,	NONE };
 	_map["*"]	= { OT_MULTIPLY,				"*",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
+	_map[u8"×"] = { OT_MULTIPLY,				"*",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
 	_map["/"]	= { OT_DIVIDE,					"/",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
+	_map[u8"÷"] = { OT_DIVIDE,					"/",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
 	_map["%"]	= { OT_MODULUS,					"%",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
 	_map["+"]	= { OT_ADD,						"+",	LEFT_TO_RIGHT,		110,	140,	NONE };
 	_map["-"]	= { OT_SUBTRACT,				"-",	LEFT_TO_RIGHT,		110,	140,	NONE };
@@ -159,22 +162,30 @@ void OperatorsMap::setup()
 	_wordsMap["is"] = { OT_IS,					"is",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map["<"]	= { OT_SMALLER,					"<",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map["<="]	= { OT_SMALLER_EQUAL,			"<=",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[u8"≤"] = { OT_SMALLER_EQUAL,			"<=",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[">"]	= { OT_GREATER,					">",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[">="]	= { OT_GREATER_EQUAL,			">=",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
-	_map["=="]	= { OT_EQUAL,					"==",	LEFT_TO_RIGHT,		80,		NONE,	NONE };
+	_map[u8"≥"] = { OT_GREATER_EQUAL,			">=",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map["="]	= { OT_EQUAL,					"=",	LEFT_TO_RIGHT,		80,		NONE,	NONE };
 	_map["!="]	= { OT_NOT_EQUAL,				"!=",	LEFT_TO_RIGHT,		80,		NONE,	NONE };
+	_map[u8"≠"] = { OT_NOT_EQUAL,				"!=",	LEFT_TO_RIGHT,		80,		NONE,	NONE };
 	_map["&"]	= { OT_BITWISE_AND,				"&",	LEFT_TO_RIGHT,		70,		140,	NONE };
 	_map["^"]	= { OT_BITWISE_XOR,				"^",	LEFT_TO_RIGHT,		60,		NONE,	NONE };
 	_map["?"]	= { OT_BITWISE_OR,				"?",	LEFT_TO_RIGHT,		50,		NONE,	NONE };
 	_wordsMap["and"] = { OT_LOGICAL_AND,		"and",	LEFT_TO_RIGHT,		40,		NONE,	NONE };
+	_map[u8"∧"] = { OT_LOGICAL_AND,				"and",	LEFT_TO_RIGHT,		40,		NONE,	NONE };
 	_wordsMap["or"] = { OT_LOGICAL_OR,			"or",	LEFT_TO_RIGHT,		30,		NONE,	NONE };
+	_map[u8"∨"] = { OT_LOGICAL_AND,				"and",	LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[","]	= { OT_COMMA,					",",	LEFT_TO_RIGHT,		20,		NONE,	NONE };
 	_wordsMap["if"] = { OT_IF,					"if",	LEFT_TO_RIGHT,		15,		NONE,	NONE };
-	_map["="]	= { OT_ASSIGN_EQUAL,			"=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[":="]	= { OT_ASSIGN_EQUAL,			":=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[u8"≡"] = { OT_ASSIGN_EQUAL,			":=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["+="]	= { OT_ASSIGN_ADD,				"+=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["-="]	= { OT_ASSIGN_SUBTRACT,			"-=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["*="]	= { OT_ASSIGN_MULTIPLY,			"*=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[u8"×="] = { OT_ASSIGN_MULTIPLY,		"*=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["/="]	= { OT_ASSIGN_DIVIDE,			"/=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[u8"÷="] = { OT_ASSIGN_DIVIDE,			"/=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["%="]	= { OT_ASSIGN_MODULUS,			"%=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map["<<="]	= { OT_ASSIGN_SHIFT_LEFT,		"<<=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[">>="]	= { OT_ASSIGN_SHIFT_RIGHT,		">>=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };

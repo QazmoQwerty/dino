@@ -1,71 +1,10 @@
-// if C == 0:
-//     H = null
-// else if V == r:
-//     H = (g - b) / C
-// else if V == g:
-//     H = (b - r) / C + 2
-// else:
-//     H = (r - g) / C + 4
-
-
-// switch {
-//     case a == 1 {
-//         x += 10
-//         return x
-//     }
-//     case b == 2:
-//         return 10
-//     int i = 0
-//     default:
-//         return x + 10
-// }
-
-// interface B:
-//     int Bar() 
-
-// type A {
-//     int num
-
-//     int Prop: get:
-//         return num
-
-//     int Prop2: set {
-//         a = b
-//     }
-// }
-
-// x = 2 → x ≡ 4
-
-// x ≤ 1 → return 1
-// x = 2 → return 2
-// x ≠ 3 → return 3
-
-// return 3 if x ≠ 3
-
-// if x = 3:
-//     x ≡ 4
-
-if x = 2:
-    return 10
-
-
-// switch {
-//     case x ≤ 1:
-//         return 1
-//     case x = 2:
-//         return 2
-//     case x ≠ 3:
-//         return 3
-// }
-
-// switch A.Area() {
-//     case a {
-//         x += 10
-//         return x
-//     }
-//     case b:
-//         return 10
-//     default {
-//         return x + 10
-//     }
-// }
+switch a × 5 ÷ 7 {
+    default: 
+        a ≡ 1
+    case x ≤ 10: 
+        a ≡ 2
+    case x = 10: 
+        a ≡ 3
+    case x ≥ 10 ∧ ¬false ∨ x ≠ 5: 
+        a ≡ 4
+}
