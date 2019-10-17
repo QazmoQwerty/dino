@@ -8,26 +8,26 @@
 //     H = (r - g) / C + 4
 
 
-switch {
-    case a == 1 {
-        x += 10
-        return x
-    }
-    case b == 2:
-        return 10
-    default:
-        return x + 10
-    }
-}
+// switch {
+//     case a == 1 {
+//         x += 10
+//         return x
+//     }
+//     case b == 2:
+//         return 10
+//     int i = 0
+//     default:
+//         return x + 10
+// }
 
-switch A.Area() {
-    case a {
-        x += 10
-        return x
-    }
-    case b:
-        return 10
-    default:
-        return x + 10
-    }
-}
+// switch A.Area() {
+//     case a {
+//         x += 10
+//         return x
+//     }
+//     case b:
+//         return 10
+//     default {
+//         return x + 10
+//     }
+// }

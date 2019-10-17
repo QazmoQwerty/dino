@@ -45,10 +45,6 @@ int main(int argc, char *argv[])
 			t = std::ifstream("DinoCodeExamples/Test.dino");
 		else t = std::ifstream(argv[1]);
 	}
-	catch (DinoException e) {
-		std::cout << e.errorMsg() << std::endl;
-		exit(0);
-	}
 	catch (exception e) {
 		std::cout << e.what() << std::endl;
 		exit(0);

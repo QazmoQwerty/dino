@@ -270,6 +270,13 @@ vector<AST::Node*> AST::ForLoop::getChildren()
 
 vector<AST::Node*> AST::SwitchCase::getChildren()
 {
-	// TODO
-	return vector<Node*>();
+	vector<Node*> v;
+	v.push_back(_expression);
+	v.push_back(_default);
+	for (CaseClause i : _cases)
+	{
+		v.push_back(i._expression);
+		v.push_back(i._statement);
+	}
+	return v;
 }

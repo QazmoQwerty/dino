@@ -5,8 +5,6 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 {
 	auto preparsedTokens = new vector<Token*>();
 
-	//stack<OperatorType> brackets;
-
 	for (Token * token : tokens)
 	{
 		if (token->_type == TT_MULTI_LINE_COMMENT || token->_type == TT_WHITESPACE)
@@ -14,7 +12,7 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 			delete token;
 			continue;
 		}
-		if (token->_type == TT_SINGLE_LINE_COMMENT || token->_type == TT_NEWLINE)	// TODO - make it so you can have multiple-line sections of code.
+		if (token->_type == TT_SINGLE_LINE_COMMENT || token->_type == TT_NEWLINE)
 		{
 			bool b = false;
 			if (preparsedTokens->size() != 0)
@@ -61,15 +59,12 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 		}
 		preparsedTokens->push_back(token);
 	}
-	/*Token* t = new Token();
-	t->_data = "|";
-	t->_line = preparsedTokens->back()->_line + 1;
-	t->_type = TT_LINE_BREAK;
-	preparsedTokens->push_back(t);*/
 	auto eof = new OperatorToken;
 	eof->_data = "EOF";
 	eof->_type = TT_OPERATOR;
-	eof->_line = preparsedTokens->back()->_line; // TODO: fix crush when file is empty.
+	if (preparsedTokens->size() == 0)
+		throw DinoException("empty program", EXT_GENERAL, 0);
+	eof->_line = preparsedTokens->back()->_line;
 	eof->_operator = { OT_EOF, "EOF", NULL, NULL };
 	preparsedTokens->push_back(eof);
 	return *preparsedTokens;

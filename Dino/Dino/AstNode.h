@@ -220,7 +220,10 @@ namespace AST
 
 		void setCondition(Expression* expression) { _expression = expression; }
 		void addCase(Expression* expression, Statement* statement) { _cases.push_back({ expression, statement }); }
-		void setDefault(Statement* statement) { _default = statement; }
+		void setDefault(Statement* statement) { 
+			if (_default) throw DinoException("'default' clause may only be set once", EXT_GENERAL, statement->getLine());
+			_default = statement; 
+		}
 		Expression* getExpression() { return _expression; }
 		vector<CaseClause> getCases() { return _cases; }
 		Statement* getDefault() { return _default; }

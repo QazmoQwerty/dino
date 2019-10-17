@@ -193,7 +193,28 @@ AST::Node * Parser::std(Token * token)
 				return node;
 			}
 			case(OT_SWITCH): {
-				
+				auto node = new AST::SwitchCase();
+				if (!eatOperator(OT_CURLY_BRACES_OPEN))
+				{
+					node->setCondition(parseExpression());
+					expectOperator(OT_CURLY_BRACES_OPEN);
+				}
+				while (!eatOperator(OT_CURLY_BRACES_CLOSE))
+				{
+					if (eatOperator(OT_CASE))
+					{
+						auto expression = parseExpression();
+						node->addCase(expression, parseInnerBlock());
+					}
+					else if (eatOperator(OT_DEFAULT))
+						node->setDefault(parseInnerBlock());
+					else throw DinoException("expected 'case' or 'default'", EXT_GENERAL, peekToken()->_line);
+
+					if (!eatOperator(OT_CURLY_BRACES_CLOSE))
+						expectLineBreak();
+				}
+				node->setLine(token->_line);
+				return node;
 			}
 			case(OT_UNLESS): {
 				auto node = new AST::IfThenElse();
@@ -354,17 +375,6 @@ AST::Node * Parser::nud(Token * token)
 			}
 			op->setExpression(parseExpression());
 			expectOperator(OT_SQUARE_BRACKETS_CLOSE);
-			return op;
-		}
-		if (ot->_operator._type == OT_CURLY_BRACES_OPEN)
-		{
-			if (eatOperator(OT_CURLY_BRACES_CLOSE))
-			{
-				op->setExpression(NULL);
-				return op;
-			}
-			op->setExpression(parseExpression());
-			expectOperator(OT_CURLY_BRACES_CLOSE);
 			return op;
 		}
 
