@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\user\Desktop\icu4c-65_1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -126,6 +127,7 @@
     <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="TypeEnums.h" />
+    <ClInclude Include="Utf8Handler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AstNode.cpp" />

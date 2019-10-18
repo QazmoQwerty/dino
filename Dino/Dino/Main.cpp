@@ -1,4 +1,4 @@
-#include <fstream>
+﻿#include <fstream>
 #include <iostream>
 #include <sstream> 
 
@@ -8,8 +8,8 @@
 #include "AstToFile.h"
 #include "Parser.h"
 //#include "Interpreter.h"
-
 #include <Windows.h>
+#include "Utf8Handler.h"
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
@@ -37,14 +37,13 @@ int main(int argc, char *argv[])
 		std::cout << "-noRun (stops the interpreter from executing the program)" << std::endl << std::endl;
 		return 0;
 	}
-
 	showLexerOutput = cmdOptionExists(argv, argv + argc, "-showlex");
 	outputAstFile = !cmdOptionExists(argv, argv + argc, "-noAst");
 	executeInterpret = !cmdOptionExists(argv, argv + argc, "-noRun");
 
 	try {
 		if (argc <= 1)
-			t = std::ifstream("DinoCodeExamples/LinkedList.dino");
+			t = std::ifstream("DinoCodeExamples/Test.dino");
 		else t = std::ifstream(argv[1]);
 	}
 	catch (exception e) {
@@ -55,7 +54,12 @@ int main(int argc, char *argv[])
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
 	//SetConsoleOutputCP(65001);
-	//std::cout << str << std::endl;
+	//std::string test = std::string(u8"שלום");
+	//bool b = test == str;
+	//std::cout << b << std::endl << str.length() << std::endl;
+
+
+
 
 	OperatorsMap::setup();
 	Lexer::setup();

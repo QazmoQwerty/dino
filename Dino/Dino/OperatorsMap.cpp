@@ -175,7 +175,7 @@ void OperatorsMap::setup()
 	_wordsMap["and"] = { OT_LOGICAL_AND,		"and",	LEFT_TO_RIGHT,		40,		NONE,	NONE };
 	_map[u8"∧"] = { OT_LOGICAL_AND,				"and",	LEFT_TO_RIGHT,		40,		NONE,	NONE };
 	_wordsMap["or"] = { OT_LOGICAL_OR,			"or",	LEFT_TO_RIGHT,		30,		NONE,	NONE };
-	_map[u8"∨"] = { OT_LOGICAL_AND,				"and",	LEFT_TO_RIGHT,		30,		NONE,	NONE };
+	_map[u8"∨"] = { OT_LOGICAL_OR,				"or",	LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[","]	= { OT_COMMA,					",",	LEFT_TO_RIGHT,		20,		NONE,	NONE };
 	_wordsMap["if"] = { OT_IF,					"if",	LEFT_TO_RIGHT,		15,		NONE,	NONE };
 	_map[":="]	= { OT_ASSIGN_EQUAL,			":=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };

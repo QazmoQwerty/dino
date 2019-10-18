@@ -51,6 +51,9 @@
     <ClInclude Include="InterpreterValues.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Utf8Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Lexer.cpp">
