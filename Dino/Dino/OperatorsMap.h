@@ -29,8 +29,8 @@ public:
 	/*
 		Funtion returns map with an operator string as the key, and the corresponding OperatorType as the value.
 	*/
-	static const unordered_map<string, Operator>& getOperators();
-	static const unordered_map<string, Operator>& getWordOperators();
+	static const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& getOperators();
+	static const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& getWordOperators();
 
 	static bool isWord(OperatorType type);
 	static bool isUnary(OperatorType type);
@@ -38,8 +38,8 @@ public:
 	static bool isKeyword(Operator op);
 	static bool isAssignment(OperatorType type);
 
-	static pair<const string, Operator> getOperatorByDefinition(OperatorType operatorType);
+	static pair<const unicode_string, Operator> getOperatorByDefinition(OperatorType operatorType);
 private:
-	static unordered_map<string, Operator> _map;
-	static unordered_map<string, Operator> _wordsMap;
+	static unordered_map<unicode_string, Operator, UnicodeHasherFunction> _map;
+	static unordered_map<unicode_string, Operator, UnicodeHasherFunction> _wordsMap;
 };

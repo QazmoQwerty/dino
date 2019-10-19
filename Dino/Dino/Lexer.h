@@ -10,6 +10,7 @@
 #include <iostream>
 #include "Token.h"
 #include "OperatorsMap.h"
+//#include "unicode/uchar.h"
 
 using std::vector;
 using std::string;
@@ -32,8 +33,10 @@ public:
 		NOTE: Token could be of type "OperatorToken" or "LiteralToken<T>" as well as regular "Token", 
 			  so make sure to check the _type variable of each token.
 	*/
-	static vector<Token*>& lex(string str);
+	static vector<Token*>& lex(unicode_string str);
 private:
-	static unordered_map<char, CharType> _map;
-	static Token * getToken(string str, unsigned int & index, int & line);
+	static unordered_map<unicode_char, CharType, UnicodeHasherFunction> _map;
+	static Token * getToken(unicode_string str, unsigned int & index, int & line);
+
+	static CharType getCharType(unicode_char c);
 };

@@ -26,6 +26,16 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char *argv[])
 {
+	/*SetConsoleOutputCP(65001);
+	int a[] = {
+		0xa8, 0xaa, 0xad, 0xaf, 0xb2,0xb3,0xb4,0xb5,
+	};
+	for (int i : a)
+		std::cout << unicode_char(i).to_string() << std::endl;
+	system("pause");
+	exit(0);*/
+
+
 	std::ifstream t;
 	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
 
@@ -53,7 +63,7 @@ int main(int argc, char *argv[])
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
-	//SetConsoleOutputCP(65001);
+	SetConsoleOutputCP(65001);
 	//std::string test = std::string(u8"שלום");
 	//bool b = test == str;
 	//std::cout << b << std::endl << str.length() << std::endl;
@@ -67,7 +77,9 @@ int main(int argc, char *argv[])
 	{
 		auto lexed = Lexer::lex(str);
 		auto vec = Preprocessor::preprocess(lexed);
-		
+
+		//for (auto i : lexed) printToken(i);
+
 		if (showLexerOutput)
 			for (auto i : vec) printToken(i);
 

@@ -35,21 +35,21 @@ void Parser::expectOperator(OperatorType ot)
 {
 	if (!eatOperator(ot)) 
 	{
-		string errorMsg = "expected '" + OperatorsMap::getOperatorByDefinition(ot).second._str + "'";
+		string errorMsg = "expected '" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "'";
 		throw DinoException(errorMsg.c_str(), EXT_GENERAL, peekToken()->_line);
 	}
 }
 
-string Parser::expectIdentifier()
+unicode_string Parser::expectIdentifier()
 {
 	if (peekToken()->_type == TT_IDENTIFIER)
 		return nextToken()->_data;
 	else throw DinoException("expected an identifier.", EXT_GENERAL, peekToken()->_line);
 }
 
-vector<string> Parser::expectIdentifierList()
+vector<unicode_string> Parser::expectIdentifierList()
 {
-	vector<string> v;
+	vector<unicode_string> v;
 	v.push_back(expectIdentifier());
 	while (eatOperator(OT_COMMA));
 		v.push_back(expectIdentifier());

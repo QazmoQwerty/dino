@@ -1,6 +1,8 @@
-#include "Lexer.h"
+﻿#include "Lexer.h"
 
-unordered_map<char, CharType> Lexer::_map;
+unordered_map<unicode_char, CharType, UnicodeHasherFunction> Lexer::_map;
+
+#define UTF8(a) unicode_char(a)
 
 /*
 	Sets up values in _map.
@@ -8,20 +10,39 @@ unordered_map<char, CharType> Lexer::_map;
 */
 void Lexer::setup()
 {
-	_map[' '] = _map['\t'] = _map['\r'] = CT_WHITESPACE;
-	_map['\n'] = CT_NEWLINE;
-	_map['_'] = CT_LETTER;
-	for (char c = 'a'; c <= 'z'; c++)
-		_map[c] = CT_LETTER;
-	for (char c = 'A'; c <= 'Z'; c++)
-		_map[c] = CT_LETTER;
-	for (char c = '0'; c <= '9'; c++)
-		_map[c] = CT_DIGIT;
 	for (auto c : OperatorsMap::getOperators())
 		for (unsigned int i = 0; i < c.first.length(); i++)
 			_map[c.first[i]] = CT_OPERATOR;
-	_map['|'] = CT_LINE_BREAK;
 }
+
+/*
+	Gets a unicode_char and returns corresponding CharType.
+	CT_WHITESPACE	:	' ', '\t', '\r'
+	CT_NEWLINE		:	'\n'
+	CT_LINE_BREAK	:	'|'
+	CT_OPERATOR		:	operators defined in OperatorsMap
+	CT_DIGIT		:	any unicode character from category Nd
+	CT_LETTER		:	any unicode character from categories Li, Lm, Lt, Lu, Lo
+*/
+CharType Lexer::getCharType(unicode_char c)
+{
+	// TODO - use u_isalpha and u_isdigit from ICU library for all unicode letters and digits
+	auto cp = c.getValue();
+	switch (cp) {
+		case (' '): case ('\t'): case('\r'): 
+				return CT_WHITESPACE;
+		case ('\n'):	return CT_NEWLINE;
+		case('|'):		return CT_LINE_BREAK;
+		case('_'):		return CT_LETTER;
+	}
+
+	if (('a' <= cp && cp <= 'z') || ('A' <= cp && cp <= 'Z'))
+		return CT_LETTER;
+	if ('0' <= cp && cp <= '9')
+		return CT_DIGIT;
+	return _map[c];
+}
+
 
 /*
 	Gets a string of code (usually either interpreted or taken from a file).
@@ -29,7 +50,7 @@ void Lexer::setup()
 	NOTE: Token could be of type "OperatorToken" or "LiteralToken<T>" as well as regular "Token",
 			so make sure to check the _type variable of each token.
 */
-vector<Token*>& Lexer::lex(string str)
+vector<Token*>& Lexer::lex(unicode_string str)
 {
 	vector<Token*> *tokens = new vector<Token*>();
 	int line = 1;
@@ -45,13 +66,13 @@ vector<Token*>& Lexer::lex(string str)
 	NOTE: "index" and "line" parameters are passed by reference, and are 
 		  changed internally, no need to increment them outside of this function.
 */
-Token * Lexer::getToken(string str, unsigned int & index, int & line)
+Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 {
 	Token* token = new struct Token;
-	char curr = str[index];
+	unicode_char curr = str[index];
 	token->_data = curr;
 	index++;
-	switch (_map[curr])
+	switch (getCharType(curr))
 	{
 		case CT_WHITESPACE:
 		{
@@ -80,7 +101,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 			bool isFraction = false;
 			while (index < str.length())
 			{
-				if (_map[str[index]] == CT_DIGIT)
+				if (getCharType(str[index]) == CT_DIGIT)
 					token->_data += str[index];
 				else if (str[index] == '.' && !isFraction)
 				{
@@ -109,7 +130,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 		{
 			while (index < str.length())
 			{
-				if (_map[str[index]] == CT_DIGIT || _map[str[index]] == CT_LETTER)
+				if (getCharType(str[index]) == CT_DIGIT || getCharType(str[index]) == CT_LETTER)
 					token->_data += str[index];
 				else break;
 				index++;
@@ -138,9 +159,10 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 
 		case CT_OPERATOR:
 		{
-			while (index < str.length() && _map[str[index]] == CT_OPERATOR)
+			while (index < str.length() && getCharType(str[index]) == CT_OPERATOR)
 			{
-				string newOp = token->_data + str[index];
+				unicode_string newOp = token->_data;
+				newOp += str[index];
 				if (OperatorsMap::getOperators().count(token->_data) == 0 || OperatorsMap::getOperators().count(newOp) != 0)
 				{
 					token->_data = newOp;
@@ -156,7 +178,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 
 			if (temp->_operator._type == OT_SINGLE_QUOTE || temp->_operator._type == OT_DOUBLE_QUOTE)	// Character
 			{
-				char c = temp->_data[0];
+				unicode_char c = temp->_data[0];
 				temp->_data = "";
 
 				while (index < str.length())
@@ -193,7 +215,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 					temp->_type = TT_SINGLE_LINE_COMMENT;
 					line++;
 				}
-				else if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)
+				/*else if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)	// TODO - multi line comments
 				{
 					temp->_data = "";
 					while (index + 1 < str.length() && string() + str[index] + str[index + 1] != MULTI_LINE_COMMENT_END)
@@ -204,7 +226,7 @@ Token * Lexer::getToken(string str, unsigned int & index, int & line)
 					}
 					index += 2;
 					temp->_type = TT_MULTI_LINE_COMMENT;
-				}
+				}*/
 				delete token;
 				token = temp;
 			}

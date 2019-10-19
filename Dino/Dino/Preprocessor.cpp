@@ -65,7 +65,7 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 	if (preparsedTokens->size() == 0)
 		throw DinoException("empty program", EXT_GENERAL, 0);
 	eof->_line = preparsedTokens->back()->_line;
-	eof->_operator = { OT_EOF, "EOF", NULL, NULL };
+	eof->_operator = { OT_EOF, unicode_string("EOF"), NULL, NULL };
 	preparsedTokens->push_back(eof);
 	return *preparsedTokens;
 }

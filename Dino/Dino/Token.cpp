@@ -16,13 +16,13 @@ void printToken(Token * token)
 			std::cout << "line " << token->_line << " - [NEWLINE]" << std::endl;
 			break;
 		case (TT_OPERATOR):
-			std::cout << "line " << token->_line << " - [OPERATOR: "<< token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [OPERATOR: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_LINE_BREAK):
-			std::cout << "line " << token->_line << " - [LINE_BREAK: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [LINE_BREAK: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_IDENTIFIER):
-			std::cout << "line " << token->_line << " - [IDENTIFIER: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [IDENTIFIER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_LITERAL):
 			printLiteralToken(token);
@@ -48,19 +48,19 @@ void printLiteralToken(Token * token)
 	switch (((LiteralToken<int>*)token)->_literalType)
 	{
 		case (LT_BOOLEAN):
-			std::cout << "line " << token->_line << " - [BOOLEAN: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [BOOLEAN: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_INTEGER):
-			std::cout << "line " << token->_line << " - [INTEGER: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [INTEGER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_STRING):
-			std::cout << "line " << token->_line << " - [STRING: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [STRING: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_CHARACTER):
-			std::cout << "line " << token->_line << " - [CHARACTER: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [CHARACTER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_FRACTION):
-			std::cout << "line " << token->_line << " - [FRACTION: " << token->_data << "]" << std::endl;
+			std::cout << "line " << token->_line << " - [FRACTION: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_NULL):
 			std::cout << "line " << token->_line << " - [NULL]" << std::endl;
@@ -157,17 +157,19 @@ string getSpecialCharConstant(string value)
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_STRING based on the input.
 */
-LiteralToken<string> * createStringLiteralToken(string value, int line)
+LiteralToken<string> * createStringLiteralToken(unicode_string value, int line)
 {
 	LiteralToken<string> * token = new struct LiteralToken<string>;
-	token->_data = '"' + value + '"';
+	token->_data = unicode_string("\"");
+	token->_data += value;
+	token->_data += *new unicode_string("\"");
 	token->_line = line;
 	token->_literalType = LT_STRING;
 	token->_type = TT_LITERAL;
-	for (unsigned int i = 1; i < value.length(); i++)
-		if (value[i - 1] == '\\')
-			value.replace(i - 1, 2, getSpecialCharConstant(value[i]));
-	token->_value = value;
+	/*for (unsigned int i = 1; i < value.length(); i++) // TODO - special characters
+		if (value[i - 1] == "\\")
+			value.replace(i - 1, 2, getSpecialCharConstant(value[i]));*/
+	token->_value = value.to_string();	// TODO - unicode string literals
 	return token;
 }
 
@@ -176,21 +178,23 @@ LiteralToken<string> * createStringLiteralToken(string value, int line)
 	Function creates and returns a LiteralToken with type LT_CHARACTER based on the input.
 	NOTE: if input is not a valid character an exception will be thrown.
 */
-LiteralToken<char> * createCharacterLiteralToken(string value, int line)	
+LiteralToken<char> * createCharacterLiteralToken(unicode_string value, int line)	
 {
 	if (value.length() == 0)
 		throw DinoException("Empty char constant", EXT_LEXER, line);
-	string tempData = value;
-	if (value[0] == '\\' && value.length() >= 2)
-		value = getSpecialCharConstant(value[1]);
+	unicode_string tempData = value;
+	/*if (value[0] == '\\' && value.length() >= 2)
+		value = getSpecialCharConstant(value[1]);*/
 	if (value.length() != 1)
 		throw DinoException("Too many characters in character constant", EXT_LEXER, line);
 	LiteralToken<char> * token = new struct LiteralToken<char>;
-	token->_data = '\'' + tempData + '\'';
+	token->_data = unicode_string("'");
+	token->_data += tempData;
+	token->_data += "'";
 	token->_line = line;
 	token->_literalType = LT_CHARACTER;
 	token->_type = TT_LITERAL;
-	token->_value = value[0];
+	token->_value = value[0].to_string()[0];	// todo - unicode character literals
 	return token;
 }
 
@@ -199,14 +203,14 @@ LiteralToken<char> * createCharacterLiteralToken(string value, int line)
 	Function creates and returns a LiteralToken with type LT_FRACTION based on the input.
 	NOTE: if input is not a valid fraction an exception will be thrown.
 */
-LiteralToken<float> * createFractionLiteralToken(string data, int line)
+LiteralToken<float> * createFractionLiteralToken(unicode_string data, int line)
 {
 	LiteralToken<float> * token = new struct LiteralToken<float>;
 	token->_data = data;
 	token->_line = line;
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_FRACTION;
-	try { token->_value = stof(data); }
+	try { token->_value = stof(data.to_string()); }
 	catch (exception) { throw DinoException("Invalid fraction literal", EXT_LEXER, line); }
 	return token;
 }
@@ -216,14 +220,14 @@ LiteralToken<float> * createFractionLiteralToken(string data, int line)
 	Function creates and returns a LiteralToken with type LT_INTEGER based on the input.
 	NOTE: if input is not a valid integer an exception will be thrown.
 */
-LiteralToken<int> * createIntegerLiteralToken(string data, int line)
+LiteralToken<int> * createIntegerLiteralToken(unicode_string data, int line)
 {
 	LiteralToken<int> * token = new struct LiteralToken<int>;
 	token->_data = data;
 	token->_line = line;
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_INTEGER;
-	try { token->_value = stoi(data); }
+	try { token->_value = stoi(data.to_string()); }
 	catch (exception) { throw DinoException("Invalid integer literal", EXT_LEXER, line); }
 	return token;
 }
@@ -233,7 +237,7 @@ LiteralToken<int> * createIntegerLiteralToken(string data, int line)
 	Function creates and returns a LiteralToken with type LT_BOOLEAN based on the input.
 	NOTE: if input is not "false" or "true" an exception will be thrown.
 */
-LiteralToken<bool> * createBooleanLiteralToken(string data, int line)
+LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, int line)
 {
 	LiteralToken<bool> * temp = new struct LiteralToken<bool>;
 	temp->_data = data;
