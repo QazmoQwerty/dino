@@ -1,5 +1,8 @@
-void InsertAtBack(int data) {
-    if first = null:
-        first ≡ CreateNode(data, null)
-    else: first.InsertAtEnd(data)		
+
+
+for int i ≡ 0 | i ≤ 20 ∧ i ≠ 10 | i++ {
+    if i ≠ 20: i ≡ 20    
+    else if i = 10:
+        return ¬5
 }
+
