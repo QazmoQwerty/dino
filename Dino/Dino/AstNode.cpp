@@ -109,11 +109,11 @@ void AST::Function::addParameters(Expression * parameters)
 
 string AST::InterfaceDeclaration::toString()
 {
-	string str = "<InterfaceDeclaration>\\n" + _name;
+	string str = "<InterfaceDeclaration>\\n" + _name.to_string();
 	for (unsigned int i = 0; i < _implements.size(); i++)
 	{
 		if (i == 0) str += " is ";
-		str += _implements[i];
+		str += _implements[i].to_string();
 		if (i < _implements.size() - 1)
 			str += ", ";
 	}
@@ -146,11 +146,11 @@ vector<AST::Node*> AST::UnaryOperationStatement::getChildren()
 
 string AST::TypeDeclaration::toString()
 {
-	string str = "<TypeDeclaration>\\n" + _name;
+	string str = "<TypeDeclaration>\\n" + _name.to_string();
 	for (unsigned int i = 0; i < _interfaces.size(); i++)
 	{
 		if (i == 0) str += " is ";
-		str += _interfaces[i];
+		str += _interfaces[i].to_string();
 		if (i < _interfaces.size() - 1)
 			str += ", ";
 	}
@@ -167,13 +167,6 @@ vector<AST::Node*> AST::TypeDeclaration::getChildren()
 	for (auto i : _propertyDeclarations)
 		v.push_back(i);
 	return v;
-}
-
-AST::TypeDeclaration::TypeDeclaration() : Statement()
-{
-	_interfaces = vector<string>();
-	_variableDeclarations = vector<VariableDeclaration*>();
-	_functionDeclarations = vector<FunctionDeclaration*>();
 }
 
 vector<AST::Node*> AST::NamespaceDeclaration::getChildren()

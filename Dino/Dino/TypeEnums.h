@@ -204,8 +204,8 @@ enum VariableType
 	VT_CHARACTER,
 	VT_STRING,
 	VT_CUSTOM,
-	VT_NULL,
-	VT_UNKNOWN,
+	//VT_NULL,
+	//VT_UNKNOWN,
 };
 
 enum StatementType

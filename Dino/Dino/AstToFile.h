@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 
 #include "AstNode.h"
 #include <sstream>
 #include <fstream>
+#include "utf8.h"
 
 using std::stringstream;
 using std::ofstream;
@@ -37,6 +38,7 @@ void astToFile(string filename, AST::Node* ast, bool showLine)
 {
 	ofstream file;
 	file.open(filename);
+	file << utf8::bom;	// make sure output file is utf8 encoded
 	file << "digraph G {\n";
 	file << astToString(ast, showLine);
 	file << '}';

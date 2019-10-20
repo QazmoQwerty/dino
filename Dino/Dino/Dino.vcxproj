@@ -76,7 +76,12 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -126,6 +131,7 @@
     <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="TypeEnums.h" />
+    <ClInclude Include="Utf8Handler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AstNode.cpp" />
@@ -137,6 +143,7 @@
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Preprocessor.cpp" />
     <ClCompile Include="Token.cpp" />
+    <ClCompile Include="Utf8Handler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="DinoSyntax.txt" />

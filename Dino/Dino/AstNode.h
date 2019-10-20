@@ -67,7 +67,7 @@ namespace AST
 		Assignment() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; };
 		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; };
-		virtual string toString() { return "<Assignment>\\n" + _operator._str; };
+		virtual string toString() { return "<Assignment>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
@@ -88,7 +88,7 @@ namespace AST
 		Increment() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_INCREMENT; };
 		virtual ExpressionType getExpressionType() { return ET_INCREMENT; };
-		virtual string toString() { return "<Increment>\\n" + _operator._str; };
+		virtual string toString() { return "<Increment>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
@@ -119,20 +119,20 @@ namespace AST
 	class VariableDeclaration : public ExpressionStatement
 	{
 		Expression* _type;
-		string _varId;
+		unicode_string _varId;
 
 	public:
 		VariableDeclaration() : ExpressionStatement() {};
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
 		virtual string toString() {
-			return "<VariableDeclaration>\\n" + _varId;
+			return "<VariableDeclaration>\\n" + _varId.to_string();
 		};
 		virtual vector<Node*> getChildren();
 
-		void setVarId(string varId) { _varId = varId; }
+		void setVarId(unicode_string varId) { _varId = varId; }
 		void setType(Expression* type) { _type = type; }
-		string getVarId() { return _varId; }
+		unicode_string getVarId() { return _varId; }
 		Expression* getVarType() { return _type; }
 	};
 
@@ -146,7 +146,7 @@ namespace AST
 		UnaryAssignment() : ExpressionStatement() { _isPostfix = false; };
 		virtual ExpressionType getExpressionType() { return ET_UNARY_ASSIGNMENT; };
 		virtual StatementType getStatementType() { return ST_UNARY_ASSIGNMENT; };
-		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "") + "UnaryAssignment>\\n" + _operator._str; };
+		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "") + "UnaryAssignment>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
@@ -281,7 +281,7 @@ namespace AST
 	public:
 		UnaryOperationStatement() : Statement() {};
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
-		virtual string toString() { return string() + "<UnaryOperatorStatement>\\n" + _operator._str; };
+		virtual string toString() { return string() + "<UnaryOperatorStatement>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
@@ -316,8 +316,8 @@ namespace AST
 
 	class InterfaceDeclaration : public Statement
 	{
-		string _name;
-		vector<string> _implements;
+		unicode_string _name;
+		vector<unicode_string> _implements;
 		vector<VariableDeclaration*> _properties;
 		vector<FunctionDeclaration*> _functions;
 
@@ -327,13 +327,13 @@ namespace AST
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
-		string getName() { return _name; }
-		vector<string> getImplements() { return _implements; }
+		unicode_string getName() { return _name; }
+		vector<unicode_string> getImplements() { return _implements; }
 		vector<VariableDeclaration*> getProperties() { return _properties; }
 		vector<FunctionDeclaration*> getFunctions() { return _functions; }
 
-		void setName(string id) { _name = id; }
-		void addImplements(string interface) { _implements.push_back(interface); }
+		void setName(unicode_string id) { _name = id; }
+		void addImplements(unicode_string interface) { _implements.push_back(interface); }
 		void addProperty(VariableDeclaration* property) { _properties.push_back(property); }
 		void addFunction(FunctionDeclaration* function);
 	};
@@ -358,26 +358,26 @@ namespace AST
 
 	class TypeDeclaration : public Statement
 	{
-		string _name;
-		vector<string> _interfaces;
+		unicode_string _name;
+		vector<unicode_string> _interfaces;
 		vector<VariableDeclaration*> _variableDeclarations;
 		vector<FunctionDeclaration*> _functionDeclarations;
 		vector<PropertyDeclaration*> _propertyDeclarations;
 
 	public:
-		TypeDeclaration();
+		TypeDeclaration() {};
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
-		string getName() { return _name; }
-		vector<string> getInterfaces() { return _interfaces; }
+		unicode_string getName() { return _name; }
+		vector<unicode_string> getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
 		vector<FunctionDeclaration*> getFunctionDeclarations() { return _functionDeclarations; }
 		vector<PropertyDeclaration*> getPropertyDeclarations() { return _propertyDeclarations; }
 
-		void setName(string id) { _name = id; }
-		void addInterface(string interface) { _interfaces.push_back(interface); }
+		void setName(unicode_string id) { _name = id; }
+		void addInterface(unicode_string interface) { _interfaces.push_back(interface); }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
@@ -385,19 +385,19 @@ namespace AST
 
 	class NamespaceDeclaration : public Statement
 	{
-		string _name;
+		unicode_string _name;
 		Statement* _statement;
 
 	public:
 		NamespaceDeclaration() { _name = ""; };
 		virtual StatementType getStatementType() { return ST_NAMESPACE_DECLARATION; };
-		virtual string toString() { return "<NamespaceDeclaration>\\n" + _name; };
+		virtual string toString() { return "<NamespaceDeclaration>\\n" + _name.to_string(); };
 		virtual vector<Node*> getChildren();
 
-		string getName() { return _name; }
+		unicode_string getName() { return _name; }
 		Statement* getStatement() { return _statement; }
 
-		void setName(string id) { _name = id; }
+		void setName(unicode_string id) { _name = id; }
 		void setStatement(Statement* statement) { _statement = statement; }
 	};
 
@@ -425,7 +425,7 @@ namespace AST
 	public:
 		BinaryOperation() : Expression() {};
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; };
-		virtual string toString() { return string() + "<BinaryOperator>\\n" + _operator._str; };
+		virtual string toString() { return string() + "<BinaryOperator>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
@@ -446,7 +446,7 @@ namespace AST
 	public:
 		UnaryOperation() : Expression() { _isPostfix = false; };
 		virtual ExpressionType getExpressionType() { return ET_UNARY_OPERATION; };
-		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "")+ "UnaryOperator>\\n" + _operator._str; };
+		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "")+ "UnaryOperator>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
@@ -460,14 +460,14 @@ namespace AST
 
 	class Variable : public Expression
 	{
-		string _varId;
+		unicode_string _varId;
 	public:
-		Variable(string varId) : Expression() { _varId = varId; };
+		Variable(unicode_string varId) : Expression() { _varId = varId; };
 		Variable() : Expression() {};
-		void setVarId(string varId) { _varId = varId; }
-		string getVarId() { return _varId; }
+		void setVarId(unicode_string varId) { _varId = varId; }
+		unicode_string getVarId() { return _varId; }
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE; };
-		virtual string toString() { return "<Variable>\\n" + _varId; };
+		virtual string toString() { return "<Variable>\\n" + _varId.to_string(); };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 	};
 

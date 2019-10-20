@@ -1,10 +1,25 @@
-digraph G {
-0 [label="<StatementBlock>"];0->2;0->7;
-2 [label="<Assignment>\n="];2->1;2->4;
-1 [label="<Variable>\nx"];
-4 [label="<BinaryOperator>\n×"];4->3;4->5;
-3 [label="<IntegerLiteral>\n4"];
-5 [label="<IntegerLiteral>\n5"];
-7 [label="<PostfixUnaryAssignment>\n++"];7->6;
-6 [label="<Variable>\nx"];
+﻿digraph G {
+0 [label="<StatementBlock>"];0->3;
+3 [label="<FunctionDeclaration>\n"];3->2;3->5;3->6;
+2 [label="<VariableDeclaration>\nInsertAtBack"];2->1;
+1 [label="<Variable>\nvoid"];
+5 [label="<VariableDeclaration>\ndata"];5->4;
+4 [label="<Variable>\nint"];
+6 [label="<StatementBlock>"];6->7;
+7 [label="<IfThenElse>"];7->9;7->12;7->21;
+9 [label="<BinaryOperator>\n="];9->8;9->10;
+8 [label="<Variable>\nfirst"];
+10 [label="<NullLiteral>"];
+12 [label="<Assignment>\n≡"];12->11;12->14;
+11 [label="<Variable>\nfirst"];
+14 [label="<FunctionCall>\n"];14->13;14->16;
+13 [label="<Variable>\nCreateNode"];
+16 [label="<ExpressionList>"];16->15;16->17;
+15 [label="<Variable>\ndata"];
+17 [label="<NullLiteral>"];
+21 [label="<FunctionCall>\n"];21->19;21->22;
+19 [label="<BinaryOperator>\n."];19->18;19->20;
+18 [label="<Variable>\nfirst"];
+20 [label="<Variable>\nInsertAtEnd"];
+22 [label="<Variable>\ndata"];
 }

@@ -1,11 +1,11 @@
-#include "OperatorsMap.h"
+﻿#include "OperatorsMap.h"
 
-unordered_map<string, Operator> OperatorsMap::_map;
-unordered_map<string, Operator> OperatorsMap::_wordsMap;
+unordered_map<unicode_string, Operator, UnicodeHasherFunction> OperatorsMap::_map;
+unordered_map<unicode_string, Operator, UnicodeHasherFunction> OperatorsMap::_wordsMap;
 
-const unordered_map<string, Operator>& OperatorsMap::getOperators() { return _map; }
+const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& OperatorsMap::getOperators() { return _map; }
 
-const unordered_map<string, Operator>& OperatorsMap::getWordOperators() { return _wordsMap; }
+const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& OperatorsMap::getWordOperators() { return _wordsMap; }
 
 bool OperatorsMap::isWord(OperatorType type)
 {
@@ -116,7 +116,7 @@ bool OperatorsMap::isAssignment(OperatorType type)
 	Gets an OperatorType and searches _map for the corresponding operator string.
 	NOTE: Unused function, might get deleted in the future.
 */
-pair<const string, Operator> OperatorsMap::getOperatorByDefinition(OperatorType operatorType)
+pair<const unicode_string, Operator> OperatorsMap::getOperatorByDefinition(OperatorType operatorType)
 {
 	for (auto t : OperatorsMap::getOperators())
 		if (t.second._type == operatorType)
@@ -124,7 +124,7 @@ pair<const string, Operator> OperatorsMap::getOperatorByDefinition(OperatorType 
 	for (auto t : OperatorsMap::getWordOperators())
 		if (t.second._type == operatorType)
 			return t;
-	return pair<const string, Operator>("", { OT_UNKNOWN, "", NULL, NULL });
+	return pair<const unicode_string, Operator>(unicode_string(""), { OT_UNKNOWN, unicode_string(""), NULL, NULL });
 }
 
 //#define SPECIAL(a) a, a, a
@@ -132,85 +132,98 @@ pair<const string, Operator> OperatorsMap::getOperatorByDefinition(OperatorType 
 #define KEYWORD NULL, NONE, NONE, NONE
 #define NON_PARSER NULL, NONE, NONE, NONE
 
+#define UTF8(a) unicode_string(a)
+
 /*
 	Sets up values in _map.
 	IMPORTANT: Function MUST be called once before using any other functions of this class.
 */
 void OperatorsMap::setup()
 {
-	_map = unordered_map<string, Operator>();
-	_wordsMap = unordered_map<string, Operator>();
+	_map = unordered_map<unicode_string, Operator, UnicodeHasherFunction>();
+	_wordsMap = unordered_map<unicode_string, Operator, UnicodeHasherFunction>();
 
 	//				  type						str		associativity		binary	prefix	postfix
-	_map["++"]	= { OT_INCREMENT,				"++",	LEFT_TO_RIGHT,		NONE,	140,	150	 };
-	_map["--"]	= { OT_DECREMENT,				"--",	LEFT_TO_RIGHT,		NONE,	140,	150  };
-	_map["."]	= { OT_PERIOD,					".",	LEFT_TO_RIGHT,		150,	NONE,	NONE };
-	_map["@"]	= { OT_AT,						"@",	RIGHT_TO_LEFT,		NONE,	140,	140  };
-	_map["~"]	= { OT_BITWISE_NOT,				"~",	RIGHT_TO_LEFT,		NONE,	130,	NONE };
-	_wordsMap["not"] = { OT_LOGICAL_NOT,		"not",	RIGHT_TO_LEFT,		NONE,	130,	NONE };
-	_wordsMap["new"] = { OT_NEW,				"new",	RIGHT_TO_LEFT,		NONE,	130,	NONE };
-	_map["*"]	= { OT_MULTIPLY,				"*",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
-	_map["/"]	= { OT_DIVIDE,					"/",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
-	_map["%"]	= { OT_MODULUS,					"%",	LEFT_TO_RIGHT,		120,	NONE,	NONE };
-	_map["+"]	= { OT_ADD,						"+",	LEFT_TO_RIGHT,		110,	140,	NONE };
-	_map["-"]	= { OT_SUBTRACT,				"-",	LEFT_TO_RIGHT,		110,	140,	NONE };
-	_map["<<"]	= { OT_BITWISE_SHIFT_LEFT,		"<<",	LEFT_TO_RIGHT,		100,	100,	NONE };
-	_map[">>"]	= { OT_BITWISE_SHIFT_RIGHT,		">>",	LEFT_TO_RIGHT,		100,	100,	NONE };
-	_wordsMap["is"] = { OT_IS,					"is",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
-	_map["<"]	= { OT_SMALLER,					"<",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
-	_map["<="]	= { OT_SMALLER_EQUAL,			"<=",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
-	_map[">"]	= { OT_GREATER,					">",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
-	_map[">="]	= { OT_GREATER_EQUAL,			">=",	LEFT_TO_RIGHT,		90,		NONE,	NONE };
-	_map["=="]	= { OT_EQUAL,					"==",	LEFT_TO_RIGHT,		80,		NONE,	NONE };
-	_map["!="]	= { OT_NOT_EQUAL,				"!=",	LEFT_TO_RIGHT,		80,		NONE,	NONE };
-	_map["&"]	= { OT_BITWISE_AND,				"&",	LEFT_TO_RIGHT,		70,		140,	NONE };
-	_map["^"]	= { OT_BITWISE_XOR,				"^",	LEFT_TO_RIGHT,		60,		NONE,	NONE };
-	_map["?"]	= { OT_BITWISE_OR,				"?",	LEFT_TO_RIGHT,		50,		NONE,	NONE };
-	_wordsMap["and"] = { OT_LOGICAL_AND,		"and",	LEFT_TO_RIGHT,		40,		NONE,	NONE };
-	_wordsMap["or"] = { OT_LOGICAL_OR,			"or",	LEFT_TO_RIGHT,		30,		NONE,	NONE };
-	_map[","]	= { OT_COMMA,					",",	LEFT_TO_RIGHT,		20,		NONE,	NONE };
-	_wordsMap["if"] = { OT_IF,					"if",	LEFT_TO_RIGHT,		15,		NONE,	NONE };
-	_map["="]	= { OT_ASSIGN_EQUAL,			"=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["+="]	= { OT_ASSIGN_ADD,				"+=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["-="]	= { OT_ASSIGN_SUBTRACT,			"-=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["*="]	= { OT_ASSIGN_MULTIPLY,			"*=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["/="]	= { OT_ASSIGN_DIVIDE,			"/=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["%="]	= { OT_ASSIGN_MODULUS,			"%=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["<<="]	= { OT_ASSIGN_SHIFT_LEFT,		"<<=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map[">>="]	= { OT_ASSIGN_SHIFT_RIGHT,		">>=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["&="]	= { OT_ASSIGN_BITWISE_AND,		"&=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["?="]	= { OT_ASSIGN_BITWISE_OR,		"?=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map["^="]	= { OT_ASSIGN_BITWISE_XOR,		"^=",	RIGHT_TO_LEFT,		10,		NONE,	NONE };
-	_map[":"]	= { OT_COLON,					":",	LEFT_TO_RIGHT,		NONE,	NONE,	NONE };
-	_map["("]	= { OT_PARENTHESIS_OPEN,		"(",	LEFT_TO_RIGHT,		150,	150,	150  };
-	_map[")"]	= { OT_PARENTHESIS_CLOSE,		")",	LEFT_TO_RIGHT,		0,		0,		0	 };
-	_map["["]	= { OT_SQUARE_BRACKETS_OPEN,	"[",	LEFT_TO_RIGHT,		150,	150,	150  };
-	_map["]"]	= { OT_SQUARE_BRACKETS_CLOSE,	"]",	LEFT_TO_RIGHT,		0,		0,		0	 };
-	_map["{"]	= { OT_CURLY_BRACES_OPEN,		"{",	LEFT_TO_RIGHT,		150,	150,	150  };
-	_map["}"]	= { OT_CURLY_BRACES_CLOSE,		"}",	LEFT_TO_RIGHT,		0,		0,		0	 };
+	_map[UTF8("++")]		= { OT_INCREMENT,				UTF8("++"),	LEFT_TO_RIGHT,		NONE,	140,	150	 };
+	_map[UTF8("--")]		= { OT_DECREMENT,				UTF8("--"),	LEFT_TO_RIGHT,		NONE,	140,	150  };
+	_map[UTF8(".")]			= { OT_PERIOD,					UTF8("."),	LEFT_TO_RIGHT,		150,	NONE,	NONE };
+	_map[UTF8("@")]			= { OT_AT,						UTF8("@"),	RIGHT_TO_LEFT,		NONE,	140,	140  };
+	_map[UTF8("~")]			= { OT_BITWISE_NOT,				UTF8("~"),	RIGHT_TO_LEFT,		NONE,	130,	NONE };
+	_wordsMap[UTF8("not")]	= { OT_LOGICAL_NOT,		UTF8("not"),	RIGHT_TO_LEFT,		NONE,	130,	NONE };
+	_map[UTF8(u8"¬")]		= { OT_LOGICAL_NOT,				UTF8("not"),	RIGHT_TO_LEFT,		NONE,	130,	NONE };
+	_wordsMap[UTF8("new")]	= { OT_NEW,				UTF8("new"),	RIGHT_TO_LEFT,		NONE,	130,	NONE };
+	_map[UTF8("*")]			= { OT_MULTIPLY,				UTF8("*"),	LEFT_TO_RIGHT,		120,	NONE,	NONE };
+	_map[UTF8(u8"×")]		= { OT_MULTIPLY,				UTF8("*"),	LEFT_TO_RIGHT,		120,	NONE,	NONE };
+	_map[UTF8("/")]			= { OT_DIVIDE,					UTF8("/"),	LEFT_TO_RIGHT,		120,	NONE,	NONE };
+	_map[UTF8(u8"÷")]		= { OT_DIVIDE,					UTF8("/"),	LEFT_TO_RIGHT,		120,	NONE,	NONE };
+	_map[UTF8("%")]			= { OT_MODULUS,					UTF8("%"),	LEFT_TO_RIGHT,		120,	NONE,	NONE };
+	_map[UTF8("+")]			= { OT_ADD,						UTF8("+"),	LEFT_TO_RIGHT,		110,	140,	NONE };
+	_map[UTF8("-")]			= { OT_SUBTRACT,				UTF8("-"),	LEFT_TO_RIGHT,		110,	140,	NONE };
+	_map[UTF8("<<")]		= { OT_BITWISE_SHIFT_LEFT,		UTF8("<<"),	LEFT_TO_RIGHT,		100,	100,	NONE };
+	_map[UTF8(">>")]		= { OT_BITWISE_SHIFT_RIGHT,		UTF8(">>"),	LEFT_TO_RIGHT,		100,	100,	NONE };
+	_wordsMap[UTF8("is")]	= { OT_IS,					UTF8("is"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8("<")]	= { OT_SMALLER,					UTF8("<"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8("<=")]	= { OT_SMALLER_EQUAL,			UTF8("<="),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8(u8"≤")] = { OT_SMALLER_EQUAL,			UTF8("<="),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8(">")]	= { OT_GREATER,					UTF8(">"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8(">=")]	= { OT_GREATER_EQUAL,			UTF8(">="),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8(u8"≥")] = { OT_GREATER_EQUAL,			UTF8(">="),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8("=")]	= { OT_EQUAL,					UTF8("="),	LEFT_TO_RIGHT,		80,		NONE,	NONE };
+	_map[UTF8("!=")]	= { OT_NOT_EQUAL,				UTF8("!="),	LEFT_TO_RIGHT,		80,		NONE,	NONE };
+	_map[UTF8(u8"≠")] = { OT_NOT_EQUAL,				UTF8("!="),	LEFT_TO_RIGHT,		80,		NONE,	NONE };
+	_map[UTF8("&")]	= { OT_BITWISE_AND,				UTF8("&"),	LEFT_TO_RIGHT,		70,		140,	NONE };
+	_map[UTF8("^")]	= { OT_BITWISE_XOR,				UTF8("^"),	LEFT_TO_RIGHT,		60,		NONE,	NONE };
+	_map[UTF8("?")]	= { OT_BITWISE_OR,				UTF8("?"),	LEFT_TO_RIGHT,		50,		NONE,	NONE };
+	_wordsMap[UTF8("and")] = { OT_LOGICAL_AND,		UTF8("and"),	LEFT_TO_RIGHT,		40,		NONE,	NONE };
+	_map[UTF8(u8"∧")] = { OT_LOGICAL_AND,				UTF8("and"),	LEFT_TO_RIGHT,		40,		NONE,	NONE };
+	_wordsMap[UTF8("or")] = { OT_LOGICAL_OR,			UTF8("or"),	LEFT_TO_RIGHT,		30,		NONE,	NONE };
+	_map[UTF8(u8"∨")] = { OT_LOGICAL_OR,				UTF8("or"),	LEFT_TO_RIGHT,		30,		NONE,	NONE };
+	_map[UTF8(",")]	= { OT_COMMA,					UTF8(","),	LEFT_TO_RIGHT,		20,		NONE,	NONE };
+	_wordsMap[UTF8("if")] = { OT_IF,					UTF8("if"),	LEFT_TO_RIGHT,		15,		NONE,	NONE };
+	_map[UTF8(":=")]	= { OT_ASSIGN_EQUAL,			UTF8(":="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8(u8"≡")] = { OT_ASSIGN_EQUAL,			UTF8(u8"≡"),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("+=")]	= { OT_ASSIGN_ADD,				UTF8("+="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("-=")]	= { OT_ASSIGN_SUBTRACT,			UTF8("-="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("*=")]	= { OT_ASSIGN_MULTIPLY,			UTF8("*="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8(u8"×=")] = { OT_ASSIGN_MULTIPLY,		UTF8("*="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("/=")]	= { OT_ASSIGN_DIVIDE,			UTF8("/="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8(u8"÷=")] = { OT_ASSIGN_DIVIDE,			UTF8("/="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("%=")]	= { OT_ASSIGN_MODULUS,			UTF8("%="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("<<=")]	= { OT_ASSIGN_SHIFT_LEFT,		UTF8("<<="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8(">>=")]	= { OT_ASSIGN_SHIFT_RIGHT,		UTF8(">>="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("&=")]	= { OT_ASSIGN_BITWISE_AND,		UTF8("&="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("?=")]	= { OT_ASSIGN_BITWISE_OR,		UTF8("?="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8("^=")]	= { OT_ASSIGN_BITWISE_XOR,		UTF8("^="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8(":")]	= { OT_COLON,					UTF8(":"),	LEFT_TO_RIGHT,		NONE,	NONE,	NONE };
+	_map[UTF8("(")]	= { OT_PARENTHESIS_OPEN,		UTF8("("),	LEFT_TO_RIGHT,		150,	150,	150  };
+	_map[UTF8(")")]	= { OT_PARENTHESIS_CLOSE,		UTF8(")"),	LEFT_TO_RIGHT,		0,		0,		0	 };
+	_map[UTF8("[")]	= { OT_SQUARE_BRACKETS_OPEN,	UTF8("["),	LEFT_TO_RIGHT,		150,	150,	150  };
+	_map[UTF8("]")]	= { OT_SQUARE_BRACKETS_CLOSE,	UTF8("]"),	LEFT_TO_RIGHT,		0,		0,		0	 };
+	_map[UTF8("{")]	= { OT_CURLY_BRACES_OPEN,		UTF8("{"),	LEFT_TO_RIGHT,		150,	150,	150  };
+	_map[UTF8("}")]	= { OT_CURLY_BRACES_CLOSE,		UTF8("}"),	LEFT_TO_RIGHT,		0,		0,		0	 };
 
 	// Non-parser related operators:
-	_map["//"] = { OT_SINGLE_LINE_COMMENT,		"//",	NON_PARSER };
-	_map["/*"] = { OT_MULTI_LINE_COMMENT_OPEN,	"/*",	NON_PARSER };
-	_map["*/"] = { OT_MULTI_LINE_COMMENT_CLOSE,	"*/",	NON_PARSER };
-	_map["\""] = { OT_DOUBLE_QUOTE,				"\"",	NON_PARSER };
-	_map["\\"] = { OT_DOUBLE_QUOTE,				"\"",	NON_PARSER };
-	_map["'"]  = { OT_SINGLE_QUOTE,				"'",	NON_PARSER };
+	_map[UTF8("//")] = { OT_SINGLE_LINE_COMMENT,		UTF8("//"),	NON_PARSER };
+	_map[UTF8("/*")] = { OT_MULTI_LINE_COMMENT_OPEN,	UTF8("/*"),	NON_PARSER };
+	_map[UTF8("*/")] = { OT_MULTI_LINE_COMMENT_CLOSE,	UTF8("*/"),	NON_PARSER };
+	_map[UTF8("\"")] = { OT_DOUBLE_QUOTE,				UTF8("\""),	NON_PARSER };
+	_map[UTF8("\\")] = { OT_DOUBLE_QUOTE,				UTF8("\""),	NON_PARSER };
+	_map[UTF8("'")]  = { OT_SINGLE_QUOTE,				UTF8("'"),	NON_PARSER };
 
 	
-	_wordsMap["while"]	= { OT_WHILE,	"while",	KEYWORD };
-	_wordsMap["for"]	= { OT_FOR,		"for",		KEYWORD };
-	_wordsMap["do"]		= { OT_DO,		"do",		KEYWORD };
-	_wordsMap["switch"] = { OT_SWITCH,	"switch",	KEYWORD };
-	_wordsMap["case"]   = { OT_CASE,	"case",		KEYWORD };
-	_wordsMap["default"]= { OT_DEFAULT, "default",	KEYWORD };
-	_wordsMap["else"]	= { OT_ELSE,	"else",		KEYWORD };
-	_wordsMap["unless"] = { OT_UNLESS,	"unless",	KEYWORD };
-	_wordsMap["return"] = { OT_RETURN,	"return",	KEYWORD };
-	_wordsMap["get"]	= { OT_GET,		"get",		KEYWORD };
-	_wordsMap["set"]	= { OT_SET,		"set",		KEYWORD };
-	_wordsMap["type"]	= { OT_TYPE,	"type",		KEYWORD };
-	_wordsMap["delete"] = { OT_DELETE,	"delete",	KEYWORD };
-	_wordsMap["interface"]	= { OT_INTERFACE,	"interface",	KEYWORD };
-	_wordsMap["namespace"]	= { OT_NAMESPACE,	"namespace",	KEYWORD };
+	_wordsMap[UTF8("while")]	= { OT_WHILE,	UTF8("while"),	KEYWORD };
+	_wordsMap[UTF8("for")]	= { OT_FOR,		UTF8("for"),		KEYWORD };
+	_wordsMap[UTF8("do")]		= { OT_DO,		UTF8("do"),		KEYWORD };
+	_wordsMap[UTF8("switch")] = { OT_SWITCH,	UTF8("switch"),	KEYWORD };
+	_wordsMap[UTF8("case")]   = { OT_CASE,	UTF8("case"),		KEYWORD };
+	_wordsMap[UTF8("default")]= { OT_DEFAULT, UTF8("default"),	KEYWORD };
+	_wordsMap[UTF8("else")]	= { OT_ELSE,	UTF8("else"),		KEYWORD };
+	_wordsMap[UTF8("unless")] = { OT_UNLESS,	UTF8("unless"),	KEYWORD };
+	_wordsMap[UTF8("return")] = { OT_RETURN,	UTF8("return"),	KEYWORD };
+	_wordsMap[UTF8("get")]	= { OT_GET,		UTF8("get"),		KEYWORD };
+	_wordsMap[UTF8("set")]	= { OT_SET,		UTF8("set"),		KEYWORD };
+	_wordsMap[UTF8("type")]	= { OT_TYPE,	UTF8("type"),		KEYWORD };
+	_wordsMap[UTF8("delete")] = { OT_DELETE,	UTF8("delete"),	KEYWORD };
+	_wordsMap[UTF8("interface")]	= { OT_INTERFACE,	UTF8("interface"),	KEYWORD };
+	_wordsMap[UTF8("namespace")]	= { OT_NAMESPACE,	UTF8("namespace"),	KEYWORD };
 }
