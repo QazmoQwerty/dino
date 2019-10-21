@@ -1,5 +1,7 @@
 #include "Utf8Handler.h"
 
+/* ---------- unicode_char ---------- */
+
 unicode_char::unicode_char(string str)
 {
 	unicode_string s = unicode_string(str);
@@ -18,12 +20,24 @@ string unicode_char::to_string() const
 	return str;
 }
 
+
+/* --------- unicode_string --------- */
+
 string unicode_string::to_string() const
 {
 	string str;
 	for (unicode_char c : _str)
 		str += c.to_string();
 	return str;
+}
+
+void unicode_string::addString(string str)
+{
+	string::iterator iter = str.begin();
+	while (iter != str.end()) {
+		utf8::uint32_t tok = utf8::next(iter, str.end());
+		_str.push_back(unicode_char(tok));
+	}
 }
 
 unicode_string & unicode_string::operator=(unicode_char other)
@@ -56,7 +70,10 @@ bool unicode_string::operator==(const unicode_string & other) const
 	return true;
 }
 
-bool unicode_string::operator==(const string other) const { return unicode_string(other) == *this; }
+bool unicode_string::operator==(const string other) const 
+{
+	return unicode_string(other) == *this;
+}
 
 unicode_string & unicode_string::operator+=(unicode_string & other)
 {
@@ -65,13 +82,7 @@ unicode_string & unicode_string::operator+=(unicode_string & other)
 	return *this;
 }
 
-unicode_string & unicode_string::operator+=(string other) { addString(other); return *this; }
-
-void unicode_string::addString(string str)
-{
-	string::iterator iter = str.begin();
-	while (iter != str.end()) {
-		utf8::uint32_t tok = utf8::next(iter, str.end());
-		_str.push_back(unicode_char(tok));
-	}
+unicode_string & unicode_string::operator+=(string other) { 
+	addString(other);
+	return *this;
 }

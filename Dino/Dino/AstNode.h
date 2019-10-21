@@ -17,41 +17,89 @@ namespace AST
 		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
 		int _line;
 	public:
+		/* Default constructor, does NOT set line.*/
 		Node() { _nodeId = _idCount++; };
+
+		/* Set the line the node is on */
 		void setLine(int line) { _line = line; }
-		const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+
+		/* Line the node is on */
 		const int getLine() const { return _line; }
+		
+		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
+
+		/* Returns whether the node represents an Expression */
 		virtual bool isExpression() = 0;
+
+		/* ----------  For AstToFile.h ---------- */
+
+		/* 
+			Returns node's unique id number 
+			Function defined for AST visual representation - see AstToFile.h 
+		*/
+		const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+
+		/* 
+			Returns a string representation of the node (excluding children info)
+			Function defined for AST visual representation - see AstToFile.h 
+		*/
 		virtual string toString() = 0;
+
+		/*
+			Returns a vector of all children owned by the node.
+			Function defined for AST visual representation - see AstToFile.h
+		*/
 		virtual vector<Node*> getChildren() = 0;
 	};
 
+	/*
+		A statement is code that expresses some action to be carried out.
+	*/
 	class Statement : virtual public Node
 	{
 	public:
 		Statement() : Node() {};
-		virtual bool isStatement() { return true; };
-		virtual bool isExpression() { return false; };
 
 		virtual StatementType getStatementType() = 0;
+
+		/* This node IS a Statement */
+		virtual bool isStatement() { return true; };
+
+		/* This node is NOT an Expression */
+		virtual bool isExpression() { return false; };
 	};
 
+	/*
+		An expression is code that evaluates to a value.
+	*/
 	class Expression : virtual public Node
 	{
 	public:
 		Expression() : Node() {};
-		virtual bool isStatement() { return false; };
-		virtual bool isExpression() { return true; };
 
 		virtual ExpressionType getExpressionType() = 0;
+
+		/* This node is NOT a Statement */
+		virtual bool isStatement() { return false; };
+
+		/* This node IS an Expression */
+		virtual bool isExpression() { return true; };
 	};
 
+	/*
+		An ExpressionStatement is both an Expression and a Statement; 
+		it expresses an action to be carried out AND evaluates to a value.
+	*/
 	class ExpressionStatement : public Expression, public Statement
 	{
 	public:
 		ExpressionStatement() : Expression() {};
+
+		/* This node IS a Statement */
 		virtual bool isStatement() { return true; };
+
+		/* This node IS an Expression */
 		virtual bool isExpression() { return true; };
 	};
 
@@ -65,10 +113,10 @@ namespace AST
 
 	public:
 		Assignment() : ExpressionStatement() {};
+		virtual vector<Node*> getChildren();
+		virtual string toString() { return "<Assignment>\\n" + _operator._str.to_string(); };
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; };
 		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; };
-		virtual string toString() { return "<Assignment>\\n" + _operator._str.to_string(); };
-		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
 		void setLeft(Expression* left) { _left = left; }
