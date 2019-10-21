@@ -17,7 +17,6 @@ public:
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
 	
-
 	AST::Node* parse(int lastPrecedence = 0);
 	AST::StatementBlock* parseBlock(OperatorType expected = OT_EOF);
 

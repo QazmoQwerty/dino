@@ -14,7 +14,6 @@ using std::unordered_map;
 #define BINARY	0b0001
 #define PREFIX	0b0010
 #define POSTFIX	0b0100
-//#define KEYWORD	0b1000
 #define NONE -1
 
 class OperatorsMap
@@ -26,10 +25,10 @@ public:
 	*/
 	static void setup();
 
-	/*
-		Funtion returns map with an operator string as the key, and the corresponding OperatorType as the value.
-	*/
+	/* Funtion returns map with an operator string as the key, and the corresponding OperatorType as the value. */
 	static const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& getOperators();
+
+	/* Funtion returns map with an operator string as the key, and the corresponding OperatorType as the value. */
 	static const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& getWordOperators();
 
 	static bool isWord(OperatorType type);
