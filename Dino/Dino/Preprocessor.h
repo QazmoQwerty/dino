@@ -25,6 +25,5 @@ using std::stack;
 class Preprocessor 
 {
 public:
-	//static vector<vector<Token*>*>& Preparse(vector<Token*> tokens);
 	static vector<Token*>& preprocess(vector<Token*> tokens);
 };

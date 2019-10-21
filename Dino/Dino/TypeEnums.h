@@ -46,53 +46,8 @@ enum CharType
 	CT_UNKNOWN,
 };
 
-
-
-//enum BinaryOperator {
-//	OT_IS,
-//};
-//
-//enum KeywordType {
-//	OT_WHILE,
-//	OT_DO,
-//	OT_FOR,
-//	OT_IF,
-//	OT_ELSE,
-//	OT_UNLESS,
-//	
-//	
-//	OT_DELETE,
-//	OT_TYPE,
-//	OT_INTERFACE,
-//	OT_NAMESPACE,
-//	OT_IMPLEMENTS,
-//	
-//	OT_GET,
-//	OT_SET,
-//};
-//
-//enum PrefixOperator {
-//	PRE_POSITIVE,					//	+
-//	PRE_NEGATIVE,					//	-
-//	PRE_PREFIX_AT,					//	@
-//	PRE_REFERENCE,					//	&
-//	PRE_INCREMENT,					//	++
-//	PRE_DECREMENT,					//	--
-//	PRE_RETURN,
-//	PRE_NEW,
-//};
-//
-//enum PostfixOperator {
-//
-//	// Postfix:
-//	POST_INCREMENT,			//	++
-//	POST_DECREMENT,			//	--
-//	POST_AT,					//	@
-//};
-
 /*
 	Types of operators the lexer proccesses.
-	Probably incomplete.
 */
 enum OperatorType
 {
@@ -196,18 +151,9 @@ enum ExceptionType
 	EXT_LEXER,
 };
 
-enum VariableType
-{
-	VT_BOOLEAN,
-	VT_INTEGER,
-	VT_FRACTION,
-	VT_CHARACTER,
-	VT_STRING,
-	VT_CUSTOM,
-	//VT_NULL,
-	//VT_UNKNOWN,
-};
-
+/*
+	Types of AST statements 
+*/
 enum StatementType
 {
 	ST_SWITCH,
@@ -232,6 +178,9 @@ enum StatementType
 	ST_UNKNOWN,
 };
 
+/*
+	Types of AST expressions
+*/
 enum ExpressionType
 {
 	ET_UNARY_ASSIGNMENT,
