@@ -68,6 +68,8 @@ namespace AST
 
 		/* This node is NOT an Expression */
 		virtual bool isExpression() { return false; };
+
+		virtual bool isDeclaration() { return false; }
 	};
 
 	/*
@@ -171,6 +173,7 @@ namespace AST
 
 	public:
 		VariableDeclaration() : ExpressionStatement() {};
+		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
 		virtual string toString() {
@@ -217,6 +220,7 @@ namespace AST
 		virtual string toString() { return "<StatementBlock>"; };
 		virtual vector<Node*> getChildren();
 
+		vector<Statement*> getStatements() { return _statements; }
 		void addStatement(Statement* statement) { _statements.push_back(statement); }
 	};
 
@@ -348,6 +352,7 @@ namespace AST
 
 	public:
 		FunctionDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>\\n"; };
 		virtual vector<Node*> getChildren();
@@ -371,6 +376,7 @@ namespace AST
 
 	public:
 		InterfaceDeclaration() {};
+		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
@@ -393,6 +399,7 @@ namespace AST
 		Statement* _set;
 	public:
 		PropertyDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
 		virtual string toString() { return "<PropertyDeclaration>"; };
 		virtual vector<Node*> getChildren();
@@ -414,6 +421,7 @@ namespace AST
 
 	public:
 		TypeDeclaration() {};
+		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
@@ -438,6 +446,7 @@ namespace AST
 
 	public:
 		NamespaceDeclaration() { _name = ""; };
+		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_NAMESPACE_DECLARATION; };
 		virtual string toString() { return "<NamespaceDeclaration>\\n" + _name.to_string(); };
 		virtual vector<Node*> getChildren();

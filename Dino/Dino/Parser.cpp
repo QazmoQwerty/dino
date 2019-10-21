@@ -288,7 +288,13 @@ AST::Node * Parser::std(Token * token)
 			case(OT_NAMESPACE):	{
 				auto node = new AST::NamespaceDeclaration();
 				node->setName(expectIdentifier());
-				node->setStatement(parseInnerBlock());	// technically incorrect, should only accept declarations
+				auto inner = parseInnerBlock();
+				if (inner->isDeclaration());
+				else if (inner->getStatementType() == ST_STATEMENT_BLOCK) 
+					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
+						if (!i->isDeclaration())
+							throw DinoException("Expected a declaration", EXT_GENERAL, i->getLine());
+				node->setStatement(inner);	
 				node->setLine(token->_line);
 				return node;
 			}
