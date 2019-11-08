@@ -543,6 +543,11 @@ namespace AST
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(Expression* thenBranch) { _thenBranch = thenBranch; }
 		void setElseBranch(Expression* elseBranch) { _elseBranch = elseBranch; }
+
+		Expression* getCondition() { return _condition; }
+		Expression* getThenBranch() { return _thenBranch; }
+		Expression* getElseBranch() { return _elseBranch; }
+
 	};
 
 	/********************** Literals **********************/
