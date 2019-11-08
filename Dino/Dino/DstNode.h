@@ -81,4 +81,14 @@ namespace DST
 	public:
 		ConditionalExpression(AST::ConditionalExpression *base);
 	};
+
+	class PropertyDeclaration : public Statement {
+	private:
+		AST::PropertyDeclaration *_base;
+		VariableDeclaration* _decl;
+		Statement* _get;
+		Statement* _set;
+	public:
+		PropertyDeclaration(AST::PropertyDeclaration *base);
+	};
 }

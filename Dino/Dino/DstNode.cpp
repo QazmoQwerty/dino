@@ -12,3 +12,10 @@ DST::ConditionalExpression::ConditionalExpression(AST::ConditionalExpression * b
 	_thenBranch = Decorator::convertToExpression(Decorator::decorate(_base->getThenBranch()));
 	_elseBranch = Decorator::convertToExpression(Decorator::decorate(_base->getElseBranch()));
 }
+
+DST::PropertyDeclaration::PropertyDeclaration(AST::PropertyDeclaration * base) : _base(base)
+{
+	_decl = Decorator::convertToExpression(Decorator::decorate(_base->getVarDecl()));
+	_get = Decorator::convertToStatement(Decorator::decorate(_base->getGet()));
+	_set= Decorator::convertToStatement(Decorator::decorate(_base->getSet()));
+}
