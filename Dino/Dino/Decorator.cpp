@@ -1,31 +1,45 @@
 #include "Decorator.h"
 
-
-
-Decorator::Decorator()
-{
-}
-
-
-Decorator::~Decorator()
-{
-}
-
 DST::Node *Decorator::decorate(AST::Node * node)
 {
-	return NULL;
+	if (node->isExpression())
+	{
+		switch (dynamic_cast<AST::Expression*>(node)->getExpressionType())
+		{
+			case ET_ASSIGNMENT:
+				return decorate(dynamic_cast<AST::Assignment*>(node));
+			case ET_VARIABLE:
+				return decorate(dynamic_cast<AST::Variable*>(node));
+		}
+	}
 }
 
-DST::Expression * Decorator::convertToExpression(DST::Node * node)
+
+DST::Expression *Decorator::decorate(AST::Variable * node)
 {
-	if (node == nullptr || node->isExpression())
-		return dynamic_cast<DST::Expression*>(node);
-	throw DinoException("expected an expression", EXT_GENERAL, node->getLine());
+	if (_variables.count(node->getVarId()))
+		return new DST::Variable(node, _variables[node->getVarId()]);
+
+	else if (_types.count(node->getVarId()))
+		return evalType(node);
+
+	else 
+		throw DinoException::DinoException("Identifier is undefined", EXT_GENERAL, node->getLine()); // TODO: add id to error.
 }
 
-DST::Statement * Decorator::convertToStatement(DST::Node * node)
+DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 {
-	if (node == nullptr || node->isStatement())
-		return dynamic_cast<DST::Statement*>(node);
-	throw DinoException("expected a statement", EXT_GENERAL, node->getLine());
+	auto decl = new DST::VariableDeclaration(node);
+	decl->setType(evalType(node->getVarType()));
+	if (_variables.count(node->getVarId()))
+		throw DinoException::DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
+	_variables[node->getVarId()] = decl->getType();
+	return decl;
+}
+
+DST::Type * Decorator::evalType(AST::Expression * node)
+{
+	if (node->getExpressionType() == ET_VARIABLE)
+		return new DST::BasicType(node);
+	return nullptr;
 }

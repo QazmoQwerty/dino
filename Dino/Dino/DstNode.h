@@ -1,11 +1,10 @@
 #pragma once
 
 #include "AstNode.h";
-#include "Decorator.h";
 
 namespace DST
 {
-	class Node : public AST::Node
+	class Node
 	{
 		
 	};
@@ -16,8 +15,7 @@ namespace DST
 	class Statement : virtual public Node
 	{
 	public:
-		Statement() : Node() {};
-
+		
 		virtual StatementType getStatementType() = 0;
 
 		/* This node IS a Statement */
@@ -35,8 +33,6 @@ namespace DST
 	class Expression : virtual public Node
 	{
 	public:
-		Expression() : Node() {};
-
 		virtual ExpressionType getExpressionType() = 0;
 
 		/* This node is NOT a Statement */
@@ -45,7 +41,7 @@ namespace DST
 		/* This node IS an Expression */
 		virtual bool isExpression() { return true; };
 	};
-
+	
 	/*
 		An ExpressionStatement is both an Expression and a Statement;
 		it expresses an action to be carried out AND evaluates to a value.
@@ -53,8 +49,6 @@ namespace DST
 	class ExpressionStatement : public Expression, public Statement
 	{
 	public:
-		ExpressionStatement() : Expression() {};
-
 		/* This node IS a Statement */
 		virtual bool isStatement() { return true; };
 
@@ -62,33 +56,47 @@ namespace DST
 		virtual bool isExpression() { return true; };
 	};
 
-	class BinaryOperation : public Expression
+	class Type : public Expression
 	{
-		AST::BinaryOperation *_base;
-		Expression *_left;
-		Expression *_right;
-
+	protected:
+		AST::Expression *_base;
 	public:
-		BinaryOperation(AST::BinaryOperation *base);
+		Type(AST::Expression *base) : _base(base) { }
+		virtual ExactType getExactType() = 0;
+		virtual ExpressionType getExpressionType() { return ET_TYPE; }
 	};
 
-	class ConditionalExpression : public Expression
+	class BasicType : public Type 
 	{
-		AST::ConditionalExpression *_base;
-		Expression* _condition;
-		Expression* _thenBranch;
-		Expression* _elseBranch;
 	public:
-		ConditionalExpression(AST::ConditionalExpression *base);
+		BasicType(AST::Expression *base) : Type(base) { }
+		unicode_string getTypeId() { return dynamic_cast<AST::Variable*>(_base)->getVarId(); }
+		ExactType getExactType() { return EXACT_BASIC; }
 	};
 
-	class PropertyDeclaration : public Statement {
-	private:
-		AST::PropertyDeclaration *_base;
-		VariableDeclaration* _decl;
-		Statement* _get;
-		Statement* _set;
+	class VariableDeclaration : public ExpressionStatement
+	{
+		AST::VariableDeclaration *_base;
+		Type *_type;
+
 	public:
-		PropertyDeclaration(AST::PropertyDeclaration *base);
+		VariableDeclaration(AST::VariableDeclaration *base) : _base(base) { };
+
+		Type *getType() { return _type; }
+		void setType(Type *type) { _type = type; }
+
+		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; }
+		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; }
+	};
+
+	class Variable : public Expression
+	{
+		AST::Variable *_base;
+		Type *_type;
+
+	public:
+		Variable(AST::Variable *base, Type *type) : _base(base), _type(type) {};
+		void setType(Type *type) { _type = type; };
+		virtual ExpressionType getExpressionType() { return ET_VARIABLE; }
 	};
 }
