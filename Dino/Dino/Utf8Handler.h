@@ -62,7 +62,7 @@ public:
 		Number of unicode characters in string.
 		NOTE: does not include null-terminator.
 	*/
-	unsigned int length() const { return _str.size(); }
+	size_t length() const { return _str.size(); }
 
 	/* ----------  Operators ---------- */
 
