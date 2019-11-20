@@ -272,3 +272,8 @@ vector<AST::Node*> AST::SwitchCase::getChildren()
 	}
 	return v;
 }
+
+vector<AST::Node*> AST::Variable::getChildren()
+{
+	return vector<Node*>();
+}

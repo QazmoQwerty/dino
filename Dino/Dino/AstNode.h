@@ -245,7 +245,6 @@ namespace AST
 		Statement* getElseBranch() { return _elseBranch; }
 	};
 
-
 	typedef struct CaseClause {
 		Expression* _expression;
 		Statement* _statement;
@@ -525,7 +524,7 @@ namespace AST
 		unicode_string getVarId() { return _varId; }
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE; };
 		virtual string toString() { return "<Variable>\\n" + _varId.to_string(); };
-		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+		virtual vector<Node*> getChildren();
 	};
 
 	class ConditionalExpression : public Expression
