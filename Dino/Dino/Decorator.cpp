@@ -1,5 +1,8 @@
 #include "Decorator.h"
 
+unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction> Decorator::_variables;
+unordered_map<unicode_string, /* TypeDefinition* */ void*, UnicodeHasherFunction> Decorator::_types;
+
 DST::Node *Decorator::decorate(AST::Node * node)
 {
 	if (node->isExpression())
@@ -12,8 +15,8 @@ DST::Node *Decorator::decorate(AST::Node * node)
 				return decorate(dynamic_cast<AST::Variable*>(node));
 		}
 	}
+	return NULL;
 }
-
 
 DST::Expression *Decorator::decorate(AST::Variable * node)
 {
