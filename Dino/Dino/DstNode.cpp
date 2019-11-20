@@ -46,6 +46,40 @@ vector<DST::Node*> DST::TypeDeclaration::getChildren()
 	return vector<Node*>();
 }
 
+vector<DST::Node*> DST::IfThenElse::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_condition);
+	v.push_back(_thenBranch);
+	v.push_back(_elseBranch);
+	return v;
+}
+
+vector<DST::Node*> DST::WhileLoop::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_condition);
+	v.push_back(_statement);
+	return v;
+}
+
+vector<DST::Node*> DST::ForLoop::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_begin);
+	v.push_back(_condition);
+	v.push_back(_increment);
+	v.push_back(_statement);
+	return v;
+}
+
+vector<DST::Node*> DST::UnaryOperationStatement::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
+	return v;
+}
+
 vector<DST::Node*> DST::VariableDeclaration::getChildren()
 {
 	vector<Node*> v;

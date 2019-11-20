@@ -52,6 +52,14 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::Assignment*>(node));
 	case ST_STATEMENT_BLOCK:
 		return decorate(dynamic_cast<AST::StatementBlock*>(node));
+	case ST_IF_THEN_ELSE:
+		return decorate(dynamic_cast<AST::IfThenElse*>(node));
+	case ST_FOR_LOOP: 
+		return decorate(dynamic_cast<AST::ForLoop*>(node));
+	case ST_WHILE_LOOP: 
+		return decorate(dynamic_cast<AST::WhileLoop*>(node));
+	case ST_DO_WHILE_LOOP: 
+		throw DinoException("do-while loops are not implemented yet", EXT_GENERAL, node->getLine());
 	}
 	return NULL;
 }
@@ -118,9 +126,48 @@ DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)
 	return bl;
 }
 
+DST::IfThenElse * Decorator::decorate(AST::IfThenElse * node)
+{
+	auto ite = new DST::IfThenElse(node);
+	ite->setCondition(decorate(node->getCondition()));
+	if (!isCondition(ite->getCondition()))
+		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+	ite->setThenBranch(decorate(node->getThenBranch()));
+	ite->setElseBranch(decorate(node->getThenBranch()));
+	return ite;
+}
+
+DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
+{
+	auto loop = new DST::ForLoop(node);
+	loop->setBegin(decorate(node->getBegin()));
+	loop->setCondition(decorate(node->getCondition()));
+	if (!isCondition(loop->getCondition()))
+		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+	loop->setIncrement(decorate(node->getIncrement()));
+	loop->setStatement(decorate(node->getStatement()));
+	return loop;
+}
+
+DST::WhileLoop * Decorator::decorate(AST::WhileLoop * node)
+{
+	auto loop = new DST::WhileLoop(node);
+	loop->setCondition(decorate(node->getCondition()));
+	if (!isCondition(loop->getCondition()))
+		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+	loop->setStatement(decorate(node->getStatement()));
+	return loop;
+}
+
 DST::Type * Decorator::evalType(AST::Expression * node)
 {
 	if (node->getExpressionType() == ET_VARIABLE)
 		return new DST::BasicType(node);
 	return nullptr;
+}
+
+bool Decorator::isCondition(DST::Expression * node)
+{
+	return node && node->getType()->getExactType() == EXACT_BASIC
+		&& dynamic_cast<DST::BasicType*>(node)->getTypeId() == CONDITION_TYPE;
 }

@@ -192,6 +192,99 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class IfThenElse : public Statement
+	{
+		AST::IfThenElse *_base;
+		Expression* _condition;
+		Statement* _thenBranch;
+		Statement* _elseBranch;
+
+	public:
+		IfThenElse(AST::IfThenElse *base) : _base(base) {};
+		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
+		virtual string toString() { return "<IfThenElse>"; };
+		virtual vector<Node*> getChildren();
+
+		void setCondition(Expression* condition) { _condition = condition; }
+		void setThenBranch(Statement* thenBranch) { _thenBranch = thenBranch; }
+		void setElseBranch(Statement* elseBranch) { _elseBranch = elseBranch; }
+
+		Expression* getCondition() { return _condition; }
+		Statement* getThenBranch() { return _thenBranch; }
+		Statement* getElseBranch() { return _elseBranch; }
+	};
+
+	class WhileLoop : public Statement
+	{
+		AST::WhileLoop *_base;
+		Expression* _condition;
+		Statement* _statement;
+
+	public:
+		WhileLoop(AST::WhileLoop *base) : _base(base) {};
+		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
+		virtual string toString() { return "<While>"; };
+		virtual vector<Node*> getChildren();
+
+		void setCondition(Expression* condition) { _condition = condition; }
+		void setStatement(Statement* statement) { _statement = statement; }
+
+		Expression* getCondition() { return _condition; }
+		Statement* getStatement() { return _statement; }
+	};
+
+	class ForLoop : public Statement
+	{
+		AST::ForLoop *_base;
+		Statement* _begin;
+		Expression* _condition;
+		Statement* _increment;
+		Statement* _statement;
+
+	public:
+		ForLoop(AST::ForLoop *base) : _base(base) {};
+		virtual StatementType getStatementType() { return ST_FOR_LOOP; };
+		virtual string toString() { return "<For>"; };
+		virtual vector<Node*> getChildren();
+
+		void setCondition(Expression* condition) { _condition = condition; }
+		void setStatement(Statement* statement) { _statement = statement; }
+		void setBegin(Statement* begin) { _begin = begin; }
+		void setIncrement(Statement* increment) { _increment = increment; }
+
+		Expression* getCondition() { return _condition; }
+		Statement* getStatement() { return _statement; }
+		Statement* getBegin() { return _begin; }
+		Statement* getIncrement() { return _increment; }
+	};
+
+	class DoWhileLoop : public WhileLoop
+	{
+	public:
+		DoWhileLoop(AST::DoWhileLoop *base) : WhileLoop(base) {};
+		virtual StatementType getStatementType() { return ST_DO_WHILE_LOOP; };
+		virtual string toString() { return "<Do>"; };
+
+	};
+
+	class UnaryOperationStatement : public Statement
+	{
+		Operator _operator;
+		Expression* _expression;
+
+	public:
+		UnaryOperationStatement() : Statement() {};
+		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
+		virtual string toString() { return string() + "<UnaryOperatorStatement>\\n" + _operator._str.to_string(); };
+		virtual vector<Node*> getChildren();
+
+		void setOperator(Operator op) { _operator = op; }
+		void setExpression(Expression* expression) { _expression = expression; }
+
+		Operator getOperator() { return _operator; }
+		Expression* getExpression() { return _expression; }
+	};
+
 	class TypeDeclaration : public Statement 
 	{
 		unicode_string _name;
@@ -206,6 +299,8 @@ namespace DST
 		virtual string toString() { return "<TypeDeclaration>"; };
 		virtual vector<Node*> getChildren();
 	};
+
+
 
 	/***************** ExpressionStatements *****************/
 

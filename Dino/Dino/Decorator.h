@@ -2,6 +2,8 @@
 
 #include "DstNode.h"
 
+#define CONDITION_TYPE unicode_string("bool")
+
 using std::unordered_map;
 
 class Decorator
@@ -20,6 +22,9 @@ public:
 	 
 	 //Statements
 	 static DST::StatementBlock *decorate(AST::StatementBlock *node);
+	 static DST::IfThenElse *decorate(AST::IfThenElse *node);
+	 static DST::ForLoop *decorate(AST::ForLoop *node);
+	 static DST::WhileLoop *decorate(AST::WhileLoop *node);
 
 	 // ExpressionStatements
 	 static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
@@ -27,6 +32,8 @@ public:
 
 	 
 	 static DST::Type *evalType(AST::Expression *node);
+
+	 static bool isCondition(DST::Expression *node);
 
 	 static unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction> _variables;
 	 static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;	// Should point to a class which saves all the functions, properties and variables of a class
