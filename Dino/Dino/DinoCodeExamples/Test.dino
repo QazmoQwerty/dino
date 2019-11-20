@@ -1,3 +1,8 @@
 int x := 10
-x += 2
-y := x
+bool b := false
+if x = 10:
+    x += 2
+else {
+    int y := x + 2
+    b := y < x
+}

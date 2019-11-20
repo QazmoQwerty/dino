@@ -97,7 +97,9 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
 
 	// TODO - determine type
-	bo->setType(bo->getLeft()->getType());	// (temporary)
+	if (node->getOperator()._type == OT_EQUAL || node->getOperator()._type == OT_SMALLER || node->getOperator()._type == OT_LOGICAL_NOT || node->getOperator()._type == OT_LOGICAL_AND)
+		bo->setType(new DST::BasicType(CONDITION_TYPE)); // temporary
+	else bo->setType(bo->getLeft()->getType());	// temporary
 
 	return bo;
 }
@@ -169,5 +171,5 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 bool Decorator::isCondition(DST::Expression * node)
 {
 	return node && node->getType()->getExactType() == EXACT_BASIC
-		&& dynamic_cast<DST::BasicType*>(node)->getTypeId() == CONDITION_TYPE;
+		&& dynamic_cast<DST::BasicType*>(node->getType())->getTypeId() == CONDITION_TYPE;
 }
