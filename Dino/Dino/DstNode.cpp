@@ -13,14 +13,14 @@ vector<DST::Node*> DST::BasicType::getChildren()
 vector<DST::Node*> DST::Variable::getChildren()
 {
 	vector<Node*> v;
-	v.push_back(_type);
+	//v.push_back(_type);
 	return v;
 }
 
 vector<DST::Node*> DST::BinaryOperation::getChildren()
 {
 	vector<Node*> v;
-	v.push_back(_type);
+	//v.push_back(_type);
 	v.push_back(_left);
 	v.push_back(_right);
 	return v;
@@ -29,7 +29,7 @@ vector<DST::Node*> DST::BinaryOperation::getChildren()
 vector<DST::Node*> DST::Literal::getChildren()
 {
 	vector<Node*> v;
-	v.push_back(_type);
+	//v.push_back(_type);
 	return v;
 }
 
@@ -49,6 +49,15 @@ vector<DST::Node*> DST::TypeDeclaration::getChildren()
 vector<DST::Node*> DST::VariableDeclaration::getChildren()
 {
 	vector<Node*> v;
-	v.push_back(_type);
+	//v.push_back(_type);
+	return v;
+}
+
+vector<DST::Node*> DST::Assignment::getChildren()
+{
+	vector<Node*> v;
+	//v.push_back(_type);
+	v.push_back(_left);
+	v.push_back(_right);
 	return v;
 }

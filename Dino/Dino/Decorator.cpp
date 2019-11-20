@@ -30,12 +30,14 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 	{
 	case ET_VARIABLE:
 		return decorate(dynamic_cast<AST::Variable*>(node));
-	case ET_VARIABLE_DECLARATION:
-		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
 	case ET_BINARY_OPERATION:
 		return decorate(dynamic_cast<AST::BinaryOperation*>(node));
 	case ET_LITERAL:
 		return decorate(dynamic_cast<AST::Literal*>(node));
+	case ET_VARIABLE_DECLARATION:
+		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
+	case ET_ASSIGNMENT:
+		return decorate(dynamic_cast<AST::Assignment*>(node));
 	}
 	return NULL;
 }
@@ -44,7 +46,12 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 {
 	switch (dynamic_cast<AST::Statement*>(node)->getStatementType())
 	{
-	
+	case ST_VARIABLE_DECLARATION:
+		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
+	case ST_ASSIGNMENT:
+		return decorate(dynamic_cast<AST::Assignment*>(node));
+	case ST_STATEMENT_BLOCK:
+		return decorate(dynamic_cast<AST::StatementBlock*>(node));
 	}
 	return NULL;
 }
@@ -68,6 +75,13 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 		throw DinoException::DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
 	_variables[node->getVarId()] = decl->getType();
 	return decl;
+}
+
+DST::Assignment * Decorator::decorate(AST::Assignment * node)
+{
+	auto assignment = new DST::Assignment(node, decorate(node->getLeft()), decorate(node->getRight()));
+	assignment->setType(assignment->getLeft()->getType());
+	return assignment;
 }
 
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
@@ -94,6 +108,14 @@ DST::Literal * Decorator::decorate(AST::Literal * node)
 	case (LT_FUNCTION):		throw DinoException("function literals are not implemented yet", EXT_GENERAL, node->getLine());
 	}
 	return lit;
+}
+
+DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)
+{
+	auto bl = new DST::StatementBlock();
+	for (auto i : dynamic_cast<AST::StatementBlock*>(node)->getStatements())
+		bl->addStatement(decorate(i));
+	return bl;
 }
 
 DST::Type * Decorator::evalType(AST::Expression * node)

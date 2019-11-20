@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 			astToFile("AstDisplay.gv", ast, showLineAST);
 
 		DST::Node* dst = Decorator::decorate(ast);
-		dstToFile("DstDisplat.gv", dst, false);
+		dstToFile("DstDisplay.gv", dst, false);
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }
 	catch (exception e) { std::cout << e.what() << std::endl; }

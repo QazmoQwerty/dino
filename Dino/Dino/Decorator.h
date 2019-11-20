@@ -15,9 +15,16 @@ public:
 
 	 // Expressions
 	 static DST::Expression *decorate(AST::Variable *node);
-	 static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
 	 static DST::BinaryOperation *decorate(AST::BinaryOperation *node);
 	 static DST::Literal *decorate(AST::Literal *node);
+	 
+	 //Statements
+	 static DST::StatementBlock *decorate(AST::StatementBlock *node);
+
+	 // ExpressionStatements
+	 static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
+	 static DST::Assignment *decorate(AST::Assignment *node);
+
 	 
 	 static DST::Type *evalType(AST::Expression *node);
 

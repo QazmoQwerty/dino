@@ -109,6 +109,7 @@ namespace DST
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
 
+		virtual string toShortString() = 0;
 		virtual string toString() { return "<Type>"; };
 		virtual vector<Node*> getChildren();
 	};
@@ -117,12 +118,13 @@ namespace DST
 	{
 		unicode_string _typeId;
 	public:
-		BasicType(AST::Expression *base) : Type(base) { dynamic_cast<AST::Variable*>(_base)->getVarId(); }
+		BasicType(AST::Expression *base) : Type(base) { _typeId = dynamic_cast<AST::Variable*>(_base)->getVarId(); }
 		BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
 		unicode_string getTypeId() { return _typeId; }
 		ExactType getExactType() { return EXACT_BASIC; }
 
-		virtual string toString() { return "<BasicType>"; };
+		virtual string toShortString() { return _typeId.to_string(); };
+		virtual string toString() { return "<BasicType>\n" + _typeId.to_string(); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -137,7 +139,7 @@ namespace DST
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE; }
 
-		virtual string toString() { return "<Variable>"; };
+		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -157,7 +159,7 @@ namespace DST
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
 
-		virtual string toString() { return "<BinaryOperation>"; };
+		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -171,7 +173,7 @@ namespace DST
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
 
-		virtual string toString() { return "<Literal>"; };
+		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -221,7 +223,28 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; }
 
-		virtual string toString() { return "<TypeDeclaration>"; };
+		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
+		virtual vector<Node*> getChildren();
+	};
+
+	class Assignment : public ExpressionStatement
+	{
+		AST::Assignment *_base;
+		Type *_type;
+		Expression *_left;
+		Expression *_right;
+
+	public:
+		Assignment(AST::Assignment *base) : _base(base) {};
+		Assignment(AST::Assignment *base, Expression *left, Expression *right) : _base(base), _left(left), _right(right) {};
+		void setType(Type *type) { _type = type; };
+		virtual Type *getType() { return _type; }
+		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; }
+		virtual StatementType getStatementType() { return ST_ASSIGNMENT; }
+		Expression *getLeft() { return _left; }
+		Expression *getRight() { return _right; }
+
+		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
 }
