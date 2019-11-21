@@ -11,6 +11,7 @@ class Decorator
 public:
 	static void setup();
 	static DST::Node *decorate(AST::Node *node);
+	static void clear();
 
 private:
 	static DST::Expression *decorate(AST::Expression *node);
@@ -37,9 +38,10 @@ private:
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
 	static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
+	static vector<void*> _toDelete;
 
 	// Scope
-	static int currentScope() { return _variables.size() - 1; }
+	static unsigned int currentScope() { return (int)_variables.size() - 1; }
 	static void enterBlock() { _variables.push_back(unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>()); }
 	static void leaveBlock();
 };

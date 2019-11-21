@@ -2,6 +2,7 @@
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
 unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
+vector<void*> Decorator::_toDelete;
 
 #define createBasicType(name) _types[unicode_string(name)] = new DST::TypeDeclaration(unicode_string(name));
 
@@ -198,6 +199,13 @@ bool Decorator::isCondition(DST::Expression * node)
 void Decorator::leaveBlock()
 {
 	for (auto i : _variables[currentScope()])
-	delete i.second;
+		_toDelete.push_back(i.second);
 	_variables.pop_back();
+}
+
+void Decorator::clear()
+{
+	for (auto i : _toDelete)
+		if (i != nullptr)
+			delete i;
 }
