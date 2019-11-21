@@ -215,10 +215,10 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 					temp->_type = TT_SINGLE_LINE_COMMENT;
 					line++;
 				}
-				/*else if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)	// TODO - multi line comments
+				if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)
 				{
 					temp->_data = "";
-					while (index + 1 < str.length() && string() + str[index] + str[index + 1] != MULTI_LINE_COMMENT_END)
+					while (index + 1 < str.length() && !(str[index] == MULTI_LINE_COMMENT_END_1 && str[index + 1] == MULTI_LINE_COMMENT_END_2))
 					{
 						if (str[index] == '\n')
 							line++;
@@ -226,7 +226,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 					}
 					index += 2;
 					temp->_type = TT_MULTI_LINE_COMMENT;
-				}*/
+				}
 				delete token;
 				token = temp;
 			}
