@@ -95,10 +95,18 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 {
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
-	// TODO - determine type
-	if (node->getOperator()._type == OT_EQUAL || node->getOperator()._type == OT_SMALLER || node->getOperator()._type == OT_LOGICAL_NOT || node->getOperator()._type == OT_LOGICAL_AND)
-		bo->setType(new DST::BasicType(CONDITION_TYPE)); // temporary
-	else bo->setType(bo->getLeft()->getType());	// temporary
+
+	switch (OperatorsMap::getReturnType(node->getOperator()._type))
+	{
+		case RT_BOOLEAN: 
+			bo->setType(new DST::BasicType(CONDITION_TYPE));
+			break;
+		case RT_LEFT: 
+			bo->setType(bo->getLeft()->getType());
+			break;
+		case RT_VOID: 
+			throw DinoException("Could not decorate, unimplemented operator.", EXT_GENERAL, node->getLine());
+	}
 
 	return bo;
 }
