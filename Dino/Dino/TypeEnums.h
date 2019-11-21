@@ -16,6 +16,14 @@ enum TokenType
 	TT_UNKNOWN,
 };
 
+enum ReturnType
+{
+	RT_LEFT,
+	RT_RIGHT,
+	RT_BOOLEAN,
+	RT_VOID,
+};
+
 /*
 	Types of literals the lexer proccesses
 */

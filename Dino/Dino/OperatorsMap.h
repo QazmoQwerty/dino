@@ -37,6 +37,8 @@ public:
 	static bool isKeyword(Operator op);
 	static bool isAssignment(OperatorType type);
 
+	static ReturnType getReturnType(OperatorType type);
+
 	static pair<const unicode_string, Operator> getOperatorByDefinition(OperatorType operatorType);
 private:
 	static unordered_map<unicode_string, Operator, UnicodeHasherFunction> _map;

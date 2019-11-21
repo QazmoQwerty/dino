@@ -95,7 +95,6 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 {
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
-
 	// TODO - determine type
 	if (node->getOperator()._type == OT_EQUAL || node->getOperator()._type == OT_SMALLER || node->getOperator()._type == OT_LOGICAL_NOT || node->getOperator()._type == OT_LOGICAL_AND)
 		bo->setType(new DST::BasicType(CONDITION_TYPE)); // temporary

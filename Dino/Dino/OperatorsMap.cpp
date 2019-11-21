@@ -112,6 +112,54 @@ bool OperatorsMap::isAssignment(OperatorType type)
 	return std::find(std::begin(assignmentTypes), std::end(assignmentTypes), type) != std::end(assignmentTypes);
 }
 
+ReturnType OperatorsMap::getReturnType(OperatorType type)
+{
+	OperatorType leftTypes[] = {
+		OT_ADD,							//	+
+		OT_SUBTRACT,					//	-
+		OT_DIVIDE,						//	/
+		OT_MULTIPLY,					//	*
+		OT_MODULUS,						//	%
+		OT_INCREMENT,					//	++
+		OT_DECREMENT,					//	--
+		OT_BITWISE_AND,					//	&
+		OT_BITWISE_OR,					//	?
+		OT_BITWISE_XOR,					//	^
+		OT_BITWISE_NOT,					//	~
+		OT_BITWISE_SHIFT_LEFT,			//	<<
+		OT_BITWISE_SHIFT_RIGHT,			//	>>
+		OT_ASSIGN_EQUAL,				//	:=
+		OT_ASSIGN_ADD,					//	+=
+		OT_ASSIGN_SUBTRACT,				//	-=
+		OT_ASSIGN_MULTIPLY,				//	*=
+		OT_ASSIGN_DIVIDE,				//	/=
+		OT_ASSIGN_MODULUS,				//	%=
+		OT_ASSIGN_SHIFT_LEFT,			//	<<=
+		OT_ASSIGN_SHIFT_RIGHT,			//	>>=
+		OT_ASSIGN_BITWISE_AND,			//	&=
+		OT_ASSIGN_BITWISE_OR,			//	?=
+		OT_ASSIGN_BITWISE_XOR,			//	^=
+	};
+	if (std::find(std::begin(leftTypes), std::end(leftTypes), type) != std::end(leftTypes))
+		return RT_LEFT;
+
+	OperatorType logicalTypes[] = {
+		OT_EQUAL,						//	=
+		OT_NOT_EQUAL,					//	!=
+		OT_GREATER,						//	>
+		OT_SMALLER,						//	<
+		OT_GREATER_EQUAL,				//	>=
+		OT_SMALLER_EQUAL,				//	<=
+		OT_IS,							//	is
+		OT_LOGICAL_AND,					//	and
+		OT_LOGICAL_OR,					//	or
+		OT_LOGICAL_NOT,					//	not
+	};
+	if (std::find(std::begin(logicalTypes), std::end(logicalTypes), type) != std::end(logicalTypes))
+		return RT_BOOLEAN;
+	return RT_VOID;
+}
+
 /*
 	Gets an OperatorType and searches _map for the corresponding operator string.
 	NOTE: Unused function, might get deleted in the future.
