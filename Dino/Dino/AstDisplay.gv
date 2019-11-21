@@ -1,5 +1,5 @@
 ﻿digraph G {
-0 [label="<StatementBlock>"];0->1;
+0 [label="<StatementBlock>"];0->1;0->18;
 1 [label="<For>"];1->4;1->7;1->10;1->12;
 4 [label="<Assignment>\n≡"];4->3;4->5;
 3 [label="<VariableDeclaration>\ni"];3->2;
@@ -15,4 +15,8 @@
 14 [label="<Assignment>\n≡"];14->13;14->15;
 13 [label="<Variable>\ni"];
 15 [label="<Variable>\ni"];
+18 [label="<Assignment>\n≡"];18->17;18->19;
+17 [label="<VariableDeclaration>\ni"];17->16;
+16 [label="<Variable>\nint"];
+19 [label="<IntegerLiteral>\n0"];
 }

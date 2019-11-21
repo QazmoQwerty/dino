@@ -163,6 +163,7 @@ DST::IfThenElse * Decorator::decorate(AST::IfThenElse * node)
 
 DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 {
+	enterBlock();
 	auto loop = new DST::ForLoop(node);
 	loop->setBegin(decorate(node->getBegin()));
 	loop->setCondition(decorate(node->getCondition()));
@@ -170,6 +171,7 @@ DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
 	loop->setIncrement(decorate(node->getIncrement()));
 	loop->setStatement(decorate(node->getStatement()));
+	leaveBlock();
 	return loop;
 }
 
