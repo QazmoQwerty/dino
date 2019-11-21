@@ -108,6 +108,7 @@ namespace DST
 		virtual Type *getType() { return NULL; } // TODO - pointer to a global "type" type specifier.
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
+		virtual bool equals(Type *other) = 0;
 
 		virtual string toShortString() = 0;
 		virtual string toString() { return "<Type>"; };
@@ -122,6 +123,7 @@ namespace DST
 		BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
 		unicode_string getTypeId() { return _typeId; }
 		ExactType getExactType() { return EXACT_BASIC; }
+		virtual bool equals(Type *other) { return other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId; }
 
 		virtual string toShortString() { return _typeId.to_string(); };
 		virtual string toString() { return "<BasicType>\n" + _typeId.to_string(); };

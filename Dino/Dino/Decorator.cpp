@@ -1,6 +1,6 @@
 #include "Decorator.h"
 
-unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction> Decorator::_variables;
+vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
 unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 
 #define createBasicType(name) _types[unicode_string(name)] = new DST::TypeDeclaration(unicode_string(name));
@@ -26,6 +26,8 @@ DST::Node *Decorator::decorate(AST::Node * node)
 
 DST::Expression * Decorator::decorate(AST::Expression * node)
 {
+	if (node == nullptr)
+		return NULL;
 	switch (dynamic_cast<AST::Expression*>(node)->getExpressionType())
 	{
 	case ET_VARIABLE:
@@ -44,6 +46,8 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 
 DST::Statement * Decorator::decorate(AST::Statement * node)
 {
+	if (node == nullptr)
+		return NULL;
 	switch (dynamic_cast<AST::Statement*>(node)->getStatementType())
 	{
 	case ST_VARIABLE_DECLARATION:
@@ -66,28 +70,36 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 
 DST::Expression *Decorator::decorate(AST::Variable * node)
 {
-	if (_variables.count(node->getVarId()))
-		return new DST::Variable(node, _variables[node->getVarId()]);
-
-	else if (_types.count(node->getVarId()))
+	unicode_string name = node->getVarId();
+	
+	for (int scope = currentScope(); scope >= 0; scope--)
+		if (_variables[scope].count(name))
+			return new DST::Variable(node, _variables[scope][name]);
+	if (_types.count(name))
 		return evalType(node);
-
-	else throw DinoException::DinoException("Identifier is undefined", EXT_GENERAL, node->getLine()); // TODO: add id to error.
+	throw DinoException::DinoException("Identifier is undefined", EXT_GENERAL, node->getLine()); // TODO: add id to error.
 }
 
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 {
 	auto decl = new DST::VariableDeclaration(node);
+	unicode_string name = node->getVarId();
 	decl->setType(evalType(node->getVarType()));
-	if (_variables.count(node->getVarId()))
-		throw DinoException::DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
-	_variables[node->getVarId()] = decl->getType();
+	for (int scope = currentScope(); scope >= 0; scope--)
+		if (_variables[scope].count(name))
+			throw DinoException::DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
+	if (_types.count(name))
+		throw DinoException::DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
+		
+	_variables[currentScope()][name] = decl->getType();
 	return decl;
 }
 
 DST::Assignment * Decorator::decorate(AST::Assignment * node)
 {
 	auto assignment = new DST::Assignment(node, decorate(node->getLeft()), decorate(node->getRight()));
+	if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))
+		throw DinoException("Assignment of different types invalid.", EXT_GENERAL, node->getLine());
 	assignment->setType(assignment->getLeft()->getType());
 	return assignment;
 }
@@ -129,9 +141,11 @@ DST::Literal * Decorator::decorate(AST::Literal * node)
 
 DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)
 {
+	enterBlock();
 	auto bl = new DST::StatementBlock();
 	for (auto i : dynamic_cast<AST::StatementBlock*>(node)->getStatements())
 		bl->addStatement(decorate(i));
+	leaveBlock();
 	return bl;
 }
 
@@ -142,7 +156,7 @@ DST::IfThenElse * Decorator::decorate(AST::IfThenElse * node)
 	if (!isCondition(ite->getCondition()))
 		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
 	ite->setThenBranch(decorate(node->getThenBranch()));
-	ite->setElseBranch(decorate(node->getThenBranch()));
+	ite->setElseBranch(decorate(node->getElseBranch()));
 	return ite;
 }
 
@@ -179,4 +193,11 @@ bool Decorator::isCondition(DST::Expression * node)
 {
 	return node && node->getType()->getExactType() == EXACT_BASIC
 		&& dynamic_cast<DST::BasicType*>(node->getType())->getTypeId() == CONDITION_TYPE;
+}
+
+void Decorator::leaveBlock()
+{
+	for (auto i : _variables[currentScope()])
+	delete i.second;
+	_variables.pop_back();
 }
