@@ -485,7 +485,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		{	
 			auto funcCall = new AST::FunctionCall();
 			funcCall->setFunctionId(convertToExpression(left));
-			funcCall->setParameters(parseOptionalExpression());
+			funcCall->setArguments(parseOptionalExpression());
 			expectOperator(OT_PARENTHESIS_CLOSE);
 			funcCall->setLine(token->_line);
 			return funcCall;

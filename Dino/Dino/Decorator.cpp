@@ -8,12 +8,18 @@ vector<void*> Decorator::_toDelete;
 
 void Decorator::setup()
 {
+	enterBlock();
 	createBasicType("type");
 	createBasicType("int");
 	createBasicType("bool");
 	createBasicType("string");
 	createBasicType("char");
 	createBasicType("float");
+
+	auto *t = new DST::FunctionType();
+	t->addReturn(new DST::BasicType(unicode_string("void")));
+	t->addParameter(new DST::BasicType(unicode_string("int")));
+	_variables[0][unicode_string("Print")] = t;
 }
 
 DST::Node *Decorator::decorate(AST::Node * node)
@@ -31,7 +37,7 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		return NULL;
 	switch (dynamic_cast<AST::Expression*>(node)->getExpressionType())
 	{
-	case ET_VARIABLE:
+	case ET_IDENTIFIER:
 		return decorate(dynamic_cast<AST::Identifier*>(node));
 	case ET_BINARY_OPERATION:
 		return decorate(dynamic_cast<AST::BinaryOperation*>(node));
@@ -41,6 +47,10 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
 	case ET_ASSIGNMENT:
 		return decorate(dynamic_cast<AST::Assignment*>(node));
+	case ET_LIST:
+		return decorate(dynamic_cast<AST::ExpressionList*>(node));
+	case ET_FUNCTION_CALL:
+		return decorate(dynamic_cast<AST::FunctionCall*>(node));
 	}
 	return NULL;
 }
@@ -51,6 +61,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return NULL;
 	switch (dynamic_cast<AST::Statement*>(node)->getStatementType())
 	{
+	case ST_FUNCTION_CALL:
+		return decorate(dynamic_cast<AST::FunctionCall*>(node));
 	case ST_VARIABLE_DECLARATION:
 		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
 	case ST_ASSIGNMENT:
@@ -105,6 +117,21 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	return assignment;
 }
 
+DST::FunctionCall * Decorator::decorate(AST::FunctionCall * node)
+{
+	auto call = new DST::FunctionCall(node);
+	call->setFunctionId(decorate(node->getFunctionId()));
+	if (node->getArguments()->getExpressionType() != ET_LIST)
+	{
+		auto list = new DST::ExpressionList(node->getArguments());
+		list->addExpression(decorate(node->getArguments()));
+		call->setArguments(list);
+	}
+	else call->setArguments(decorate((AST::ExpressionList*)node->getArguments()));
+
+	return call;
+}
+
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 {
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
@@ -138,6 +165,14 @@ DST::Literal * Decorator::decorate(AST::Literal * node)
 	case (LT_FUNCTION):		throw DinoException("function literals are not implemented yet", EXT_GENERAL, node->getLine());
 	}
 	return lit;
+}
+
+DST::ExpressionList * Decorator::decorate(AST::ExpressionList * node)
+{
+	auto list = new DST::ExpressionList(node);
+	for (auto i : node->getExpressions())
+		list->addExpression(decorate(i));
+	return list;
 }
 
 DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)
@@ -187,7 +222,7 @@ DST::WhileLoop * Decorator::decorate(AST::WhileLoop * node)
 
 DST::Type * Decorator::evalType(AST::Expression * node)
 {
-	if (node->getExpressionType() == ET_VARIABLE)
+	if (node->getExpressionType() == ET_IDENTIFIER)
 		return new DST::BasicType(node);
 	return nullptr;
 }
@@ -207,6 +242,7 @@ void Decorator::leaveBlock()
 
 void Decorator::clear()
 {
+	leaveBlock();
 	for (auto i : _toDelete)
 		if (i != nullptr)
 			delete i;

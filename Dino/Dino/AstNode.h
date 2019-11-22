@@ -150,7 +150,7 @@ namespace AST
 	class FunctionCall : public ExpressionStatement
 	{
 		Expression* _functionId;
-		Expression* _parameters;
+		Expression* _arguments;
 
 	public:
 		FunctionCall() : ExpressionStatement() {};
@@ -160,10 +160,10 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setFunctionId(Expression* funcId) { _functionId = funcId; }
-		void setParameters(Expression* parameters) { _parameters = parameters; }
+		void setArguments(Expression* arguments) { _arguments = arguments; }
 
 		Expression* getFunctionId() { return _functionId; }
-		Expression* getParameters() { return _parameters; }
+		Expression* getArguments() { return _arguments; }
 	};
 
 	class VariableDeclaration : public ExpressionStatement

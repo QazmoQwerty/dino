@@ -130,6 +130,27 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class FunctionType : public Type
+	{
+		vector<Type*> _returns;
+		vector<Type*> _parameters;
+
+	public:
+		FunctionType() : Type(NULL) { }
+		FunctionType(AST::Expression *base) : Type(base) { }
+		void addReturn(Type *returnType) { _returns.push_back(returnType); }
+		void addParameter(Type *parameterType) { _parameters.push_back(parameterType); }
+		vector<Type*> getReturns() { return _returns; }
+		vector<Type*> getParameters() { return _parameters; }
+
+		ExactType getExactType() { return EXACT_FUNCTION; }
+		virtual bool equals(Type *other);
+
+		virtual string toShortString();
+		virtual string toString() { return "<FunctionType>" + toShortString(); };
+		virtual vector<Node*> getChildren();
+	};
+
 	class Variable : public Expression
 	{
 		AST::Identifier *_base;
@@ -139,7 +160,7 @@ namespace DST
 		Variable(AST::Identifier *base, Type *type) : _base(base), _type(type) {};
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; }
-		virtual ExpressionType getExpressionType() { return ET_VARIABLE; }
+		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -177,6 +198,22 @@ namespace DST
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+	};
+
+	class ExpressionList : public Expression
+	{
+		Type *_type;
+		AST::Expression *_base;
+		vector<Expression*> _expressions;
+	public:
+		ExpressionList(AST::Expression *base) : _base(base) { _type = new BasicType(unicode_string("ExpressionList")); /*temporary*/};
+		Type *getType() { return _type; }
+		virtual ExpressionType getExpressionType() { return ET_LIST; };
+		virtual string toString() { return "<ExpressionList>"; };
+		virtual vector<Node*> getChildren();
+
+		void addExpression(Expression* expression) { _expressions.push_back(expression); };
+		vector<Expression*> getExpressions() { return _expressions; }
 	};
 
 	/********************** Statements **********************/
@@ -303,7 +340,6 @@ namespace DST
 	};
 
 
-
 	/***************** ExpressionStatements *****************/
 
 	class VariableDeclaration : public ExpressionStatement
@@ -343,5 +379,37 @@ namespace DST
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+	};
+
+	/*typedef struct FunctionParameter 
+	{
+		unicode_string name;
+		Type *type;
+	} FunctionParameter;*/
+
+	class FunctionCall : public ExpressionStatement
+	{
+		AST::FunctionCall *_base;
+		Expression *_funcPtr;
+		ExpressionList *_arguments;
+
+	public:
+		FunctionCall(AST::FunctionCall *base) : _base(base) {};
+		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
+		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
+		virtual string toString() { return string() + "<FunctionCall>\\n"; };
+		virtual vector<Node*> getChildren();
+
+		void setFunctionId(Expression* funcId)
+		{
+			if (funcId->getType()->getExactType() != EXACT_FUNCTION)
+				throw DinoException("Cannot invoke expression as function", EXT_GENERAL, funcId->getLine());
+			_funcPtr = funcId;
+		}
+		void setArguments(ExpressionList* arguments) { _arguments = arguments; }
+
+		FunctionType *getType() { return (FunctionType*)_funcPtr->getType(); }
+		Expression* getFunctionId() { return _funcPtr; }
+		Expression* getParameters() { return _arguments; }
 	};
 }
