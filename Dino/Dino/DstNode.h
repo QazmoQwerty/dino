@@ -146,7 +146,7 @@ namespace DST
 		}
 
 		virtual string toShortString() { return _typeId.to_string(); };
-		virtual string toString() { return "<BasicType>\n" + _typeId.to_string(); };
+		virtual string toString() { return "<BasicType>\\n" + _typeId.to_string(); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -229,7 +229,7 @@ namespace DST
 		ExpressionList(AST::Expression *base) : _base(base) { _type = new TypeList(base); };
 		TypeList *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_LIST; };
-		virtual string toString() { return "<ExpressionList>\nType: " + _type->toShortString(); };
+		virtual string toString() { return "<ExpressionList>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 
 		void addExpression(Expression* expression) { _expressions.push_back(expression); _type->addType(expression->getType()); };
@@ -359,6 +359,32 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class VariableDeclaration;
+
+	class FunctionDeclaration : public Statement
+	{
+		AST::FunctionDeclaration *_base;
+		VariableDeclaration *_decl;
+		vector<VariableDeclaration*> _parameters;
+		Statement *_content;
+
+	public:
+		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl){};
+		virtual bool isDeclaration() { return true; }
+		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
+		virtual string toString() { return "<FunctionDeclaration>"; };
+		virtual vector<Node*> getChildren();
+
+		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
+		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
+		void setContent(Statement* content) { _content = content; }
+
+		VariableDeclaration* getVarDecl() { return _decl; }
+		vector<VariableDeclaration*> getParameters() { return _parameters; }
+		Statement* getContent() { return _content; }
+	};
+
 
 	/***************** ExpressionStatements *****************/
 
@@ -375,6 +401,7 @@ namespace DST
 
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; }
+		unicode_string getVarId() { return _base->getVarId(); }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();

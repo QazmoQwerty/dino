@@ -15,12 +15,6 @@ void Decorator::setup()
 	createBasicType("string");
 	createBasicType("char");
 	createBasicType("float");
-
-	auto *t = new DST::FunctionType();
-	t->addReturn(new DST::BasicType(unicode_string("void")));
-	t->addParameter(new DST::BasicType(unicode_string("int")));
-	t->addParameter(new DST::BasicType(unicode_string("int")));
-	_variables[0][unicode_string("Print")] = t;
 }
 
 DST::Node *Decorator::decorate(AST::Node * node)
@@ -64,6 +58,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	{
 	case ST_FUNCTION_CALL:
 		return decorate(dynamic_cast<AST::FunctionCall*>(node));
+	case ST_FUNCTION_DECLARATION:
+		return decorate(dynamic_cast<AST::FunctionDeclaration*>(node));
 	case ST_VARIABLE_DECLARATION:
 		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
 	case ST_ASSIGNMENT:
@@ -94,6 +90,22 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 	throw DinoException::DinoException("Identifier is undefined", EXT_GENERAL, node->getLine()); // TODO: add id to error.
 }
 
+DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
+{
+	enterBlock();
+	auto decl = new DST::FunctionDeclaration(node, decorate(node->getVarDecl()));
+	for (auto i : node->getParameters())
+		decl->addParameter(decorate(i));
+	decl->setContent(decorate(node->getContent()));
+	leaveBlock();
+	auto type = new DST::FunctionType();
+	type->addReturn(decl->getVarDecl()->getType());	// TODO - functions that return multiple types
+	for (auto i : decl->getParameters())
+		type->addParameter(i->getType());
+	_variables[currentScope()][decl->getVarDecl()->getVarId()] = type;
+	return decl;
+}
+
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 {
 	auto decl = new DST::VariableDeclaration(node);
@@ -122,7 +134,6 @@ DST::FunctionCall * Decorator::decorate(AST::FunctionCall * node)
 {
 	auto call = new DST::FunctionCall(node);
 	call->setFunctionId(decorate(node->getFunctionId()));
-		
 	if (node->getArguments()->getExpressionType() != ET_LIST)
 	{
 		auto list = new DST::ExpressionList(node->getArguments());

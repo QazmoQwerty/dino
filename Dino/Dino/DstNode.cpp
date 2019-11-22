@@ -99,6 +99,16 @@ vector<DST::Node*> DST::Assignment::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::FunctionDeclaration::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_decl);
+	for (auto i : _parameters)
+		v.push_back(i);
+	v.push_back(_content);
+	return v;
+}
+
 vector<DST::Node*> DST::FunctionCall::getChildren()
 {
 	vector<Node*> v;

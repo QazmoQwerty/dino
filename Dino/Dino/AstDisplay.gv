@@ -1,16 +1,18 @@
 ﻿digraph G {
-0 [label="<StatementBlock>"];0->3;0->6;
-3 [label="<Assignment>\n≡"];3->2;3->4;
-2 [label="<VariableDeclaration>\nx"];2->1;
+0 [label="<StatementBlock>"];0->3;0->11;
+3 [label="<FunctionDeclaration>\n"];3->2;3->5;3->8;3->-1;-1 [label="<NULL>"];
+2 [label="<VariableDeclaration>\nPrint"];2->1;
 1 [label="<Identifier>\nint"];
-4 [label="<IntegerLiteral>\n0"];
-6 [label="<FunctionCall>\n"];6->5;6->12;
-5 [label="<Identifier>\nPrint"];
-12 [label="<ExpressionList>"];12->10;12->13;
-10 [label="<BinaryOperator>\n+"];10->8;10->11;
-8 [label="<BinaryOperator>\n*"];8->7;8->9;
-7 [label="<Identifier>\nx"];
-9 [label="<IntegerLiteral>\n12"];
-11 [label="<IntegerLiteral>\n2"];
-13 [label="<IntegerLiteral>\n10"];
+5 [label="<VariableDeclaration>\na"];5->4;
+4 [label="<Identifier>\nint"];
+8 [label="<VariableDeclaration>\nb"];8->7;
+7 [label="<Identifier>\nstring"];
+11 [label="<Assignment>\n≡"];11->10;11->13;
+10 [label="<VariableDeclaration>\na"];10->9;
+9 [label="<Identifier>\nint"];
+13 [label="<FunctionCall>\n"];13->12;13->15;
+12 [label="<Identifier>\nPrint"];
+15 [label="<ExpressionList>"];15->14;15->16;
+14 [label="<IntegerLiteral>\n10"];
+16 [label="<StringLiteral>\nwow"];
 }

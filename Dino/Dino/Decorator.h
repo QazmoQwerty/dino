@@ -28,6 +28,7 @@ private:
 	static DST::IfThenElse *decorate(AST::IfThenElse *node);
 	static DST::ForLoop *decorate(AST::ForLoop *node);
 	static DST::WhileLoop *decorate(AST::WhileLoop *node);
+	static DST::FunctionDeclaration *decorate(AST::FunctionDeclaration *node);
 
 	// ExpressionStatements
 	static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
