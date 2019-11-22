@@ -1,22 +1,10 @@
 ﻿digraph G {
-0 [label="<StatementBlock>"];0->1;0->18;
-1 [label="<For>"];1->4;1->7;1->10;1->12;
-4 [label="<Assignment>\n≡"];4->3;4->5;
-3 [label="<VariableDeclaration>\ni"];3->2;
-2 [label="<Variable>\nint"];
-5 [label="<IntegerLiteral>\n0"];
-7 [label="<BinaryOperator>\n<"];7->6;7->8;
-6 [label="<Variable>\ni"];
-8 [label="<IntegerLiteral>\n10"];
-10 [label="<Assignment>\n+="];10->9;10->11;
-9 [label="<Variable>\ni"];
-11 [label="<IntegerLiteral>\n1"];
-12 [label="<StatementBlock>"];12->14;
-14 [label="<Assignment>\n≡"];14->13;14->15;
-13 [label="<Variable>\ni"];
-15 [label="<Variable>\ni"];
-18 [label="<Assignment>\n≡"];18->17;18->19;
-17 [label="<VariableDeclaration>\ni"];17->16;
-16 [label="<Variable>\nint"];
-19 [label="<IntegerLiteral>\n0"];
+0 [label="<StatementBlock>"];0->2;
+2 [label="<FunctionCall>\n"];2->1;2->6;
+1 [label="<Variable>\nPrint"];
+6 [label="<BinaryOperator>\n+"];6->4;6->7;
+4 [label="<BinaryOperator>\n*"];4->3;4->5;
+3 [label="<Variable>\nx"];
+5 [label="<IntegerLiteral>\n12"];
+7 [label="<IntegerLiteral>\n2"];
 }

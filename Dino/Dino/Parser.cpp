@@ -321,7 +321,7 @@ AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
 	{
-		auto node = new AST::Variable(token->_data);
+		auto node = new AST::Identifier(token->_data);
 		node->setLine(token->_line);
 		return node;
 	}

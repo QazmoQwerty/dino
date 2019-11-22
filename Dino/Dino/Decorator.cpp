@@ -32,7 +32,7 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 	switch (dynamic_cast<AST::Expression*>(node)->getExpressionType())
 	{
 	case ET_VARIABLE:
-		return decorate(dynamic_cast<AST::Variable*>(node));
+		return decorate(dynamic_cast<AST::Identifier*>(node));
 	case ET_BINARY_OPERATION:
 		return decorate(dynamic_cast<AST::BinaryOperation*>(node));
 	case ET_LITERAL:
@@ -69,7 +69,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	return NULL;
 }
 
-DST::Expression *Decorator::decorate(AST::Variable * node)
+DST::Expression *Decorator::decorate(AST::Identifier * node)
 {
 	unicode_string name = node->getVarId();
 	

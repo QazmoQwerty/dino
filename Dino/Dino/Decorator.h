@@ -18,7 +18,7 @@ private:
 	static DST::Statement *decorate(AST::Statement *node);
 
 	// Expressions
-	static DST::Expression *decorate(AST::Variable *node);
+	static DST::Expression *decorate(AST::Identifier *node);
 	static DST::BinaryOperation *decorate(AST::BinaryOperation *node);
 	static DST::Literal *decorate(AST::Literal *node);
 	 

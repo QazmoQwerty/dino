@@ -119,7 +119,7 @@ namespace DST
 	{
 		unicode_string _typeId;
 	public:
-		BasicType(AST::Expression *base) : Type(base) { _typeId = dynamic_cast<AST::Variable*>(_base)->getVarId(); }
+		BasicType(AST::Expression *base) : Type(base) { _typeId = dynamic_cast<AST::Identifier*>(_base)->getVarId(); }
 		BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
 		unicode_string getTypeId() { return _typeId; }
 		ExactType getExactType() { return EXACT_BASIC; }
@@ -132,11 +132,11 @@ namespace DST
 
 	class Variable : public Expression
 	{
-		AST::Variable *_base;
+		AST::Identifier *_base;
 		Type *_type;
 
 	public:
-		Variable(AST::Variable *base, Type *type) : _base(base), _type(type) {};
+		Variable(AST::Identifier *base, Type *type) : _base(base), _type(type) {};
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE; }

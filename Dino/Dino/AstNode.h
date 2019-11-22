@@ -514,16 +514,16 @@ namespace AST
 		bool isPostfix() { return _isPostfix; }
 	};
 
-	class Variable : public Expression
+	class Identifier : public Expression
 	{
 		unicode_string _varId;
 	public:
-		Variable(unicode_string varId) : Expression() { _varId = varId; };
-		Variable() : Expression() {};
+		Identifier(unicode_string varId) : Expression() { _varId = varId; };
+		Identifier() : Expression() {};
 		void setVarId(unicode_string varId) { _varId = varId; }
 		unicode_string getVarId() { return _varId; }
-		virtual ExpressionType getExpressionType() { return ET_VARIABLE; };
-		virtual string toString() { return "<Variable>\\n" + _varId.to_string(); };
+		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; };
+		virtual string toString() { return "<Identifier>\\n" + _varId.to_string(); };
 		virtual vector<Node*> getChildren();
 	};
 
