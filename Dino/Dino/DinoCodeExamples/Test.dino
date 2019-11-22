@@ -4,6 +4,7 @@
 }
 
 int i ≡ 0*/
+
 int x ≡ 0
-Print(x * 12 + 2)
+Print(x * 12 + 2, 10)
 //int Print := 10

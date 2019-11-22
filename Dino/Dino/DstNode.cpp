@@ -112,38 +112,47 @@ bool DST::FunctionType::equals(Type * other)
 	if (other->getExactType() != EXACT_FUNCTION)
 		return false;
 	auto othr = (FunctionType*)other;
-	if (_returns.size() != othr->_returns.size() || _parameters.size() != othr->_parameters.size())
-		return false;
-	for (int i = 0; i < _returns.size(); i++)
-		if (_returns[i]->equals(othr->_returns[i]))
-			return false;
-	for (int i = 0; i < _parameters.size(); i++)
-		if (_parameters[i]->equals(othr->_parameters[i]))
-			return false;
-	return true;
+	return _returns->equals(othr->_returns) && _parameters->equals(othr->_parameters);
 }
 
 string DST::FunctionType::toShortString()
 {
-	string str = "";
-	for (int i = 0; i < _returns.size(); i++)
-	{
-		if (i > 0)
-			str += ", ";
-		str += _returns[i]->toShortString();
-	}
-	str += "(";
-	for (int i = 0; i < _parameters.size(); i++)
-	{
-		if (i > 0)
-			str += ", ";
-		str += _parameters[i]->toShortString();
-	}
-	str += ")";
-	return str;
+	if (_returns->size() == 1)
+		return _returns->toShortString() + "(" + _parameters->toShortString() + ")";
+	return "(" + _returns->toShortString() + ")(" + _parameters->toShortString() + ")";
 }
 
 vector<DST::Node*> DST::FunctionType::getChildren()
+{
+	return vector<Node*>();
+}
+
+bool DST::TypeList::equals(Type * other)
+{
+	if (other->getExactType() != EXACT_TYPELIST)
+		return false;
+	auto othr = (TypeList*)other;
+	if (_types.size() != othr->_types.size())
+		return false;
+	for (int i = 0; i < _types.size(); i++)
+		if (!_types[i]->equals(othr->_types[i]))
+			return false;
+	return true;
+}
+
+string DST::TypeList::toShortString()
+{
+	string str = "";
+	for (int i = 0; i < _types.size(); i++)
+	{
+		if (i > 0)
+			str += ", ";
+		str += _types[i]->toShortString();
+	}
+	return str;
+}
+
+vector<DST::Node*> DST::TypeList::getChildren()
 {
 	return vector<Node*>();
 }

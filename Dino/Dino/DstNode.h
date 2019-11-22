@@ -115,7 +115,23 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
-	class BasicType : public Type 
+	class TypeList : public Type
+	{
+		vector<Type*> _types;
+	public:
+		TypeList(AST::Expression *base) : Type(base) { }
+		void addType(Type *type) { _types.push_back(type); }
+		vector<Type*> getTypes() { return _types; }
+		size_t size() { return _types.size(); }
+		ExactType getExactType() { return EXACT_TYPELIST; }
+		virtual bool equals(Type *other);
+
+		virtual string toShortString();
+		virtual string toString() { return "<FunctionType>" + toShortString(); };
+		virtual vector<Node*> getChildren();
+	};
+
+	class BasicType : public Type
 	{
 		unicode_string _typeId;
 	public:
@@ -123,7 +139,11 @@ namespace DST
 		BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
 		unicode_string getTypeId() { return _typeId; }
 		ExactType getExactType() { return EXACT_BASIC; }
-		virtual bool equals(Type *other) { return other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId; }
+		virtual bool equals(Type *other)
+		{
+			return other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId ||
+				other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]);
+		}
 
 		virtual string toShortString() { return _typeId.to_string(); };
 		virtual string toString() { return "<BasicType>\n" + _typeId.to_string(); };
@@ -132,16 +152,16 @@ namespace DST
 
 	class FunctionType : public Type
 	{
-		vector<Type*> _returns;
-		vector<Type*> _parameters;
+		TypeList *_returns;
+		TypeList *_parameters;
 
 	public:
-		FunctionType() : Type(NULL) { }
-		FunctionType(AST::Expression *base) : Type(base) { }
-		void addReturn(Type *returnType) { _returns.push_back(returnType); }
-		void addParameter(Type *parameterType) { _parameters.push_back(parameterType); }
-		vector<Type*> getReturns() { return _returns; }
-		vector<Type*> getParameters() { return _parameters; }
+		FunctionType() : Type(NULL) { _returns = new TypeList(NULL); _parameters = new TypeList(NULL); }
+		FunctionType(AST::FunctionCall *base) : Type(base) { _returns = new TypeList(base->getFunctionId()); _parameters = new TypeList(base->getArguments()); }
+		void addReturn(Type *returnType) { _returns->addType(returnType); }
+		void addParameter(Type *parameterType) { _parameters->addType(parameterType); }
+		TypeList *getReturns() { return _returns; }
+		TypeList *getParameters() { return _parameters; }
 
 		ExactType getExactType() { return EXACT_FUNCTION; }
 		virtual bool equals(Type *other);
@@ -202,17 +222,17 @@ namespace DST
 
 	class ExpressionList : public Expression
 	{
-		Type *_type;
+		TypeList *_type;
 		AST::Expression *_base;
 		vector<Expression*> _expressions;
 	public:
-		ExpressionList(AST::Expression *base) : _base(base) { _type = new BasicType(unicode_string("ExpressionList")); /*temporary*/};
-		Type *getType() { return _type; }
+		ExpressionList(AST::Expression *base) : _base(base) { _type = new TypeList(base); };
+		TypeList *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_LIST; };
-		virtual string toString() { return "<ExpressionList>"; };
+		virtual string toString() { return "<ExpressionList>\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 
-		void addExpression(Expression* expression) { _expressions.push_back(expression); };
+		void addExpression(Expression* expression) { _expressions.push_back(expression); _type->addType(expression->getType()); };
 		vector<Expression*> getExpressions() { return _expressions; }
 	};
 
@@ -389,6 +409,7 @@ namespace DST
 
 	class FunctionCall : public ExpressionStatement
 	{
+		Type *_type;
 		AST::FunctionCall *_base;
 		Expression *_funcPtr;
 		ExpressionList *_arguments;
@@ -397,7 +418,7 @@ namespace DST
 		FunctionCall(AST::FunctionCall *base) : _base(base) {};
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
-		virtual string toString() { return string() + "<FunctionCall>\\n"; };
+		virtual string toString() { return string() + "<FunctionCall>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 
 		void setFunctionId(Expression* funcId)
@@ -405,10 +426,16 @@ namespace DST
 			if (funcId->getType()->getExactType() != EXACT_FUNCTION)
 				throw DinoException("Cannot invoke expression as function", EXT_GENERAL, funcId->getLine());
 			_funcPtr = funcId;
+			_type = ((FunctionType*)funcId->getType())->getReturns();
 		}
-		void setArguments(ExpressionList* arguments) { _arguments = arguments; }
+		void setArguments(ExpressionList* arguments) 
+		{
+			if (!((FunctionType*)_funcPtr->getType())->getParameters()->equals(arguments->getType()))
+				throw DinoException("Argument types do not match function parameters", EXT_GENERAL, arguments->getLine());
+			_arguments = arguments; 
+		}
 
-		FunctionType *getType() { return (FunctionType*)_funcPtr->getType(); }
+		Type *getType() { return _type; }
 		Expression* getFunctionId() { return _funcPtr; }
 		Expression* getParameters() { return _arguments; }
 	};

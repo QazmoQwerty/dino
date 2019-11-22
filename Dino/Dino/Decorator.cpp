@@ -19,6 +19,7 @@ void Decorator::setup()
 	auto *t = new DST::FunctionType();
 	t->addReturn(new DST::BasicType(unicode_string("void")));
 	t->addParameter(new DST::BasicType(unicode_string("int")));
+	t->addParameter(new DST::BasicType(unicode_string("int")));
 	_variables[0][unicode_string("Print")] = t;
 }
 
@@ -121,6 +122,7 @@ DST::FunctionCall * Decorator::decorate(AST::FunctionCall * node)
 {
 	auto call = new DST::FunctionCall(node);
 	call->setFunctionId(decorate(node->getFunctionId()));
+		
 	if (node->getArguments()->getExpressionType() != ET_LIST)
 	{
 		auto list = new DST::ExpressionList(node->getArguments());
