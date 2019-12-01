@@ -23,13 +23,15 @@ private:
 	static DST::Literal *decorate(AST::Literal *node);
 	static DST::ExpressionList *decorate(AST::ExpressionList *node);
 	 
-	//Statements
+	// Statements
 	static DST::StatementBlock *decorate(AST::StatementBlock *node);
 	static DST::IfThenElse *decorate(AST::IfThenElse *node);
 	static DST::ForLoop *decorate(AST::ForLoop *node);
 	static DST::WhileLoop *decorate(AST::WhileLoop *node);
 	static DST::FunctionDeclaration *decorate(AST::FunctionDeclaration *node);
-
+	static DST::PropertyDeclaration * decorate(AST::PropertyDeclaration * node);
+	static DST::UnaryOperationStatement * decorate(AST::UnaryOperationStatement * node);
+	
 	// ExpressionStatements
 	static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
 	static DST::Assignment *decorate(AST::Assignment *node);

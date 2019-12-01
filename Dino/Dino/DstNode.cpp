@@ -109,6 +109,14 @@ vector<DST::Node*> DST::FunctionDeclaration::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::PropertyDeclaration::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_get);
+	v.push_back(_set);
+	return v;
+}
+
 vector<DST::Node*> DST::FunctionCall::getChildren()
 {
 	vector<Node*> v;
@@ -165,4 +173,14 @@ string DST::TypeList::toShortString()
 vector<DST::Node*> DST::TypeList::getChildren()
 {
 	return vector<Node*>();
+}
+
+bool DST::PropertyType::equals(Type * other)
+{
+	return _return->equals(other);
+}
+
+string DST::PropertyType::toShortString()
+{
+	return _return->toShortString();
 }

@@ -114,6 +114,26 @@ namespace DST
 		virtual string toString() { return "<Type>"; };
 		virtual vector<Node*> getChildren();
 	};
+	
+	class PropertyType : public Type
+	{
+		Type *_return;
+		bool _hasGet;
+		bool _hasSet;
+
+	public:
+		PropertyType(Type *ret, bool hasGet, bool hasSet) : _return(ret), _hasGet(hasGet), _hasSet(hasSet), Type(NULL) {}
+		bool hasGet() { return _hasGet; }
+		bool hasSet() { return _hasSet; }
+		Type *getReturn() { return _return; }
+
+		ExactType getExactType() { return EXACT_PROPERTY; }
+		virtual bool equals(Type *other);
+
+		virtual string toShortString();
+		virtual string toString() { return "<FunctionType>" + toShortString(); };
+		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+	};
 
 	class TypeList : public Type
 	{
@@ -130,7 +150,7 @@ namespace DST
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
-
+	
 	class BasicType : public Type
 	{
 		unicode_string _typeId;
@@ -141,8 +161,10 @@ namespace DST
 		ExactType getExactType() { return EXACT_BASIC; }
 		virtual bool equals(Type *other)
 		{
-			return other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId ||
-				other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]);
+			return 
+				(other->getExactType() == EXACT_PROPERTY && equals(((PropertyType*)other)->getReturn())) ||
+				(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId) ||
+				(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
 		}
 
 		virtual string toShortString() { return _typeId.to_string(); };
@@ -328,19 +350,18 @@ namespace DST
 
 	class UnaryOperationStatement : public Statement
 	{
-		Operator _operator;
+		AST::UnaryOperationStatement *_base;
 		Expression* _expression;
 
 	public:
-		UnaryOperationStatement() : Statement() {};
+		UnaryOperationStatement(AST::UnaryOperationStatement *base, Expression *expression) : _base(base), _expression(expression) {};
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
-		virtual string toString() { return string() + "<UnaryOperatorStatement>\\n" + _operator._str.to_string(); };
+		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
 
-		void setOperator(Operator op) { _operator = op; }
 		void setExpression(Expression* expression) { _expression = expression; }
 
-		Operator getOperator() { return _operator; }
+		Operator getOperator() { return _base->getOperator(); }
 		Expression* getExpression() { return _expression; }
 	};
 
@@ -385,6 +406,24 @@ namespace DST
 		Statement* getContent() { return _content; }
 	};
 
+	class PropertyDeclaration : public Statement {
+	private:
+		AST::PropertyDeclaration *_base;
+		Type *_type;
+		StatementBlock* _get;
+		StatementBlock* _set;
+	public:
+		PropertyDeclaration(AST::PropertyDeclaration *base, StatementBlock *get, StatementBlock *set, Type *type) : _base(base), _get(get), _set(set), _type(type) {};
+		virtual bool isDeclaration() { return true; }
+		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
+		virtual string toString() { return "<PropertyDeclaration>\\n" + _type->toShortString() + " " + _base->getVarDecl()->getVarId().to_string(); };
+		virtual vector<Node*> getChildren();
+		
+		/*void setGet(Statement* get) { _get = get; }
+		void setSet(Statement* set) { _set = set; }
+		Statement* getGet() { return _get; }
+		Statement* getSet() { return _set; }*/
+	};
 
 	/***************** ExpressionStatements *****************/
 

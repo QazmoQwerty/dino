@@ -66,12 +66,16 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::Assignment*>(node));
 	case ST_STATEMENT_BLOCK:
 		return decorate(dynamic_cast<AST::StatementBlock*>(node));
+	case ST_PROPERTY_DECLARATION:
+		return decorate(dynamic_cast<AST::PropertyDeclaration*>(node));
 	case ST_IF_THEN_ELSE:
 		return decorate(dynamic_cast<AST::IfThenElse*>(node));
 	case ST_FOR_LOOP: 
 		return decorate(dynamic_cast<AST::ForLoop*>(node));
 	case ST_WHILE_LOOP: 
 		return decorate(dynamic_cast<AST::WhileLoop*>(node));
+	case ST_UNARY_OPERATION:
+		return decorate(dynamic_cast<AST::UnaryOperationStatement*>(node));
 	case ST_DO_WHILE_LOOP: 
 		throw DinoException("do-while loops are not implemented yet", EXT_GENERAL, node->getLine());
 	}
@@ -104,6 +108,34 @@ DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
 		type->addParameter(i->getType());
 	_variables[currentScope()][decl->getVarDecl()->getVarId()] = type;
 	return decl;
+}
+
+DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
+{
+	unicode_string name = node->getVarDecl()->getVarId();
+	DST::Type* type = evalType(node->getVarDecl()->getVarType());
+	for (int scope = currentScope(); scope >= 0; scope--)
+		if (_variables[scope].count(name))
+			throw DinoException::DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
+	if (_types.count(name))
+		throw DinoException::DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
+
+	
+	DST::StatementBlock *get = decorate(node->getGet());
+
+	enterBlock();
+	_variables[currentScope()][unicode_string("value")] = type;
+	DST::StatementBlock *set = decorate(node->getSet());
+	leaveBlock();
+	
+
+	_variables[currentScope()][name] = new DST::PropertyType(type, get, set);
+	return new DST::PropertyDeclaration(node, get, set, type);
+}
+
+DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement * node)
+{
+	return new DST::UnaryOperationStatement(node, decorate(node->getExpression()));
 }
 
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)

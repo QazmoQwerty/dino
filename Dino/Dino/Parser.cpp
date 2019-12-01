@@ -88,14 +88,16 @@ AST::Expression * Parser::parseOptionalExpression(int precedence)
 	return convertToExpression(parse(precedence));
 }
 
-AST::Statement * Parser::parseInnerBlock()
+AST::StatementBlock * Parser::parseInnerBlock()
 {
 	if (eatOperator(OT_CURLY_BRACES_OPEN))
 		return parseBlock(OT_CURLY_BRACES_CLOSE);
 	else if (eatOperator(OT_COLON))
 	{
 		skipLineBreaks();
-		return convertToStatement(parse());
+		auto *block = new AST::StatementBlock();
+		block->addStatement(convertToStatement(parse()));
+		return block;
 	}
 	else throw DinoException("expected a block statement.", EXT_GENERAL, peekToken()->_line);
 }
@@ -186,8 +188,14 @@ AST::Node * Parser::std(Token * token)
 				node->setCondition(parseExpression());
 				node->setThenBranch(parseInnerBlock());
 				bool b = eatLineBreak();
-				if (eatOperator(OT_ELSE))
-					node->setElseBranch(isOperator(peekToken(), OT_IF) ? dynamic_cast<AST::IfThenElse*>(parse()) : parseInnerBlock());
+				if (eatOperator(OT_ELSE)) {
+					if (isOperator(peekToken(), OT_IF)) {
+						auto block = new AST::StatementBlock();
+						block->addStatement(parseStatement());
+						node->setElseBranch(block);
+					}
+					else node->setElseBranch(parseInnerBlock());
+				}
 				else if (b) _index--;
 				node->setLine(token->_line);
 				return node;
