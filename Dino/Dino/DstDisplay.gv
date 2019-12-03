@@ -1,0 +1,26 @@
+﻿digraph G {
+6 [label="<StatementBlock>"];6->11;6->14;6->20;
+11 [label="<Assignment>\n≡
+Type: int"];11->9;11->7;
+9 [label="<VariableDeclaration>\nx
+Type: int"];
+7 [label="<IntegerLiteral>\n2
+Type: int"];
+14 [label="<FunctionDeclaration>"];14->12;14->15;14->-1;-1 [label="<NULL>"];
+12 [label="<VariableDeclaration>\nPrint
+Type: void"];
+15 [label="<VariableDeclaration>\ny
+Type: int"];
+20 [label="<Switch>"];20->21;20->-2;-2 [label="<NULL>"];20->23;20->22;20->26;20->25;20->29;20->28;
+21 [label="<Identifier>\nx
+Type: int"];
+23 [label="<IntegerLiteral>\n1
+Type: int"];
+22 [label="<StatementBlock>"];
+26 [label="<IntegerLiteral>\n2
+Type: int"];
+25 [label="<StatementBlock>"];
+29 [label="<IntegerLiteral>\n2
+Type: int"];
+28 [label="<StatementBlock>"];
+}

@@ -1,19 +1,20 @@
 ﻿digraph G {
-0 [label="<StatementBlock>"];0->3;0->7;
+0 [label="<StatementBlock>"];0->3;0->7;0->10;
 3 [label="<Assignment>\n≡"];3->2;3->4;
-2 [label="<VariableDeclaration>\na"];2->1;
-1 [label="<Identifier>\nbool"];
-4 [label="<BoolLiteral>\n0"];
-7 [label="<PropertyDeclaration>"];7->6;7->8;7->13;
-6 [label="<VariableDeclaration>\nA"];6->5;
-5 [label="<Identifier>\nint"];
-8 [label="<StatementBlock>"];8->9;
-9 [label="<UnaryOperationStatement>\nreturn"];9->11;
-11 [label="<BinaryOperator>\n+"];11->10;11->12;
-10 [label="<Identifier>\na"];
-12 [label="<IntegerLiteral>\n10"];
-13 [label="<StatementBlock>"];13->15;
-15 [label="<Assignment>\n≡"];15->14;15->16;
-14 [label="<Identifier>\na"];
-16 [label="<Identifier>\nvalue"];
+2 [label="<VariableDeclaration>\nx"];2->1;
+1 [label="<Identifier>\nint"];
+4 [label="<IntegerLiteral>\n2"];
+7 [label="<FunctionDeclaration>\n"];7->6;7->9;7->-1;-1 [label="<NULL>"];
+6 [label="<VariableDeclaration>\nPrint"];6->5;
+5 [label="<Identifier>\nvoid"];
+9 [label="<VariableDeclaration>\ny"];9->8;
+8 [label="<Identifier>\nint"];
+10 [label="<Switch>"];10->11;10->-2;-2 [label="<NULL>"];10->12;10->13;10->14;10->15;10->16;10->17;
+11 [label="<Identifier>\nx"];
+12 [label="<IntegerLiteral>\n1"];
+13 [label="<StatementBlock>"];
+14 [label="<IntegerLiteral>\n2"];
+15 [label="<StatementBlock>"];
+16 [label="<IntegerLiteral>\n2"];
+17 [label="<StatementBlock>"];
 }

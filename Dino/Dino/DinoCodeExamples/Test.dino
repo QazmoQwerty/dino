@@ -1,9 +1,15 @@
+int x ≡ 2
 
-bool a ≡ false
+void Print(int y)
 
-int A {
-    get { return a + 10 }
-    set {
-        a ≡ value
-    }
+switch x {
+	case 1 {
+
+	}
+	case 2 {
+	
+	}
+	case 3 {
+	
+	}
 }

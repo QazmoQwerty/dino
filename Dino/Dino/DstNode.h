@@ -277,8 +277,8 @@ namespace DST
 	{
 		AST::IfThenElse *_base;
 		Expression* _condition;
-		Statement* _thenBranch;
-		Statement* _elseBranch;
+		StatementBlock *_thenBranch;
+		StatementBlock* _elseBranch;
 
 	public:
 		IfThenElse(AST::IfThenElse *base) : _base(base) {};
@@ -287,12 +287,41 @@ namespace DST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setThenBranch(Statement* thenBranch) { _thenBranch = thenBranch; }
-		void setElseBranch(Statement* elseBranch) { _elseBranch = elseBranch; }
+		void setThenBranch(StatementBlock* thenBranch) { _thenBranch = thenBranch; }
+		void setElseBranch(StatementBlock* elseBranch) { _elseBranch = elseBranch; }
 
 		Expression* getCondition() { return _condition; }
-		Statement* getThenBranch() { return _thenBranch; }
-		Statement* getElseBranch() { return _elseBranch; }
+		StatementBlock* getThenBranch() { return _thenBranch; }
+		StatementBlock* getElseBranch() { return _elseBranch; }
+	};
+
+	typedef struct CaseClause {
+		Expression* _expression;
+		StatementBlock* _statement;
+	} CaseClause;
+
+	class SwitchCase : public Statement {
+		AST::SwitchCase *_base;
+		Expression* _expression;
+		vector<CaseClause> _cases;
+		StatementBlock* _default;
+
+	public:
+		SwitchCase(AST::SwitchCase *base) : _base(base), _default(NULL) {};
+		virtual StatementType getStatementType() { return ST_SWITCH; };
+		virtual string toString() { return "<Switch>"; };
+		virtual vector<Node*> getChildren();
+
+		void setExpression(Expression* expression) { _expression = expression; }
+		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
+		void setDefault(StatementBlock* statement) {
+			if (_default) throw DinoException("'default' clause may only be set once", EXT_GENERAL, statement->getLine());
+			_default = statement;
+		}
+		Expression* getExpression() { return _expression; }
+		vector<CaseClause> getCases() { return _cases; }
+		StatementBlock* getDefault() { return _default; }
+
 	};
 
 	class WhileLoop : public Statement
@@ -320,7 +349,7 @@ namespace DST
 		Statement* _begin;
 		Expression* _condition;
 		Statement* _increment;
-		Statement* _statement;
+		StatementBlock* _statement;
 
 	public:
 		ForLoop(AST::ForLoop *base) : _base(base) {};
@@ -329,7 +358,7 @@ namespace DST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setStatement(Statement* statement) { _statement = statement; }
+		void setStatement(StatementBlock* statement) { _statement = statement; }
 		void setBegin(Statement* begin) { _begin = begin; }
 		void setIncrement(Statement* increment) { _increment = increment; }
 

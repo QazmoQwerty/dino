@@ -70,7 +70,9 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::PropertyDeclaration*>(node));
 	case ST_IF_THEN_ELSE:
 		return decorate(dynamic_cast<AST::IfThenElse*>(node));
-	case ST_FOR_LOOP: 
+	case ST_SWITCH:
+		return decorate(dynamic_cast<AST::SwitchCase*>(node));
+	case ST_FOR_LOOP:
 		return decorate(dynamic_cast<AST::ForLoop*>(node));
 	case ST_WHILE_LOOP: 
 		return decorate(dynamic_cast<AST::WhileLoop*>(node));
@@ -222,6 +224,9 @@ DST::ExpressionList * Decorator::decorate(AST::ExpressionList * node)
 
 DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)
 {
+	if (!node)
+		return NULL;
+
 	enterBlock();
 	auto bl = new DST::StatementBlock();
 	for (auto i : dynamic_cast<AST::StatementBlock*>(node)->getStatements())
@@ -239,6 +244,20 @@ DST::IfThenElse * Decorator::decorate(AST::IfThenElse * node)
 	ite->setThenBranch(decorate(node->getThenBranch()));
 	ite->setElseBranch(decorate(node->getElseBranch()));
 	return ite;
+}
+
+DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
+{
+	auto sc = new DST::SwitchCase(node);
+	sc->setExpression(decorate(node->getExpression()));
+	sc->setDefault(decorate(node->getDefault()));
+	for (auto c : node->getCases()) {
+		sc->addCase(decorate(c._expression), decorate(c._statement));
+		// if case type == swich type.
+		if (!sc->getCases().back()._expression->getType()->equals(sc->getExpression()->getType()))
+			throw DinoException("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + "\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", EXT_GENERAL, node->getLine());
+	}
+	return sc;
 }
 
 DST::ForLoop * Decorator::decorate(AST::ForLoop * node)

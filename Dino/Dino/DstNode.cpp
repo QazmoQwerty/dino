@@ -60,6 +60,19 @@ vector<DST::Node*> DST::IfThenElse::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::SwitchCase::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
+	v.push_back(_default);
+	for (CaseClause i : _cases)
+	{
+		v.push_back(i._expression);
+		v.push_back(i._statement);
+	}
+	return v;
+}
+
 vector<DST::Node*> DST::WhileLoop::getChildren()
 {
 	vector<Node*> v;

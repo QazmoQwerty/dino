@@ -204,7 +204,7 @@ AST::Node * Parser::std(Token * token)
 				auto node = new AST::SwitchCase();
 				if (!eatOperator(OT_CURLY_BRACES_OPEN))
 				{
-					node->setCondition(parseExpression());
+					node->setExpression(parseExpression());
 					expectOperator(OT_CURLY_BRACES_OPEN);
 				}
 				while (!eatOperator(OT_CURLY_BRACES_CLOSE))

@@ -258,11 +258,11 @@ namespace AST
 
 	public:
 		SwitchCase() : Statement() {};
-		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
+		virtual StatementType getStatementType() { return ST_SWITCH; };
 		virtual string toString() { return "<Switch>"; };
 		virtual vector<Node*> getChildren();
 
-		void setCondition(Expression* expression) { _expression = expression; }
+		void setExpression(Expression* expression) { _expression = expression; }
 		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
 		void setDefault(StatementBlock* statement) {
 			if (_default) throw DinoException("'default' clause may only be set once", EXT_GENERAL, statement->getLine());
