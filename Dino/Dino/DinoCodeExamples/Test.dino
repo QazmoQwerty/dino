@@ -4,7 +4,7 @@ void Print(int y)
 
 switch x {
 	case 1 {
-
+        Print(int)
 	}
 	case 2 {
 	

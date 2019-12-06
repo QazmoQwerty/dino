@@ -11,16 +11,22 @@ Type: int"];
 Type: void"];
 15 [label="<VariableDeclaration>\ny
 Type: int"];
-20 [label="<Switch>"];20->21;20->-2;-2 [label="<NULL>"];20->23;20->22;20->26;20->25;20->29;20->28;
+20 [label="<Switch>"];20->21;20->-2;-2 [label="<NULL>"];20->29;20->22;20->32;20->31;20->35;20->34;
 21 [label="<Identifier>\nx
 Type: int"];
-23 [label="<IntegerLiteral>\n1
+29 [label="<IntegerLiteral>\n1
 Type: int"];
-22 [label="<StatementBlock>"];
-26 [label="<IntegerLiteral>\n2
+22 [label="<StatementBlock>"];22->23;
+23 [label="<FunctionCall>\nType: void"];23->24;23->25;
+24 [label="<Identifier>\nPrint
+Type: void(int)"];
+25 [label="<ExpressionList>\nType: int"];25->27;
+27 [label="<IntegerLiteral>\n10
 Type: int"];
-25 [label="<StatementBlock>"];
-29 [label="<IntegerLiteral>\n2
+32 [label="<IntegerLiteral>\n2
 Type: int"];
-28 [label="<StatementBlock>"];
+31 [label="<StatementBlock>"];
+35 [label="<IntegerLiteral>\n3
+Type: int"];
+34 [label="<StatementBlock>"];
 }

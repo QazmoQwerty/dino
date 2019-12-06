@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
 	OperatorsMap::setup();
 	Lexer::setup();
 	Decorator::setup();
+	DST::setup();
 	try
 	{
 		auto lexed = Lexer::lex(str);

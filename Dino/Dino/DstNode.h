@@ -4,7 +4,12 @@
 
 namespace DST
 {
-	static int _idCount = 0;
+	static int idCount = 0;
+
+	class BasicType;
+	static BasicType *typeidTypePtr;
+
+	void setup();
 
 	class Node
 	{
@@ -12,7 +17,7 @@ namespace DST
 		int _line;
 	public:
 		/* Default constructor, does NOT set line.*/
-		Node() { _nodeId = _idCount++; };
+		Node() { _nodeId = idCount++; };
 
 		/* Set the line the node is on */
 		void setLine(int line) { _line = line; }
@@ -105,7 +110,7 @@ namespace DST
 		AST::Expression *_base;
 	public:
 		Type(AST::Expression *base) : _base(base) { }
-		virtual Type *getType() { return NULL; } // TODO - pointer to a global "type" type specifier.
+		virtual Type *getType();
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
 		virtual bool equals(Type *other) = 0;

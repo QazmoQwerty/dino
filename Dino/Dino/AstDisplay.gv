@@ -9,12 +9,15 @@
 5 [label="<Identifier>\nvoid"];
 9 [label="<VariableDeclaration>\ny"];9->8;
 8 [label="<Identifier>\nint"];
-10 [label="<Switch>"];10->11;10->-2;-2 [label="<NULL>"];10->12;10->13;10->14;10->15;10->16;10->17;
+10 [label="<Switch>"];10->11;10->-2;-2 [label="<NULL>"];10->12;10->13;10->17;10->18;10->19;10->20;
 11 [label="<Identifier>\nx"];
 12 [label="<IntegerLiteral>\n1"];
-13 [label="<StatementBlock>"];
-14 [label="<IntegerLiteral>\n2"];
-15 [label="<StatementBlock>"];
-16 [label="<IntegerLiteral>\n2"];
-17 [label="<StatementBlock>"];
+13 [label="<StatementBlock>"];13->15;
+15 [label="<FunctionCall>\n"];15->14;15->16;
+14 [label="<Identifier>\nPrint"];
+16 [label="<Identifier>\nint"];
+17 [label="<IntegerLiteral>\n2"];
+18 [label="<StatementBlock>"];
+19 [label="<IntegerLiteral>\n3"];
+20 [label="<StatementBlock>"];
 }

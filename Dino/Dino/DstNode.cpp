@@ -1,5 +1,10 @@
 #include "DstNode.h"
 
+DST::Type * DST::Type::getType()
+{
+	return typeidTypePtr;
+}
+
 vector<DST::Node*> DST::Type::getChildren()
 {
 	return vector<Node*>();
@@ -196,4 +201,9 @@ bool DST::PropertyType::equals(Type * other)
 string DST::PropertyType::toShortString()
 {
 	return _return->toShortString();
+}
+
+void DST::setup()
+{
+	typeidTypePtr = new BasicType(unicode_string("typeid"));
 }

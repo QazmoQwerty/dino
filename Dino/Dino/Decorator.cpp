@@ -178,7 +178,6 @@ DST::FunctionCall * Decorator::decorate(AST::FunctionCall * node)
 
 	return call;
 }
-
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 {
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
