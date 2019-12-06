@@ -271,6 +271,8 @@ namespace DST
 	public:
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 
+		bool hasReturnType(Type *returnType);
+
 		vector<Statement*> getStatements() { return _statements; }
 		void addStatement(Statement* statement) { _statements.push_back(statement); }
 
@@ -333,7 +335,7 @@ namespace DST
 	{
 		AST::WhileLoop *_base;
 		Expression* _condition;
-		Statement* _statement;
+		StatementBlock* _statement;
 
 	public:
 		WhileLoop(AST::WhileLoop *base) : _base(base) {};
@@ -342,10 +344,10 @@ namespace DST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setStatement(Statement* statement) { _statement = statement; }
+		void setStatement(StatementBlock* statement) { _statement = statement; }
 
 		Expression* getCondition() { return _condition; }
-		Statement* getStatement() { return _statement; }
+		StatementBlock* getStatement() { return _statement; }
 	};
 
 	class ForLoop : public Statement
@@ -368,7 +370,7 @@ namespace DST
 		void setIncrement(Statement* increment) { _increment = increment; }
 
 		Expression* getCondition() { return _condition; }
-		Statement* getStatement() { return _statement; }
+		StatementBlock* getStatement() { return _statement; }
 		Statement* getBegin() { return _begin; }
 		Statement* getIncrement() { return _increment; }
 	};
@@ -379,7 +381,6 @@ namespace DST
 		DoWhileLoop(AST::DoWhileLoop *base) : WhileLoop(base) {};
 		virtual StatementType getStatementType() { return ST_DO_WHILE_LOOP; };
 		virtual string toString() { return "<Do>"; };
-
 	};
 
 	class UnaryOperationStatement : public Statement
@@ -421,7 +422,7 @@ namespace DST
 		AST::FunctionDeclaration *_base;
 		VariableDeclaration *_decl;
 		vector<VariableDeclaration*> _parameters;
-		Statement *_content;
+		StatementBlock *_content;
 
 	public:
 		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl){};
@@ -433,11 +434,12 @@ namespace DST
 		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
-		void setContent(Statement* content) { _content = content; }
+		void setContent(StatementBlock* content) { _content = content; }
 
 		VariableDeclaration* getVarDecl() { return _decl; }
+		Type *getReturnType();
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
-		Statement* getContent() { return _content; }
+		StatementBlock* getContent() { return _content; }
 	};
 
 	class PropertyDeclaration : public Statement {

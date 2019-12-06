@@ -103,9 +103,11 @@ DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
 	for (auto i : node->getParameters())
 		decl->addParameter(decorate(i));
 	decl->setContent(decorate(node->getContent()));
+	if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
+		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
 	leaveBlock();
 	auto type = new DST::FunctionType();
-	type->addReturn(decl->getVarDecl()->getType());	// TODO - functions that return multiple types
+	type->addReturn(decl->getReturnType());	// TODO - functions that return multiple types
 	for (auto i : decl->getParameters())
 		type->addParameter(i->getType());
 	_variables[currentScope()][decl->getVarDecl()->getVarId()] = type;

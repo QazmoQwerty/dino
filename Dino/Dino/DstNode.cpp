@@ -43,6 +43,43 @@ vector<DST::Node*> DST::ExpressionList::getChildren()
 	return v;
 }
 
+bool DST::StatementBlock::hasReturnType(Type * returnType)
+{
+	if (this == nullptr)
+		return false;
+	for (auto i : _statements) 
+	{
+		switch (i->getStatementType()) {
+			case ST_UNARY_OPERATION:
+				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_RETURN)
+				{
+					if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
+						return true;
+					throw DinoException("Return type does not match function header.", EXT_GENERAL, i->getLine());
+				}
+				break;
+			case ST_IF_THEN_ELSE:
+				if (((DST::IfThenElse*)i)->getThenBranch()->hasReturnType(returnType) &&
+					((DST::IfThenElse*)i)->getElseBranch()->hasReturnType(returnType))
+					return true;
+				break;
+			/*case ST_FOR_LOOP:
+				if (((DST::ForLoop*)i)->getStatement()->hasReturnType(returnType))
+					return true;
+				break;
+			case ST_WHILE_LOOP:
+				if (((DST::WhileLoop*)i)->getStatement()->hasReturnType(returnType))
+					return true;
+				break;*/
+			/*case ST_DO_WHILE_LOOP:	
+				if (((DST::DoWhileLoop*)i)->getStatement()->hasReturnType(returnType))	
+					return true;
+				break;*/ // TODO - do loops make a difference?
+		}
+	}
+	return false;
+}
+
 vector<DST::Node*> DST::StatementBlock::getChildren()
 {
 	vector<Node*> v;
@@ -125,6 +162,11 @@ vector<DST::Node*> DST::FunctionDeclaration::getChildren()
 		v.push_back(i);
 	v.push_back(_content);
 	return v;
+}
+
+DST::Type * DST::FunctionDeclaration::getReturnType()
+{
+	return _decl->getType();
 }
 
 vector<DST::Node*> DST::PropertyDeclaration::getChildren()

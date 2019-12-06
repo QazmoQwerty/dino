@@ -1,32 +1,33 @@
 ﻿digraph G {
-6 [label="<StatementBlock>"];6->11;6->14;6->20;
-11 [label="<Assignment>\n≡
-Type: int"];11->9;11->7;
-9 [label="<VariableDeclaration>\nx
+7 [label="<StatementBlock>"];7->10;7->22;
+10 [label="<FunctionDeclaration>"];10->8;10->11;10->13;
+8 [label="<VariableDeclaration>\nFoo2
 Type: int"];
-7 [label="<IntegerLiteral>\n2
+11 [label="<VariableDeclaration>\nb
 Type: int"];
-14 [label="<FunctionDeclaration>"];14->12;14->15;14->-1;-1 [label="<NULL>"];
-12 [label="<VariableDeclaration>\nPrint
-Type: void"];
-15 [label="<VariableDeclaration>\ny
+13 [label="<StatementBlock>"];13->16;
+16 [label="<UnaryOperationStatement>\nreturn"];16->14;
+14 [label="<IntegerLiteral>\n10
 Type: int"];
-20 [label="<Switch>"];20->21;20->-2;-2 [label="<NULL>"];20->29;20->22;20->32;20->31;20->35;20->34;
-21 [label="<Identifier>\nx
+22 [label="<FunctionDeclaration>"];22->20;22->23;22->25;
+20 [label="<VariableDeclaration>\nTester
 Type: int"];
-29 [label="<IntegerLiteral>\n1
+23 [label="<VariableDeclaration>\na
 Type: int"];
-22 [label="<StatementBlock>"];22->23;
-23 [label="<FunctionCall>\nType: void"];23->24;23->25;
-24 [label="<Identifier>\nPrint
-Type: void(int)"];
-25 [label="<ExpressionList>\nType: int"];25->27;
+25 [label="<StatementBlock>"];25->26;
+26 [label="<IfThenElse>"];26->30;26->32;26->36;
+30 [label="<BinaryOperator>\n=
+Type: bool"];30->29;30->27;
+29 [label="<Identifier>\na
+Type: int"];
 27 [label="<IntegerLiteral>\n10
 Type: int"];
-32 [label="<IntegerLiteral>\n2
+32 [label="<StatementBlock>"];32->35;
+35 [label="<UnaryOperationStatement>\nreturn"];35->33;
+33 [label="<IntegerLiteral>\n10
 Type: int"];
-31 [label="<StatementBlock>"];
-35 [label="<IntegerLiteral>\n3
+36 [label="<StatementBlock>"];36->39;
+39 [label="<UnaryOperationStatement>\nreturn"];39->37;
+37 [label="<IntegerLiteral>\n20
 Type: int"];
-34 [label="<StatementBlock>"];
 }
