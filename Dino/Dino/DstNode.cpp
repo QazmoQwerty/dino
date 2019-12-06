@@ -47,15 +47,20 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 {
 	if (this == nullptr)
 		return false;
+	bool isVoid = false;
+	if (returnType->getExactType() == EXACT_BASIC && ((BasicType*)returnType)->getTypeId() == unicode_string("void"))
+		isVoid = true;
 	for (auto i : _statements) 
 	{
 		switch (i->getStatementType()) {
 			case ST_UNARY_OPERATION:
 				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_RETURN)
 				{
+					if (isVoid && ((DST::UnaryOperationStatement*)i)->getExpression() == NULL)
+						return true;
 					if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
 						return true;
-					throw DinoException("Return type does not match function header.", EXT_GENERAL, i->getLine());
+					throw DinoException("Return value type does not match function type.", EXT_GENERAL, i->getLine());
 				}
 				break;
 			case ST_IF_THEN_ELSE:
@@ -73,7 +78,7 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 				break;
 		}
 	}
-	return false;
+	return isVoid;
 }
 
 vector<DST::Node*> DST::StatementBlock::getChildren()

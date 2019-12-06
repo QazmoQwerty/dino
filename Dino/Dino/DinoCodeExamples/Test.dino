@@ -1,6 +1,13 @@
 int x := 10
 
-int Boo: get {
+void Boo() {
+    if true:
+        return
+    x += 10
+}
 
-    return 'a'
+int Boo2() {
+    if true:
+        return 10
+    x += 10
 }

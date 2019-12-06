@@ -1,14 +1,24 @@
 ﻿digraph G {
-7 [label="<StatementBlock>"];7->12;7->19;
+7 [label="<StatementBlock>"];7->12;7->15;
 12 [label="<Assignment>\n:=
 Type: int"];12->10;12->8;
 10 [label="<VariableDeclaration>\nx
 Type: int"];
 8 [label="<IntegerLiteral>\n10
 Type: int"];
-19 [label="<PropertyDeclaration>\nint Boo"];19->14;19->-1;-1 [label="<NULL>"];
-14 [label="<StatementBlock>"];14->17;
-17 [label="<UnaryOperationStatement>\nreturn"];17->15;
-15 [label="<IntegerLiteral>\n10
+15 [label="<FunctionDeclaration>"];15->13;15->16;
+13 [label="<VariableDeclaration>\nBoo
+Type: void"];
+16 [label="<StatementBlock>"];16->17;16->25;
+17 [label="<IfThenElse>"];17->18;17->20;17->-1;-1 [label="<NULL>"];
+18 [label="<BoolLiteral>\n1
+Type: bool"];
+20 [label="<StatementBlock>"];20->21;
+21 [label="<UnaryOperationStatement>\nreturn"];21->-2;-2 [label="<NULL>"];
+25 [label="<Assignment>\n+=
+Type: int"];25->24;25->22;
+24 [label="<Identifier>\nx
+Type: int"];
+22 [label="<IntegerLiteral>\n10
 Type: int"];
 }
