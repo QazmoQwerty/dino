@@ -2,16 +2,22 @@
 
 //void Foo1(int a)
 
-int Foo2(int b): return 10
+/*int Foo2(int b): return 10
 
 
 int Tester(int a) {
     if a = 10:
         return 10
     else: return 20
-}
+}*/
 
 int Tester3(int a) {
     unless a = 20:
         return 10
+    switch a {
+        case 10:
+            return 10
+        default: return 20
+
+    }
 }

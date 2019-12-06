@@ -63,18 +63,14 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 					((DST::IfThenElse*)i)->getElseBranch()->hasReturnType(returnType))
 					return true;
 				break;
-			/*case ST_FOR_LOOP:
-				if (((DST::ForLoop*)i)->getStatement()->hasReturnType(returnType))
-					return true;
+			case ST_SWITCH:
+				bool b = ((DST::SwitchCase*)i)->getDefault()->hasReturnType(returnType);
+				if (!b) break;
+				for (auto i : ((DST::SwitchCase*)i)->getCases())
+					if (!i._statement->hasReturnType(returnType))
+						b = false;
+				if (b) return true;
 				break;
-			case ST_WHILE_LOOP:
-				if (((DST::WhileLoop*)i)->getStatement()->hasReturnType(returnType))
-					return true;
-				break;*/
-			/*case ST_DO_WHILE_LOOP:	
-				if (((DST::DoWhileLoop*)i)->getStatement()->hasReturnType(returnType))	
-					return true;
-				break;*/ // TODO - do loops make a difference?
 		}
 	}
 	return false;
