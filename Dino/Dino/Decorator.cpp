@@ -124,14 +124,15 @@ DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
 	if (_types.count(name))
 		throw DinoException::DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
 
-	
 	DST::StatementBlock *get = decorate(node->getGet());
+
+	if (get && !get->hasReturnType(type))
+		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
 
 	enterBlock();
 	_variables[currentScope()][unicode_string("value")] = type;
 	DST::StatementBlock *set = decorate(node->getSet());
 	leaveBlock();
-	
 
 	_variables[currentScope()][name] = new DST::PropertyType(type, get, set);
 	return new DST::PropertyDeclaration(node, get, set, type);

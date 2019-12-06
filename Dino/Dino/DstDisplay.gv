@@ -1,33 +1,14 @@
 ﻿digraph G {
-7 [label="<StatementBlock>"];7->10;
-10 [label="<FunctionDeclaration>"];10->8;10->11;10->13;
-8 [label="<VariableDeclaration>\nTester3
+7 [label="<StatementBlock>"];7->12;7->19;
+12 [label="<Assignment>\n:=
+Type: int"];12->10;12->8;
+10 [label="<VariableDeclaration>\nx
 Type: int"];
-11 [label="<VariableDeclaration>\na
+8 [label="<IntegerLiteral>\n10
 Type: int"];
-13 [label="<StatementBlock>"];13->14;13->24;
-14 [label="<IfThenElse>"];14->18;14->-1;-1 [label="<NULL>"];14->20;
-18 [label="<BinaryOperator>\n=
-Type: bool"];18->17;18->15;
-17 [label="<Identifier>\na
-Type: int"];
-15 [label="<IntegerLiteral>\n20
-Type: int"];
-20 [label="<StatementBlock>"];20->23;
-23 [label="<UnaryOperationStatement>\nreturn"];23->21;
-21 [label="<IntegerLiteral>\n10
-Type: int"];
-24 [label="<Switch>"];24->25;24->26;24->34;24->30;
-25 [label="<Identifier>\na
-Type: int"];
-26 [label="<StatementBlock>"];26->29;
-29 [label="<UnaryOperationStatement>\nreturn"];29->27;
-27 [label="<IntegerLiteral>\n20
-Type: int"];
-34 [label="<IntegerLiteral>\n10
-Type: int"];
-30 [label="<StatementBlock>"];30->33;
-33 [label="<UnaryOperationStatement>\nreturn"];33->31;
-31 [label="<IntegerLiteral>\n10
+19 [label="<PropertyDeclaration>\nint Boo"];19->14;19->-1;-1 [label="<NULL>"];
+14 [label="<StatementBlock>"];14->17;
+17 [label="<UnaryOperationStatement>\nreturn"];17->15;
+15 [label="<IntegerLiteral>\n10
 Type: int"];
 }
