@@ -250,3 +250,8 @@ void DST::setup()
 {
 	typeidTypePtr = new BasicType(unicode_string("typeid"));
 }
+
+vector<DST::Node*> DST::ArrayType::getChildren()
+{
+	return vector<Node*>();
+}

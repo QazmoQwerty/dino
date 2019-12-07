@@ -177,6 +177,29 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class ArrayType : public Type
+	{
+		Type *_valueType;
+		unsigned int _length;	// size = 0 means size is unknown.
+
+	public:
+		ArrayType(AST::Expression *base) : Type(base) {  }
+		ArrayType(Type *valueType, int length) : Type(NULL), _valueType(valueType), _length(length) { }
+		ArrayType(Type *valueType) : ArrayType(valueType, 0) {}
+		ExactType getExactType() { return EXACT_ARRAY; }
+
+		virtual bool equals(Type *other)
+		{
+			return other->getExactType() == EXACT_ARRAY &&
+				((ArrayType*)other)->_length == _length &&
+				((ArrayType*)other)->_valueType->equals(_valueType);
+		}
+
+		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length) ? std::to_string(_length) : "") + "]"; };
+		virtual string toString() { return "<ArrayType>\\n" + toShortString(); };
+		virtual vector<Node*> getChildren();
+	};
+
 	class FunctionType : public Type
 	{
 		TypeList *_returns;

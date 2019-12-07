@@ -24,8 +24,26 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 	return std::find(begin, end, option) != end;
 }	
 
+#include <stdio.h>
+
 int main(int argc, char *argv[])
 {
+	/*int num = 0, i = 0;
+	printf("enter a number: ");
+	scanf("%d", &num);
+	while (num <= 0) 
+	{
+		printf("invalid input\nenter a number: ");
+		scanf("%d", &num);
+	}
+	for (i = 10; i < num * 10; i *= 10)
+	{
+		printf("%d", num % i / (i / 10));
+	}
+	std::cout << std::endl;
+	system("pause");
+	exit(0);*/
+
 	std::ifstream t;
 	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
 
