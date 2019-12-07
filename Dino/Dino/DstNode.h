@@ -270,6 +270,21 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class Conversion : public Expression
+	{
+		AST::FunctionCall *_base;
+		Type *_type;
+		Expression *_expression;
+	public: 
+		Conversion(AST::FunctionCall *base, Type *type, Expression *expression) : _base(base), _type(type), _expression(expression) {}
+		void setType(Type *type) { _type = type; }
+		Type *getType() { return _type; }
+		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }
+
+		virtual string toString() { return "<Conversion>\nType: " + _type->toShortString(); };
+		virtual vector<Node*> getChildren();
+	};
+
 	class StatementBlock;
 	class VariableDeclaration;
 

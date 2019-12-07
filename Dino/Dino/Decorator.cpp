@@ -202,11 +202,8 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 				type->addParameter((DST::Type*)i);
 			return type;
 		}
-		if (arguments->getExpressions().size() == 1)
-		{
-			// conversion
-			throw DinoException("conversions are not supported yet", EXT_GENERAL, node->getLine());
-		}
+		if (arguments->getExpressions().size() == 1) // conversion
+			return new DST::Conversion(node, (DST::Type*)funcId, arguments->getExpressions()[0]);
 		throw DinoException("invalid function arguments", EXT_GENERAL, node->getLine());
 	}
 

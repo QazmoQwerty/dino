@@ -272,3 +272,10 @@ vector<DST::Node*> DST::FunctionLiteral::getChildren()
 	v.push_back(_content);
 	return v;
 }
+
+vector<DST::Node*> DST::Conversion::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
+	return v;
+}
