@@ -178,6 +178,12 @@ vector<DST::Node*> DST::PropertyDeclaration::getChildren()
 	return v;
 }
 
+DST::FunctionCall::FunctionCall(AST::FunctionCall * base, Expression * funcPtr, ExpressionList * arguments) : _base(base)
+{
+	setFunctionId(funcPtr);
+	setArguments(arguments);
+}
+
 vector<DST::Node*> DST::FunctionCall::getChildren()
 {
 	vector<Node*> v;

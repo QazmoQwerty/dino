@@ -57,7 +57,12 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	switch (dynamic_cast<AST::Statement*>(node)->getStatementType())
 	{
 	case ST_FUNCTION_CALL:
-		return decorate(dynamic_cast<AST::FunctionCall*>(node));
+	{
+		auto n = decorate(dynamic_cast<AST::FunctionCall*>(node));
+		if (!n->isStatement())
+			throw DinoException("exected a statements", EXT_GENERAL, node->getLine());
+		return dynamic_cast<DST::ExpressionStatement*>(n);
+	}
 	case ST_FUNCTION_DECLARATION:
 		return decorate(dynamic_cast<AST::FunctionDeclaration*>(node));
 	case ST_VARIABLE_DECLARATION:
@@ -167,18 +172,43 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	return assignment;
 }
 
-DST::FunctionCall * Decorator::decorate(AST::FunctionCall * node)
+DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 {
-	auto call = new DST::FunctionCall(node);
-	call->setFunctionId(decorate(node->getFunctionId()));
+	auto funcId = decorate(node->getFunctionId());
+	DST::ExpressionList *arguments;
 	if (node->getArguments()->getExpressionType() != ET_LIST)
 	{
 		auto list = new DST::ExpressionList(node->getArguments());
 		list->addExpression(decorate(node->getArguments()));
-		call->setArguments(list);
+		arguments = list;
 	}
-	else call->setArguments(decorate((AST::ExpressionList*)node->getArguments()));
+	else arguments = decorate((AST::ExpressionList*)node->getArguments());
 
+	if (funcId->getExpressionType() == ET_TYPE)	// function type OR conversion
+	{
+		bool areAllTypes = true;
+		for (auto i : arguments->getExpressions())
+			if (i->getExpressionType() != ET_TYPE)
+				areAllTypes = false;
+
+		if (areAllTypes)
+		{
+			// function type
+			auto type = new DST::FunctionType(node);
+			type->addReturn((DST::Type*)funcId);
+			for (auto i : arguments->getExpressions())
+				type->addParameter((DST::Type*)i);
+			return type;
+		}
+		if (arguments->getExpressions().size() == 1)
+		{
+			// conversion
+			throw DinoException("conversions are not supported yet", EXT_GENERAL, node->getLine());
+		}
+		throw DinoException("invalid function arguments", EXT_GENERAL, node->getLine());
+	}
+
+	auto call = new DST::FunctionCall(node, funcId, arguments);
 	return call;
 }
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
@@ -290,7 +320,10 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 {
 	if (node->getExpressionType() == ET_IDENTIFIER)
 		return new DST::BasicType(node);
-	return nullptr;
+	auto ret = decorate(node);
+	if (ret->getExpressionType() != ET_TYPE)
+		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
+	return (DST::Type*)ret;
 }
 
 bool Decorator::isCondition(DST::Expression * node)

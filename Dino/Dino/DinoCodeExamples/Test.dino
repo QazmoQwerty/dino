@@ -1,4 +1,4 @@
-int x := 10
+/*int x := 10
 
 void Boo() {
     if true:
@@ -10,4 +10,12 @@ int Boo2() {
     if true:
         return 10
     x += 10
-}
+    return 20
+}*/
+
+int a := int(1.1)
+
+// int Sum(int a, int b): return a + b
+
+// int(int, int) ptr := Sum
+// int a := ptr(1, 2)

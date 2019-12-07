@@ -22,7 +22,8 @@ private:
 	static DST::BinaryOperation *decorate(AST::BinaryOperation *node);
 	static DST::Literal *decorate(AST::Literal *node);
 	static DST::ExpressionList *decorate(AST::ExpressionList *node);
-	 
+	static DST::Expression *decorate(AST::FunctionCall *node);
+
 	// Statements
 	static DST::StatementBlock *decorate(AST::StatementBlock *node);
 	static DST::IfThenElse *decorate(AST::IfThenElse *node);
@@ -36,7 +37,6 @@ private:
 	// ExpressionStatements
 	static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
 	static DST::Assignment *decorate(AST::Assignment *node);
-	static DST::FunctionCall *decorate(AST::FunctionCall *node);
 	
 
 	static DST::Type *evalType(AST::Expression *node);

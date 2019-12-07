@@ -541,6 +541,7 @@ namespace DST
 
 	public:
 		FunctionCall(AST::FunctionCall *base) : _base(base) {};
+		FunctionCall(AST::FunctionCall *base, Expression *funcPtr, ExpressionList *arguments);
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\nType: " + _type->toShortString(); };

@@ -1,24 +1,36 @@
 ﻿digraph G {
-7 [label="<StatementBlock>"];7->12;7->15;
-12 [label="<Assignment>\n:=
-Type: int"];12->10;12->8;
-10 [label="<VariableDeclaration>\nx
+7 [label="<StatementBlock>"];7->10;7->33;7->44;
+10 [label="<FunctionDeclaration>"];10->8;10->11;10->13;10->15;
+8 [label="<VariableDeclaration>\nSum
 Type: int"];
-8 [label="<IntegerLiteral>\n10
+11 [label="<VariableDeclaration>\na
 Type: int"];
-15 [label="<FunctionDeclaration>"];15->13;15->16;
-13 [label="<VariableDeclaration>\nBoo
-Type: void"];
-16 [label="<StatementBlock>"];16->17;16->25;
-17 [label="<IfThenElse>"];17->18;17->20;17->-1;-1 [label="<NULL>"];
-18 [label="<BoolLiteral>\n1
-Type: bool"];
-20 [label="<StatementBlock>"];20->21;
-21 [label="<UnaryOperationStatement>\nreturn"];21->-2;-2 [label="<NULL>"];
-25 [label="<Assignment>\n+=
-Type: int"];25->24;25->22;
-24 [label="<Identifier>\nx
+13 [label="<VariableDeclaration>\nb
 Type: int"];
-22 [label="<IntegerLiteral>\n10
+15 [label="<StatementBlock>"];15->19;
+19 [label="<UnaryOperationStatement>\nreturn"];19->18;
+18 [label="<BinaryOperator>\n+
+Type: int"];18->17;18->16;
+17 [label="<Identifier>\na
+Type: int"];
+16 [label="<Identifier>\nb
+Type: int"];
+33 [label="<Assignment>\n:=
+Type: int(int, int)"];33->24;33->23;
+24 [label="<VariableDeclaration>\nptr
+Type: int(int, int)"];
+23 [label="<Identifier>\nSum
+Type: int(int, int)"];
+44 [label="<Assignment>\n:=
+Type: int"];44->42;44->41;
+42 [label="<VariableDeclaration>\na
+Type: int"];
+41 [label="<FunctionCall>\nType: int"];41->34;41->35;
+34 [label="<Identifier>\nptr
+Type: int(int, int)"];
+35 [label="<ExpressionList>\nType: int, int"];35->37;35->39;
+37 [label="<IntegerLiteral>\n1
+Type: int"];
+39 [label="<IntegerLiteral>\n2
 Type: int"];
 }
