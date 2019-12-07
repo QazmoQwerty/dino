@@ -270,6 +270,33 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class StatementBlock;
+	class VariableDeclaration;
+
+	class FunctionLiteral : public Expression
+	{
+		AST::Function *_base;
+		FunctionType *_type;
+		vector<VariableDeclaration*> _parameters;
+		StatementBlock *_content;
+
+	public:
+		FunctionLiteral(AST::Function* base) : _base(base) {}
+		void setType(FunctionType *type) { _type = type; }
+		Type *getType() { return _type; }
+		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
+
+		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
+		virtual vector<Node*> getChildren();
+
+		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
+		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
+		void setContent(StatementBlock* content) { _content = content; }
+
+		vector<VariableDeclaration*> getParameters() { return _parameters; }
+		StatementBlock* getContent() { return _content; }
+	};
+
 	class ExpressionList : public Expression
 	{
 		TypeList *_type;

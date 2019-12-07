@@ -1,19 +1,21 @@
-/*int x := 10
+int a234 := 10
 
-void Boo() {
+void() a2345 := () {
     if true:
         return
-    x += 10
+    a234 += 10
 }
 
-int Boo2() {
+int() a23456 := () int {
     if true:
         return 10
-    x += 10
-    return 20
-}*/
+    a234 += 10
+}
 
-int a := int(1.1)
+
+int(int) a := (int a) int { return a * 10 }
+//a := (): x++
+//a := () int: return 10
 
 // int Sum(int a, int b): return a + b
 

@@ -358,14 +358,17 @@ AST::Node * Parser::nud(Token * token)
 		if (peekToken()->_type == TT_IDENTIFIER || isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
 		{
 			auto params = convertToExpression(inner);
-			switch (params->getExpressionType())	// make sure inner is a list of variable declarations
+			if (params != nullptr)
 			{
+				switch (params->getExpressionType())	// make sure inner is a list of variable declarations
+				{
 				case(ET_LIST):
 					for (auto i : dynamic_cast<AST::ExpressionList*>(inner)->getExpressions())
 						if (i->getExpressionType() != ET_VARIABLE_DECLARATION)
 							return inner;
 				case(ET_VARIABLE_DECLARATION): break;
 				default: return inner;
+				}
 			}
 			auto func = new AST::Function();
 			func->addParameters(params);

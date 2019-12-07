@@ -48,6 +48,8 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 	if (this == nullptr)
 		return false;
 	bool isVoid = false;
+	if (returnType->getExactType() == EXACT_TYPELIST && ((TypeList*)returnType)->getTypes().size() == 1)
+		returnType = ((TypeList*)returnType)->getTypes()[0];
 	if (returnType->getExactType() == EXACT_BASIC && ((BasicType*)returnType)->getTypeId() == unicode_string("void"))
 		isVoid = true;
 	for (auto i : _statements) 
@@ -260,4 +262,13 @@ void DST::setup()
 vector<DST::Node*> DST::ArrayType::getChildren()
 {
 	return vector<Node*>();
+}
+
+vector<DST::Node*> DST::FunctionLiteral::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _parameters)
+		v.push_back(i);
+	v.push_back(_content);
+	return v;
 }

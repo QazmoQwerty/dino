@@ -20,9 +20,10 @@ private:
 	// Expressions
 	static DST::Expression *decorate(AST::Identifier *node);
 	static DST::BinaryOperation *decorate(AST::BinaryOperation *node);
-	static DST::Literal *decorate(AST::Literal *node);
+	static DST::Expression *decorate(AST::Literal *node);
 	static DST::ExpressionList *decorate(AST::ExpressionList *node);
 	static DST::Expression *decorate(AST::FunctionCall *node);
+	static DST::FunctionLiteral *decorate(AST::Function *node);
 
 	// Statements
 	static DST::StatementBlock *decorate(AST::StatementBlock *node);

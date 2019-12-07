@@ -1,36 +1,66 @@
 ﻿digraph G {
-7 [label="<StatementBlock>"];7->10;7->33;7->44;
-10 [label="<FunctionDeclaration>"];10->8;10->11;10->13;10->15;
-8 [label="<VariableDeclaration>\nSum
+8 [label="<StatementBlock>"];8->13;8->36;8->64;8->86;
+13 [label="<Assignment>\n:=
+Type: int"];13->11;13->9;
+11 [label="<VariableDeclaration>\na234
 Type: int"];
-11 [label="<VariableDeclaration>\na
+9 [label="<IntegerLiteral>\n10
 Type: int"];
-13 [label="<VariableDeclaration>\nb
+36 [label="<Assignment>\n:=
+Type: void()"];36->29;36->14;
+29 [label="<VariableDeclaration>\na2345
+Type: void()"];
+14 [label="<FunctionLiteral>
+Type: void()"];14->19;
+19 [label="<StatementBlock>"];19->20;19->28;
+20 [label="<IfThenElse>"];20->21;20->23;20->-1;-1 [label="<NULL>"];
+21 [label="<BoolLiteral>\n1
+Type: bool"];
+23 [label="<StatementBlock>"];23->24;
+24 [label="<UnaryOperationStatement>\nreturn"];24->-2;-2 [label="<NULL>"];
+28 [label="<Assignment>\n+=
+Type: int"];28->27;28->25;
+27 [label="<Identifier>\na234
 Type: int"];
-15 [label="<StatementBlock>"];15->19;
-19 [label="<UnaryOperationStatement>\nreturn"];19->18;
-18 [label="<BinaryOperator>\n+
-Type: int"];18->17;18->16;
-17 [label="<Identifier>\na
+25 [label="<IntegerLiteral>\n10
 Type: int"];
-16 [label="<Identifier>\nb
+64 [label="<Assignment>\n:=
+Type: int()"];64->57;64->37;
+57 [label="<VariableDeclaration>\na23456
+Type: int()"];
+37 [label="<FunctionLiteral>
+Type: int()"];37->42;
+42 [label="<StatementBlock>"];42->43;42->53;42->56;
+43 [label="<IfThenElse>"];43->44;43->46;43->-3;-3 [label="<NULL>"];
+44 [label="<BoolLiteral>\n1
+Type: bool"];
+46 [label="<StatementBlock>"];46->49;
+49 [label="<UnaryOperationStatement>\nreturn"];49->47;
+47 [label="<IntegerLiteral>\n10
 Type: int"];
-33 [label="<Assignment>\n:=
-Type: int(int, int)"];33->24;33->23;
-24 [label="<VariableDeclaration>\nptr
-Type: int(int, int)"];
-23 [label="<Identifier>\nSum
-Type: int(int, int)"];
-44 [label="<Assignment>\n:=
-Type: int"];44->42;44->41;
-42 [label="<VariableDeclaration>\na
+53 [label="<Assignment>\n+=
+Type: int"];53->52;53->50;
+52 [label="<Identifier>\na234
 Type: int"];
-41 [label="<FunctionCall>\nType: int"];41->34;41->35;
-34 [label="<Identifier>\nptr
-Type: int(int, int)"];
-35 [label="<ExpressionList>\nType: int, int"];35->37;35->39;
-37 [label="<IntegerLiteral>\n1
+50 [label="<IntegerLiteral>\n10
 Type: int"];
-39 [label="<IntegerLiteral>\n2
+56 [label="<UnaryOperationStatement>\nreturn"];56->54;
+54 [label="<IntegerLiteral>\n20
+Type: int"];
+86 [label="<Assignment>\n:=
+Type: int(int)"];86->78;86->65;
+78 [label="<VariableDeclaration>\na
+Type: int(int)"];
+65 [label="<FunctionLiteral>
+Type: int(int)"];65->70;65->72;
+70 [label="<VariableDeclaration>\na
+Type: int"];
+72 [label="<StatementBlock>"];72->77;
+77 [label="<UnaryOperationStatement>\nreturn"];77->76;
+76 [label="<BinaryOperator>\n*
+Type: int"];76->75;76->73;
+75 [label="<Identifier>\na
+Type: int"];
+73 [label="<IntegerLiteral>\n10
 Type: int"];
 }

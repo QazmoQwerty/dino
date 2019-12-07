@@ -15,6 +15,7 @@ void Decorator::setup()
 	createBasicType("string");
 	createBasicType("char");
 	createBasicType("float");
+	createBasicType("void");
 }
 
 DST::Node *Decorator::decorate(AST::Node * node)
@@ -176,10 +177,11 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 {
 	auto funcId = decorate(node->getFunctionId());
 	DST::ExpressionList *arguments;
-	if (node->getArguments()->getExpressionType() != ET_LIST)
+	if (node->getArguments() == nullptr || node->getArguments()->getExpressionType() != ET_LIST)
 	{
 		auto list = new DST::ExpressionList(node->getArguments());
-		list->addExpression(decorate(node->getArguments()));
+		if (node->getArguments())
+			list->addExpression(decorate(node->getArguments()));
 		arguments = list;
 	}
 	else arguments = decorate((AST::ExpressionList*)node->getArguments());
@@ -211,6 +213,29 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 	auto call = new DST::FunctionCall(node, funcId, arguments);
 	return call;
 }
+
+DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
+{
+	enterBlock();
+	auto lit = new DST::FunctionLiteral(node);
+	auto type = new DST::FunctionType();
+	if (node->getReturnType() == NULL)
+		type->addReturn(new DST::BasicType(unicode_string("void")));
+	else type->addReturn(evalType(node->getReturnType()));
+	for (auto i : node->getParameters())
+	{
+		auto param = decorate(i);
+		type->addParameter(param->getType());
+		lit->addParameter(param);
+	}
+	lit->setContent(decorate(node->getContent()));
+	lit->setType(type);
+	if (lit->getContent() && !lit->getContent()->hasReturnType(type->getReturns()))
+		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+	leaveBlock();
+	return lit;
+}
+
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 {
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
@@ -230,8 +255,10 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 	return bo;
 }
 
-DST::Literal * Decorator::decorate(AST::Literal * node)
+DST::Expression * Decorator::decorate(AST::Literal * node)
 {
+	if (node->getLiteralType() == LT_FUNCTION)
+		return decorate((AST::Function*)node);
 	auto lit = new DST::Literal(node);
 	switch (node->getLiteralType()) 
 	{
@@ -241,7 +268,6 @@ DST::Literal * Decorator::decorate(AST::Literal * node)
 	case (LT_INTEGER):		lit->setType(new DST::BasicType(unicode_string("int")));	break;
 	case (LT_STRING):		lit->setType(new DST::BasicType(unicode_string("string"))); break;
 	case (LT_NULL):			lit->setType(new DST::BasicType(unicode_string("null")));	break;
-	case (LT_FUNCTION):		throw DinoException("function literals are not implemented yet", EXT_GENERAL, node->getLine());
 	}
 	return lit;
 }
