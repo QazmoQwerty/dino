@@ -1,13 +1,17 @@
 ﻿digraph G {
-0 [label="<StatementBlock>"];0->3;0->7;
-3 [label="<Assignment>\n:="];3->2;3->4;
-2 [label="<VariableDeclaration>\nf"];2->1;
-1 [label="<Identifier>\nfloat"];
-4 [label="<FracLiteral>\n1.100000"];
-7 [label="<Assignment>\n:="];7->6;7->9;
-6 [label="<VariableDeclaration>\na"];6->5;
-5 [label="<Identifier>\nint"];
-9 [label="<FunctionCall>\n"];9->8;9->10;
-8 [label="<Identifier>\nint"];
-10 [label="<Identifier>\nf"];
+0 [label="<StatementBlock>"];0->5;0->13;
+5 [label="<Assignment>\n:="];5->4;5->6;
+4 [label="<VariableDeclaration>\narr"];4->2;
+2 [label="<BinaryOperator>\n["];2->1;2->3;
+1 [label="<Identifier>\nint"];
+3 [label="<IntegerLiteral>\n2"];
+6 [label="<UnaryOperator>\n["];6->8;
+8 [label="<ExpressionList>"];8->7;8->9;
+7 [label="<IntegerLiteral>\n1"];
+9 [label="<IntegerLiteral>\n2"];
+13 [label="<Assignment>\n:="];13->11;13->14;
+11 [label="<BinaryOperator>\n["];11->10;11->12;
+10 [label="<Identifier>\narr"];
+12 [label="<IntegerLiteral>\n1"];
+14 [label="<IntegerLiteral>\n2"];
 }

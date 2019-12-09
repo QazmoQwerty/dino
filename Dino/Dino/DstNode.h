@@ -194,6 +194,8 @@ namespace DST
 				((ArrayType*)other)->_length == _length &&
 				((ArrayType*)other)->_valueType->equals(_valueType);
 		}
+		int getLength() { return _length; }
+		Type *getType() { return _valueType; }
 
 		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length) ? std::to_string(_length) : "") + "]"; };
 		virtual string toString() { return "<ArrayType>\\n" + toShortString(); };
@@ -264,6 +266,9 @@ namespace DST
 		Literal(AST::Literal* base) : _base(base) {}
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
+		void *getValue();
+		LiteralType getLiteralType() { return _base->getLiteralType(); }
+
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
@@ -326,6 +331,23 @@ namespace DST
 
 		void addExpression(Expression* expression) { _expressions.push_back(expression); _type->addType(expression->getType()); };
 		vector<Expression*> getExpressions() { return _expressions; }
+	};
+
+	class ArrayLiteral : public Expression
+	{
+		ArrayType *_type;
+		vector<Expression*> _array;
+
+	public:
+		ArrayLiteral(Type *type, vector<Expression*> arr) : _array(arr) { _type = new ArrayType(type, arr.size()); }
+		ArrayType *getType() { return _type; }
+		virtual ExpressionType getExpressionType() { return ET_ARRAY; };
+		virtual string toString() { return "<ArrayLiteral>\\nType: " + _type->toShortString(); };
+		virtual vector<Node*> getChildren();
+
+
+		void addValue(Expression* value) { _array.push_back(value); };
+		vector<Expression*> getArray() { return _array; }
 	};
 
 	/********************** Statements **********************/

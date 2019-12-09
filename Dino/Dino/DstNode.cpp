@@ -43,6 +43,14 @@ vector<DST::Node*> DST::ExpressionList::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::ArrayLiteral::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _array)
+		v.push_back(i);
+	return v;
+}
+
 bool DST::StatementBlock::hasReturnType(Type * returnType)
 {
 	if (this == nullptr)
@@ -278,4 +286,14 @@ vector<DST::Node*> DST::Conversion::getChildren()
 	vector<Node*> v;
 	v.push_back(_expression);
 	return v;
+}
+
+void * DST::Literal::getValue() 
+{
+	switch (_base->getLiteralType())
+	{
+	case LT_INTEGER:
+		return new int((dynamic_cast<AST::Integer*>(_base)->getValue()));
+	}
+	return NULL;
 }

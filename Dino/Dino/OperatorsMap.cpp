@@ -157,6 +157,11 @@ ReturnType OperatorsMap::getReturnType(OperatorType type)
 	};
 	if (std::find(std::begin(logicalTypes), std::end(logicalTypes), type) != std::end(logicalTypes))
 		return RT_BOOLEAN;
+
+	if (type == OT_SQUARE_BRACKETS_OPEN)
+		return RT_ARRAY;
+
+
 	return RT_VOID;
 }
 

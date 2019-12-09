@@ -1,3 +1,2 @@
-
-float f := 1.1
-int a := int(f)
+int[2] arr := [1, 2]
+arr[1] := 2

@@ -24,6 +24,7 @@ private:
 	static DST::ExpressionList *decorate(AST::ExpressionList *node);
 	static DST::Expression *decorate(AST::FunctionCall *node);
 	static DST::FunctionLiteral *decorate(AST::Function *node);
+	static DST::Expression * decorate(AST::UnaryOperation * node);
 
 	// Statements
 	static DST::StatementBlock *decorate(AST::StatementBlock *node);

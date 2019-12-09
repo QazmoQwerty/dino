@@ -39,6 +39,8 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		return decorate(dynamic_cast<AST::BinaryOperation*>(node));
 	case ET_LITERAL:
 		return decorate(dynamic_cast<AST::Literal*>(node));
+	case ET_UNARY_OPERATION: 
+		return decorate(dynamic_cast<AST::UnaryOperation*>(node));
 	case ET_VARIABLE_DECLARATION:
 		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
 	case ET_ASSIGNMENT:
@@ -149,6 +151,27 @@ DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement 
 	return new DST::UnaryOperationStatement(node, decorate(node->getExpression()));
 }
 
+DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
+{
+
+	if (node->getOperator()._type == OT_SQUARE_BRACKETS_OPEN)
+	{
+		auto values = decorate(node->getExpression());
+		DST::Type *prevType = NULL;
+		for (auto val : ((DST::ExpressionList*)values)->getExpressions())
+		{
+			if (prevType && !val->getType()->equals(prevType))
+				throw DinoException::DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
+			prevType = val->getType();
+		}
+		if (!prevType)
+			throw DinoException::DinoException("array literal can't be empty", EXT_GENERAL, node->getLine()); // TODO: check this one with shalev.
+
+		return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)values)->getExpressions());
+	}
+	return NULL;
+}
+
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 {
 	auto decl = new DST::VariableDeclaration(node);
@@ -241,6 +264,26 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 	{
 		case RT_BOOLEAN: 
 			bo->setType(new DST::BasicType(CONDITION_TYPE));
+			break;
+		case RT_ARRAY:
+			// array access
+			if (bo->getLeft()->getExpressionType() == ET_IDENTIFIER)
+			{
+				if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
+					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
+				if(((DST::ArrayType*)bo->getLeft()->getType())->getLength() <= *((int*)((DST::Literal*)(bo->getRight()))->getValue()))
+					throw DinoException("index out of range", EXT_GENERAL, node->getLine());
+				bo->setType(((DST::ArrayType*)bo->getLeft())->getType()->getType());
+			}
+			// array declaration
+			else
+			{
+				if (bo->getLeft()->getExpressionType() != ET_TYPE)
+					throw DinoException("expected a type", EXT_GENERAL, node->getLine());
+				if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
+					throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
+				bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
+			}
 			break;
 		case RT_LEFT: 
 			bo->setType(bo->getLeft()->getType());
@@ -344,7 +387,13 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 	if (node->getExpressionType() == ET_IDENTIFIER)
 		return new DST::BasicType(node);
 	auto ret = decorate(node);
-	if (ret->getExpressionType() != ET_TYPE)
+	if (ret->getExpressionType() == ET_BINARY_OPERATION)
+	{
+		auto arr = ret->getType();
+		delete ret;
+		ret = arr;
+	}
+	else if (ret->getExpressionType() != ET_TYPE)
 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
 	return (DST::Type*)ret;
 }
