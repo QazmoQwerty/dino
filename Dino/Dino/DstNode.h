@@ -159,6 +159,7 @@ namespace DST
 	class BasicType : public Type
 	{
 		unicode_string _typeId;
+		unordered_map<unicode_string, Type*, UnicodeHasherFunction> _members;
 	public:
 		BasicType(AST::Expression *base) : Type(base) { _typeId = dynamic_cast<AST::Identifier*>(_base)->getVarId(); }
 		BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
@@ -171,6 +172,8 @@ namespace DST
 				(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId) ||
 				(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
 		}
+		void addMember(unicode_string id, Type* type)  { _members[id] = type; }
+		Type *getMember(unicode_string id) { return _members[id]; }
 
 		virtual string toShortString() { return _typeId.to_string(); };
 		virtual string toString() { return "<BasicType>\\n" + _typeId.to_string(); };
@@ -492,13 +495,14 @@ namespace DST
 		unicode_string _name;
 		AST::TypeDeclaration *_base;
 		//vector<InterfaceDeclaration*> _interfaces;
-		unordered_map<unicode_string, Statement*, UnicodeHasherFunction> _decls;
+		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> _decls;
 	public:
 		TypeDeclaration(unicode_string name) : _name(name), _base(NULL) {}
 		TypeDeclaration(AST::TypeDeclaration *base) : _name(base->getName()), _base(base) {}
 		
-		void addDeclaration(Statement* decl);
-		Statement* getDeclaration(unicode_string id)  { return _decls[id]; }
+		void addDeclaration(Statement *decl, Type *type);
+		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
+		Type* getMemberType(unicode_string id) { return _decls[id].second; }
 
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
 		virtual bool isDeclaration() { return true; }

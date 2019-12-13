@@ -157,9 +157,24 @@ DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
 {
 	enterBlock();
 	auto decl = new DST::TypeDeclaration(node);
-	for (auto i : node->getVariableDeclarations()) decl->addDeclaration(decorate(i));
-	for (auto i : node->getFunctionDeclarations()) decl->addDeclaration(decorate(i));
-	for (auto i : node->getPropertyDeclarations()) decl->addDeclaration(decorate(i));
+	vector<DST::Statement*> decls;
+
+	for (auto i : node->getVariableDeclarations()) 
+	{
+		auto dec = decorate(i);
+		decl->addDeclaration(dec, _variables[currentScope()][dec->getVarId()]);
+	}
+	for (auto i : node->getFunctionDeclarations()) 
+	{
+		auto dec = decorate(i);
+		decl->addDeclaration(dec, _variables[currentScope()][dec->getVarDecl()->getVarId()]);
+	}
+	for (auto i : node->getPropertyDeclarations())
+	{
+		auto dec = decorate(i);
+		decl->addDeclaration(dec, _variables[currentScope()][dec->getPropId()]);
+	}
+
 	leaveBlock();
 	_types[decl->getName()] = decl;
 	return decl;
@@ -278,6 +293,21 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 		auto type = left->getType();
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
+		if (type->getExactType() == EXACT_PROPERTY && ((DST::PropertyType*)type)->hasGet())
+			type = ((DST::PropertyType*)type)->getReturn();
+		if (type->getExactType() != EXACT_BASIC)
+			throw DinoException("Expression must have class type", EXT_GENERAL, node->getLine());
+		auto memberType = _types[((DST::BasicType*)type)->getTypeId()]->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+		if (memberType == nullptr)
+			throw DinoException("Unkown identifier", EXT_GENERAL, node->getLine());
+		if (!(((AST::Identifier*)node->getRight())->getVarId())[0].isUpper())
+			throw DinoException("Cannot access private member", EXT_GENERAL, node->getLine());
+
+		auto right = new DST::Variable((AST::Identifier*)node->getRight(), memberType);
+		
+		auto bo = new DST::BinaryOperation(node, left, right);
+		bo->setType(memberType);
+		return bo;
 	}
 
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));

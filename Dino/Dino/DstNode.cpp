@@ -99,7 +99,7 @@ vector<DST::Node*> DST::StatementBlock::getChildren()
 	return v;
 }
 
-void DST::TypeDeclaration::addDeclaration(Statement * decl)
+void DST::TypeDeclaration::addDeclaration(Statement * decl, Type * type)
 {
 	unicode_string varId;
 	switch (decl->getStatementType())
@@ -111,14 +111,14 @@ void DST::TypeDeclaration::addDeclaration(Statement * decl)
 	}
 	if (_decls.count(varId))
 		throw DinoException("Multiple members of same name are not allowed", EXT_GENERAL, decl->getLine());
-	_decls[varId] = decl;
+	_decls[varId] = std::make_pair(decl, type);
 }
 
 vector<DST::Node*> DST::TypeDeclaration::getChildren()
 {
 	vector<Node*> v;
 	for (auto i : _decls)
-		v.push_back(i.second);
+		v.push_back(i.second.first);
 	return v;
 }
 

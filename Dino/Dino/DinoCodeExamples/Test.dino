@@ -2,7 +2,7 @@ type Foo {
     int a
 
     int B {
-        get: return a
+        
         set: a := value
     }
 
@@ -12,3 +12,4 @@ type Foo {
 }
 
 Foo me
+int m := me.B
