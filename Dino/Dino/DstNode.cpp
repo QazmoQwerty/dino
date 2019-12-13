@@ -116,7 +116,10 @@ void DST::TypeDeclaration::addDeclaration(Statement * decl)
 
 vector<DST::Node*> DST::TypeDeclaration::getChildren()
 {
-	return vector<Node*>();
+	vector<Node*> v;
+	for (auto i : _decls)
+		v.push_back(i.second);
+	return v;
 }
 
 vector<DST::Node*> DST::IfThenElse::getChildren()

@@ -86,6 +86,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::WhileLoop*>(node));
 	case ST_UNARY_OPERATION:
 		return decorate(dynamic_cast<AST::UnaryOperationStatement*>(node));
+	case ST_TYPE_DECLARATION:
+		return decorate(dynamic_cast<AST::TypeDeclaration*>(node));
 	case ST_DO_WHILE_LOOP: 
 		throw DinoException("do-while loops are not implemented yet", EXT_GENERAL, node->getLine());
 	}
@@ -153,8 +155,14 @@ DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement 
 
 DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
 {
+	enterBlock();
 	auto decl = new DST::TypeDeclaration(node);
-	return nullptr;
+	for (auto i : node->getVariableDeclarations()) decl->addDeclaration(decorate(i));
+	for (auto i : node->getFunctionDeclarations()) decl->addDeclaration(decorate(i));
+	for (auto i : node->getPropertyDeclarations()) decl->addDeclaration(decorate(i));
+	leaveBlock();
+	_types[decl->getName()] = decl;
+	return decl;
 }
 
 DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
@@ -264,7 +272,16 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 
 DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 {
+	if (node->getOperator()._type == OT_PERIOD) 
+	{
+		auto left = decorate(node->getLeft());
+		auto type = left->getType();
+		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
+			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
+	}
+
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
+
 
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))
 	{

@@ -1,2 +1,14 @@
-int[2] arr := [1, 2]
-arr[1] := 2
+type Foo {
+    int a
+
+    int B {
+        get: return a
+        set: a := value
+    }
+
+    int F(int b) {
+        return a + b
+    }
+}
+
+Foo me

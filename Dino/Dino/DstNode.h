@@ -501,10 +501,10 @@ namespace DST
 		Statement* getDeclaration(unicode_string id)  { return _decls[id]; }
 
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
-
 		virtual bool isDeclaration() { return true; }
 
-		virtual string toString() { return "<TypeDeclaration>"; };
+		unicode_string getName() { return _name; }
+		virtual string toString() { return "<TypeDeclaration>\\n" + _name.to_string(); };
 		virtual vector<Node*> getChildren();
 	};
 

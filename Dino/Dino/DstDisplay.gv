@@ -1,22 +1,33 @@
 ﻿digraph G {
-8 [label="<StatementBlock>"];8->23;8->30;
-23 [label="<Assignment>\n:=
-Type: int[2]"];23->17;23->15;
-17 [label="<VariableDeclaration>\narr
-Type: int[2]"];
-15 [label="<ArrayLiteral>\nType: int[2]"];15->11;15->13;
-11 [label="<IntegerLiteral>\n1
+8 [label="<StatementBlock>"];8->9;8->35;
+9 [label="<TypeDeclaration>\nFoo"];9->10;9->14;9->34;
+10 [label="<VariableDeclaration>\na
 Type: int"];
-13 [label="<IntegerLiteral>\n2
+14 [label="<FunctionDeclaration>"];14->12;14->15;14->17;
+12 [label="<VariableDeclaration>\nF
 Type: int"];
-30 [label="<Assignment>\n:=
-Type: int"];30->29;30->24;
-29 [label="<BinaryOperator>\n[
-Type: int"];29->28;29->26;
-28 [label="<Identifier>\narr
-Type: int[2]"];
-26 [label="<IntegerLiteral>\n1
+15 [label="<VariableDeclaration>\nb
 Type: int"];
-24 [label="<IntegerLiteral>\n2
+17 [label="<StatementBlock>"];17->21;
+21 [label="<UnaryOperationStatement>\nreturn"];21->20;
+20 [label="<BinaryOperator>\n+
+Type: int"];20->19;20->18;
+19 [label="<Identifier>\na
 Type: int"];
+18 [label="<Identifier>\nb
+Type: int"];
+34 [label="<PropertyDeclaration>\nint B"];34->26;34->29;
+26 [label="<StatementBlock>"];26->28;
+28 [label="<UnaryOperationStatement>\nreturn"];28->27;
+27 [label="<Identifier>\na
+Type: int"];
+29 [label="<StatementBlock>"];29->32;
+32 [label="<Assignment>\n:=
+Type: int"];32->31;32->30;
+31 [label="<Identifier>\na
+Type: int"];
+30 [label="<Identifier>\nvalue
+Type: int"];
+35 [label="<VariableDeclaration>\nme
+Type: Foo"];
 }
