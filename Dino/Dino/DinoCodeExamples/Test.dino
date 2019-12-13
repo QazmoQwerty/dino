@@ -1,4 +1,4 @@
-type Foo {
+/*type Foo {
     int a
 
     int B {
@@ -10,6 +10,12 @@ type Foo {
         return a + b
     }
 }
-
 Foo me
-int m := me.B
+int m := me.B*/
+
+int a
+int f { 
+    //get: return a
+    set: a := value
+}
+int b := f

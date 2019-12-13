@@ -114,6 +114,8 @@ namespace DST
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
 		virtual bool equals(Type *other) = 0;
+		virtual bool readable() { return true; }
+		virtual bool writeable() { return true; }
 
 		virtual string toShortString() = 0;
 		virtual string toString() { return "<Type>"; };
@@ -134,6 +136,9 @@ namespace DST
 
 		ExactType getExactType() { return EXACT_PROPERTY; }
 		virtual bool equals(Type *other);
+
+		virtual bool readable() { return hasGet(); }
+		virtual bool writeable() { return hasSet(); }
 
 		virtual string toShortString();
 		virtual string toString() { return "<FunctionType>" + toShortString(); };

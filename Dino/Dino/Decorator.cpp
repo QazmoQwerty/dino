@@ -182,7 +182,6 @@ DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
 
 DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 {
-
 	if (node->getOperator()._type == OT_SQUARE_BRACKETS_OPEN)
 	{
 		auto values = decorate(node->getExpression());
@@ -219,6 +218,12 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 DST::Assignment * Decorator::decorate(AST::Assignment * node)
 {
 	auto assignment = new DST::Assignment(node, decorate(node->getLeft()), decorate(node->getRight()));
+
+	if (!assignment->getLeft()->getType()->writeable())
+		throw DinoException("lvalue is read-only", EXT_GENERAL, node->getLine());
+	if (!assignment->getRight()->getType()->readable())
+		throw DinoException("rvalue is write-only", EXT_GENERAL, node->getLine());
+
 	if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))
 		throw DinoException("Assignment of different types invalid.", EXT_GENERAL, node->getLine());
 	assignment->setType(assignment->getLeft()->getType());
@@ -232,8 +237,13 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 	if (node->getArguments() == nullptr || node->getArguments()->getExpressionType() != ET_LIST)
 	{
 		auto list = new DST::ExpressionList(node->getArguments());
-		if (node->getArguments())
-			list->addExpression(decorate(node->getArguments()));
+		if (node->getArguments()) 
+		{
+			auto dec = decorate(node->getArguments());
+			if (dec->getType()->readable())
+				throw DinoException("argument is write-only", EXT_GENERAL, node->getLine());
+			list->addExpression(dec);
+		}
 		arguments = list;
 	}
 	else arguments = decorate((AST::ExpressionList*)node->getArguments());
