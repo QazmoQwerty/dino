@@ -151,6 +151,12 @@ DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement 
 	return new DST::UnaryOperationStatement(node, decorate(node->getExpression()));
 }
 
+DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
+{
+	auto decl = new DST::TypeDeclaration(node);
+	return nullptr;
+}
+
 DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 {
 

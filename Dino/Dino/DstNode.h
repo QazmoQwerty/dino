@@ -180,11 +180,11 @@ namespace DST
 	class ArrayType : public Type
 	{
 		Type *_valueType;
-		unsigned int _length;	// size = 0 means size is unknown.
+		size_t _length;	// size = 0 means size is unknown.
 
 	public:
 		ArrayType(AST::Expression *base) : Type(base) {  }
-		ArrayType(Type *valueType, int length) : Type(NULL), _valueType(valueType), _length(length) { }
+		ArrayType(Type *valueType, size_t length) : Type(NULL), _valueType(valueType), _length(length) { }
 		ArrayType(Type *valueType) : ArrayType(valueType, 0) {}
 		ExactType getExactType() { return EXACT_ARRAY; }
 
@@ -194,7 +194,7 @@ namespace DST
 				((ArrayType*)other)->_length == _length &&
 				((ArrayType*)other)->_valueType->equals(_valueType);
 		}
-		int getLength() { return _length; }
+		size_t getLength() { return _length; }
 		Type *getType() { return _valueType; }
 
 		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length) ? std::to_string(_length) : "") + "]"; };
@@ -490,13 +490,19 @@ namespace DST
 	class TypeDeclaration : public Statement 
 	{
 		unicode_string _name;
-		/*vector<unicode_string> _interfaces;
-		vector<VariableDeclaration*> _variableDeclarations;
-		vector<FunctionDeclaration*> _functionDeclarations;
-		vector<PropertyDeclaration*> _propertyDeclarations;*/
+		AST::TypeDeclaration *_base;
+		//vector<InterfaceDeclaration*> _interfaces;
+		unordered_map<unicode_string, Statement*, UnicodeHasherFunction> _decls;
 	public:
-		TypeDeclaration(unicode_string name) : _name(name) {}
+		TypeDeclaration(unicode_string name) : _name(name), _base(NULL) {}
+		TypeDeclaration(AST::TypeDeclaration *base) : _name(base->getName()), _base(base) {}
+		
+		void addDeclaration(Statement* decl);
+		Statement* getDeclaration(unicode_string id)  { return _decls[id]; }
+
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+
+		virtual bool isDeclaration() { return true; }
 
 		virtual string toString() { return "<TypeDeclaration>"; };
 		virtual vector<Node*> getChildren();
@@ -541,7 +547,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
 		virtual string toString() { return "<PropertyDeclaration>\\n" + _type->toShortString() + " " + _base->getVarDecl()->getVarId().to_string(); };
 		virtual vector<Node*> getChildren();
-		
+		unicode_string getPropId() { return _base->getVarDecl()->getVarId(); }
 		/*void setGet(Statement* get) { _get = get; }
 		void setSet(Statement* set) { _set = set; }
 		Statement* getGet() { return _get; }
@@ -567,6 +573,7 @@ namespace DST
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+		virtual bool isDeclaration() { return true; }
 	};
 
 	class Assignment : public ExpressionStatement

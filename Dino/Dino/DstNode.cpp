@@ -99,6 +99,21 @@ vector<DST::Node*> DST::StatementBlock::getChildren()
 	return v;
 }
 
+void DST::TypeDeclaration::addDeclaration(Statement * decl)
+{
+	unicode_string varId;
+	switch (decl->getStatementType())
+	{
+	case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
+	case ST_VARIABLE_DECLARATION: varId = ((VariableDeclaration*)decl)->getVarId(); break;
+	case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getPropId(); break;
+	default: throw DinoException("Type declarations may only specify variable, property, and function declarations.", EXT_GENERAL, decl->getLine());
+	}
+	if (_decls.count(varId))
+		throw DinoException("Multiple members of same name are not allowed", EXT_GENERAL, decl->getLine());
+	_decls[varId] = decl;
+}
+
 vector<DST::Node*> DST::TypeDeclaration::getChildren()
 {
 	return vector<Node*>();
