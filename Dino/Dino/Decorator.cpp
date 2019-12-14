@@ -310,8 +310,8 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 		auto memberType = _types[((DST::BasicType*)type)->getTypeId()]->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
 		if (memberType == nullptr)
 			throw DinoException("Unkown identifier", EXT_GENERAL, node->getLine());
-		if (!(((AST::Identifier*)node->getRight())->getVarId())[0].isUpper())
-			throw DinoException("Cannot access private member", EXT_GENERAL, node->getLine());
+		//if (!(((AST::Identifier*)node->getRight())->getVarId())[0].isUpper())
+		//	throw DinoException("Cannot access private member", EXT_GENERAL, node->getLine());
 
 		auto right = new DST::Variable((AST::Identifier*)node->getRight(), memberType);
 		
@@ -332,20 +332,25 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 			// array access
 			if (bo->getLeft()->getExpressionType() == ET_IDENTIFIER)
 			{
-				if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
+				if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER ||
+					 bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(&DST::BasicType(unicode_string("int")))))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
-				if(((DST::ArrayType*)bo->getLeft()->getType())->getLength() <= *((int*)((DST::Literal*)(bo->getRight()))->getValue()))
+				if(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::ArrayType*)bo->getLeft()->getType())->getLength() <= *((int*)((DST::Literal*)(bo->getRight()))->getValue()))
 					throw DinoException("index out of range", EXT_GENERAL, node->getLine());
-				bo->setType(((DST::ArrayType*)bo->getLeft())->getType()->getType());
+				bo->setType(bo->getLeft()->getType()->getType());
 			}
 			// array declaration
 			else
 			{
 				if (bo->getLeft()->getExpressionType() != ET_TYPE)
 					throw DinoException("expected a type", EXT_GENERAL, node->getLine());
-				if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
-					throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
-				bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
+				if (bo->getRight())
+				{
+					if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
+						throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
+					bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
+				}
+				else bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH));
 			}
 			break;
 		case RT_LEFT: 

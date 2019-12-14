@@ -4,6 +4,7 @@
 
 namespace DST
 {
+	static const int UNKNOWN_ARRAY_LENGTH = 0;
 	static int idCount = 0;
 
 	class BasicType;
