@@ -6,6 +6,7 @@
 #include "Lexer/Preprocessor.h"
 #include "Parser/AstNode.h"
 #include "Other/AstToFile.h"
+#include "CodeGenerator/CodeGenerator.h"
 #include "Parser/Parser.h"
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
@@ -27,6 +28,8 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char *argv[])
 {
+	CodeGenerator::setup();
+
 	std::ifstream t;
 	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
 
