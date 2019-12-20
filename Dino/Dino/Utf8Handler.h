@@ -29,6 +29,8 @@ public:
 	/* Returns unicode letter in std::string form. */
 	string to_string() const;
 
+	bool isUpper() { return 'A' <= _val && _val <= 'Z'; }
+
 	/* ----------  Operators ---------- */
 
 	inline bool operator==(const string& other) const { return to_string() == other; }
@@ -62,7 +64,7 @@ public:
 		Number of unicode characters in string.
 		NOTE: does not include null-terminator.
 	*/
-	unsigned int length() const { return _str.size(); }
+	size_t length() const { return _str.size(); }
 
 	/* ----------  Operators ---------- */
 

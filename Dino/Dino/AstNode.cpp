@@ -59,7 +59,7 @@ vector<AST::Node*> AST::FunctionCall::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_functionId);
-	v.push_back(_parameters);
+	v.push_back(_arguments);
 	return v;
 }
 
@@ -271,4 +271,9 @@ vector<AST::Node*> AST::SwitchCase::getChildren()
 		v.push_back(i._statement);
 	}
 	return v;
+}
+
+vector<AST::Node*> AST::Identifier::getChildren()
+{
+	return vector<Node*>();
 }

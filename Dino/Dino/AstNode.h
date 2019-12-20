@@ -150,7 +150,7 @@ namespace AST
 	class FunctionCall : public ExpressionStatement
 	{
 		Expression* _functionId;
-		Expression* _parameters;
+		Expression* _arguments;
 
 	public:
 		FunctionCall() : ExpressionStatement() {};
@@ -160,10 +160,10 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setFunctionId(Expression* funcId) { _functionId = funcId; }
-		void setParameters(Expression* parameters) { _parameters = parameters; }
+		void setArguments(Expression* arguments) { _arguments = arguments; }
 
 		Expression* getFunctionId() { return _functionId; }
-		Expression* getParameters() { return _parameters; }
+		Expression* getArguments() { return _arguments; }
 	};
 
 	class VariableDeclaration : public ExpressionStatement
@@ -227,8 +227,8 @@ namespace AST
 	class IfThenElse : public Statement
 	{
 		Expression* _condition;
-		Statement* _thenBranch;
-		Statement* _elseBranch;
+		StatementBlock* _thenBranch;
+		StatementBlock* _elseBranch;
 
 	public:
 		IfThenElse() : Statement() {};
@@ -237,47 +237,46 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setThenBranch(Statement* thenBranch) { _thenBranch = thenBranch; }
-		void setElseBranch(Statement* elseBranch) { _elseBranch = elseBranch; }
+		void setThenBranch(StatementBlock* thenBranch) { _thenBranch = thenBranch; }
+		void setElseBranch(StatementBlock* elseBranch) { _elseBranch = elseBranch; }
 
 		Expression* getCondition() { return _condition; }
-		Statement* getThenBranch() { return _thenBranch; }
-		Statement* getElseBranch() { return _elseBranch; }
+		StatementBlock* getThenBranch() { return _thenBranch; }
+		StatementBlock* getElseBranch() { return _elseBranch; }
 	};
-
 
 	typedef struct CaseClause {
 		Expression* _expression;
-		Statement* _statement;
+		StatementBlock* _statement;
 	} CaseClause;
 
 	class SwitchCase : public Statement
 	{
 		Expression* _expression;
 		vector<CaseClause> _cases;
-		Statement* _default;
+		StatementBlock* _default;
 
 	public:
 		SwitchCase() : Statement() {};
-		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
+		virtual StatementType getStatementType() { return ST_SWITCH; };
 		virtual string toString() { return "<Switch>"; };
 		virtual vector<Node*> getChildren();
 
-		void setCondition(Expression* expression) { _expression = expression; }
-		void addCase(Expression* expression, Statement* statement) { _cases.push_back({ expression, statement }); }
-		void setDefault(Statement* statement) { 
+		void setExpression(Expression* expression) { _expression = expression; }
+		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
+		void setDefault(StatementBlock* statement) {
 			if (_default) throw DinoException("'default' clause may only be set once", EXT_GENERAL, statement->getLine());
 			_default = statement; 
 		}
 		Expression* getExpression() { return _expression; }
 		vector<CaseClause> getCases() { return _cases; }
-		Statement* getDefault() { return _default; }
+		StatementBlock* getDefault() { return _default; }
 	};
 
 	class WhileLoop : public Statement
 	{
 		Expression* _condition;
-		Statement* _statement;
+		StatementBlock* _statement;
 
 	public:
 		WhileLoop() : Statement() {};
@@ -286,10 +285,10 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setStatement(Statement* statement) { _statement = statement; }
+		void setStatement(StatementBlock* statement) { _statement = statement; }
 
 		Expression* getCondition() { return _condition; }
-		Statement* getStatement() { return _statement; }
+		StatementBlock* getStatement() { return _statement; }
 	};
 
 	class ForLoop : public Statement
@@ -297,7 +296,7 @@ namespace AST
 		Statement* _begin;
 		Expression* _condition;
 		Statement* _increment;
-		Statement* _statement;
+		StatementBlock* _statement;
 
 	public:
 		ForLoop() : Statement() {};
@@ -306,12 +305,12 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		void setCondition(Expression* condition) { _condition = condition; }
-		void setStatement(Statement* statement) { _statement = statement; }
+		void setStatement(StatementBlock* statement) { _statement = statement; }
 		void setBegin(Statement* begin) { _begin = begin; }
 		void setIncrement(Statement* increment) { _increment = increment; }
 
 		Expression* getCondition() { return _condition; }
-		Statement* getStatement() { return _statement; }
+		StatementBlock* getStatement() { return _statement; }
 		Statement* getBegin() { return _begin; }
 		Statement* getIncrement() { return _increment; }
 	};
@@ -333,7 +332,7 @@ namespace AST
 	public:
 		UnaryOperationStatement() : Statement() {};
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
-		virtual string toString() { return string() + "<UnaryOperatorStatement>\\n" + _operator._str.to_string(); };
+		virtual string toString() { return string() + "<UnaryOperationStatement>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
 		void setOperator(Operator op) { _operator = op; }
@@ -348,7 +347,7 @@ namespace AST
 	private:
 		VariableDeclaration* _decl;
 		vector<VariableDeclaration*> _parameters;
-		Statement* _content;
+		StatementBlock* _content;
 
 	public:
 		FunctionDeclaration(VariableDeclaration* decl) { _decl = decl; };
@@ -360,11 +359,11 @@ namespace AST
 		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
 		void addParameter(Node* parameter);
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
-		void setContent(Statement* content) { _content = content; }
+		void setContent(StatementBlock* content) { _content = content; }
 
 		VariableDeclaration* getVarDecl() { return _decl; }
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
-		Statement* getContent() { return _content; }
+		StatementBlock* getContent() { return _content; }
 	};
 
 	class InterfaceDeclaration : public Statement
@@ -395,8 +394,8 @@ namespace AST
 	class PropertyDeclaration : public Statement {
 	private:
 		VariableDeclaration* _decl;
-		Statement* _get;
-		Statement* _set;
+		StatementBlock* _get;
+		StatementBlock* _set;
 	public:
 		PropertyDeclaration(VariableDeclaration* decl) { _decl = decl; };
 		virtual bool isDeclaration() { return true; }
@@ -404,10 +403,10 @@ namespace AST
 		virtual string toString() { return "<PropertyDeclaration>"; };
 		virtual vector<Node*> getChildren();
 
-		void setGet(Statement* get) { _get = get; }
-		void setSet(Statement* set) { _set = set; }
-		Statement* getGet() { return _get; }
-		Statement* getSet() { return _set; }
+		void setGet(StatementBlock* get) { _get = get; }
+		void setSet(StatementBlock* set) { _set = set; }
+		StatementBlock* getGet() { return _get; }
+		StatementBlock* getSet() { return _set; }
 		VariableDeclaration* getVarDecl() { return _decl; }
 	};
 
@@ -442,7 +441,7 @@ namespace AST
 	class NamespaceDeclaration : public Statement
 	{
 		unicode_string _name;
-		Statement* _statement;
+		StatementBlock* _statement;
 
 	public:
 		NamespaceDeclaration() { _name = ""; };
@@ -452,10 +451,10 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		unicode_string getName() { return _name; }
-		Statement* getStatement() { return _statement; }
+		StatementBlock* getStatement() { return _statement; }
 
 		void setName(unicode_string id) { _name = id; }
-		void setStatement(Statement* statement) { _statement = statement; }
+		void setStatement(StatementBlock* statement) { _statement = statement; }
 	};
 
 	/********************** Expressions **********************/
@@ -515,17 +514,17 @@ namespace AST
 		bool isPostfix() { return _isPostfix; }
 	};
 
-	class Variable : public Expression
+	class Identifier : public Expression
 	{
 		unicode_string _varId;
 	public:
-		Variable(unicode_string varId) : Expression() { _varId = varId; };
-		Variable() : Expression() {};
+		Identifier(unicode_string varId) : Expression() { _varId = varId; };
+		Identifier() : Expression() {};
 		void setVarId(unicode_string varId) { _varId = varId; }
 		unicode_string getVarId() { return _varId; }
-		virtual ExpressionType getExpressionType() { return ET_VARIABLE; };
-		virtual string toString() { return "<Variable>\\n" + _varId.to_string(); };
-		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; };
+		virtual string toString() { return "<Identifier>\\n" + _varId.to_string(); };
+		virtual vector<Node*> getChildren();
 	};
 
 	class ConditionalExpression : public Expression
@@ -613,7 +612,7 @@ namespace AST
 	class Function : public Literal
 	{
 		vector<VariableDeclaration*> _parameters;
-		Statement* _content;
+		StatementBlock* _content;
 		Expression* _returnType;
 
 	public:
@@ -623,11 +622,11 @@ namespace AST
 
 		void addParameters(Expression* parameters);
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
-		void setContent(Statement* content) { _content = content; }
+		void setContent(StatementBlock* content) { _content = content; }
 		void setReturnType(Expression* type) { _returnType = type; }
 
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
-		Statement* getContent() { return _content; }
+		StatementBlock* getContent() { return _content; }
 		Expression* getReturnType() { return _returnType; }
 	};
 

@@ -1,7 +1,8 @@
 #pragma once
 
 #define SINGLE_LINE_COMMENT_END '\n'
-#define MULTI_LINE_COMMENT_END "*/"
+#define MULTI_LINE_COMMENT_END_1 '*'
+#define MULTI_LINE_COMMENT_END_2 '/'
 #define ESCAPE_CHAR '\\'
 
 #include <vector>

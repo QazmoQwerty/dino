@@ -102,7 +102,7 @@
 //		case (ET_UNARY_OPERATION):			return interpretUnaryOp(dynamic_cast<AST::UnaryOperation*>(node));
 //		case (ET_CONDITIONAL_EXPRESSION):	throw "conditional expression are not supported yet";
 //		case (ET_LITERAL):					return interpretLiteral(dynamic_cast<AST::Literal*>(node));
-//		case (ET_VARIABLE):					return interpretVariable(dynamic_cast<AST::Variable*>(node));
+//		case (ET_IDENTIFIER):					return interpretVariable(dynamic_cast<AST::Identifier*>(node));
 //	}
 //
 //	return NULL;
@@ -194,9 +194,9 @@
 //			throw "nullptr exception";
 //		if (_types.count(left->getType()) == 0)
 //			throw "type doesn't exist";
-//		if (node->getRight()->getExpressionType() != ET_VARIABLE)
+//		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 //			throw "right of '.' operator must be a variable name";
-//		string varName = dynamic_cast<AST::Variable*>(node->getRight())->getVarId();
+//		string varName = dynamic_cast<AST::Identifier*>(node->getRight())->getVarId();
 //		Value* ret = ((TypeValue*)left)->getVariable(varName, _currentNamespace.top());
 //		if (ret->getType() == "property")
 //			((PropertyValue*)ret)->setThisPtr(copyValue(leftVal));	// set thisPtr to point at leftVal (the pointer to the left hand expression)
@@ -292,9 +292,9 @@
 //
 //Value * Interpreter::interpretUnaryOp(AST::UnaryOperation * node)
 //{
-//	if (node->getOperator()._type == OT_NEW && node->getExpression()->getExpressionType() == ET_VARIABLE)
+//	if (node->getOperator()._type == OT_NEW && node->getExpression()->getExpressionType() == ET_IDENTIFIER)
 //	{
-//		TypeValue* t = new TypeValue(dynamic_cast<AST::Variable*>(node->getExpression())->getVarId(), _types);
+//		TypeValue* t = new TypeValue(dynamic_cast<AST::Identifier*>(node->getExpression())->getVarId(), _types);
 //		t->setNotTemp();
 //		return new PtrValue(t->getType(), t);
 //	}
@@ -347,8 +347,8 @@
 //
 //Value * Interpreter::interpretFuncCall(AST::FunctionCall * node)
 //{
-//	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
-//		&& ((AST::Variable*)node->getFunctionId())->getVarId() == "Print") 
+//	if (node->getFunctionId()->getExpressionType() == ET_IDENTIFIER
+//		&& ((AST::Identifier*)node->getFunctionId())->getVarId() == "Print") 
 //	{
 //		for (unsigned int i = 0; i < node->getParameters().size(); i++) 
 //		{
@@ -361,8 +361,8 @@
 //		std::cout << std::endl;
 //		return NULL;
 //	}
-//	if (node->getFunctionId()->getExpressionType() == ET_VARIABLE
-//		&& ((AST::Variable*)node->getFunctionId())->getVarId() == "PrintL")
+//	if (node->getFunctionId()->getExpressionType() == ET_IDENTIFIER
+//		&& ((AST::Identifier*)node->getFunctionId())->getVarId() == "PrintL")
 //	{
 //		for (unsigned int i = 0; i < node->getParameters().size(); i++)
 //		{
@@ -390,9 +390,9 @@
 //		else left = thisPtr;
 //		if (_types.count(left->getType()) == 0)
 //			throw "type doesn't exist";
-//		if (tempNode->getRight()->getExpressionType() != ET_VARIABLE)
+//		if (tempNode->getRight()->getExpressionType() != ET_IDENTIFIER)
 //			throw "right of '.' operator must be a variable name";
-//		string varName = dynamic_cast<AST::Variable*>(tempNode->getRight())->getVarId();
+//		string varName = dynamic_cast<AST::Identifier*>(tempNode->getRight())->getVarId();
 //		val = ((TypeValue*)left)->getVariable(varName, _currentNamespace.top());
 //	}
 //	else val = interpret(node->getFunctionId());
@@ -467,7 +467,7 @@
 //	}
 //}
 //
-//Value * Interpreter::interpretVariable(AST::Variable * node)
+//Value * Interpreter::interpretVariable(AST::Identifier * node)
 //{
 //	string name = node->getVarId();
 //

@@ -9,6 +9,7 @@
 #include "Parser.h"
 #include <Windows.h>
 #include "Utf8Handler.h"
+#include "Decorator.h"
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
@@ -22,6 +23,8 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
 	return std::find(begin, end, option) != end;
 }	
+
+#include <stdio.h>
 
 int main(int argc, char *argv[])
 {
@@ -57,12 +60,14 @@ int main(int argc, char *argv[])
 
 	OperatorsMap::setup();
 	Lexer::setup();
+	Decorator::setup();
+	DST::setup();
 	try
 	{
 		auto lexed = Lexer::lex(str);
 		auto vec = Preprocessor::preprocess(lexed);
 
-		if (showLexerOutput)
+		if (showLexerOutput or true)
 			for (auto i : vec) printToken(i);
 
 		Parser p = Parser(vec);
@@ -70,6 +75,10 @@ int main(int argc, char *argv[])
 
 		if (outputAstFile)
 			astToFile("AstDisplay.gv", ast, showLineAST);
+
+		DST::Node* dst = Decorator::decorate(ast);
+		dstToFile("DstDisplay.gv", dst, false);
+		Decorator::clear();
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }
 	catch (exception e) { std::cout << e.what() << std::endl; }

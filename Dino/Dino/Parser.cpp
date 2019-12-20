@@ -88,14 +88,16 @@ AST::Expression * Parser::parseOptionalExpression(int precedence)
 	return convertToExpression(parse(precedence));
 }
 
-AST::Statement * Parser::parseInnerBlock()
+AST::StatementBlock * Parser::parseInnerBlock()
 {
 	if (eatOperator(OT_CURLY_BRACES_OPEN))
 		return parseBlock(OT_CURLY_BRACES_CLOSE);
 	else if (eatOperator(OT_COLON))
 	{
 		skipLineBreaks();
-		return convertToStatement(parse());
+		auto *block = new AST::StatementBlock();
+		block->addStatement(convertToStatement(parse()));
+		return block;
 	}
 	else throw DinoException("expected a block statement.", EXT_GENERAL, peekToken()->_line);
 }
@@ -186,8 +188,14 @@ AST::Node * Parser::std(Token * token)
 				node->setCondition(parseExpression());
 				node->setThenBranch(parseInnerBlock());
 				bool b = eatLineBreak();
-				if (eatOperator(OT_ELSE))
-					node->setElseBranch(isOperator(peekToken(), OT_IF) ? dynamic_cast<AST::IfThenElse*>(parse()) : parseInnerBlock());
+				if (eatOperator(OT_ELSE)) {
+					if (isOperator(peekToken(), OT_IF)) {
+						auto block = new AST::StatementBlock();
+						block->addStatement(parseStatement());
+						node->setElseBranch(block);
+					}
+					else node->setElseBranch(parseInnerBlock());
+				}
 				else if (b) _index--;
 				node->setLine(token->_line);
 				return node;
@@ -196,7 +204,7 @@ AST::Node * Parser::std(Token * token)
 				auto node = new AST::SwitchCase();
 				if (!eatOperator(OT_CURLY_BRACES_OPEN))
 				{
-					node->setCondition(parseExpression());
+					node->setExpression(parseExpression());
 					expectOperator(OT_CURLY_BRACES_OPEN);
 				}
 				while (!eatOperator(OT_CURLY_BRACES_CLOSE))
@@ -321,7 +329,7 @@ AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
 	{
-		auto node = new AST::Variable(token->_data);
+		auto node = new AST::Identifier(token->_data);
 		node->setLine(token->_line);
 		return node;
 	}
@@ -350,14 +358,17 @@ AST::Node * Parser::nud(Token * token)
 		if (peekToken()->_type == TT_IDENTIFIER || isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
 		{
 			auto params = convertToExpression(inner);
-			switch (params->getExpressionType())	// make sure inner is a list of variable declarations
+			if (params != nullptr)
 			{
+				switch (params->getExpressionType())	// make sure inner is a list of variable declarations
+				{
 				case(ET_LIST):
 					for (auto i : dynamic_cast<AST::ExpressionList*>(inner)->getExpressions())
 						if (i->getExpressionType() != ET_VARIABLE_DECLARATION)
 							return inner;
 				case(ET_VARIABLE_DECLARATION): break;
 				default: return inner;
+				}
 			}
 			auto func = new AST::Function();
 			func->addParameters(params);
@@ -485,7 +496,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		{	
 			auto funcCall = new AST::FunctionCall();
 			funcCall->setFunctionId(convertToExpression(left));
-			funcCall->setParameters(parseOptionalExpression());
+			funcCall->setArguments(parseOptionalExpression());
 			expectOperator(OT_PARENTHESIS_CLOSE);
 			funcCall->setLine(token->_line);
 			return funcCall;

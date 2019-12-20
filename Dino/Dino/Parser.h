@@ -31,7 +31,7 @@ public:
 	AST::Statement* parseStatement();
 	AST::Expression* parseExpression(int precedence = 0);
 	AST::Expression* parseOptionalExpression(int precedence = 0);
-	AST::Statement* parseInnerBlock();
+	AST::StatementBlock* parseInnerBlock();
 	int precedence(Token* token, int category);
 	int leftPrecedence(OperatorToken* token, int category);
 private:
