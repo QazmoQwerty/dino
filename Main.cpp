@@ -78,6 +78,10 @@ int main(int argc, char *argv[])
 
 		DST::Node* dst = Decorator::decorate(ast);
 		dstToFile("DstDisplay.gv", dst, false);
+
+		
+		//auto irCode = CodeGenerator::codeGen(dst);
+		//irCode->print(llvm::errs());
 		Decorator::clear();
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }

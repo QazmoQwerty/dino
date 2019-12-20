@@ -1,11 +1,12 @@
 
-int Foo(int a) {
+/*int Foo(int a) {
     switch (a) {
         case 10: return 20
         default: return a
     }
     //return 20
-}
+}*/
 
-int b ≡ 10
-b ≡ Foo(b)
+int b ≡ 10 + 10
+/*b ≡ Foo(b)
+b := true*/

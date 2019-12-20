@@ -259,6 +259,7 @@ namespace DST
 		BinaryOperation(AST::BinaryOperation *base) : _base(base) {};
 		BinaryOperation(AST::BinaryOperation *base, Expression *left, Expression *right) : _base(base), _left(left), _right(right) {};
 		void setType(Type *type) { _type = type; };
+		Operator getOperator() { return _base->getOperator(); }
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; }
 		Expression *getLeft() { return _left; }
@@ -274,6 +275,7 @@ namespace DST
 		Type *_type;
 	public:
 		Literal(AST::Literal* base) : _base(base) {}
+		AST::Literal *getBase() { return _base; }
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
 		void *getValue();
