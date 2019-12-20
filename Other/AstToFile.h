@@ -80,7 +80,7 @@ void dstToFile(string filename, DST::Node* dst, bool showLine)
 {
 	ofstream file;
 	file.open(filename);
-	file << utf8::bom;	// make sure output file is utf8 encoded
+	//file << utf8::bom;	// make sure output file is utf8 encoded
 	file << "digraph G {\n";
 	file << dstToString(dst, showLine);
 	file << '}';

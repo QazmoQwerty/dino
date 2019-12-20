@@ -1,4 +1,4 @@
-﻿#include "../OperatorsMap.h"
+﻿#include "OperatorsMap.h"
 
 unordered_map<unicode_string, Operator, UnicodeHasherFunction> OperatorsMap::_map;
 unordered_map<unicode_string, Operator, UnicodeHasherFunction> OperatorsMap::_wordsMap;
@@ -9,7 +9,7 @@ const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& OperatorsM
 
 bool OperatorsMap::isWord(OperatorType type)
 {
-	OperatorType wordTypes[] = {
+	/*OperatorType wordTypes[] = {
 		OT_WHILE,
 		OT_DO,
 		OT_FOR,
@@ -27,12 +27,20 @@ bool OperatorsMap::isWord(OperatorType type)
 		OT_SET,
 		OT_IMPLEMENTS,
 	};
-	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);
+	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);*/
+
+	switch(type) {
+		case OT_WHILE: case OT_DO: case OT_FOR: case OT_IF: case OT_ELSE: case OT_LOGICAL_AND: case OT_LOGICAL_OR: case OT_LOGICAL_NOT:
+		case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_DELETE: case OT_GET: case OT_SET: case OT_IMPLEMENTS:
+			return true;
+		default: 
+			return false;
+	}
 }
 
 bool OperatorsMap::isUnary(OperatorType type)
 {
-	OperatorType unaryTypes[] = {
+	/*OperatorType unaryTypes[] = {
 		OT_ADD,
 		OT_SUBTRACT,
 		OT_LOGICAL_NOT,
@@ -56,24 +64,41 @@ bool OperatorsMap::isUnary(OperatorType type)
 		OT_NEW,
 		OT_AT,
 	};
-	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);
+	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);*/
+
+	switch (type) 
+	{
+		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT: case OT_INCREMENT: case OT_DECREMENT: case OT_PARENTHESIS_OPEN:
+		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_IS: case OT_FOR: case OT_RETURN:
+		case OT_DELETE: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_AT:
+			return true;
+		default: 
+			return false;
+	}
 }
 
 bool OperatorsMap::isBinary(OperatorType type)
 {
-	OperatorType nonBinaryTypes[] = {
+	/*OperatorType nonBinaryTypes[] = {
 		OT_INCREMENT,
 		OT_DECREMENT,
 		OT_LOGICAL_NOT,
 		OT_BITWISE_NOT,
 	};
-	return std::find(std::begin(nonBinaryTypes), std::end(nonBinaryTypes), type) == std::end(nonBinaryTypes);
+	return std::find(std::begin(nonBinaryTypes), std::end(nonBinaryTypes), type) == std::end(nonBinaryTypes);*/
+	switch(type) 
+	{
+		case OT_INCREMENT: case OT_DECREMENT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
+			return false;
+		default: 
+			return true;
+	}
 }
 
 bool OperatorsMap::isKeyword(Operator op)
 {
 	//return op._binaryPrecedence == NONE && op._prefixPrecedence == NONE && op._postfixPrecedence == NONE;
-	OperatorType keywordTypes[] = {
+	/*OperatorType keywordTypes[] = {
 		OT_SWITCH,
 		OT_CASE,
 		OT_DEFAULT,
@@ -91,12 +116,23 @@ bool OperatorsMap::isKeyword(Operator op)
 		OT_GET,
 		OT_SET,
 	};
-	return std::find(std::begin(keywordTypes), std::end(keywordTypes), op._type) != std::end(keywordTypes);
+	return std::find(std::begin(keywordTypes), std::end(keywordTypes), op._type) != std::end(keywordTypes);*/
+
+	switch (op._type) 
+	{
+		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS:
+		case OT_RETURN: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_DELETE: case OT_GET: case OT_SET:	
+			return true;
+		default: 
+			return false;
+	}
+
+	
 }
 
 bool OperatorsMap::isAssignment(OperatorType type)
 {
-	OperatorType assignmentTypes[] = {
+	/*OperatorType assignmentTypes[] = {
 		OT_ASSIGN_EQUAL,
 		OT_ASSIGN_ADD,
 		OT_ASSIGN_DIVIDE,
@@ -109,60 +145,117 @@ bool OperatorsMap::isAssignment(OperatorType type)
 		OT_ASSIGN_SHIFT_LEFT,
 		OT_ASSIGN_SHIFT_RIGHT,
 	};
-	return std::find(std::begin(assignmentTypes), std::end(assignmentTypes), type) != std::end(assignmentTypes);
+	return std::find(std::begin(assignmentTypes), std::end(assignmentTypes), type) != std::end(assignmentTypes);*/
+
+	switch (type) 
+	{
+		case OT_ASSIGN_EQUAL: case OT_ASSIGN_ADD: case OT_ASSIGN_DIVIDE: case OT_ASSIGN_MULTIPLY: case OT_ASSIGN_SUBTRACT: case OT_ASSIGN_MODULUS:
+		case OT_ASSIGN_BITWISE_AND: case OT_ASSIGN_BITWISE_OR: case OT_ASSIGN_BITWISE_XOR: case OT_ASSIGN_SHIFT_LEFT: case OT_ASSIGN_SHIFT_RIGHT:
+			return true;
+		default: 
+			return false;
+	}
 }
 
 ReturnType OperatorsMap::getReturnType(OperatorType type)
 {
-	OperatorType leftTypes[] = {
-		OT_ADD,							//	+
-		OT_SUBTRACT,					//	-
-		OT_DIVIDE,						//	/
-		OT_MULTIPLY,					//	*
-		OT_MODULUS,						//	%
-		OT_INCREMENT,					//	++
-		OT_DECREMENT,					//	--
-		OT_BITWISE_AND,					//	&
-		OT_BITWISE_OR,					//	?
-		OT_BITWISE_XOR,					//	^
-		OT_BITWISE_NOT,					//	~
-		OT_BITWISE_SHIFT_LEFT,			//	<<
-		OT_BITWISE_SHIFT_RIGHT,			//	>>
-		OT_ASSIGN_EQUAL,				//	:=
-		OT_ASSIGN_ADD,					//	+=
-		OT_ASSIGN_SUBTRACT,				//	-=
-		OT_ASSIGN_MULTIPLY,				//	*=
-		OT_ASSIGN_DIVIDE,				//	/=
-		OT_ASSIGN_MODULUS,				//	%=
-		OT_ASSIGN_SHIFT_LEFT,			//	<<=
-		OT_ASSIGN_SHIFT_RIGHT,			//	>>=
-		OT_ASSIGN_BITWISE_AND,			//	&=
-		OT_ASSIGN_BITWISE_OR,			//	?=
-		OT_ASSIGN_BITWISE_XOR,			//	^=
-	};
-	if (std::find(std::begin(leftTypes), std::end(leftTypes), type) != std::end(leftTypes))
-		return RT_LEFT;
+	// OperatorType leftTypes[] = {
+	// 	OT_ADD,							//	+
+	// 	OT_SUBTRACT,					//	-
+	// 	OT_DIVIDE,						//	/
+	// 	OT_MULTIPLY,					//	*
+	// 	OT_MODULUS,						//	%
+	// 	OT_INCREMENT,					//	++
+	// 	OT_DECREMENT,					//	--
+	// 	OT_BITWISE_AND,					//	&
+	// 	OT_BITWISE_OR,					//	?
+	// 	OT_BITWISE_XOR,					//	^
+	// 	OT_BITWISE_NOT,					//	~
+	// 	OT_BITWISE_SHIFT_LEFT,			//	<<
+	// 	OT_BITWISE_SHIFT_RIGHT,			//	>>
+	// 	OT_ASSIGN_EQUAL,				//	:=
+	// 	OT_ASSIGN_ADD,					//	+=
+	// 	OT_ASSIGN_SUBTRACT,				//	-=
+	// 	OT_ASSIGN_MULTIPLY,				//	*=
+	// 	OT_ASSIGN_DIVIDE,				//	/=
+	// 	OT_ASSIGN_MODULUS,				//	%=
+	// 	OT_ASSIGN_SHIFT_LEFT,			//	<<=
+	// 	OT_ASSIGN_SHIFT_RIGHT,			//	>>=
+	// 	OT_ASSIGN_BITWISE_AND,			//	&=
+	// 	OT_ASSIGN_BITWISE_OR,			//	?=
+	// 	OT_ASSIGN_BITWISE_XOR,			//	^=
+	// };
+	// if (std::find(std::begin(leftTypes), std::end(leftTypes), type) != std::end(leftTypes))
+	// 	return RT_LEFT;
 
-	OperatorType logicalTypes[] = {
-		OT_EQUAL,						//	=
-		OT_NOT_EQUAL,					//	!=
-		OT_GREATER,						//	>
-		OT_SMALLER,						//	<
-		OT_GREATER_EQUAL,				//	>=
-		OT_SMALLER_EQUAL,				//	<=
-		OT_IS,							//	is
-		OT_LOGICAL_AND,					//	and
-		OT_LOGICAL_OR,					//	or
-		OT_LOGICAL_NOT,					//	not
-	};
-	if (std::find(std::begin(logicalTypes), std::end(logicalTypes), type) != std::end(logicalTypes))
-		return RT_BOOLEAN;
+	// OperatorType logicalTypes[] = {
+	// 	OT_EQUAL,						//	=
+	// 	OT_NOT_EQUAL,					//	!=
+	// 	OT_GREATER,						//	>
+	// 	OT_SMALLER,						//	<
+	// 	OT_GREATER_EQUAL,				//	>=
+	// 	OT_SMALLER_EQUAL,				//	<=
+	// 	OT_IS,							//	is
+	// 	OT_LOGICAL_AND,					//	and
+	// 	OT_LOGICAL_OR,					//	or
+	// 	OT_LOGICAL_NOT,					//	not
+	// };
+	// if (std::find(std::begin(logicalTypes), std::end(logicalTypes), type) != std::end(logicalTypes))
+	// 	return RT_BOOLEAN;
 
-	if (type == OT_SQUARE_BRACKETS_OPEN)
-		return RT_ARRAY;
+	// if (type == OT_SQUARE_BRACKETS_OPEN)
+	// 	return RT_ARRAY;
 
 
-	return RT_VOID;
+	// return RT_VOID;
+
+
+	switch (type) 
+	{
+		case OT_ADD:						//	+
+		case OT_SUBTRACT:					//	-
+		case OT_DIVIDE:						//	/
+		case OT_MULTIPLY:					//	*
+		case OT_MODULUS:					//	%
+		case OT_INCREMENT:					//	++
+		case OT_DECREMENT:					//	--
+		case OT_BITWISE_AND:				//	&
+		case OT_BITWISE_OR:					//	?
+		case OT_BITWISE_XOR:				//	^
+		case OT_BITWISE_NOT:				//	~
+		case OT_BITWISE_SHIFT_LEFT:			//	<<
+		case OT_BITWISE_SHIFT_RIGHT:		//	>>
+		case OT_ASSIGN_EQUAL:				//	:=
+		case OT_ASSIGN_ADD:					//	+=
+		case OT_ASSIGN_SUBTRACT:			//	-=
+		case OT_ASSIGN_MULTIPLY:			//	*=
+		case OT_ASSIGN_DIVIDE:				//	/=
+		case OT_ASSIGN_MODULUS:				//	%=
+		case OT_ASSIGN_SHIFT_LEFT:			//	<<=
+		case OT_ASSIGN_SHIFT_RIGHT:			//	>>=
+		case OT_ASSIGN_BITWISE_AND:			//	&=
+		case OT_ASSIGN_BITWISE_OR:			//	?=
+		case OT_ASSIGN_BITWISE_XOR:			//	^=
+			return RT_LEFT;
+
+		case OT_EQUAL:						//	=
+		case OT_NOT_EQUAL:					//	!=
+		case OT_GREATER:					//	>
+		case OT_SMALLER:					//	<
+		case OT_GREATER_EQUAL:				//	>=
+		case OT_SMALLER_EQUAL:				//	<=
+		case OT_IS:							//	is
+		case OT_LOGICAL_AND:				//	and
+		case OT_LOGICAL_OR:					//	or
+		case OT_LOGICAL_NOT:				//	not
+			return RT_BOOLEAN;
+
+		case OT_SQUARE_BRACKETS_OPEN:
+			return RT_ARRAY;
+
+		default: 
+			return RT_VOID;
+	}
 }
 
 /*
@@ -177,13 +270,13 @@ pair<const unicode_string, Operator> OperatorsMap::getOperatorByDefinition(Opera
 	for (auto t : OperatorsMap::getWordOperators())
 		if (t.second._type == operatorType)
 			return t;
-	return pair<const unicode_string, Operator>(unicode_string(""), { OT_UNKNOWN, unicode_string(""), NULL, NULL });
+	return pair<const unicode_string, Operator>(unicode_string(""), { OT_UNKNOWN, unicode_string(""), NON_ASSCOCIATIVE, 0 });
 }
 
 //#define SPECIAL(a) a, a, a
 
-#define KEYWORD NULL, NONE, NONE, NONE
-#define NON_PARSER NULL, NONE, NONE, NONE
+#define KEYWORD NON_ASSCOCIATIVE, NONE, NONE, NONE
+#define NON_PARSER NON_ASSCOCIATIVE, NONE, NONE, NONE
 
 #define UTF8(a) unicode_string(a)
 

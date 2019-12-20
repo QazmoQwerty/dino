@@ -29,6 +29,7 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 						case(OT_PARENTHESIS_CLOSE):
 						case(OT_SQUARE_BRACKETS_CLOSE):
 							b = true;
+						default: break;
 					}
 				}
 			}
@@ -65,7 +66,7 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 	if (preparsedTokens->size() == 0)
 		throw DinoException("empty program", EXT_GENERAL, 0);
 	eof->_line = preparsedTokens->back()->_line;
-	eof->_operator = { OT_EOF, unicode_string("EOF"), NULL, NULL };
+	eof->_operator = { OT_EOF, unicode_string("EOF"), NON_ASSCOCIATIVE, 0 };
 	preparsedTokens->push_back(eof);
 	return *preparsedTokens;
 }

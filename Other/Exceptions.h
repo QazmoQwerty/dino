@@ -15,7 +15,7 @@ class DinoException : public exception {
 	std::string _msg;
 
 public:
-	DinoException(const char* msg, ExceptionType type, int line) : _type(type), _line(line) {}
+	//DinoException(const char* msg, ExceptionType type, int line) : _type(type), _line(line) {}
 	DinoException(std::string msg, ExceptionType type, int line) : _msg(msg), _type(type), _line(line) {}
 
 	string errorMsg() { return "line " + std::to_string(_line) + ": Error " + std::to_string(_type) + ": " + what(); }

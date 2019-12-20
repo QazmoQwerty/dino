@@ -51,7 +51,7 @@ vector<unicode_string> Parser::expectIdentifierList()
 {
 	vector<unicode_string> v;
 	v.push_back(expectIdentifier());
-	while (eatOperator(OT_COMMA));
+	while (eatOperator(OT_COMMA))
 		v.push_back(expectIdentifier());
 	return v;
 }
@@ -110,14 +110,14 @@ AST::StatementBlock * Parser::parseInnerBlock()
 int Parser::precedence(Token * token, int category)
 {
 	if (token->_type != TT_OPERATOR)
-		return NULL;
+		return 0;
 	auto op = ((OperatorToken*)token)->_operator;
 	switch (category) {
 		case(BINARY):	return op._binaryPrecedence;
 		case(PREFIX):	return op._prefixPrecedence;
 		case(POSTFIX):	return op._postfixPrecedence;
 		case(BINARY | POSTFIX):	return op._binaryPrecedence != NONE ? op._binaryPrecedence : op._postfixPrecedence;
-		default:		return NULL;
+		default:		return 0;
 	}
 	
 }
@@ -319,7 +319,9 @@ AST::Node * Parser::std(Token * token)
 			op->setExpression(parseOptionalExpression());
 			op->setLine(token->_line);
 			return op;
-		}
+			}
+			default: 
+				return NULL;
 		}
 	}
 	return NULL;

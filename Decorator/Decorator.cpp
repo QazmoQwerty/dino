@@ -2,7 +2,7 @@
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
 unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
-vector<void*> Decorator::_toDelete;
+vector<DST::Node*> Decorator::_toDelete;
 
 #define createBasicType(name) _types[unicode_string(name)] = new DST::TypeDeclaration(unicode_string(name));
 
@@ -49,8 +49,9 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		return decorate(dynamic_cast<AST::ExpressionList*>(node));
 	case ET_FUNCTION_CALL:
 		return decorate(dynamic_cast<AST::FunctionCall*>(node));
+	default: 
+		return NULL;
 	}
-	return NULL;
 }
 
 DST::Statement * Decorator::decorate(AST::Statement * node)
@@ -90,8 +91,9 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::TypeDeclaration*>(node));
 	case ST_DO_WHILE_LOOP: 
 		throw DinoException("do-while loops are not implemented yet", EXT_GENERAL, node->getLine());
+	default: 
+		return NULL;
 	}
-	return NULL;
 }
 
 DST::Expression *Decorator::decorate(AST::Identifier * node)
@@ -103,7 +105,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 			return new DST::Variable(node, _variables[scope][name]);
 	if (_types.count(name))
 		return evalType(node);
-	throw DinoException::DinoException("Identifier is undefined", EXT_GENERAL, node->getLine()); // TODO: add id to error.
+	throw DinoException("Identifier is undefined", EXT_GENERAL, node->getLine()); // TODO: add id to error.
 }
 
 DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
@@ -130,9 +132,9 @@ DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
 	DST::Type* type = evalType(node->getVarDecl()->getVarType());
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (_variables[scope].count(name))
-			throw DinoException::DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
+			throw DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
 	if (_types.count(name))
-		throw DinoException::DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
+		throw DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
 
 	DST::StatementBlock *get = decorate(node->getGet());
 
@@ -189,11 +191,11 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 		for (auto val : ((DST::ExpressionList*)values)->getExpressions())
 		{
 			if (prevType && !val->getType()->equals(prevType))
-				throw DinoException::DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
+				throw DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
 			prevType = val->getType();
 		}
 		if (!prevType)
-			throw DinoException::DinoException("array literal can't be empty", EXT_GENERAL, node->getLine()); // TODO: check this one with shalev.
+			throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine()); // TODO: check this one with shalev.
 
 		return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)values)->getExpressions());
 	}
@@ -207,9 +209,9 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	decl->setType(evalType(node->getVarType()));
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (_variables[scope].count(name))
-			throw DinoException::DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
+			throw DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
 	if (_types.count(name))
-		throw DinoException::DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
+		throw DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
 		
 	_variables[currentScope()][name] = decl->getType();
 	return decl;
@@ -240,7 +242,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		if (node->getArguments()) 
 		{
 			auto dec = decorate(node->getArguments());
-			if (dec->getType()->readable())
+			if (!dec->getType()->readable())
 				throw DinoException("argument is write-only", EXT_GENERAL, node->getLine());
 			list->addExpression(dec);
 		}
@@ -332,8 +334,9 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 			// array access
 			if (bo->getLeft()->getExpressionType() == ET_IDENTIFIER)
 			{
-				if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER ||
-					 bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(&DST::BasicType(unicode_string("int")))))
+				DST::BasicType intType(unicode_string("int"));
+				if (!((bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER) ||
+					 (bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(&intType))))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
 				if(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::ArrayType*)bo->getLeft()->getType())->getLength() <= *((int*)((DST::Literal*)(bo->getRight()))->getValue()))
 					throw DinoException("index out of range", EXT_GENERAL, node->getLine());
@@ -358,6 +361,8 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 			break;
 		case RT_VOID: 
 			throw DinoException("Could not decorate, unimplemented operator.", EXT_GENERAL, node->getLine());
+
+		default: break;
 	}
 
 	return bo;
@@ -376,6 +381,7 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 	case (LT_INTEGER):		lit->setType(new DST::BasicType(unicode_string("int")));	break;
 	case (LT_STRING):		lit->setType(new DST::BasicType(unicode_string("string"))); break;
 	case (LT_NULL):			lit->setType(new DST::BasicType(unicode_string("null")));	break;
+	default: break;
 	}
 	return lit;
 }

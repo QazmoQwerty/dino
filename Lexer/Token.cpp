@@ -64,6 +64,7 @@ void printLiteralToken(Token * token)
 		case (LT_NULL):
 			std::cout << "line " << token->_line << " - [NULL]" << std::endl;
 			break;
+		default: break;
 	}
 }
 
@@ -94,6 +95,7 @@ void printLiteralTokenByValue(Token * token)
 		case (LT_NULL):
 			std::cout << "line " << token->_line << " - [NULL]" << std::endl;
 			break;
+		default: break;
 	}
 }
 

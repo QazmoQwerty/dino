@@ -9,6 +9,7 @@
 #include "Parser/Parser.h"
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
+#include <stdio.h>
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
@@ -23,8 +24,6 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 	//return std::find(begin, end, option) != end;
 	return false;
 }	
-
-#include <stdio.h>
 
 int main(int argc, char *argv[])
 {
@@ -82,6 +81,6 @@ int main(int argc, char *argv[])
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }
 
-	if (argc <= 1)
-		system("pause");
+	//if (argc <= 1)
+	//	system("pause");
 }

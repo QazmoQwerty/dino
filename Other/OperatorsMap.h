@@ -15,6 +15,7 @@ using std::unordered_map;
 #define PREFIX	0b0010
 #define POSTFIX	0b0100
 #define NONE -1
+#define NON_ASSCOCIATIVE 0
 
 class OperatorsMap
 {

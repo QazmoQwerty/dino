@@ -1,5 +1,11 @@
-int x := 0
-char i := 'a'
-int[2] arr := [1,2]
-arr[x] := x
-arr[i] := x
+
+int Foo(int a) {
+    switch (a) {
+        case 10: return 20
+        default: return a
+    }
+    //return 20
+}
+
+int b ≡ 10
+b ≡ Foo(b)

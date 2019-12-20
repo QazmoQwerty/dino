@@ -48,7 +48,7 @@ private:
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
 	static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
-	static vector<void*> _toDelete;
+	static vector<DST::Node*> _toDelete;
 
 	// Scope
 	static unsigned int currentScope() { return (int)_variables.size() - 1; }
