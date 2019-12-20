@@ -7,21 +7,21 @@
 #include "AstNode.h"
 #include "AstToFile.h"
 #include "Parser.h"
-#include <Windows.h>
 #include "Utf8Handler.h"
 #include "Decorator.h"
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
-	char ** itr = std::find(begin, end, option);
+	/*char ** itr = std::find(begin, end, option);
 	if (itr != end && ++itr != end)
-		return *itr;
+		return *itr;*/
 	return 0;
 }
 
 bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
-	return std::find(begin, end, option) != end;
+	//return std::find(begin, end, option) != end;
+	return false;
 }	
 
 #include <stdio.h>
@@ -55,8 +55,6 @@ int main(int argc, char *argv[])
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
-
-	SetConsoleOutputCP(65001);	// Make the console output UTF8
 
 	OperatorsMap::setup();
 	Lexer::setup();

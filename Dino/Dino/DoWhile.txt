@@ -1,8 +1,0 @@
-int x
-x = 10
-
-while x < 15
-{
-	print(x)
-	++x
-} print(x)

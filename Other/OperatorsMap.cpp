@@ -1,4 +1,4 @@
-﻿#include "OperatorsMap.h"
+﻿#include "../OperatorsMap.h"
 
 unordered_map<unicode_string, Operator, UnicodeHasherFunction> OperatorsMap::_map;
 unordered_map<unicode_string, Operator, UnicodeHasherFunction> OperatorsMap::_wordsMap;
