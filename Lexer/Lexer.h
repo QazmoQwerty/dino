@@ -10,7 +10,7 @@
 #include <string>
 #include <iostream>
 #include "Token.h"
-#include "OperatorsMap.h"
+#include "../Other/OperatorsMap.h"
 
 using std::vector;
 using std::string;

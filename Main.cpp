@@ -2,13 +2,13 @@
 #include <iostream>
 #include <sstream> 
 
-#include "Lexer.h"
-#include "Preprocessor.h"
-#include "AstNode.h"
-#include "AstToFile.h"
-#include "Parser.h"
-#include "Utf8Handler.h"
-#include "Decorator.h"
+#include "Lexer/Lexer.h"
+#include "Lexer/Preprocessor.h"
+#include "Parser/AstNode.h"
+#include "Other/AstToFile.h"
+#include "Parser/Parser.h"
+#include "Other/Utf8Handler.h"
+#include "Decorator/Decorator.h"
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {

@@ -5,8 +5,9 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#include "Token.h"
-#include "OperatorsMap.h"
+#include "../Lexer/Token.h"
+#include "../Other/OperatorsMap.h"
+#include "../Other/TypeEnums.h"
 #include "AstNode.h"
 
 class Parser
@@ -18,7 +19,7 @@ public:
 	Token* nextToken() { return getToken(_index++); }
 	
 	AST::Node* parse(int lastPrecedence = 0);
-	AST::StatementBlock* parseBlock(OperatorType expected = OT_EOF);
+	AST::StatementBlock* parseBlock(OperatorType expected = OperatorType::OT_EOF);
 
 	void expectLineBreak();
 	void expectOperator(OperatorType ot);

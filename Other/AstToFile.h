@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include "AstNode.h"
 #include <sstream>
 #include <fstream>
 #include "utf8.h"
-#include "DstNode.h"
+#include "../Parser/AstNode.h"
+#include "../Decorator/DstNode.h"
 
 using std::stringstream;
 using std::ofstream;

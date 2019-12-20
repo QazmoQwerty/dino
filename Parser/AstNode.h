@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include "TypeEnums.h"
-#include "OperatorsMap.h"
+#include "../Other/TypeEnums.h"
+#include "../Other/OperatorsMap.h"
 using std::string;
 using std::vector;
 
@@ -38,7 +38,8 @@ namespace AST
 			Returns node's unique id number 
 			Function defined for AST visual representation - see AstToFile.h 
 		*/
-		const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		const unsigned int getNodeId() const { return _nodeId; };
 
 		/* 
 			Returns a string representation of the node (excluding children info)

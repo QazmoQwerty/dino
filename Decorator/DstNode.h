@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AstNode.h"
+#include "../Parser/AstNode.h"
 
 namespace DST
 {
@@ -38,7 +38,8 @@ namespace DST
 			Returns node's unique id number
 			Function defined for AST visual representation - see AstToFile.h
 		*/
-		const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		const unsigned int getNodeId() const { return _nodeId; };
 
 		/*
 			Returns a string representation of the node (excluding children info)

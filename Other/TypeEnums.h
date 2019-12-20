@@ -146,9 +146,9 @@ enum OperatorType
 	OT_PERIOD,						//	.
 	OT_COMMA,						//	,
 	OT_COLON,						//	:
-	OT_ESCAPE,						//	\ 
-	OT_EOF,
+	OT_ESCAPE,						//	(backslash) 
 	OT_UNKNOWN,
+	OT_EOF,
 };
 
 /*

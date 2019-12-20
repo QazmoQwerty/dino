@@ -1,5 +1,4 @@
 #include "Token.h"
-#include "OperatorsMap.h"
 
 /*
 	Function gets a Token and prints it based on its type.

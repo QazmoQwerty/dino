@@ -2,9 +2,9 @@
 
 #include <iostream>
 #include <string>
-#include "Exceptions.h"
-#include "TypeEnums.h"
-#include "Utf8Handler.h"
+#include "../Other/Exceptions.h"
+#include "../Other/TypeEnums.h"
+#include "../Other/Utf8Handler.h"
 
 #define ESCAPE_CHAR '\\'
 #define LEFT_TO_RIGHT 1

@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include "TypeEnums.h"
-#include "Token.h"
+#include "../Lexer/Token.h"
 
 using std::vector;
 using std::string;
