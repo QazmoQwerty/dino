@@ -246,6 +246,7 @@ namespace DST
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+		unicode_string getVarId() { return _base->getVarId(); }
 	};
 
 	class BinaryOperation : public Expression

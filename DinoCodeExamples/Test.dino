@@ -1,12 +1,5 @@
 
-/*int Foo(int a) {
-    switch (a) {
-        case 10: return 20
-        default: return a
-    }
-    //return 20
-}*/
-
-int b ≡ 10 + 10
-/*b ≡ Foo(b)
-b := true*/
+int Main(int b) {
+    int a := 10
+    return a + b
+}

@@ -80,8 +80,9 @@ int main(int argc, char *argv[])
 		dstToFile("DstDisplay.gv", dst, false);
 
 		
-		//auto irCode = CodeGenerator::codeGen(dst);
-		//irCode->print(llvm::errs());
+		auto irCode = CodeGenerator::codeGen(dynamic_cast<DST::StatementBlock*>(dst)->getStatements()[0]);
+		irCode->print(llvm::errs());
+		std::cout << "done that" << std::endl;
 		Decorator::clear();
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }
