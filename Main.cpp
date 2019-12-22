@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 		auto irCode = CodeGenerator::codeGen(dynamic_cast<DST::StatementBlock*>(dst)->getStatements()[0]);
 		irCode->print(llvm::errs());
 		CodeGenerator::execute((llvm::Function*)irCode);
+		std::cout << "done that" << std::endl;
 		Decorator::clear();
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }

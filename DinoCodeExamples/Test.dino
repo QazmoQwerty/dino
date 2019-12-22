@@ -1,13 +1,4 @@
 
-int Main(int a) {
-    int b := 10
-    if a < b:
-        a := 4
-    return a
-
-    if a {
-        a++
-        a--
-    }
-    
+int Main() {
+    return 10
 }

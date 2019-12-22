@@ -53,7 +53,7 @@ namespace CodeGenerator
         // Create JIT
         llvm::Module *M = _module.get();
         std::string errStr;
-        llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).create();
+        llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).setEngineKind(llvm::EngineKind::Interpreter).create();
 
         if (!EE) {
             llvm::errs() << ": Failed to construct ExecutionEngine: " << errStr << "\n";
@@ -68,18 +68,13 @@ namespace CodeGenerator
 
         llvm::errs() << "OK\n";
         llvm::errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
-        llvm::errs() << "---------\nstarting with JIT...\n";
+        llvm::errs() << "---------\nstarting with Interpreter...\n";
 
-        // Call the Fibonacci function with argument n:
-        std::vector<llvm::GenericValue> Args(1);
-        Args[0].IntVal = llvm::APInt(64, 10);
-        auto addr = EE->getFunctionAddress("Main");
-
-        llvm::GenericValue GV = EE->runFunction(func, Args);
+        std::vector<llvm::GenericValue> noargs;
+        auto i = EE->isCompilingLazily();
+        llvm::GenericValue GV = EE->runFunction(func, noargs);
 
         llvm::errs() << "done !!! \n";
-        //llvm::Type::
-        // import result of execution
         llvm::outs() << "Result: " << GV.IntVal << "\n";
     }
 
