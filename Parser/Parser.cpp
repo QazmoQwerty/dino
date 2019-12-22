@@ -150,6 +150,7 @@ AST::Node * Parser::parse(int lastPrecedence)
 	return left;
 }
 
+
 AST::Node * Parser::std(Token * token)
 {
 	if (token->_type == TT_OPERATOR && OperatorsMap::isKeyword(((OperatorToken*)token)->_operator))

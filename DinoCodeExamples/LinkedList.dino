@@ -22,7 +22,7 @@ void Main() {
 type ListNode {
 	int data
 	ListNode next
-	
+ 
 	int Data {
 		get: return data
 		set: data ≡ value

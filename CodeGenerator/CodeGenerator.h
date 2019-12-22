@@ -19,6 +19,14 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/ExecutionEngine/MCJIT.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/ExecutionEngine/Interpreter.h"
+
 
 #include "../Decorator/Decorator.h"
 
@@ -40,6 +48,43 @@ namespace CodeGenerator
         llvm::InitializeNativeTargetAsmParser();
     }
 
+    static void execute(llvm::Function *func)
+    {
+        // Create JIT
+        llvm::Module *M = _module.get();
+        std::string errStr;
+        llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).create();
+
+        if (!EE) {
+            llvm::errs() << ": Failed to construct ExecutionEngine: " << errStr << "\n";
+            return;
+        }
+
+        llvm::errs() << "verifying... ";
+        if (llvm::verifyModule(*M)) {
+            llvm::errs() << ": Error constructing function!\n";
+            return;
+        }
+
+        llvm::errs() << "OK\n";
+        llvm::errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
+        llvm::errs() << "---------\nstarting with JIT...\n";
+
+        // Call the Fibonacci function with argument n:
+        std::vector<llvm::GenericValue> Args(1);
+        Args[0].IntVal = llvm::APInt(64, 10);
+        auto addr = EE->getFunctionAddress("Main");
+
+        llvm::GenericValue GV = EE->runFunction(func, Args);
+
+        llvm::errs() << "done !!! \n";
+        //llvm::Type::
+        // import result of execution
+        llvm::outs() << "Result: " << GV.IntVal << "\n";
+    }
+
+    llvm::Function *getParentFunction(); 
+
     static AllocaInst *CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) ; 
 
     Value *codeGen(DST::Node *node);
@@ -56,6 +101,7 @@ namespace CodeGenerator
 
     llvm::Function *codeGen(DST::FunctionDeclaration *node);
     llvm::Value *codeGen(DST::IfThenElse *node);
+    llvm::Value *codeGen(DST::WhileLoop *node);
 
     llvm::Type *evalType(DST::Type *node);
 }
