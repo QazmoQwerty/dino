@@ -1,5 +1,12 @@
 
-int Main(int b) {
+int Main() {
     int a := 10
-    return a + b
+
+    if a = 10: 
+        return 10
+    else {
+        a := a + 10
+        return 20 
+    }
+    return 10
 }

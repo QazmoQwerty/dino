@@ -49,12 +49,13 @@ namespace CodeGenerator
     Value *codeGen(DST::BinaryOperation* node);
     Value *codeGen(DST::Assignment* node);
 
-    Value *codeGen(DST::StatementBlock* node);
+    llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");
     Value *codeGen(DST::Variable *node);
     AllocaInst *codeGen(DST::VariableDeclaration *node);
     Value *codeGen(DST::UnaryOperationStatement *node);
 
     llvm::Function *codeGen(DST::FunctionDeclaration *node);
+    llvm::Value *codeGen(DST::IfThenElse *node);
 
     llvm::Type *evalType(DST::Type *node);
 }

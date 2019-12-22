@@ -18,6 +18,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_STATEMENT_BLOCK: return codeGen((DST::StatementBlock*)node);
         case ST_UNARY_OPERATION: return codeGen((DST::UnaryOperationStatement*)node);
         case ST_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
+        case ST_IF_THEN_ELSE: return codeGen((DST::IfThenElse*)node);
         default: return NULL;
     }
 }
@@ -35,13 +36,13 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
     }
 }
 
-Value *CodeGenerator::codeGen(DST::StatementBlock *node)
+llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::Twine &blockName)
 {
     // Get parent function
     auto parent = _builder.GetInsertBlock() ? _builder.GetInsertBlock()->getParent() : nullptr; 
 
     // Create BasicBlock
-    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", parent);
+    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, blockName, parent);
 
     _builder.SetInsertPoint(bb);
     for (auto i : node->getStatements()) 
@@ -69,9 +70,7 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
     Value *left = codeGen(node->getLeft());
-    left->print(llvm::errs());
     Value *right = codeGen(node->getRight());
-    right->print(llvm::errs());
     switch (node->getOperator()._type)
     {
         case OT_ADD:
@@ -80,6 +79,10 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateSub(left, right, "subtmp");
         case OT_SMALLER:
             return _builder.CreateICmpULT(left, right, "cmptmp");
+        case OT_EQUAL:
+            return _builder.CreateICmpEQ(left, right, "cmptmp");
+        case OT_NOT_EQUAL:
+            return _builder.CreateICmpNE(left, right, "cmptmp");
         default:
             return NULL;
     }
@@ -115,10 +118,10 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
     }
 }
 
-Value *loadIfNeeded(Value *val)
-{
+//Value *loadIfNeeded(Value *val)
+//{
     //return val->getType()->isty ? nullptr : val;
-}
+//}
 
 Value *CodeGenerator::codeGen(DST::Variable *node)
 {
@@ -197,4 +200,45 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
     }
 
     return func;
+}
+
+llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
+{
+    Value *cond = codeGen(node->getCondition());
+
+    // Get parent function
+    auto parent = _builder.GetInsertBlock() ? _builder.GetInsertBlock()->getParent() : nullptr;
+    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
+    llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
+    llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(_context, "ifcont");
+    auto br = _builder.CreateCondBr(cond, thenBB, elseBB);
+     if (node->getThenBranch())
+    {
+        _builder.SetInsertPoint(thenBB);
+        for (auto i : node->getThenBranch()->getStatements()) 
+        {
+            auto val = codeGen(i);
+            if (val == nullptr)
+                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+        }
+        _builder.CreateBr(mergeBB);
+        parent->getBasicBlockList().push_back(thenBB);
+    }
+
+    if (node->getElseBranch())
+    {
+        _builder.SetInsertPoint(elseBB);
+        for (auto i : node->getElseBranch()->getStatements()) 
+        {
+            auto val = codeGen(i);
+            if (val == nullptr)
+                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+        }
+        _builder.CreateBr(mergeBB);
+        parent->getBasicBlockList().push_back(elseBB);
+    }
+
+    parent->getBasicBlockList().push_back(mergeBB);
+    _builder.SetInsertPoint(mergeBB);
+    return br;
 }

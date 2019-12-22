@@ -74,32 +74,24 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 				}
 				break;
 			case ST_IF_THEN_ELSE:
-				if (((DST::IfThenElse*)i)->getThenBranch() == nullptr || ((DST::IfThenElse*)i)->getElseBranch() == nullptr)
-					return false;
-				if (((DST::IfThenElse*)i)->getThenBranch()->hasReturnType(returnType) &&
+				if (((DST::IfThenElse*)i)->getThenBranch() && ((DST::IfThenElse*)i)->getElseBranch() &&
+				 	((DST::IfThenElse*)i)->getThenBranch()->hasReturnType(returnType) &&
 					((DST::IfThenElse*)i)->getElseBranch()->hasReturnType(returnType))
 					return true;
 				break;
 			case ST_SWITCH: 
 			{
-				// if (((DST::SwitchCase*)i)->getDefault() == nullptr)
-				// 	return false;
-				// bool b = ((DST::SwitchCase*)i)->getDefault()->hasReturnType(returnType);
-				// if (!b) break;
-				// for (auto i : ((DST::SwitchCase*)i)->getCases()) 
-				// {
-				// 	if (!i._statement->hasReturnType(returnType))
-				// 		b = false;
-				// }
-				// if (b) return true;
-				// break;
-
 				if (((DST::SwitchCase*)i)->getDefault() == nullptr || !((DST::SwitchCase*)i)->getDefault()->hasReturnType(returnType))
-					return false;
+					break;
+				bool b = true;
 				for (auto i : ((DST::SwitchCase*)i)->getCases()) 
-					if (i._statement == nullptr || !i._statement->hasReturnType(returnType))
-						return false;
-				return true;
+					if (i._statement == nullptr || !i._statement->hasReturnType(returnType)) 
+					{ 
+						b = false; 
+						break; 
+					}
+				if (b) return true;
+				break;
 			}
 			default: break;
 		}
