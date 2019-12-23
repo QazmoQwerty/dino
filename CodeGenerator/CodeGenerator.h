@@ -71,7 +71,6 @@ namespace CodeGenerator
         llvm::errs() << "---------\nstarting with Interpreter...\n";
 
         std::vector<llvm::GenericValue> noargs;
-        auto i = EE->isCompilingLazily();
         llvm::GenericValue GV = EE->runFunction(func, noargs);
 
         llvm::errs() << "done !!! \n";
