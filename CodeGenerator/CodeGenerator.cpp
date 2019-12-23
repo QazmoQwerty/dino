@@ -197,7 +197,6 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
 
 llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
 {
-
     vector<llvm::Type*> types;
     auto params = node->getParameters();
     for (auto i : params) 
@@ -279,18 +278,18 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
 
     parent->getBasicBlockList().push_back(condBB);
 
+    parent->getBasicBlockList().push_back(loopBB);
+    _builder.SetInsertPoint(loopBB);
     if (node->getStatement()->getStatements().size() != 0)
     {
-        _builder.SetInsertPoint(loopBB);
         for (auto i : node->getStatement()->getStatements()) 
         {
             auto val = codeGen(i);
             if (val == nullptr)
                 throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
         }
-        _builder.CreateBr(condBB);
-        parent->getBasicBlockList().push_back(loopBB);
     }
+    _builder.CreateBr(condBB);
     parent->getBasicBlockList().push_back(exitBB);
     _builder.SetInsertPoint(exitBB);
     return br;
@@ -301,12 +300,14 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
     Value *cond = codeGen(node->getCondition());
 
     auto parent = getParentFunction();
-    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then", parent);
+    
+    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
     llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(_context, "ifcont");
     llvm::BranchInst *br = _builder.CreateCondBr(cond, thenBB, elseBB);
-    
-    //parent->getBasicBlockList().push_back(thenBB);
+    parent->print(llvm::errs());
+    thenBB->print(llvm::errs());
+    parent->getBasicBlockList().push_back(thenBB);
     _builder.SetInsertPoint(thenBB);
     if (node->getThenBranch())
     {
