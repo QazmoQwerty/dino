@@ -368,13 +368,16 @@ namespace DST
 	class StatementBlock : public Statement
 	{
 		vector<Statement*> _statements;
+		bool _hasReturn;
 	public:
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
+		StatementBlock() : _hasReturn(false) {}
 
 		bool hasReturnType(Type *returnType);
+		bool hasReturn() { return _hasReturn; }
 
 		vector<Statement*> getStatements() { return _statements; }
-		void addStatement(Statement* statement) { _statements.push_back(statement); }
+		void addStatement(Statement* statement);
 
 		virtual string toString() { return "<StatementBlock>"; };
 		virtual vector<Node*> getChildren();

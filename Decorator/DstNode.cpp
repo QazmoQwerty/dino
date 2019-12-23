@@ -66,9 +66,8 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 			case ST_UNARY_OPERATION:
 				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_RETURN)
 				{
-					if (isVoid && ((DST::UnaryOperationStatement*)i)->getExpression() == NULL)
-						return true;
-					if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
+					if ((isVoid && ((DST::UnaryOperationStatement*)i)->getExpression() == NULL) ||
+						((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
 						return true;
 					throw DinoException("Return value type does not match function type.", EXT_GENERAL, i->getLine());
 				}
@@ -97,6 +96,13 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 		}
 	}
 	return isVoid;
+}
+
+void DST::StatementBlock::addStatement(DST::Statement *statement)
+{ 
+	_statements.push_back(statement); 
+	if (statement->getStatementType() == ST_UNARY_OPERATION && ((UnaryOperationStatement*)statement)->getOperator()._type == OT_RETURN)
+		_hasReturn = true;
 }
 
 vector<DST::Node*> DST::StatementBlock::getChildren()

@@ -114,6 +114,8 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateAdd(left, right, "addtmp");
         case OT_SUBTRACT:
             return _builder.CreateSub(left, right, "subtmp");
+        case OT_MULTIPLY:
+            return _builder.CreateMul(left, right, "multmp");
         case OT_SMALLER:
             return _builder.CreateICmpULT(left, right, "cmptmp");
         case OT_EQUAL:
@@ -150,9 +152,9 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
     switch (node->getOperator()._type)
     {
         case OT_RETURN:
-            _builder.CreateStore(codeGen(node->getExpression()), _currRetPtr);
-            return _builder.CreateBr(_currFuncExit);
-            //return _builder.CreateRet();
+            //_builder.CreateStore(codeGen(node->getExpression()), _currRetPtr);
+            //return _builder.CreateBr(_currFuncExit);
+            return _builder.CreateRet(codeGen(node->getExpression()));
         default: return NULL;
     }
 }
@@ -219,6 +221,8 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
 
     // Record the function arguments in the NamedValues map.
     _namedValues.clear();
+    //if (!returnType->isVoidTy())
+        //_currRetPtr = CreateEntryBlockAlloca(func, returnType, "ret");
     for (llvm::Argument &arg : func->args())
     {
         AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
@@ -226,11 +230,14 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
         _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
     }
 
+    //auto startBB = llvm::BasicBlock::Create(_context, "start", func);
 
-    auto retType = evalType(node->getReturnType());
-    
-    _currRetPtr = CreateEntryBlockAlloca(func, retType, "ret");
-    _currFuncExit = llvm::BasicBlock::Create(_context, "exit", func);
+    /*_currFuncExit = llvm::BasicBlock::Create(_context, "return");
+    if (!returnType->isVoidTy()) {
+        _builder.SetInsertPoint(_currFuncExit);
+        _builder.CreateRet(_builder.CreateLoad(_currRetPtr));
+        _builder.SetInsertPoint(bb);
+    }*/
 
     for (auto i : node->getContent()->getStatements()) 
     {
@@ -239,14 +246,15 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
             throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
     }
 
-    if (!retType->isVoidTy()) {
-        _builder.SetInsertPoint(_currFuncExit);
-        _builder.CreateRet(_builder.CreateLoad(_currRetPtr));
-    }
 
-    func->getBasicBlockList().push_back(_currFuncExit);
+    if (!_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateBr(_builder.GetInsertBlock());
+        //llvm::BasicBlock::Create(_context, "else");
+    //func->getBasicBlockList().push_back(_currFuncExit);
+    
 
-    llvm::verifyFunction(*func);
+    if (!llvm::verifyFunction(*func, &llvm::errs()))
+        llvm::errs() << "Function Vertified!\n---------------------------\n";
 
     return func;
 }
@@ -259,17 +267,19 @@ llvm::Function *CodeGenerator::getParentFunction()
 
 llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
 {
-    Value *cond = codeGen(node->getCondition());
     auto parent = getParentFunction();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(_context, "cond");
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(_context, "loop");
     llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(_context, "exitLoop");
 
+    _builder.CreateBr(condBB);
     _builder.SetInsertPoint(condBB);
+    Value *cond = codeGen(node->getCondition());
     auto br = _builder.CreateCondBr(cond, loopBB, exitBB);
+
     parent->getBasicBlockList().push_back(condBB);
 
-    if (node->getStatement())
+    if (node->getStatement()->getStatements().size() != 0)
     {
         _builder.SetInsertPoint(loopBB);
         for (auto i : node->getStatement()->getStatements()) 
@@ -278,8 +288,8 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
             if (val == nullptr)
                 throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
         }
-        _builder.CreateBr(exitBB);
-        parent->getBasicBlockList().push_back(condBB);
+        _builder.CreateBr(condBB);
+        parent->getBasicBlockList().push_back(loopBB);
     }
     parent->getBasicBlockList().push_back(exitBB);
     _builder.SetInsertPoint(exitBB);
@@ -291,37 +301,38 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
     Value *cond = codeGen(node->getCondition());
 
     auto parent = getParentFunction();
-    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
+    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then", parent);
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
     llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(_context, "ifcont");
-    auto br = _builder.CreateCondBr(cond, 
-        node->getThenBranch() ? thenBB : mergeBB,
-        node->getElseBranch() ? elseBB : mergeBB);
+    llvm::BranchInst *br = _builder.CreateCondBr(cond, thenBB, elseBB);
+    
+    //parent->getBasicBlockList().push_back(thenBB);
+    _builder.SetInsertPoint(thenBB);
     if (node->getThenBranch())
     {
-        _builder.SetInsertPoint(thenBB);
         for (auto i : node->getThenBranch()->getStatements()) 
         {
             auto val = codeGen(i);
             if (val == nullptr)
                 throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
         }
-        _builder.CreateBr(mergeBB);
-        parent->getBasicBlockList().push_back(thenBB);
     }
+    if (!_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateBr(mergeBB);
 
+    parent->getBasicBlockList().push_back(elseBB);
+    _builder.SetInsertPoint(elseBB);
     if (node->getElseBranch())
     {
-        _builder.SetInsertPoint(elseBB);
         for (auto i : node->getElseBranch()->getStatements()) 
         {
             auto val = codeGen(i);
             if (val == nullptr)
                 throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
         }
-        _builder.CreateBr(mergeBB);
-        parent->getBasicBlockList().push_back(elseBB);
-    }
+    } 
+    if (!_builder.GetInsertBlock()->getTerminator())
+            _builder.CreateBr(mergeBB);
 
     parent->getBasicBlockList().push_back(mergeBB);
     _builder.SetInsertPoint(mergeBB);
