@@ -122,6 +122,10 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateICmpEQ(left, right, "cmptmp");
         case OT_NOT_EQUAL:
             return _builder.CreateICmpNE(left, right, "cmptmp");
+        case OT_LOGICAL_AND:
+            return _builder.CreateAnd(left, right, "andtmp");
+        case OT_LOGICAL_OR:
+            return _builder.CreateOr(left, right, "ortmp");
         default:
             return NULL;
     }
@@ -136,7 +140,20 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         left = _namedValues[((DST::Variable*)node->getLeft())->getVarId().to_string()]; // temporary for tests
     else left = codeGen((DST::VariableDeclaration*)node->getLeft());
     right = codeGen(node->getRight());
-    return _builder.CreateStore(right, left);
+
+    switch (node->getOperator()._type) 
+    {
+        case OT_ASSIGN_EQUAL:
+            return _builder.CreateStore(right, left);
+        case OT_ASSIGN_ADD:
+            return _builder.CreateStore(_builder.CreateAdd(_builder.CreateLoad(left), right, "addtmp"), left);
+        case OT_ASSIGN_SUBTRACT:
+            return _builder.CreateStore(_builder.CreateSub(_builder.CreateLoad(left), right, "addtmp"), left);
+        case OT_ASSIGN_MULTIPLY:
+            return _builder.CreateStore(_builder.CreateMul(_builder.CreateLoad(left), right, "addtmp"), left);
+        default: throw DinoException("Unimplemented assignment operator", EXT_GENERAL, node->getLine());
+    }
+    
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of

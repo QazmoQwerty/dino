@@ -609,7 +609,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
-
+		Operator getOperator() { return _base->getOperator(); }
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};

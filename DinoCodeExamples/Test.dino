@@ -1,36 +1,14 @@
 
 int Main() {
-    /*int a := 2
-    int res := 1
-    int n := 9
-
-    int i := 0
-    while i < n {
-        res := res * a
-        i := i + 1
-        if res < 100:
-            return res
-    }
-        
-    return res*/
-
     int sum := 0
     int i := 0
     while i < 10 {
         int j := 0
         while j < 10 {
-            j := j + 1
-            sum := sum + 1
+            j += 1
+            sum += 1
         }
-        i := i + 1
+        i += 1
     }
-
-    
-    /*int i := 10
-    while i < 100 {
-        if i = 25:
-            return i
-        i := i + 1
-    }*/
     return sum
 }

@@ -184,22 +184,25 @@ DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
 
 DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 {
-	if (node->getOperator()._type == OT_SQUARE_BRACKETS_OPEN)
+	switch (node->getOperator()._type)
 	{
-		auto values = decorate(node->getExpression());
-		DST::Type *prevType = NULL;
-		for (auto val : ((DST::ExpressionList*)values)->getExpressions())
+		case OT_SQUARE_BRACKETS_OPEN: 
 		{
-			if (prevType && !val->getType()->equals(prevType))
-				throw DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
-			prevType = val->getType();
-		}
-		if (!prevType)
-			throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine()); // TODO: check this one with shalev.
+			auto values = decorate(node->getExpression());
+			DST::Type *prevType = NULL;
+			for (auto val : ((DST::ExpressionList*)values)->getExpressions())
+			{
+				if (prevType && !val->getType()->equals(prevType))
+					throw DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
+				prevType = val->getType();
+			}
+			if (!prevType)
+				throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine()); // TODO: check this one with shalev.
 
-		return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)values)->getExpressions());
+			return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)values)->getExpressions());
+		}
+		default: return NULL;
 	}
-	return NULL;
 }
 
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
