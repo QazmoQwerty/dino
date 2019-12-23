@@ -48,34 +48,7 @@ namespace CodeGenerator
         llvm::InitializeNativeTargetAsmParser();
     }
 
-    static void execute(llvm::Function *func)
-    {
-        // Create JIT
-        llvm::Module *M = _module.get();
-        std::string errStr;
-        llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).setEngineKind(llvm::EngineKind::Interpreter).create();
-
-        if (!EE) {
-            llvm::errs() << ": Failed to construct ExecutionEngine: " << errStr << "\n";
-            return;
-        }
-
-        llvm::errs() << "verifying... ";
-        if (llvm::verifyModule(*M)) {
-            llvm::errs() << ": Error constructing function!\n";
-            return;
-        }
-
-        llvm::errs() << "OK\n";
-        llvm::errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
-        llvm::errs() << "---------\nstarting with Interpreter...\n";
-
-        std::vector<llvm::GenericValue> noargs;
-        llvm::GenericValue GV = EE->runFunction(func, noargs);
-
-        llvm::errs() << "done !!! \n";
-        llvm::outs() << "Result: " << GV.IntVal << "\n";
-    }
+    static void execute(llvm::Function *func);
 
     llvm::Function *getParentFunction(); 
 
