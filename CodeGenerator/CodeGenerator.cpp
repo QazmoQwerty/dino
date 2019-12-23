@@ -20,6 +20,7 @@ void CodeGenerator::execute(llvm::Function *func)
         return;
     }
 
+    llvm::errs() << "We are trying to construct this LLVM module:\n\n---------\n" << *M;
     llvm::errs() << "verifying... ";
     if (llvm::verifyModule(*M)) {
         llvm::errs() << ": Error constructing function!\n";
@@ -34,6 +35,20 @@ void CodeGenerator::execute(llvm::Function *func)
     llvm::GenericValue GV = EE->runFunction(func, noargs);
 
     llvm::outs() << "Result: " << GV.IntVal << "\n";
+}
+
+// Returns a pointer to the Main function
+llvm::Function *CodeGenerator::startCodeGen(DST::StatementBlock *node) 
+{
+    llvm::Function *ret = NULL;
+    for (auto i : node->getStatements())
+    {
+        // Temporary code:
+        if (i->getStatementType() == ST_FUNCTION_DECLARATION && ((DST::FunctionDeclaration*)i)->getVarDecl()->getVarId().to_string() == "Main")
+            ret = codeGen((DST::FunctionDeclaration*)i);
+        else codeGen(i);
+    }
+    return ret;
 }
 
 Value *CodeGenerator::codeGen(DST::Node *node) 
@@ -57,12 +72,15 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_IF_THEN_ELSE: return codeGen((DST::IfThenElse*)node);
         case ST_WHILE_LOOP: return codeGen((DST::WhileLoop*)node);
         case ST_FOR_LOOP: return codeGen((DST::ForLoop*)node);
+        case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         default: return NULL;
     }
 }
 
 Value *CodeGenerator::codeGen(DST::Expression *node) 
 {
+    if (node == nullptr)
+        return NULL;
     switch (node->getExpressionType()) 
     {
         case ET_BINARY_OPERATION: return codeGen((DST::BinaryOperation*)node);
@@ -70,6 +88,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_ASSIGNMENT: return codeGen((DST::Assignment*)node);
         case ET_IDENTIFIER: return codeGen((DST::Variable*)node);
         case ET_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
+        case ET_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         default: return NULL;
     }
 }
@@ -163,6 +182,27 @@ AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Ty
 { 
     llvm::IRBuilder<> TmpB(&func->getEntryBlock(), func->getEntryBlock().begin());
     return TmpB.CreateAlloca(type, nullptr, varName);
+}
+
+Value *CodeGenerator::codeGen(DST::FunctionCall *node)
+{
+    if (node->getFunctionId()->getExpressionType() == ET_IDENTIFIER)
+    {
+        llvm::Function *funcPtr = _module->getFunction(((DST::Variable*)node->getFunctionId())->getVarId().to_string());
+        if (funcPtr == nullptr)
+            throw DinoException("Unknown function referenced", EXT_GENERAL, node->getLine());
+        
+        
+        // if (funcPtr->arg_size() != node->getArguments()->getExpressions().size())
+        //     throw DinoException("Incorrect # arguments passed", EXT_GENERAL, node->getLine());
+
+        std::vector<Value *> args;
+        for (auto i : node->getArguments()->getExpressions())
+            args.push_back(codeGen(i));
+                
+        return _builder.CreateCall(funcPtr, args, "calltmp");
+    }
+
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)

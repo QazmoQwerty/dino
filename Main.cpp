@@ -79,10 +79,11 @@ int main(int argc, char *argv[])
 		DST::Node* dst = Decorator::decorate(ast);
 		dstToFile("DstDisplay.gv", dst, false);
 
-		
-		auto irCode = CodeGenerator::codeGen(dynamic_cast<DST::StatementBlock*>(dst)->getStatements()[0]);
-		irCode->print(llvm::errs());
-		CodeGenerator::execute((llvm::Function*)irCode);
+		auto mainFunc = CodeGenerator::startCodeGen(dynamic_cast<DST::StatementBlock*>(dst));
+		CodeGenerator::execute(mainFunc);
+		//auto irCode = CodeGenerator::codeGen(dynamic_cast<DST::StatementBlock*>(dst)->getStatements()[0]);
+		//irCode->print(llvm::errs());
+		//CodeGenerator::execute((llvm::Function*)irCode);
 		Decorator::clear();
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }

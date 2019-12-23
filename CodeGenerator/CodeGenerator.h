@@ -46,6 +46,9 @@ namespace CodeGenerator
 
     void execute(llvm::Function *func);
 
+    // Returns a pointer to the Main function
+    llvm::Function *startCodeGen(DST::StatementBlock *node);
+
     llvm::Function *getParentFunction(); 
 
     AllocaInst *CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) ; 
@@ -54,8 +57,10 @@ namespace CodeGenerator
     Value *codeGen(DST::Statement *node);
     Value *codeGen(DST::Expression *node);
     Value *codeGen(DST::Literal *node);
-    Value *codeGen(DST::BinaryOperation* node);
-    Value *codeGen(DST::Assignment* node);
+    Value *codeGen(DST::BinaryOperation *node);
+    Value *codeGen(DST::Assignment *node);
+    Value *codeGen(DST::FunctionCall *node);
+
 
     llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");
     Value *codeGen(DST::Variable *node);

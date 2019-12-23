@@ -651,6 +651,6 @@ namespace DST
 
 		Type *getType() { return _type; }
 		Expression* getFunctionId() { return _funcPtr; }
-		Expression* getParameters() { return _arguments; }
+		ExpressionList* getArguments() { return _arguments; }
 	};
 }
