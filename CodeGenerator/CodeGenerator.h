@@ -40,19 +40,13 @@ namespace CodeGenerator
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
     static std::unordered_map<std::string, AllocaInst*> _namedValues;
 
-    static void setup() 
-    {
-	    // Nothing yet
-        llvm::InitializeNativeTarget();
-        llvm::InitializeNativeTargetAsmPrinter();
-        llvm::InitializeNativeTargetAsmParser();
-    }
+    void setup();
 
-    static void execute(llvm::Function *func);
+    void execute(llvm::Function *func);
 
     llvm::Function *getParentFunction(); 
 
-    static AllocaInst *CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) ; 
+    AllocaInst *CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) ; 
 
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);

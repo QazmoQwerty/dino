@@ -3,6 +3,6 @@ int Main() {
     int x := 10
     if x < 9:
         return x
-    else:
-        return x + 1
+    //else:
+    return x + 1
 }

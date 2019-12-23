@@ -197,7 +197,11 @@ AST::Node * Parser::std(Token * token)
 					}
 					else node->setElseBranch(parseInnerBlock());
 				}
-				else if (b) _index--;
+				else 
+				{
+					node->setElseBranch(NULL);
+					if (b) _index--;
+				}
 				node->setLine(token->_line);
 				return node;
 			}
@@ -229,6 +233,7 @@ AST::Node * Parser::std(Token * token)
 				auto node = new AST::IfThenElse();
 				node->setCondition(parseExpression());
 				node->setElseBranch(parseInnerBlock());
+				node->setThenBranch(NULL);
 				node->setLine(token->_line);
 				return node;
 			}

@@ -1,5 +1,13 @@
 #include "CodeGenerator.h"
 
+void CodeGenerator::setup()
+{
+    // Nothing yet
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeNativeTargetAsmParser();
+}
+
 void CodeGenerator::execute(llvm::Function *func)
 {
     // Create Interpreter
@@ -131,7 +139,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
 /// the function.  This is used for mutable variables etc.
-static AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) 
+AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) 
 { 
     llvm::IRBuilder<> TmpB(&func->getEntryBlock(), func->getEntryBlock().begin());
     return TmpB.CreateAlloca(type, nullptr, varName);
@@ -223,6 +231,8 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
             throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
     }
 
+    llvm::verifyFunction(*func);
+
     return func;
 }
 
@@ -265,6 +275,8 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
 {
     Value *cond = codeGen(node->getCondition());
 
+    cond->print(llvm::errs()); //t
+
     auto parent = getParentFunction();
     llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
@@ -298,5 +310,7 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
 
     parent->getBasicBlockList().push_back(mergeBB);
     _builder.SetInsertPoint(mergeBB);
+
+    br->print(llvm::errs()); //r
     return br;
 }
