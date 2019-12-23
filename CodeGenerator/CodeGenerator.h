@@ -39,6 +39,8 @@ namespace CodeGenerator
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
     static std::unordered_map<std::string, AllocaInst*> _namedValues;
+    static llvm::AllocaInst *_currRetPtr;
+    static llvm::BasicBlock *_currFuncExit;
 
     void setup();
 

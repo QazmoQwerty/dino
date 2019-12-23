@@ -150,7 +150,9 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
     switch (node->getOperator()._type)
     {
         case OT_RETURN:
-            return _builder.CreateRet(codeGen(node->getExpression()));
+            _builder.CreateStore(codeGen(node->getExpression()), _currRetPtr);
+            return _builder.CreateBr(_currFuncExit);
+            //return _builder.CreateRet();
         default: return NULL;
     }
 }
@@ -224,12 +226,25 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
         _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
     }
 
+
+    auto retType = evalType(node->getReturnType());
+    
+    _currRetPtr = CreateEntryBlockAlloca(func, retType, "ret");
+    _currFuncExit = llvm::BasicBlock::Create(_context, "exit", func);
+
     for (auto i : node->getContent()->getStatements()) 
     {
         auto val = codeGen(i);
         if (val == nullptr)
             throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
     }
+
+    if (!retType->isVoidTy()) {
+        _builder.SetInsertPoint(_currFuncExit);
+        _builder.CreateRet(_builder.CreateLoad(_currRetPtr));
+    }
+
+    func->getBasicBlockList().push_back(_currFuncExit);
 
     llvm::verifyFunction(*func);
 
@@ -275,13 +290,13 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
 {
     Value *cond = codeGen(node->getCondition());
 
-    cond->print(llvm::errs()); //t
-
     auto parent = getParentFunction();
     llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
     llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(_context, "ifcont");
-    auto br = _builder.CreateCondBr(cond, thenBB, elseBB);
+    auto br = _builder.CreateCondBr(cond, 
+        node->getThenBranch() ? thenBB : mergeBB,
+        node->getElseBranch() ? elseBB : mergeBB);
     if (node->getThenBranch())
     {
         _builder.SetInsertPoint(thenBB);
@@ -310,7 +325,5 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
 
     parent->getBasicBlockList().push_back(mergeBB);
     _builder.SetInsertPoint(mergeBB);
-
-    br->print(llvm::errs()); //r
     return br;
 }
