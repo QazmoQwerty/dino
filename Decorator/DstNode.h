@@ -124,6 +124,21 @@ namespace DST
 		virtual string toString() { return "<Type>"; };
 		virtual vector<Node*> getChildren();
 	};
+
+	class TypeDeclaration;
+
+	class TypeSpecifierType : public Type
+	{
+		private:
+			DST::TypeDeclaration *_typeDecl;
+		public:
+			TypeSpecifierType(DST::TypeDeclaration *typeDecl) : Type(NULL), _typeDecl(typeDecl) {}
+			virtual ExactType getExactType() { return EXACT_SPECIFIER; };
+			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
+			virtual bool writeable() { return false; }
+			TypeDeclaration *getTypeDecl() { return _typeDecl; }
+			virtual string toShortString() { return "typeid"; };
+	};
 	
 	class PropertyType : public Type
 	{
@@ -164,27 +179,54 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 	
+	// class BasicType : public Type
+	// {
+	// 	unicode_string _typeId;
+	// 	unordered_map<unicode_string, Type*, UnicodeHasherFunction> _members;
+	// public:
+	// 	//BasicType(TypeSpecifierType /typeSpec, AST::Expression *base) : Type(base), 
+
+	// 	BasicType(AST::Expression *base) : Type(base) { _typeId = dynamic_cast<AST::Identifier*>(_base)->getVarId(); }
+	// 	BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
+	// 	unicode_string getTypeId() { return _typeId; }
+	// 	ExactType getExactType() { return EXACT_BASIC; }
+	// 	virtual bool equals(Type *other)
+	// 	{
+	// 		return 
+	// 			(other->getExactType() == EXACT_PROPERTY && equals(((PropertyType*)other)->getReturn())) ||
+	// 			(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId) ||
+	// 			(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
+	// 	}
+	// 	void addMember(unicode_string id, Type* type)  { _members[id] = type; }
+	// 	Type *getMember(unicode_string id) { return _members[id]; }
+
+	// 	virtual string toShortString() { return _typeId.to_string(); };
+	// 	virtual string toString() { return "<BasicType>\\n" + _typeId.to_string(); };
+	// 	virtual vector<Node*> getChildren();
+	// };
+
 	class BasicType : public Type
 	{
-		unicode_string _typeId;
-		unordered_map<unicode_string, Type*, UnicodeHasherFunction> _members;
+		TypeSpecifierType *_typeSpec;
 	public:
-		BasicType(AST::Expression *base) : Type(base) { _typeId = dynamic_cast<AST::Identifier*>(_base)->getVarId(); }
-		BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
-		unicode_string getTypeId() { return _typeId; }
+		BasicType(AST::Expression *base, TypeSpecifierType *typeSpec) : Type(base), _typeSpec(typeSpec) {}
+		BasicType(TypeSpecifierType *typeSpec) : Type(NULL), _typeSpec(typeSpec) {}
+
+		TypeSpecifierType *getTypeSpecifier() { return _typeSpec; }
+		unicode_string getTypeId();
 		ExactType getExactType() { return EXACT_BASIC; }
 		virtual bool equals(Type *other)
 		{
 			return 
 				(other->getExactType() == EXACT_PROPERTY && equals(((PropertyType*)other)->getReturn())) ||
-				(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId) ||
+				(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeSpec == _typeSpec) ||
 				(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
 		}
-		void addMember(unicode_string id, Type* type)  { _members[id] = type; }
-		Type *getMember(unicode_string id) { return _members[id]; }
-
-		virtual string toShortString() { return _typeId.to_string(); };
-		virtual string toString() { return "<BasicType>\\n" + _typeId.to_string(); };
+		//void addMember(unicode_string id, Type* type)  { _members[id] = type; }
+		Type *getMember(unicode_string id);
+		virtual Type *getType() { return _typeSpec; }
+		virtual string toShortString() { return getTypeId().to_string(); };
+		virtual string toString() { return "<BasicType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -270,6 +312,31 @@ namespace DST
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
+		virtual vector<Node*> getChildren();
+	};
+
+	class MemberAccess : public Expression
+	{
+		AST::BinaryOperation *_base;
+		Type *_type;
+		Expression *_left;
+
+	public:
+		MemberAccess(AST::BinaryOperation *base) : _base(base) {};
+		MemberAccess(AST::BinaryOperation *base, Expression *left) : _base(base), _left(left) 
+		{
+			if (base->getRight()->getExpressionType() != ET_IDENTIFIER)
+				throw DinoException("right of member access must be an identifier", EXT_GENERAL, _base->getLine());
+		};
+		void setType(Type *type) { _type = type; };
+		Operator getOperator() { return _base->getOperator(); }
+		virtual Type *getType() { return _type; }
+		virtual ExpressionType getExpressionType() { return ET_MEMBER_ACCESS; }
+		Expression *getLeft() { return _left; }
+		unicode_string getRight() { return ((AST::Identifier*)_base->getRight())->getVarId(); }
+		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+
+		virtual string toString() { return "<MemberAccess>\n." + getRight().to_string() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
 

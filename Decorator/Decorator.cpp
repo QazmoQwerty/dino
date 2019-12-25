@@ -1,10 +1,10 @@
 #include "Decorator.h"
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
-unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
+//unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
-#define createBasicType(name) _types[unicode_string(name)] = new DST::TypeDeclaration(unicode_string(name));
+#define createBasicType(name) _variables[0][unicode_string(name)] = new DST::TypeSpecifierType(new DST::TypeDeclaration(unicode_string(name)));
 
 void Decorator::setup()
 {
@@ -16,6 +16,14 @@ void Decorator::setup()
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
+}
+
+DST::TypeSpecifierType *Decorator::getPrimitiveType(std::string name)
+{
+	auto ret = (DST::TypeSpecifierType*)_variables[0][(unicode_string(name))];
+	if (ret == nullptr)
+		throw "primitive type does not exist!";
+	return ret;
 }
 
 DST::Node *Decorator::decorate(AST::Node * node)
@@ -101,10 +109,11 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 	unicode_string name = node->getVarId();
 	
 	for (int scope = currentScope(); scope >= 0; scope--)
-		if (_variables[scope].count(name))
+		if (auto var = _variables[scope][name]) {
+			if (var->getExactType() == EXACT_SPECIFIER)
+				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
 			return new DST::Variable(node, _variables[scope][name]);
-	if (_types.count(name))
-		return evalType(node);
+		}
 	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
 }
 
@@ -133,8 +142,6 @@ DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (_variables[scope].count(name))
 			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
-	if (_types.count(name))
-		throw DinoException("Identifier '" + name.to_string() + "' is a type name", EXT_GENERAL, node->getLine());
 
 	DST::StatementBlock *get = decorate(node->getGet());
 
@@ -178,7 +185,7 @@ DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
 	}
 
 	leaveBlock();
-	_types[decl->getName()] = decl;
+	_variables[currentScope()][decl->getName()] = new DST::TypeSpecifierType(decl);
 	return decl;
 }
 
@@ -213,8 +220,6 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (_variables[scope].count(name))
 			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
-	if (_types.count(name))
-		throw DinoException("Identifier '" + name.to_string() + "' is a type name", EXT_GENERAL, node->getLine());
 		
 	_variables[currentScope()][name] = decl->getType();
 	return decl;
@@ -284,7 +289,7 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 	auto lit = new DST::FunctionLiteral(node);
 	auto type = new DST::FunctionType();
 	if (node->getReturnType() == NULL)
-		type->addReturn(new DST::BasicType(unicode_string("void")));
+		type->addReturn(new DST::BasicType(getPrimitiveType("void")));
 	else type->addReturn(evalType(node->getReturnType()));
 	for (auto i : node->getParameters())
 	{
@@ -300,7 +305,7 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 	return lit;
 }
 
-DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
+DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 {
 	if (node->getOperator()._type == OT_PERIOD) 
 	{
@@ -312,17 +317,19 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 			type = ((DST::PropertyType*)type)->getReturn();
 		if (type->getExactType() != EXACT_BASIC)
 			throw DinoException("Expression must have class type", EXT_GENERAL, node->getLine());
-		auto memberType = _types[((DST::BasicType*)type)->getTypeId()]->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+
+		auto memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getTypeDecl()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+
 		if (memberType == nullptr)
 			throw DinoException("Unkown identifier", EXT_GENERAL, node->getLine());
 		//if (!(((AST::Identifier*)node->getRight())->getVarId())[0].isUpper())
 		//	throw DinoException("Cannot access private member", EXT_GENERAL, node->getLine());
 
-		auto right = new DST::Variable((AST::Identifier*)node->getRight(), memberType);
+		//auto right = new DST::Variable((AST::Identifier*)node->getRight(), memberType);
 		
-		auto bo = new DST::BinaryOperation(node, left, right);
-		bo->setType(memberType);
-		return bo;
+		auto access = new DST::MemberAccess(node, left);
+		access->setType(memberType);
+		return access;
 	}
 
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
@@ -331,13 +338,13 @@ DST::BinaryOperation * Decorator::decorate(AST::BinaryOperation * node)
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))
 	{
 		case RT_BOOLEAN: 
-			bo->setType(new DST::BasicType(CONDITION_TYPE));
+			bo->setType(new DST::BasicType(getPrimitiveType("bool")));
 			break;
 		case RT_ARRAY:
 			// array access
 			if (bo->getLeft()->getExpressionType() == ET_IDENTIFIER)
 			{
-				DST::BasicType intType(unicode_string("int"));
+				DST::BasicType intType(getPrimitiveType("int"));
 				if (!((bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER) ||
 					 (bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(&intType))))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
@@ -378,12 +385,12 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 	auto lit = new DST::Literal(node);
 	switch (node->getLiteralType()) 
 	{
-	case (LT_BOOLEAN):		lit->setType(new DST::BasicType(unicode_string("bool")));	break;
-	case (LT_CHARACTER):	lit->setType(new DST::BasicType(unicode_string("char")));	break;
-	case (LT_FRACTION):		lit->setType(new DST::BasicType(unicode_string("float")));	break;
-	case (LT_INTEGER):		lit->setType(new DST::BasicType(unicode_string("int")));	break;
-	case (LT_STRING):		lit->setType(new DST::BasicType(unicode_string("string"))); break;
-	case (LT_NULL):			lit->setType(new DST::BasicType(unicode_string("null")));	break;
+	case (LT_BOOLEAN):		lit->setType(new DST::BasicType(getPrimitiveType("bool")));	break;
+	case (LT_CHARACTER):	lit->setType(new DST::BasicType(getPrimitiveType("char")));	break;
+	case (LT_FRACTION):		lit->setType(new DST::BasicType(getPrimitiveType("float")));	break;
+	case (LT_INTEGER):		lit->setType(new DST::BasicType(getPrimitiveType("int")));	break;
+	case (LT_STRING):		lit->setType(new DST::BasicType(getPrimitiveType("string"))); break;
+	case (LT_NULL):			lit->setType(new DST::BasicType(getPrimitiveType("null")));	break;
 	default: break;
 	}
 	return lit;
@@ -468,10 +475,8 @@ DST::DoWhileLoop * Decorator::decorate(AST::DoWhileLoop * node)
 
 DST::Type * Decorator::evalType(AST::Expression * node)
 {
-	if (node->getExpressionType() == ET_IDENTIFIER)
-		return new DST::BasicType(node);
 	auto ret = decorate(node);
-	if (ret->getExpressionType() == ET_BINARY_OPERATION)
+	if (ret->getExpressionType() == ET_BINARY_OPERATION)	// TODO - change this
 	{
 		auto arr = ret->getType();
 		delete ret;

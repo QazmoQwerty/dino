@@ -29,6 +29,13 @@ vector<DST::Node*> DST::BinaryOperation::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::MemberAccess::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_left);
+	return v;
+}
+
 vector<DST::Node*> DST::Literal::getChildren()
 {
 	vector<Node*> v;
@@ -298,7 +305,8 @@ string DST::PropertyType::toShortString()
 
 void DST::setup()
 {
-	typeidTypePtr = new BasicType(unicode_string("typeid"));
+	typeidTypePtr = NULL;	// TODO
+	//typeidTypePtr = new BasicType(unicode_string("typeid"));
 }
 
 vector<DST::Node*> DST::ArrayType::getChildren()
@@ -314,6 +322,13 @@ vector<DST::Node*> DST::FunctionLiteral::getChildren()
 	v.push_back(_content);
 	return v;
 }
+
+DST::Type *DST::BasicType::getMember(unicode_string id) 
+{ 
+	return _typeSpec->getTypeDecl()->getMemberType(id); 
+}
+
+unicode_string DST::BasicType::getTypeId() { return _typeSpec->getTypeDecl()->getName(); }
 
 vector<DST::Node*> DST::Conversion::getChildren()
 {
