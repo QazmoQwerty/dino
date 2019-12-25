@@ -1,4 +1,4 @@
-int Mul(int a, int b) {
+/*int Mul(int a, int b) {
     return a * b
 }
 
@@ -11,4 +11,7 @@ int Pow(int a, int n) {
 
 int Main() {
     return Pow()
-}
+}*/
+
+int(int) a := (int c) int { return c + 1 }
+int x := a(10)

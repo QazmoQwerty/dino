@@ -19,7 +19,7 @@ private:
 
 	// Expressions
 	static DST::Expression *decorate(AST::Identifier *node);
-	static DST::BinaryOperation *decorate(AST::BinaryOperation *node);
+	static DST::Expression *decorate(AST::BinaryOperation *node);
 	static DST::Expression *decorate(AST::Literal *node);
 	static DST::ExpressionList *decorate(AST::ExpressionList *node);
 	static DST::Expression *decorate(AST::FunctionCall *node);
@@ -43,12 +43,13 @@ private:
 	static DST::Assignment *decorate(AST::Assignment *node);
 	
 
+	static DST::TypeSpecifierType *getPrimitiveType(std::string name);
 	static DST::Type *evalType(AST::Expression *node);
 
 	static bool isCondition(DST::Expression *node);
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
-	static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
+	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;
 
 	// Scope
