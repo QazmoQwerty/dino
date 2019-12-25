@@ -10,5 +10,5 @@ int Pow(int a, int n) {
 }
 
 int Main() {
-    return Pow(2, 10)
+    return Pow()
 }

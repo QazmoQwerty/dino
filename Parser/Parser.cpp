@@ -34,10 +34,7 @@ void Parser::expectLineBreak()
 void Parser::expectOperator(OperatorType ot)
 {
 	if (!eatOperator(ot)) 
-	{
-		string errorMsg = "expected '" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "'";
-		throw DinoException(errorMsg.c_str(), EXT_GENERAL, peekToken()->_line);
-	}
+		throw DinoException("expected a '" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "'", EXT_GENERAL, peekToken()->_line);
 }
 
 unicode_string Parser::expectIdentifier()
