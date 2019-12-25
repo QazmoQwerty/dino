@@ -32,6 +32,7 @@ private:
 	static DST::SwitchCase *decorate(AST::SwitchCase *node);
 	static DST::ForLoop *decorate(AST::ForLoop *node);
 	static DST::WhileLoop *decorate(AST::WhileLoop *node);
+	static DST::DoWhileLoop *decorate(AST::DoWhileLoop *node);
 	static DST::FunctionDeclaration *decorate(AST::FunctionDeclaration *node);
 	static DST::PropertyDeclaration * decorate(AST::PropertyDeclaration * node);
 	static DST::UnaryOperationStatement * decorate(AST::UnaryOperationStatement * node);
