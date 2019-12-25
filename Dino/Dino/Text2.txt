@@ -1,4 +1,0 @@
-int main()
-{
-	Std.Print("hello my name is \"Ron\"");
-}

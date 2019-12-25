@@ -1,5 +1,0 @@
-int x := 0
-char i := 'a'
-int[2] arr := [1,2]
-arr[x] := x
-arr[i] := x
