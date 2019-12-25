@@ -64,7 +64,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	{
 		auto n = decorate(dynamic_cast<AST::FunctionCall*>(node));
 		if (!n->isStatement())
-			throw DinoException("exected a statements", EXT_GENERAL, node->getLine());
+			throw DinoException("expected a statement", EXT_GENERAL, node->getLine());
 		return dynamic_cast<DST::ExpressionStatement*>(n);
 	}
 	case ST_FUNCTION_DECLARATION:
@@ -105,7 +105,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 			return new DST::Variable(node, _variables[scope][name]);
 	if (_types.count(name))
 		return evalType(node);
-	throw DinoException("Identifier is undefined", EXT_GENERAL, node->getLine()); // TODO: add id to error.
+	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
 }
 
 DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
@@ -132,9 +132,9 @@ DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
 	DST::Type* type = evalType(node->getVarDecl()->getVarType());
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (_variables[scope].count(name))
-			throw DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
+			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
 	if (_types.count(name))
-		throw DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
+		throw DinoException("Identifier '" + name.to_string() + "' is a type name", EXT_GENERAL, node->getLine());
 
 	DST::StatementBlock *get = decorate(node->getGet());
 
@@ -212,9 +212,9 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	decl->setType(evalType(node->getVarType()));
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (_variables[scope].count(name))
-			throw DinoException("Identifier is already in use", EXT_GENERAL, node->getLine());
+			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
 	if (_types.count(name))
-		throw DinoException("Identifier is a type name", EXT_GENERAL, node->getLine());
+		throw DinoException("Identifier '" + name.to_string() + "' is a type name", EXT_GENERAL, node->getLine());
 		
 	_variables[currentScope()][name] = decl->getType();
 	return decl;

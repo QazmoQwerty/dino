@@ -664,10 +664,11 @@ namespace DST
 			_funcPtr = funcId;
 			_type = ((FunctionType*)funcId->getType())->getReturns();
 		}
+		
 		void setArguments(ExpressionList* arguments) 
 		{
 			if (!((FunctionType*)_funcPtr->getType())->getParameters()->equals(arguments->getType()))
-				throw DinoException("Argument types do not match function parameters", EXT_GENERAL, arguments->getLine());
+				throw DinoException("Argument types do not match function parameters", EXT_GENERAL, getLine());
 			_arguments = arguments; 
 		}
 
