@@ -1,7 +1,3 @@
-int getlast() {
-    return 10
-}
-
 int Main() {
     int j := 0
     int sum := 0

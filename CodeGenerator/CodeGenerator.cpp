@@ -1,5 +1,7 @@
 #include "CodeGenerator.h"
 
+vector<llvm::Function*> _funcs;
+
 void CodeGenerator::setup()
 {
     // Nothing yet
@@ -284,7 +286,7 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
 llvm::Value *CodeGenerator::codeGen(DST::FunctionCall* node)
 {
     llvm::Function *func = getFunction(node); // throw excetion.
-    llvm::ArrayRef<llvm::Value*> args = nullptr; //getArguaments(node);
+    llvm::ArrayRef<llvm::Value*> args(codeGen(node->getParameters())); //getArguaments(node);
     return _builder.CreateCall(func, args);
 }
 
@@ -415,15 +417,32 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
 
 llvm::Function *CodeGenerator::getFunction(DST::FunctionCall *node)
 {
-    if(_funcs.size)
+    if(_funcs.size())
     {
+        bool isNameExists = false;
+        vector<DST::Expression*> callArgs;
         for (auto f : _funcs)
         {
             if(f->getName() == node->getFunctionId()->toString())
             {
-                return f;
+                isNameExists = true;
+                
+                // if args match this function -> return function.
+                callArgs = ((DST::ExpressionList*)node->getParameters())->getExpressions();
+                if(f->arg_size() == callArgs.size())
+                {
+                    int i = 0;
+                    for (auto &fArgs : f->args())
+                        if(evalType(callArgs[i++]->getType()) != fArgs.getType()) 
+                            continue;
+                    return f;
+                }
             }
         }
+        if(isNameExists)
+            throw DinoException("No overload of this function with these arguements", EXT_GENERAL, node->getLine());
+        else 
+            throw DinoException("Function identifier not found.", EXT_GENERAL, node->getLine());        
     }
-    return NULL;
+    throw DinoException("There are no functions to call.", EXT_GENERAL, node->getLine());
 }

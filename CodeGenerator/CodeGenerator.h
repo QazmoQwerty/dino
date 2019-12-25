@@ -73,6 +73,4 @@ namespace CodeGenerator
     llvm::Type *evalType(DST::Type *node);
 
     llvm::Function *getFunction(DST::FunctionCall *node);
-    vector<llvm::Function*> _funcs;
-
 }
