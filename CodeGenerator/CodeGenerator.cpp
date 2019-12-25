@@ -57,6 +57,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_IF_THEN_ELSE: return codeGen((DST::IfThenElse*)node);
         case ST_WHILE_LOOP: return codeGen((DST::WhileLoop*)node);
         case ST_DO_WHILE_LOOP: return codeGen((DST::DoWhileLoop*)node);
+        case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         default: return NULL;
     }
 }
@@ -70,6 +71,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_ASSIGNMENT: return codeGen((DST::Assignment*)node);
         case ET_IDENTIFIER: return codeGen((DST::Variable*)node);
         case ET_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
+        case ET_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         default: return NULL;
     }
 }
@@ -273,7 +275,17 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
     if (!llvm::verifyFunction(*func, &llvm::errs()))
         llvm::errs() << "Function Vertified!\n---------------------------\n";
 
+
+    _funcs.push_back(func);
+
     return func;
+}
+
+llvm::Value *CodeGenerator::codeGen(DST::FunctionCall* node)
+{
+    llvm::Function *func = getFunction(node); // throw excetion.
+    llvm::ArrayRef<llvm::Value*> args = nullptr; //getArguaments(node);
+    return _builder.CreateCall(func, args);
 }
 
 // Get parent function
@@ -399,4 +411,19 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
     parent->getBasicBlockList().push_back(mergeBB);
     _builder.SetInsertPoint(mergeBB);
     return br;
+}
+
+llvm::Function *CodeGenerator::getFunction(DST::FunctionCall *node)
+{
+    if(_funcs.size)
+    {
+        for (auto f : _funcs)
+        {
+            if(f->getName() == node->getFunctionId()->toString())
+            {
+                return f;
+            }
+        }
+    }
+    return NULL;
 }

@@ -1,3 +1,6 @@
+int getlast() {
+    return 10
+}
 
 int Main() {
     int j := 0
@@ -5,6 +8,6 @@ int Main() {
     do {
         j += 1
         sum += j
-    } while j < 10
+    } while j < getlast()
     return sum
 }

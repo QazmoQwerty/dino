@@ -33,6 +33,7 @@
 
 using llvm::Value;
 using llvm::AllocaInst;
+using std::vector;
 
 namespace CodeGenerator 
 {
@@ -57,7 +58,8 @@ namespace CodeGenerator
     Value *codeGen(DST::Literal *node);
     Value *codeGen(DST::BinaryOperation* node);
     Value *codeGen(DST::Assignment* node);
-
+    Value *codeGen(DST::FunctionCall *node);
+    
     llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");
     Value *codeGen(DST::Variable *node);
     AllocaInst *codeGen(DST::VariableDeclaration *node);
@@ -69,4 +71,8 @@ namespace CodeGenerator
     llvm::Value *codeGen(DST::DoWhileLoop *node);
 
     llvm::Type *evalType(DST::Type *node);
+
+    llvm::Function *getFunction(DST::FunctionCall *node);
+    vector<llvm::Function*> _funcs;
+
 }
