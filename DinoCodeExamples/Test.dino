@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 int Mul(int a, int b) {
     return a * b
 }
@@ -11,16 +10,11 @@ int Pow(int a, int n) {
 }
 
 int Main() {
-    int i := Pow(2, 10)
-    return i
-=======
-int Main() {
-    int j := 0
-    int sum := 0
+    //int i := Pow(2, 10)
+    int i := 10
     do {
-        j += 1
-        sum += j
-    } while j < getlast()
-    return sum
->>>>>>> 288e9c8cca64cd55e9f4dbf0052ee18bf43dee1d
+        if i = 10:
+            i += 10
+    } while i < 0
+    return i
 }

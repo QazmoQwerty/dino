@@ -71,6 +71,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
         case ST_IF_THEN_ELSE: return codeGen((DST::IfThenElse*)node);
         case ST_WHILE_LOOP: return codeGen((DST::WhileLoop*)node);
+        case ST_DO_WHILE_LOOP: return codeGen((DST::DoWhileLoop*)node);
         case ST_FOR_LOOP: return codeGen((DST::ForLoop*)node);
         case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         default: return NULL;
@@ -303,6 +304,49 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
 llvm::Function *CodeGenerator::getParentFunction() 
 {
     return _builder.GetInsertBlock() ? _builder.GetInsertBlock()->getParent() : nullptr;
+}
+
+llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
+{
+    auto parent = getParentFunction();
+    llvm::BasicBlock *condBB = llvm::BasicBlock::Create(_context, "cond");
+    llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(_context, "loop");
+    llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(_context, "exitLoop");
+
+    // first go to the loop statement.
+    _builder.CreateBr(loopBB);
+
+    // add the block to the function.
+    parent->getBasicBlockList().push_back(loopBB);
+
+    // generate loop statement's code.
+    _builder.SetInsertPoint(loopBB);
+    if (node->getStatement()->getStatements().size() != 0)
+    {
+        for (auto i : node->getStatement()->getStatements()) 
+        {
+            auto val = codeGen(i);
+            if (val == nullptr)
+                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+        }
+    }
+    // at the end of the statements: add a jump statement to the condition.
+    _builder.CreateBr(condBB);
+
+    // generate condition block.
+    _builder.SetInsertPoint(condBB);
+    Value *cond = codeGen(node->getCondition());
+    
+    parent->getBasicBlockList().push_back(condBB);
+
+    // loop condition statement.
+    auto br = _builder.CreateCondBr(cond, loopBB, exitBB);
+    
+    // added exit_block
+    parent->getBasicBlockList().push_back(exitBB);
+    _builder.SetInsertPoint(exitBB);
+    
+    return br;
 }
 
 

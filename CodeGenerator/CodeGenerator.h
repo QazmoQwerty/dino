@@ -70,8 +70,8 @@ namespace CodeGenerator
     llvm::Function *codeGen(DST::FunctionDeclaration *node);
     llvm::Value *codeGen(DST::IfThenElse *node);
     llvm::Value *codeGen(DST::WhileLoop *node);
+    llvm::Value *codeGen(DST::DoWhileLoop *node);
     llvm::Value *codeGen(DST::ForLoop *node);
-
 
     llvm::Type *evalType(DST::Type *node);
 }
