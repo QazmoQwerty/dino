@@ -442,6 +442,7 @@ namespace DST
 
 	public:
 		WhileLoop(AST::WhileLoop *base) : _base(base) {};
+		WhileLoop(DST::WhileLoop *loop) : _base(loop->_base), _condition(loop->_condition), _statement(loop->_statement) {};
 		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
@@ -482,6 +483,7 @@ namespace DST
 	{
 	public:
 		DoWhileLoop(AST::DoWhileLoop *base) : WhileLoop(base) {};
+		DoWhileLoop(DST::WhileLoop *base) : WhileLoop(base) {};
 		virtual StatementType getStatementType() { return ST_DO_WHILE_LOOP; };
 		virtual string toString() { return "<Do>"; };
 	};

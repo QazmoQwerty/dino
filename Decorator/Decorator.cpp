@@ -90,7 +90,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	case ST_TYPE_DECLARATION:
 		return decorate(dynamic_cast<AST::TypeDeclaration*>(node));
 	case ST_DO_WHILE_LOOP: 
-		throw DinoException("do-while loops are not implemented yet", EXT_GENERAL, node->getLine());
+		return decorate(dynamic_cast<AST::DoWhileLoop*>(node));
 	default: 
 		return NULL;
 	}
@@ -457,6 +457,13 @@ DST::WhileLoop * Decorator::decorate(AST::WhileLoop * node)
 		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
 	loop->setStatement(decorate(node->getStatement()));
 	return loop;
+}
+
+DST::DoWhileLoop * Decorator::decorate(AST::DoWhileLoop * node)
+{
+	auto loop = decorate(dynamic_cast<AST::WhileLoop*>(node));
+	auto doLoop = new DST::DoWhileLoop(loop);
+	return doLoop;
 }
 
 DST::Type * Decorator::evalType(AST::Expression * node)
