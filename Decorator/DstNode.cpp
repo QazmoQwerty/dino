@@ -256,6 +256,8 @@ vector<DST::Node*> DST::FunctionType::getChildren()
 
 bool DST::TypeList::equals(Type * other)
 {
+	if (other->getExactType() == EXACT_BASIC)
+		return _types.size() == 1 && _types[0]->equals(other);
 	if (other->getExactType() != EXACT_TYPELIST)
 		return false;
 	auto othr = (TypeList*)other;
