@@ -10,11 +10,5 @@ int Pow(int a, int n) {
 }
 
 int Main() {
-    //int i := Pow(2, 10)
-    int i := 10
-    do {
-        if i = 10:
-            i += 10
-    } while i < 0
-    return i
+    return Pow(2, 10)
 }

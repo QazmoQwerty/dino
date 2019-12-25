@@ -28,7 +28,8 @@
 #include "llvm/ExecutionEngine/Interpreter.h"
 
 
-#include "../Decorator/Decorator.h"
+#include "../Decorator/DstNode.h"
+#define CONDITION_TYPE unicode_string("bool")
 
 using llvm::Value;
 using llvm::AllocaInst;
