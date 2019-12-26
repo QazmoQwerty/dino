@@ -143,6 +143,14 @@ vector<DST::Node*> DST::TypeDeclaration::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::NamespaceDeclaration::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _decls)
+		v.push_back(i.second);
+	return v;
+}
+
 vector<DST::Node*> DST::IfThenElse::getChildren()
 {
 	vector<Node*> v;

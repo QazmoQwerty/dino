@@ -75,6 +75,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 			throw DinoException("expected a statement", EXT_GENERAL, node->getLine());
 		return dynamic_cast<DST::ExpressionStatement*>(n);
 	}
+	case ST_NAMESPACE_DECLARATION:
+		return decorate(dynamic_cast<AST::NamespaceDeclaration*>(node));
 	case ST_FUNCTION_DECLARATION:
 		return decorate(dynamic_cast<AST::FunctionDeclaration*>(node));
 	case ST_VARIABLE_DECLARATION:
@@ -402,6 +404,17 @@ DST::ExpressionList * Decorator::decorate(AST::ExpressionList * node)
 	for (auto i : node->getExpressions())
 		list->addExpression(decorate(i));
 	return list;
+}
+
+DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node)
+{
+	auto decl = new DST::NamespaceDeclaration(node);
+	enterBlock();
+	for (auto i : node->getStatement()->getStatements())
+		decl->addMember(decorate(i));
+	leaveBlock();
+	_variables[currentScope()][decl->getName()] = new DST::NamespaceType(decl);
+	return decl;
 }
 
 DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)

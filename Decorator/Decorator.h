@@ -27,6 +27,7 @@ private:
 	static DST::Expression * decorate(AST::UnaryOperation * node);
 
 	// Statements
+	static DST::NamespaceDeclaration *decorate(AST::NamespaceDeclaration *node);
 	static DST::StatementBlock *decorate(AST::StatementBlock *node);
 	static DST::IfThenElse *decorate(AST::IfThenElse *node);
 	static DST::SwitchCase *decorate(AST::SwitchCase *node);

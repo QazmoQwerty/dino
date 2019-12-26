@@ -183,8 +183,11 @@ vector<AST::Node*> AST::PropertyDeclaration::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_decl);
-	v.push_back(_get);
-	v.push_back(_set);
+	v.push_back(_get != nullptr ? _get : NULL);
+	//v.push_back(_set != nullptr ? _set : NULL);
+	if (_set == nullptr)
+		v.push_back(NULL);
+	else v.push_back(_set);
 	return v;
 }
 

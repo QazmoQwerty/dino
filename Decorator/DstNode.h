@@ -20,6 +20,8 @@ namespace DST
 		/* Default constructor, does NOT set line.*/
 		Node() { _nodeId = idCount++; };
 
+		virtual ~Node() {};
+
 		/* Set the line the node is on */
 		void setLine(int line) { _line = line; }
 
@@ -112,6 +114,7 @@ namespace DST
 		AST::Expression *_base;
 	public:
 		Type(AST::Expression *base) : _base(base) { }
+		virtual ~Type() { if (_base) delete _base; }
 		virtual Type *getType();
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
@@ -130,14 +133,31 @@ namespace DST
 	class TypeSpecifierType : public Type
 	{
 		private:
-			DST::TypeDeclaration *_typeDecl;
+			TypeDeclaration *_typeDecl;
 		public:
 			TypeSpecifierType(DST::TypeDeclaration *typeDecl) : Type(NULL), _typeDecl(typeDecl) {}
+			virtual ~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; }
 			virtual ExactType getExactType() { return EXACT_SPECIFIER; };
 			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
 			TypeDeclaration *getTypeDecl() { return _typeDecl; }
 			virtual string toShortString() { return "typeid"; };
+	};
+
+	class NamespaceDeclaration;
+
+	class NamespaceType : public Type
+	{
+		private:
+			NamespaceDeclaration *_decl;
+		public:
+			NamespaceType(DST::NamespaceDeclaration *decl) : Type(NULL), _decl(decl) {}
+			virtual ~NamespaceType() { if (_decl) delete _decl; }
+			virtual ExactType getExactType() { return EXACT_NAMESPACE; };
+			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
+			virtual bool writeable() { return false; }
+			NamespaceDeclaration *getNamespaceDecl() { return _decl; }
+			virtual string toShortString() { return "namespaceType"; };
 	};
 	
 	class PropertyType : public Type
@@ -148,6 +168,7 @@ namespace DST
 
 	public:
 		PropertyType(Type *ret, bool hasGet, bool hasSet) : _return(ret), _hasGet(hasGet), _hasSet(hasSet), Type(NULL) {}
+		virtual ~PropertyType() { if (_return) delete _return; }
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
 		Type *getReturn() { return _return; }
@@ -168,6 +189,7 @@ namespace DST
 		vector<Type*> _types;
 	public:
 		TypeList(AST::Expression *base) : Type(base) { }
+		virtual ~TypeList() { _types.clear(); }
 		void addType(Type *type) { _types.push_back(type); }
 		vector<Type*> getTypes() { return _types; }
 		size_t size() { return _types.size(); }
@@ -211,6 +233,7 @@ namespace DST
 	public:
 		BasicType(AST::Expression *base, TypeSpecifierType *typeSpec) : Type(base), _typeSpec(typeSpec) {}
 		BasicType(TypeSpecifierType *typeSpec) : Type(NULL), _typeSpec(typeSpec) {}
+		virtual ~BasicType() { if (_typeSpec) delete _typeSpec; }
 
 		TypeSpecifierType *getTypeSpecifier() { return _typeSpec; }
 		unicode_string getTypeId();
@@ -239,6 +262,7 @@ namespace DST
 		ArrayType(AST::Expression *base) : Type(base) {  }
 		ArrayType(Type *valueType, size_t length) : Type(NULL), _valueType(valueType), _length(length) { }
 		ArrayType(Type *valueType) : ArrayType(valueType, 0) {}
+		virtual ~ArrayType() { if (_valueType) delete _valueType; }
 		ExactType getExactType() { return EXACT_ARRAY; }
 
 		virtual bool equals(Type *other)
@@ -263,6 +287,7 @@ namespace DST
 	public:
 		FunctionType() : Type(NULL) { _returns = new TypeList(NULL); _parameters = new TypeList(NULL); }
 		FunctionType(AST::FunctionCall *base) : Type(base) { _returns = new TypeList(base->getFunctionId()); _parameters = new TypeList(base->getArguments()); }
+		virtual ~FunctionType() { if (_returns) delete _returns; if (_parameters) delete _parameters; }
 		void addReturn(Type *returnType) { _returns->addType(returnType); }
 		void addParameter(Type *parameterType) { _parameters->addType(parameterType); }
 		TypeList *getReturns() { return _returns; }
@@ -283,6 +308,7 @@ namespace DST
 
 	public:
 		Variable(AST::Identifier *base, Type *type) : _base(base), _type(type) {};
+		virtual ~Variable() { if (_base) delete _base; if (_type) delete _type; }
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; }
@@ -303,6 +329,8 @@ namespace DST
 	public:
 		BinaryOperation(AST::BinaryOperation *base) : _base(base) {};
 		BinaryOperation(AST::BinaryOperation *base, Expression *left, Expression *right) : _base(base), _left(left), _right(right) {};
+		virtual ~BinaryOperation() { if (_base) delete _base; if (_type) delete _type; 
+							if (_left) delete _left; if (_right) delete _right; }
 		void setType(Type *type) { _type = type; };
 		Operator getOperator() { return _base->getOperator(); }
 		virtual Type *getType() { return _type; }
@@ -328,6 +356,7 @@ namespace DST
 			if (base->getRight()->getExpressionType() != ET_IDENTIFIER)
 				throw DinoException("right of member access must be an identifier", EXT_GENERAL, _base->getLine());
 		};
+		virtual ~MemberAccess() { if (_base) delete _base; if (_type) delete _type; if (_left) delete _left; }
 		void setType(Type *type) { _type = type; };
 		Operator getOperator() { return _base->getOperator(); }
 		virtual Type *getType() { return _type; }
@@ -346,6 +375,7 @@ namespace DST
 		Type *_type;
 	public:
 		Literal(AST::Literal* base) : _base(base) {}
+		virtual ~Literal() { if (_base) delete _base; if (_type) delete _type; }
 		AST::Literal *getBase() { return _base; }
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
@@ -366,6 +396,7 @@ namespace DST
 		Expression *_expression;
 	public: 
 		Conversion(AST::FunctionCall *base, Type *type, Expression *expression) : _base(base), _type(type), _expression(expression) {}
+		virtual ~Conversion() { if (_base) delete _base; if (_type) delete _type; if(_expression) delete _expression; }
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }
@@ -387,6 +418,7 @@ namespace DST
 
 	public:
 		FunctionLiteral(AST::Function* base) : _base(base) {}
+		virtual ~FunctionLiteral() { if (_base) delete _base; if (_type) delete _type; if(_content) delete _content; _parameters.clear(); }
 		void setType(FunctionType *type) { _type = type; }
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
@@ -410,6 +442,7 @@ namespace DST
 		vector<Expression*> _expressions;
 	public:
 		ExpressionList(AST::Expression *base) : _base(base) { _type = new TypeList(base); };
+		virtual ~ExpressionList() { if (_base) delete _base; if (_type) delete _type; _expressions.clear(); }
 		TypeList *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_LIST; };
 		virtual string toString() { return "<ExpressionList>\\nType: " + _type->toShortString(); };
@@ -427,6 +460,7 @@ namespace DST
 		// TODO - add AST::UnaryOperation *_base
 	public:
 		ArrayLiteral(Type *type, vector<Expression*> arr) : _array(arr) { _type = new ArrayType(type, arr.size()); }
+		virtual ~ArrayLiteral() { /*if (_base) delete _base; */if (_type) delete _type; _array.clear(); }
 		ArrayType *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_ARRAY; };
 		virtual string toString() { return "<ArrayLiteral>\\nType: " + _type->toShortString(); };
@@ -447,6 +481,7 @@ namespace DST
 	public:
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		StatementBlock() : _hasReturn(false) {}
+		virtual ~StatementBlock() { _statements.clear(); }
 		//virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
 		bool hasReturnType(Type *returnType);
@@ -468,6 +503,8 @@ namespace DST
 
 	public:
 		IfThenElse(AST::IfThenElse *base) : _base(base) {};
+		virtual ~IfThenElse() { if (_base) delete _base; if (_condition) delete _condition; 
+								if (_thenBranch) delete _thenBranch; if (_elseBranch) delete _elseBranch; }
 		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
 		virtual string toString() { return "<IfThenElse>"; };
 		virtual vector<Node*> getChildren();
@@ -495,6 +532,8 @@ namespace DST
 
 	public:
 		SwitchCase(AST::SwitchCase *base) : _base(base), _default(NULL) {};
+		virtual ~SwitchCase() { if (_base) delete _base; if (_expression) delete _expression; 
+								if (_default) delete _default; _cases.clear(); }
 		virtual StatementType getStatementType() { return ST_SWITCH; };
 		virtual string toString() { return "<Switch>"; };
 		virtual vector<Node*> getChildren();
@@ -521,6 +560,8 @@ namespace DST
 	public:
 		WhileLoop(AST::WhileLoop *base) : _base(base) {};
 		WhileLoop(DST::WhileLoop *loop) : _base(loop->_base), _condition(loop->_condition), _statement(loop->_statement) {};
+		virtual ~WhileLoop() { if (_base) delete _base; if (_condition) delete _condition; if (_statement) delete _statement; } 
+		
 		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
@@ -543,6 +584,8 @@ namespace DST
 
 	public:
 		ForLoop(AST::ForLoop *base) : _base(base) {};
+		virtual ~ForLoop() { if (_base) delete _base; if (_condition) delete _condition; if (_statement) delete _statement;
+								if (_begin) delete _begin; if (_increment) delete _increment; }
 		virtual StatementType getStatementType() { return ST_FOR_LOOP; };
 		virtual string toString() { return "<For>"; };
 		virtual vector<Node*> getChildren();
@@ -575,6 +618,7 @@ namespace DST
 
 	public:
 		UnaryOperationStatement(AST::UnaryOperationStatement *base, Expression *expression) : _base(base), _expression(expression) {};
+		virtual ~UnaryOperationStatement() { if (_base) delete _base; if (_expression) delete _expression; } 
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
 		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
@@ -595,7 +639,8 @@ namespace DST
 	public:
 		TypeDeclaration(unicode_string name) : _name(name), _base(NULL) {}
 		TypeDeclaration(AST::TypeDeclaration *base) : _name(base->getName()), _base(base) {}
-		
+		virtual ~TypeDeclaration() { if (_base) delete _base; _decls.clear(); } 
+
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
@@ -620,6 +665,7 @@ namespace DST
 
 	public:
 		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl){};
+		virtual ~FunctionDeclaration() { if (_base) delete _base; if (_decl) delete _decl; if (_content) delete _content; _parameters.clear(); } 
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>"; };
@@ -645,6 +691,7 @@ namespace DST
 		StatementBlock* _set;
 	public:
 		PropertyDeclaration(AST::PropertyDeclaration *base, StatementBlock *get, StatementBlock *set, Type *type) : _base(base), _get(get), _set(set), _type(type) {};
+		virtual ~PropertyDeclaration() { if (_base) delete _base; if (_type) delete _type; if (_get) delete _get; if (_set) delete _set; } 
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
 		virtual string toString() { return "<PropertyDeclaration>\\n" + _type->toShortString() + " " + _base->getVarDecl()->getVarId().to_string(); };
@@ -657,6 +704,36 @@ namespace DST
 		Statement* getSet() { return _set; }*/
 	};
 
+	class NamespaceDeclaration : public Statement
+	{
+	private:
+		AST::NamespaceDeclaration *_base;
+		unordered_map<unicode_string, Statement*, UnicodeHasherFunction> _decls;
+	public:
+		NamespaceDeclaration(AST::NamespaceDeclaration *base) : _base(base) {}
+		virtual ~NamespaceDeclaration() { if (_base) delete _base; _decls.clear(); } 
+		virtual StatementType getStatementType() { return ST_NAMESPACE_DECLARATION; };
+		virtual string toString() { _base->toString(); };
+		virtual vector<Node*> getChildren();
+		unicode_string getName() { return _base->getName(); }
+		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual bool isDeclaration() { return true; }
+
+		Statement *getMember(unicode_string id) { return _decls[id]; }
+		void *addMember(Statement *decl) {
+			switch(decl->getStatementType())
+			{
+				case ST_NAMESPACE_DECLARATION: 	_decls[((AST::NamespaceDeclaration*)decl)->getName()] 	= decl; break;
+				case ST_PROPERTY_DECLARATION:  	_decls[((AST::PropertyDeclaration*)	decl)->getVarDecl()->getVarId()] = decl; break;
+				case ST_FUNCTION_DECLARATION:  	_decls[((AST::FunctionDeclaration*)	decl)->getVarDecl()->getVarId()] = decl; break;
+				case ST_INTERFACE_DECLARATION: 	_decls[((AST::InterfaceDeclaration*)decl)->getName()] 	= decl; break;
+				case ST_VARIABLE_DECLARATION:  	_decls[((AST::VariableDeclaration*)	decl)->getVarId()] 	= decl; break;
+				case ST_TYPE_DECLARATION: 		_decls[((AST::TypeDeclaration*)		decl)->getName()] 	= decl; break;
+				default: throw DinoException("Expected a declaration", EXT_GENERAL, decl->getLine());
+			}
+		}
+	};
+
 	/***************** ExpressionStatements *****************/
 
 	class VariableDeclaration : public ExpressionStatement
@@ -666,6 +743,7 @@ namespace DST
 
 	public:
 		VariableDeclaration(AST::VariableDeclaration *base) : _base(base) { };
+		virtual ~VariableDeclaration() { if (_base) delete _base; if (_type) delete _type; } 
 
 		void setType(Type *type) { _type = type; }
 		virtual Type *getType() { return _type; }
@@ -690,6 +768,7 @@ namespace DST
 	public:
 		Assignment(AST::Assignment *base) : _base(base) {};
 		Assignment(AST::Assignment *base, Expression *left, Expression *right) : _base(base), _left(left), _right(right) {};
+		virtual ~Assignment() { if (_base) delete _base; if (_type) delete _type; if (_left) delete _left; if (_right) delete _right;} 
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; }
@@ -702,12 +781,6 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
-	/*typedef struct FunctionParameter 
-	{
-		unicode_string name;
-		Type *type;
-	} FunctionParameter;*/
-
 	class FunctionCall : public ExpressionStatement
 	{
 		Type *_type;
@@ -718,6 +791,7 @@ namespace DST
 	public:
 		FunctionCall(AST::FunctionCall *base) : _base(base) {};
 		FunctionCall(AST::FunctionCall *base, Expression *funcPtr, ExpressionList *arguments);
+		virtual ~FunctionCall() { if (_base) delete _base; if (_type) delete _type; if (_funcPtr) delete _funcPtr; if (_arguments) delete _arguments; } 
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\nType: " + _type->toShortString(); };
