@@ -20,6 +20,8 @@ namespace AST
 		/* Default constructor, does NOT set line.*/
 		Node() { _nodeId = _idCount++; };
 
+		virtual ~Node() {}
+
 		/* Set the line the node is on */
 		void setLine(int line) { _line = line; }
 
@@ -116,6 +118,7 @@ namespace AST
 
 	public:
 		Assignment() : ExpressionStatement() {};
+		virtual ~Assignment() { if (_left) delete _left; if (_right) delete _right; }
 		virtual vector<Node*> getChildren();
 		virtual string toString() { return "<Assignment>\\n" + _operator._str.to_string(); };
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; };
@@ -137,6 +140,7 @@ namespace AST
 
 	public:
 		Increment() : ExpressionStatement() {};
+		virtual ~Increment() { if (_expression) delete _expression; }
 		virtual StatementType getStatementType() { return ST_INCREMENT; };
 		virtual ExpressionType getExpressionType() { return ET_INCREMENT; };
 		virtual string toString() { return "<Increment>\\n" + _operator._str.to_string(); };
@@ -155,6 +159,7 @@ namespace AST
 
 	public:
 		FunctionCall() : ExpressionStatement() {};
+		virtual ~FunctionCall() { if (_functionId) delete _functionId; if (_arguments) delete _arguments; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\n"; };
@@ -174,6 +179,7 @@ namespace AST
 
 	public:
 		VariableDeclaration() : ExpressionStatement() {};
+		virtual ~VariableDeclaration() { if (_type) delete _type; }
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
@@ -196,6 +202,7 @@ namespace AST
 
 	public:
 		UnaryAssignment() : ExpressionStatement() { _isPostfix = false; };
+		virtual ~UnaryAssignment() { if (_expression) delete _expression; }
 		virtual ExpressionType getExpressionType() { return ET_UNARY_ASSIGNMENT; };
 		virtual StatementType getStatementType() { return ST_UNARY_ASSIGNMENT; };
 		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "") + "UnaryAssignment>\\n" + _operator._str.to_string(); };
@@ -217,6 +224,7 @@ namespace AST
 		vector<Statement*> _statements;
 	public:
 		StatementBlock() : Statement() {};
+		virtual ~StatementBlock() { _statements.clear(); }
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		virtual string toString() { return "<StatementBlock>"; };
 		virtual vector<Node*> getChildren();
@@ -233,6 +241,7 @@ namespace AST
 
 	public:
 		IfThenElse() : Statement() {};
+		virtual ~IfThenElse() { if (_condition) delete _condition; if (_thenBranch) delete _thenBranch; if (_elseBranch) delete _elseBranch; }
 		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
 		virtual string toString() { return "<IfThenElse>"; };
 		virtual vector<Node*> getChildren();
@@ -259,6 +268,8 @@ namespace AST
 
 	public:
 		SwitchCase() : Statement() {};
+		virtual ~SwitchCase() { if (_expression) delete _expression; if (_default) delete _default; _cases.clear(); }
+
 		virtual StatementType getStatementType() { return ST_SWITCH; };
 		virtual string toString() { return "<Switch>"; };
 		virtual vector<Node*> getChildren();
@@ -281,6 +292,7 @@ namespace AST
 
 	public:
 		WhileLoop() : Statement() {};
+		virtual ~WhileLoop() { if (_condition) delete _condition; if (_statement) delete _statement; }
 		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
@@ -301,6 +313,8 @@ namespace AST
 
 	public:
 		ForLoop() : Statement() {};
+		virtual ~ForLoop() { 	if (_condition) delete _condition; if (_begin) delete _begin; 
+								if (_increment) delete _increment; if (_statement) delete _statement;}
 		virtual StatementType getStatementType() { return ST_FOR_LOOP; };
 		virtual string toString() { return "<For>"; };
 		virtual vector<Node*> getChildren();
@@ -332,6 +346,7 @@ namespace AST
 
 	public:
 		UnaryOperationStatement() : Statement() {};
+		virtual ~UnaryOperationStatement() { if (_expression) delete _expression; }
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
 		virtual string toString() { return string() + "<UnaryOperationStatement>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
@@ -352,6 +367,7 @@ namespace AST
 
 	public:
 		FunctionDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		virtual ~FunctionDeclaration() { if (_decl) delete _decl; if (_content) delete _content; _parameters.clear(); }
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>\\n"; };
@@ -376,6 +392,7 @@ namespace AST
 
 	public:
 		InterfaceDeclaration() {};
+		virtual ~InterfaceDeclaration() { _implements.clear(); _properties.clear(); _functions.clear(); }
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual string toString();
@@ -399,6 +416,7 @@ namespace AST
 		StatementBlock* _set;
 	public:
 		PropertyDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		virtual ~PropertyDeclaration() { if (_decl) delete _decl; if (_get) delete _get; if (_set) delete _set;}
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
 		virtual string toString() { return "<PropertyDeclaration>"; };
@@ -421,6 +439,7 @@ namespace AST
 
 	public:
 		TypeDeclaration() {};
+		virtual ~TypeDeclaration() { _interfaces.clear(); _variableDeclarations.clear(); _functionDeclarations.clear(); _propertyDeclarations.clear(); }
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
 		virtual string toString();
@@ -446,6 +465,7 @@ namespace AST
 
 	public:
 		NamespaceDeclaration() { _name = ""; };
+		virtual ~NamespaceDeclaration() { if (_statement) delete _statement; }
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_NAMESPACE_DECLARATION; };
 		virtual string toString() { return "<NamespaceDeclaration>\\n" + _name.to_string(); };
@@ -465,6 +485,7 @@ namespace AST
 		vector<Expression*> _expressions;
 	public:
 		ExpressionList() : Expression() {};
+		virtual ~ExpressionList() { _expressions.clear(); }
 		virtual ExpressionType getExpressionType() { return ET_LIST; };
 		virtual string toString() { return "<ExpressionList>"; };
 		virtual vector<Node*> getChildren();
@@ -481,6 +502,7 @@ namespace AST
 
 	public:
 		BinaryOperation() : Expression() {};
+		virtual ~BinaryOperation() { if (_right) delete _right; if (_left) delete _left; }
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; };
 		virtual string toString() { return string() + "<BinaryOperator>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
@@ -502,6 +524,7 @@ namespace AST
 
 	public:
 		UnaryOperation() : Expression() { _isPostfix = false; };
+		virtual ~UnaryOperation() { if (_expression) delete _expression; }
 		virtual ExpressionType getExpressionType() { return ET_UNARY_OPERATION; };
 		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "")+ "UnaryOperator>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
@@ -536,6 +559,7 @@ namespace AST
 
 	public:
 		ConditionalExpression() : Expression() {};
+		virtual ~ConditionalExpression() { if (_condition) delete _condition; if (_thenBranch) delete _thenBranch; if (_elseBranch) delete _elseBranch; }
 		virtual ExpressionType getExpressionType() { return ET_CONDITIONAL_EXPRESSION; };
 		virtual string toString() { return string() + "<ConditionaExpression>"; };
 		virtual vector<Node*> getChildren();
@@ -618,6 +642,7 @@ namespace AST
 
 	public:
 		Function() : Literal(LT_FUNCTION) { }
+		virtual ~Function() { if (_content) delete _content; if (_returnType) delete _returnType; _parameters.clear(); }
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
 		virtual vector<Node*> getChildren();
 

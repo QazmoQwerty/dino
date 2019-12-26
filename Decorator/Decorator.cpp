@@ -409,11 +409,11 @@ DST::ExpressionList * Decorator::decorate(AST::ExpressionList * node)
 DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node)
 {
 	auto decl = new DST::NamespaceDeclaration(node);
+	_variables[currentScope()][decl->getName()] = new DST::NamespaceType(decl);
 	enterBlock();
 	for (auto i : node->getStatement()->getStatements())
 		decl->addMember(decorate(i));
 	leaveBlock();
-	_variables[currentScope()][decl->getName()] = new DST::NamespaceType(decl);
 	return decl;
 }
 
