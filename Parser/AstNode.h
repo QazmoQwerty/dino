@@ -415,7 +415,7 @@ namespace AST
 		StatementBlock* _get;
 		StatementBlock* _set;
 	public:
-		PropertyDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		PropertyDeclaration(VariableDeclaration* decl) : _get(NULL), _set(NULL) { _decl = decl; };
 		virtual ~PropertyDeclaration() { if (_decl) delete _decl; if (_get) delete _get; if (_set) delete _set;}
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
