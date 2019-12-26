@@ -147,22 +147,13 @@ vector<DST::Node*> DST::NamespaceDeclaration::getChildren()
 {
 	vector<Node*> v;
 	for (auto i : _decls)
-		v.push_back(i.second);
+		v.push_back(i.second.first);
 	return v;
 }
 
-void DST::NamespaceDeclaration::addMember(Statement * decl)
+void DST::NamespaceDeclaration::addMember(unicode_string name, Statement * decl, Type * type)
 {
-	switch (decl->getStatementType())
-	{
-	case ST_NAMESPACE_DECLARATION: 	_decls[((NamespaceDeclaration*)decl)->getName()] = decl; break;
-	case ST_PROPERTY_DECLARATION:  	_decls[((PropertyDeclaration*)decl)->getName()] = decl; break;
-	case ST_FUNCTION_DECLARATION:  	_decls[((FunctionDeclaration*)decl)->getVarDecl()->getVarId()] = decl; break;
-		// 	case ST_INTERFACE_DECLARATION: 	_decls[((InterfaceDeclaration*)decl)->getName()] 	= decl; break;
-	case ST_VARIABLE_DECLARATION:  	_decls[((VariableDeclaration*)decl)->getVarId()] = decl; break;
-	case ST_TYPE_DECLARATION: 		_decls[((TypeDeclaration*)decl)->getName()] = decl; break;
-	default: throw DinoException("Expected a declaration", EXT_GENERAL, decl->getLine());
-	}
+	_decls[name] = std::make_pair(decl, type);
 }
 
 vector<DST::Node*> DST::IfThenElse::getChildren()

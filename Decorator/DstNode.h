@@ -709,7 +709,7 @@ namespace DST
 	{
 	private:
 		AST::NamespaceDeclaration *_base;
-		unordered_map<unicode_string, Statement*, UnicodeHasherFunction> _decls;
+		unordered_map<unicode_string, std::pair<Statement*, Type*>, UnicodeHasherFunction> _decls;
 	public:
 		NamespaceDeclaration(AST::NamespaceDeclaration *base) : _base(base) {}
 		virtual ~NamespaceDeclaration() { if (_base) delete _base; _decls.clear(); } 
@@ -720,8 +720,9 @@ namespace DST
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 		virtual bool isDeclaration() { return true; }
 
-		Statement *getMember(unicode_string id) { return _decls[id]; }
-		void addMember(Statement *decl);
+		Statement *getMember(unicode_string id) { return _decls[id].first; }
+		Type *getMemberType(unicode_string id) { return _decls[id].second; }
+		void addMember(unicode_string name, Statement * decl, Type * type);
 	};
 
 	/***************** ExpressionStatements *****************/

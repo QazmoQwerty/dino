@@ -319,12 +319,16 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		auto type = left->getType();
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
+
 		if (type->getExactType() == EXACT_PROPERTY && ((DST::PropertyType*)type)->hasGet())
 			type = ((DST::PropertyType*)type)->getReturn();
-		if (type->getExactType() != EXACT_BASIC)
-			throw DinoException("Expression must have class type", EXT_GENERAL, node->getLine());
 
-		auto memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getTypeDecl()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+		DST::Type *memberType = NULL;
+		if (type->getExactType() == EXACT_BASIC)
+			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getTypeDecl()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+		else if (type->getExactType() == EXACT_NAMESPACE)
+			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)
 			throw DinoException("Unkown identifier", EXT_GENERAL, node->getLine());
@@ -416,7 +420,24 @@ DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node
 	_variables[currentScope()][decl->getName()] = new DST::NamespaceType(decl);
 	enterBlock();
 	for (auto i : node->getStatement()->getStatements())
-		decl->addMember(decorate(i));
+	{
+		auto d = decorate(i);
+		unicode_string name;
+		
+		switch (d->getStatementType())
+		{
+		case ST_NAMESPACE_DECLARATION: 	name = ((DST::NamespaceDeclaration*)d)->getName(); break;
+		case ST_PROPERTY_DECLARATION:  	name = ((DST::PropertyDeclaration*)d)->getName(); break;
+		case ST_FUNCTION_DECLARATION:  	name = ((DST::FunctionDeclaration*)d)->getVarDecl()->getVarId(); break;
+			// 	case ST_INTERFACE_DECLARATION: TODO
+		case ST_VARIABLE_DECLARATION:  	name = ((DST::VariableDeclaration*)d)->getVarId(); break;
+		case ST_TYPE_DECLARATION: 		name = ((DST::TypeDeclaration*)d)->getName(); break;
+		default: throw DinoException("Expected a declaration", EXT_GENERAL, d->getLine());
+		}
+
+		decl->addMember(name, d, _variables[currentScope()][name]);
+	}
+		
 	leaveBlock();
 	return decl;
 }
