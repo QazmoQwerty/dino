@@ -67,6 +67,8 @@ int main(int argc, char *argv[])
 		auto lexed = Lexer::lex(str);
 		auto vec = Preprocessor::preprocess(lexed);
 
+		std::cout << "Finished lexing..." << std::endl;
+
 		if (showLexerOutput or true)
 			for (auto i : vec) printToken(i);
 
@@ -76,8 +78,12 @@ int main(int argc, char *argv[])
 		if (outputAstFile)
 			astToFile("AstDisplay.gv", ast, showLineAST);
 
+		std::cout << "Finished parsing..." << std::endl;
+
 		DST::Node* dst = Decorator::decorate(ast);
 		dstToFile("DstDisplay.gv", dst, false);
+
+		std::cout << "Finished decorating..." << std::endl;
 
 		//auto mainFunc = CodeGenerator::startCodeGen(dynamic_cast<DST::StatementBlock*>(dst));
 		//CodeGenerator::execute(mainFunc);

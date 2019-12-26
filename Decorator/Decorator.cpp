@@ -219,11 +219,14 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	auto decl = new DST::VariableDeclaration(node);
 	unicode_string name = node->getVarId();
 	decl->setType(evalType(node->getVarType()));
-	for (int scope = currentScope(); scope >= 0; scope--)
+
+	if (_variables[currentScope()].count(name))
+		throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
+	/*for (int scope = currentScope(); scope >= 0; scope--)
 	{
 		if (_variables[scope].count(name))
 			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
-	}
+	}*/
 	_variables[currentScope()][name] = decl->getType();
 	return decl;
 }
