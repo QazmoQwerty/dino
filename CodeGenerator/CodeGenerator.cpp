@@ -203,7 +203,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
                 
         return _builder.CreateCall(funcPtr, args, "calltmp");
     }
-
+    return NULL;
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)

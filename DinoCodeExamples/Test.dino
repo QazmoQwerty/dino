@@ -19,7 +19,7 @@ int x := a(10)*/
 namespace Foo1 {
     int a
 
-    namespace Foo2 {
+    /*namespace Foo2 {
         int a
         int b
 
@@ -28,5 +28,5 @@ namespace Foo1 {
         }
     }
 
-    int C: get: return a + 10
+    int C: get: return a + 10*/
 }

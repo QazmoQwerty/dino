@@ -224,6 +224,7 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
 		
 	_variables[currentScope()][name] = decl->getType();
+	std::cout << "got here" << std::endl;
 	return decl;
 }
 
@@ -411,8 +412,11 @@ DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node
 	auto decl = new DST::NamespaceDeclaration(node);
 	_variables[currentScope()][decl->getName()] = new DST::NamespaceType(decl);
 	enterBlock();
-	for (auto i : node->getStatement()->getStatements())
+	for (auto i : node->getStatement()->getStatements()) {
+		std::cout << "got here too11" << std::endl;
 		decl->addMember(decorate(i));
+	}
+	std::cout << "got here too112" << std::endl;
 	leaveBlock();
 	return decl;
 }
