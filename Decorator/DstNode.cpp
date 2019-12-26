@@ -151,6 +151,20 @@ vector<DST::Node*> DST::NamespaceDeclaration::getChildren()
 	return v;
 }
 
+void DST::NamespaceDeclaration::addMember(Statement * decl)
+{
+	switch (decl->getStatementType())
+	{
+	case ST_NAMESPACE_DECLARATION: 	_decls[((NamespaceDeclaration*)decl)->getName()] = decl; break;
+	case ST_PROPERTY_DECLARATION:  	_decls[((PropertyDeclaration*)decl)->getName()] = decl; break;
+	case ST_FUNCTION_DECLARATION:  	_decls[((FunctionDeclaration*)decl)->getVarDecl()->getVarId()] = decl; break;
+		// 	case ST_INTERFACE_DECLARATION: 	_decls[((InterfaceDeclaration*)decl)->getName()] 	= decl; break;
+	case ST_VARIABLE_DECLARATION:  	_decls[((VariableDeclaration*)decl)->getVarId()] = decl; break;
+	case ST_TYPE_DECLARATION: 		_decls[((TypeDeclaration*)decl)->getName()] = decl; break;
+	default: throw DinoException("Expected a declaration", EXT_GENERAL, decl->getLine());
+	}
+}
+
 vector<DST::Node*> DST::IfThenElse::getChildren()
 {
 	vector<Node*> v;
@@ -278,16 +292,18 @@ bool DST::TypeList::equals(Type * other)
 	auto othr = (TypeList*)other;
 	if (_types.size() != othr->_types.size())
 		return false;
-	for (int i = 0; i < _types.size(); i++)
+	for (unsigned int i = 0; i < _types.size(); i++)
 		if (!_types[i]->equals(othr->_types[i]))
 			return false;
 	return true;
 }
 
+DST::FunctionDeclaration::~FunctionDeclaration() { if (_base) delete _base; if (_decl) delete _decl; if (_content) delete _content; _parameters.clear(); }
+
 string DST::TypeList::toShortString()
 {
 	string str = "";
-	for (int i = 0; i < _types.size(); i++)
+	for (unsigned int i = 0; i < _types.size(); i++)
 	{
 		if (i > 0)
 			str += ", ";
@@ -322,6 +338,8 @@ vector<DST::Node*> DST::ArrayType::getChildren()
 	return vector<Node*>();
 }
 
+DST::FunctionLiteral::~FunctionLiteral() { if (_base) delete _base; if (_type) delete _type; if (_content) delete _content; _parameters.clear(); }
+
 vector<DST::Node*> DST::FunctionLiteral::getChildren()
 {
 	vector<Node*> v;
@@ -354,3 +372,7 @@ void * DST::Literal::getValue()
 		default: return NULL;
 	}
 }
+
+DST::TypeSpecifierType::~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; }
+
+DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }

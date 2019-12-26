@@ -136,7 +136,7 @@ namespace DST
 			TypeDeclaration *_typeDecl;
 		public:
 			TypeSpecifierType(DST::TypeDeclaration *typeDecl) : Type(NULL), _typeDecl(typeDecl) {}
-			virtual ~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; }
+			virtual ~TypeSpecifierType();
 			virtual ExactType getExactType() { return EXACT_SPECIFIER; };
 			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
@@ -152,7 +152,7 @@ namespace DST
 			NamespaceDeclaration *_decl;
 		public:
 			NamespaceType(DST::NamespaceDeclaration *decl) : Type(NULL), _decl(decl) {}
-			virtual ~NamespaceType() { if (_decl) delete _decl; }
+			virtual ~NamespaceType();
 			virtual ExactType getExactType() { return EXACT_NAMESPACE; };
 			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
@@ -418,7 +418,7 @@ namespace DST
 
 	public:
 		FunctionLiteral(AST::Function* base) : _base(base) {}
-		virtual ~FunctionLiteral() { if (_base) delete _base; if (_type) delete _type; if(_content) delete _content; _parameters.clear(); }
+		virtual ~FunctionLiteral();
 		void setType(FunctionType *type) { _type = type; }
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
@@ -665,7 +665,7 @@ namespace DST
 
 	public:
 		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl){};
-		virtual ~FunctionDeclaration() { if (_base) delete _base; if (_decl) delete _decl; if (_content) delete _content; _parameters.clear(); } 
+		virtual ~FunctionDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>"; };
@@ -696,6 +696,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
 		virtual string toString() { return "<PropertyDeclaration>\\n" + _type->toShortString() + " " + _base->getVarDecl()->getVarId().to_string(); };
 		virtual vector<Node*> getChildren();
+		unicode_string getName() { return _base->getVarDecl()->getVarId(); }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 		unicode_string getPropId() { return _base->getVarDecl()->getVarId(); }
 		/*void setGet(Statement* get) { _get = get; }
@@ -720,36 +721,7 @@ namespace DST
 		virtual bool isDeclaration() { return true; }
 
 		Statement *getMember(unicode_string id) { return _decls[id]; }
-		void addMember(Statement *decl) {
-						std::cout << "got here too1!" << std::endl;
-			unicode_string varid;
-			// switch(decl->getStatementType())
-			// {
-			// 	case ST_NAMESPACE_DECLARATION: 	_decls[((AST::NamespaceDeclaration*)decl)->getName()] 	= decl; break;
-			// 	case ST_PROPERTY_DECLARATION:  	_decls[((AST::PropertyDeclaration*)	decl)->getVarDecl()->getVarId()] = decl; break;
-			// 	case ST_FUNCTION_DECLARATION:  	_decls[((AST::FunctionDeclaration*)	decl)->getVarDecl()->getVarId()] = decl; break;
-			// 	case ST_INTERFACE_DECLARATION: 	_decls[((AST::InterfaceDeclaration*)decl)->getName()] 	= decl; break;
-			// 	case ST_VARIABLE_DECLARATION:  	_decls[((AST::VariableDeclaration*)	decl)->getVarId()] 	= decl; break;
-			// 	case ST_TYPE_DECLARATION: 		_decls[((AST::TypeDeclaration*)		decl)->getName()] 	= decl; break;
-			// 	default: throw DinoException("Expected a declaration", EXT_GENERAL, decl->getLine());
-			// }
-
-			switch(decl->getStatementType())
-			{
-				case ST_NAMESPACE_DECLARATION: 	varid = ((AST::NamespaceDeclaration*)decl)->getName();
-				case ST_PROPERTY_DECLARATION:  	varid = ((AST::PropertyDeclaration*)	decl)->getVarDecl()->getVarId();
-				case ST_FUNCTION_DECLARATION:  	varid = ((AST::FunctionDeclaration*)	decl)->getVarDecl()->getVarId();
-				case ST_INTERFACE_DECLARATION: 	varid = ((AST::InterfaceDeclaration*)decl)->getName();
-				case ST_VARIABLE_DECLARATION:  	varid = ((AST::VariableDeclaration*)	decl)->getVarId();
-				case ST_TYPE_DECLARATION: 		varid = ((AST::TypeDeclaration*)		decl)->getName();
-				default: throw DinoException("Expected a declaration", EXT_GENERAL, decl->getLine());
-			}
-
-
-			std::cout << "got here too!" << std::endl;
-			_decls[varid] = decl;
-			std::cout << "got here too too!" << std::endl;
-		}
+		void addMember(Statement *decl);
 	};
 
 	/***************** ExpressionStatements *****************/

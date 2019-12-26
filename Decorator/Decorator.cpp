@@ -220,11 +220,11 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	unicode_string name = node->getVarId();
 	decl->setType(evalType(node->getVarType()));
 	for (int scope = currentScope(); scope >= 0; scope--)
+	{
 		if (_variables[scope].count(name))
 			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
-		
+	}
 	_variables[currentScope()][name] = decl->getType();
-	std::cout << "got here" << std::endl;
 	return decl;
 }
 
@@ -351,7 +351,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				if (!((bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER) ||
 					 (bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(&intType))))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
-				if(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::ArrayType*)bo->getLeft()->getType())->getLength() <= *((int*)((DST::Literal*)(bo->getRight()))->getValue()))
+				if(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::ArrayType*)bo->getLeft()->getType())->getLength() <= *((unsigned int*)((DST::Literal*)(bo->getRight()))->getValue()))
 					throw DinoException("index out of range", EXT_GENERAL, node->getLine());
 				bo->setType(bo->getLeft()->getType()->getType());
 			}
@@ -412,11 +412,8 @@ DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node
 	auto decl = new DST::NamespaceDeclaration(node);
 	_variables[currentScope()][decl->getName()] = new DST::NamespaceType(decl);
 	enterBlock();
-	for (auto i : node->getStatement()->getStatements()) {
-		std::cout << "got here too11" << std::endl;
+	for (auto i : node->getStatement()->getStatements())
 		decl->addMember(decorate(i));
-	}
-	std::cout << "got here too112" << std::endl;
 	leaveBlock();
 	return decl;
 }

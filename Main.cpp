@@ -6,7 +6,7 @@
 #include "Lexer/Preprocessor.h"
 #include "Parser/AstNode.h"
 #include "Other/AstToFile.h"
-#include "CodeGenerator/CodeGenerator.h"
+//#include "CodeGenerator/CodeGenerator.h"
 #include "Parser/Parser.h"
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
@@ -28,7 +28,7 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char *argv[])
 {
-	CodeGenerator::setup();
+	//CodeGenerator::setup();
 
 	std::ifstream t;
 	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
 	try {
 		if (argc <= 1)
-			t = std::ifstream("DinoCodeExamples/Test.dino");
+			t = std::ifstream(/*"DinoCodeExamples/Test.dino"*/"Test.dino");
 		else t = std::ifstream(argv[1]);
 	}
 	catch (exception e) {
@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
 		DST::Node* dst = Decorator::decorate(ast);
 		dstToFile("DstDisplay.gv", dst, false);
 
-		auto mainFunc = CodeGenerator::startCodeGen(dynamic_cast<DST::StatementBlock*>(dst));
-		CodeGenerator::execute(mainFunc);
+		//auto mainFunc = CodeGenerator::startCodeGen(dynamic_cast<DST::StatementBlock*>(dst));
+		//CodeGenerator::execute(mainFunc);
 		//auto irCode = CodeGenerator::codeGen(dynamic_cast<DST::StatementBlock*>(dst)->getStatements()[0]);
 		//irCode->print(llvm::errs());
 		//CodeGenerator::execute((llvm::Function*)irCode);
@@ -92,4 +92,5 @@ int main(int argc, char *argv[])
 
 	//if (argc <= 1)
 	//	system("pause");
+	return 0;
 }
