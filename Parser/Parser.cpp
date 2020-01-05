@@ -273,7 +273,7 @@ AST::Node * Parser::std(Token * token)
 					auto decl = parseStatement();
 					switch (decl->getStatementType())
 					{
-					case(ST_VARIABLE_DECLARATION): node->addProperty(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
+					case(ST_PROPERTY_DECLARATION): node->addProperty(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
 					case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
 					default: throw DinoException("expected property or function declaration", EXT_GENERAL, decl->getLine());
 					}
@@ -285,7 +285,7 @@ AST::Node * Parser::std(Token * token)
 						auto decl = parseStatement();
 						switch (decl->getStatementType())
 						{
-						case(ST_VARIABLE_DECLARATION): node->addProperty(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
+						case(ST_PROPERTY_DECLARATION): node->addProperty(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
 						case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
 						default: throw DinoException("expected property or function declaration", EXT_GENERAL, decl->getLine());
 						}
@@ -432,10 +432,13 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		if (eatOperator(OT_COLON))
 		{
 			auto decl = new AST::PropertyDeclaration(varDecl);
+
+			#define PARSE_INNER_IF_BLOCK (isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN) ? parseInnerBlock() : NULL)
+
 			if (eatOperator(OT_GET))
-				decl->setGet(parseInnerBlock());
+				decl->setGet(PARSE_INNER_IF_BLOCK);
 			else if (eatOperator(OT_SET))
-				decl->setSet(parseInnerBlock());
+				decl->setSet(PARSE_INNER_IF_BLOCK);
 			decl->setLine(token->_line);
 			return decl;
 		}
@@ -445,17 +448,17 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			auto decl = new AST::PropertyDeclaration(varDecl);
 			if (eatOperator(OT_GET))
 			{
-				decl->setGet(parseInnerBlock());
+				decl->setGet(PARSE_INNER_IF_BLOCK);
 				skipLineBreaks();
 				if (eatOperator(OT_SET))
-					decl->setSet(parseInnerBlock());
+					decl->setSet(PARSE_INNER_IF_BLOCK);
 			}
 			else if (eatOperator(OT_SET))
 			{ 
-				decl->setSet(parseInnerBlock());
+				decl->setSet(PARSE_INNER_IF_BLOCK);
 				skipLineBreaks();
 				if (eatOperator(OT_GET))
-					decl->setGet(parseInnerBlock());
+					decl->setGet(PARSE_INNER_IF_BLOCK);
 			}
 			skipLineBreaks();
 			expectOperator(OT_CURLY_BRACES_CLOSE);

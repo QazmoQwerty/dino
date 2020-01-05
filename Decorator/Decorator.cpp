@@ -35,6 +35,77 @@ DST::Node *Decorator::decorate(AST::Node * node)
 	else return decorate(dynamic_cast<AST::Statement*>(node));
 }
 
+DST::NamespaceDeclaration *partA(AST::NamespaceDeclaration *node)
+{
+	auto shallowDecl = new DST::NamespaceDeclaration(node);
+	for (auto i : node->getStatement()->getStatements())
+	{
+		if (i->getStatementType() == ST_NAMESPACE_DECLARATION)
+		{
+			auto decl = (AST::NamespaceDeclaration*)i;
+			auto tempDecl = partA(decl);
+			shallowDecl->addMember(decl->getName(), tempDecl, new DST::NamespaceType(tempDecl));
+		}
+		else if (i->getStatementType() == ST_INTERFACE_DECLARATION)
+		{
+			auto decl = (AST::InterfaceDeclaration*)i;
+			auto tempDecl = new DST::InterfaceDeclaration(decl);
+			shallowDecl->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
+		}
+		else if (i->getStatementType() == ST_TYPE_DECLARATION)
+		{
+			auto decl = (AST::TypeDeclaration*)i;
+			auto tempDecl = new DST::TypeDeclaration(decl);
+			shallowDecl->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
+		}
+	}
+	return shallowDecl;
+}
+
+void partB(DST::NamespaceDeclaration *node)
+{
+	for (auto i : node->getMembers())
+	{
+		if (i.second.first->getStatementType() == ST_NAMESPACE_DECLARATION)
+		{
+			partB((DST::NamespaceDeclaration*)i.second.first);
+		}
+		else if (i.second.first->getStatementType() == ST_INTERFACE_DECLARATION)
+		{
+			auto decl = (DST::InterfaceDeclaration*)i.second.first;
+
+			for (auto i : decl->getBase()->getImplements())
+			{
+
+			}
+
+			//auto tempDecl = new DST::InterfaceDeclaration(decl);
+			//node->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
+		}
+		else if (i.second.first->getStatementType() == ST_TYPE_DECLARATION)
+		{
+			auto decl = (AST::TypeDeclaration*)i.second.first;
+			auto tempDecl = new DST::TypeDeclaration(decl);
+			node->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
+		}
+	}
+}
+
+DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * node)
+{
+	if (node->getStatements()[0]->getStatementType() != ST_NAMESPACE_DECLARATION)
+		throw "everything must be in a namespace!";
+
+	auto mainNs = (AST::NamespaceDeclaration*)node->getStatements()[0];
+
+	auto ns = partA(mainNs);
+
+	
+
+
+	return nullptr;
+}
+
 DST::Expression * Decorator::decorate(AST::Expression * node)
 {
 	if (node == nullptr)
@@ -125,15 +196,17 @@ DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
 	auto decl = new DST::FunctionDeclaration(node, decorate(node->getVarDecl()));
 	for (auto i : node->getParameters())
 		decl->addParameter(decorate(i));
-	decl->setContent(decorate(node->getContent()));
-	if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
-		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
-	leaveBlock();
+
 	auto type = new DST::FunctionType();
 	type->addReturn(decl->getReturnType());	// TODO - functions that return multiple types
 	for (auto i : decl->getParameters())
 		type->addParameter(i->getType());
-	_variables[currentScope()][decl->getVarDecl()->getVarId()] = type;
+	_variables[currentScope() - 1][decl->getVarDecl()->getVarId()] = type;
+
+	decl->setContent(decorate(node->getContent()));
+	if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
+		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+	leaveBlock();
 	return decl;
 }
 
@@ -334,7 +407,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			throw DinoException("Unkown identifier", EXT_GENERAL, node->getLine());
 		//if (!(((AST::Identifier*)node->getRight())->getVarId())[0].isUpper())
 		//	throw DinoException("Cannot access private member", EXT_GENERAL, node->getLine());
-
 		//auto right = new DST::Variable((AST::Identifier*)node->getRight(), memberType);
 		
 		auto access = new DST::MemberAccess(node, left);

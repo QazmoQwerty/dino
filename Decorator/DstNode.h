@@ -144,6 +144,22 @@ namespace DST
 			virtual string toShortString() { return "typeid"; };
 	};
 
+	class InterfaceDeclaration;
+
+	class InterfaceSpecifierType : public Type
+	{
+	private:
+		InterfaceDeclaration *_interfaceDecl;
+	public:
+		InterfaceSpecifierType(DST::InterfaceDeclaration *interfaceDecl) : Type(NULL), _interfaceDecl(interfaceDecl) {}
+		virtual ~InterfaceSpecifierType();
+		virtual ExactType getExactType() { return EXACT_INTERFACE; };
+		virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
+		virtual bool writeable() { return false; }
+		InterfaceDeclaration *getInterfaceDecl() { return _interfaceDecl; }
+		virtual string toShortString() { return "interfaceId"; };
+	};
+
 	class NamespaceDeclaration;
 
 	class NamespaceType : public Type
@@ -630,6 +646,31 @@ namespace DST
 		Expression* getExpression() { return _expression; }
 	};
 
+	class InterfaceDeclaration : public Statement
+	{
+		AST::InterfaceDeclaration *_base;
+		vector<InterfaceDeclaration*> _implements;
+		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> _decls;
+	public:
+		//InterfaceDeclaration(unicode_string name) : _base(NULL) {}
+		InterfaceDeclaration(AST::InterfaceDeclaration *base) : _base(base) {}
+		virtual ~InterfaceDeclaration() { if (_base) delete _base; _decls.clear(); }
+		
+		AST::InterfaceDeclaration *getBase() { return _base; }
+		vector<InterfaceDeclaration*> getImplements() { return _implements; }
+		void addDeclaration(Statement *decl, Type *type);
+		Statement* getDeclaration(unicode_string id) { return _decls[id].first; }
+		Type* getMemberType(unicode_string id) { return _decls[id].second; }
+		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+
+		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual bool isDeclaration() { return true; }
+
+		unicode_string getName() { return _base->getName(); }
+		virtual string toString() { return "<TypeDeclaration>\\n" + getName().to_string(); };
+		virtual vector<Node*> getChildren();
+	};
+
 	class TypeDeclaration : public Statement 
 	{
 		unicode_string _name;
@@ -719,6 +760,8 @@ namespace DST
 		unicode_string getName() { return _base->getName(); }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 		virtual bool isDeclaration() { return true; }
+
+		unordered_map<unicode_string, std::pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
 
 		Statement *getMember(unicode_string id) { return _decls[id].first; }
 		Type *getMemberType(unicode_string id) { return _decls[id].second; }

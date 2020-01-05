@@ -14,6 +14,8 @@ public:
 	static void clear();
 
 private:
+	static DST::NamespaceDeclaration *decorateProgram(AST::StatementBlock* node);
+
 	static DST::Expression *decorate(AST::Expression *node);
 	static DST::Statement *decorate(AST::Statement *node);
 

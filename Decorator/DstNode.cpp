@@ -156,6 +156,28 @@ void DST::NamespaceDeclaration::addMember(unicode_string name, Statement * decl,
 	_decls[name] = std::make_pair(decl, type);
 }
 
+void DST::InterfaceDeclaration::addDeclaration(Statement * decl, Type * type)
+{
+	unicode_string varId;
+	switch (decl->getStatementType())
+	{
+	case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
+	case ST_VARIABLE_DECLARATION: varId = ((VariableDeclaration*)decl)->getVarId(); break;
+	default: throw DinoException("Interface declarations may only specify property, and function declarations.", EXT_GENERAL, decl->getLine());
+	}
+	if (_decls.count(varId))
+		throw DinoException("Multiple members of same name are not allowed", EXT_GENERAL, decl->getLine());
+	_decls[varId] = std::make_pair(decl, type);
+}
+
+vector<DST::Node*> DST::InterfaceDeclaration::getChildren()
+{
+	vector<Node*> v;
+	for (auto i : _decls)
+		v.push_back(i.second.first);
+	return v;
+}
+
 vector<DST::Node*> DST::IfThenElse::getChildren()
 {
 	vector<Node*> v;
@@ -367,3 +389,9 @@ void * DST::Literal::getValue()
 DST::TypeSpecifierType::~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; }
 
 DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }
+
+DST::InterfaceSpecifierType::~InterfaceSpecifierType()
+{
+	if (_interfaceDecl)
+		delete _interfaceDecl;
+}

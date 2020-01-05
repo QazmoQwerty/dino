@@ -383,11 +383,13 @@ namespace AST
 		StatementBlock* getContent() { return _content; }
 	};
 
+	class PropertyDeclaration;
+
 	class InterfaceDeclaration : public Statement
 	{
 		unicode_string _name;
 		vector<unicode_string> _implements;
-		vector<VariableDeclaration*> _properties;
+		vector<PropertyDeclaration*> _properties;
 		vector<FunctionDeclaration*> _functions;
 
 	public:
@@ -400,12 +402,12 @@ namespace AST
 
 		unicode_string getName() { return _name; }
 		vector<unicode_string> getImplements() { return _implements; }
-		vector<VariableDeclaration*> getProperties() { return _properties; }
+		vector<PropertyDeclaration*> getProperties() { return _properties; }
 		vector<FunctionDeclaration*> getFunctions() { return _functions; }
 
 		void setName(unicode_string id) { _name = id; }
 		void addImplements(unicode_string interface) { _implements.push_back(interface); }
-		void addProperty(VariableDeclaration* property) { _properties.push_back(property); }
+		void addProperty(PropertyDeclaration* property) { _properties.push_back(property); }
 		void addFunction(FunctionDeclaration* function);
 	};
 
@@ -414,18 +416,22 @@ namespace AST
 		VariableDeclaration* _decl;
 		StatementBlock* _get;
 		StatementBlock* _set;
+		bool _hasGet;
+		bool _hasSet;
 	public:
-		PropertyDeclaration(VariableDeclaration* decl) : _get(NULL), _set(NULL) { _decl = decl; };
+		PropertyDeclaration(VariableDeclaration* decl) : _get(NULL), _set(NULL), _hasGet(false), _hasSet(false) { _decl = decl; };
 		virtual ~PropertyDeclaration() { if (_decl) delete _decl; if (_get) delete _get; if (_set) delete _set;}
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
-		virtual string toString() { return "<PropertyDeclaration>"; };
+		virtual string toString() { return string("<PropertyDeclaration>\\n") + (_hasGet && _hasSet ? "get | set" : _hasSet ? "set" : _hasGet ? "get" : ""); };
 		virtual vector<Node*> getChildren();
 
-		void setGet(StatementBlock* get) { _get = get; }
-		void setSet(StatementBlock* set) { _set = set; }
+		void setGet(StatementBlock* get) { _get = get; _hasGet = true; }
+		void setSet(StatementBlock* set) { _set = set; _hasSet = true; }
+		bool hasGet() { return _hasGet; }
+		bool hasSet() { return _hasSet; }
 		StatementBlock* getGet() { return _get; }
-		StatementBlock* getSet() { return _set; }
+		StatementBlock* getSet() { return _get; }
 		VariableDeclaration* getVarDecl() { return _decl; }
 	};
 
