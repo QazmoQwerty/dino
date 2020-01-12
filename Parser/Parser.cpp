@@ -44,13 +44,19 @@ unicode_string Parser::expectIdentifier()
 	else throw DinoException("expected an identifier.", EXT_GENERAL, peekToken()->_line);
 }
 
-vector<unicode_string> Parser::expectIdentifierList()
+AST::ExpressionList * Parser::expectIdentifierList()
 {
-	vector<unicode_string> v;
-	v.push_back(expectIdentifier());
-	while (eatOperator(OT_COMMA))
-		v.push_back(expectIdentifier());
-	return v;
+	auto l = new AST::ExpressionList();
+	l->setLine(peekToken()->_line);
+	do
+	{
+		auto node = parseExpression(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
+		if (node && (node->getExpressionType() == ET_IDENTIFIER ||
+			(node->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)node)->getOperator()._type == OT_PERIOD)))
+			l->addExpression(node);
+		else throw DinoException("Expected an identifier or member access", EXT_GENERAL, peekToken()->_line);
+	} while (eatOperator(OT_COMMA));
+	return l;
 }
 
 AST::Expression * Parser::convertToExpression(AST::Node * node)
@@ -147,7 +153,6 @@ AST::Node * Parser::parse(int lastPrecedence)
 	return left;
 }
 
-
 AST::Node * Parser::std(Token * token)
 {
 	if (token->_type == TT_OPERATOR && OperatorsMap::isKeyword(((OperatorToken*)token)->_operator))
@@ -238,11 +243,12 @@ AST::Node * Parser::std(Token * token)
 				auto node = new AST::TypeDeclaration();
 				node->setName(expectIdentifier());
 				if (eatOperator(OT_IS))
-				{
+					node->setInterfaces(expectIdentifierList());
+				/*{
 					node->addInterface(expectIdentifier());
 					while (eatOperator(OT_COMMA))
 						node->addInterface(expectIdentifier());
-				}
+				}*/
 				expectOperator(OT_CURLY_BRACES_OPEN);
 				while (!eatOperator(OT_CURLY_BRACES_CLOSE))
 				{
@@ -263,11 +269,20 @@ AST::Node * Parser::std(Token * token)
 				auto node = new AST::InterfaceDeclaration();
 				node->setName(expectIdentifier());
 				if (eatOperator(OT_IS))
-				{
-					node->addImplements(expectIdentifier());
-					while (eatOperator(OT_COMMA))
-						node->addImplements(expectIdentifier());
-				}
+					node->setImplements(expectIdentifierList());
+				/*{
+					auto implements = parseExpression();
+					if (implements == nullptr)
+						throw DinoException("Expected an Expression", EXT_GENERAL, token->_line);
+					if (implements->getExpressionType() == ET_LIST)
+						node->setImplements((AST::ExpressionList*)implements);
+					else
+					{
+						auto list = new AST::ExpressionList();
+						list->addExpression(implements);
+						node->setImplements(list);
+					}
+				}*/
 				if (eatOperator(OT_COLON))
 				{
 					auto decl = parseStatement();

@@ -111,22 +111,28 @@ void AST::Function::addParameters(Expression * parameters)
 	}
 }
 
+AST::InterfaceDeclaration::~InterfaceDeclaration() 
+{
+	delete _implements; _properties.clear(); _functions.clear(); 
+}
+
 string AST::InterfaceDeclaration::toString()
 {
 	string str = "<InterfaceDeclaration>\\n" + _name.to_string();
-	for (unsigned int i = 0; i < _implements.size(); i++)
+	/*for (unsigned int i = 0; i < _implements.size(); i++)
 	{
 		if (i == 0) str += " is ";
 		str += _implements[i].to_string();
 		if (i < _implements.size() - 1)
 			str += ", ";
-	}
+	}*/
 	return str;
 }
 
 vector<AST::Node*> AST::InterfaceDeclaration::getChildren()
 {
 	vector<Node*> v;
+	v.push_back(_implements);
 	for (auto i : _properties)
 		v.push_back(i);
 	for (auto i : _functions)
@@ -148,22 +154,28 @@ vector<AST::Node*> AST::UnaryOperationStatement::getChildren()
 	return v;
 }
 
+AST::TypeDeclaration::~TypeDeclaration() 
+{ 
+	delete _interfaces; _variableDeclarations.clear(); _functionDeclarations.clear(); _propertyDeclarations.clear();
+}
+
 string AST::TypeDeclaration::toString()
 {
 	string str = "<TypeDeclaration>\\n" + _name.to_string();
-	for (unsigned int i = 0; i < _interfaces.size(); i++)
+	/*for (unsigned int i = 0; i < _interfaces.size(); i++)
 	{
 		if (i == 0) str += " is ";
 		str += _interfaces[i].to_string();
 		if (i < _interfaces.size() - 1)
 			str += ", ";
-	}
+	}*/
 	return str;
 }
 
 vector<AST::Node*> AST::TypeDeclaration::getChildren()
 {
 	vector<Node*> v;
+	v.push_back(_interfaces);
 	for (auto i : _variableDeclarations)
 		v.push_back(i);
 	for (auto i : _functionDeclarations)

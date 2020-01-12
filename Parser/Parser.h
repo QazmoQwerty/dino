@@ -24,7 +24,7 @@ public:
 	void expectLineBreak();
 	void expectOperator(OperatorType ot);
 	unicode_string expectIdentifier();
-	vector<unicode_string> expectIdentifierList();
+	AST::ExpressionList * expectIdentifierList();
 
 	AST::Expression* convertToExpression(AST::Node* node);
 	AST::Statement* convertToStatement(AST::Node* node);

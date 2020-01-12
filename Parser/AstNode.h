@@ -384,29 +384,31 @@ namespace AST
 	};
 
 	class PropertyDeclaration;
+	class ExpressionList;
 
 	class InterfaceDeclaration : public Statement
 	{
 		unicode_string _name;
-		vector<unicode_string> _implements;
+		ExpressionList* _implements;
 		vector<PropertyDeclaration*> _properties;
 		vector<FunctionDeclaration*> _functions;
 
 	public:
-		InterfaceDeclaration() {};
-		virtual ~InterfaceDeclaration() { _implements.clear(); _properties.clear(); _functions.clear(); }
+		InterfaceDeclaration() : _implements(NULL) {};
+		virtual ~InterfaceDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
 		unicode_string getName() { return _name; }
-		vector<unicode_string> getImplements() { return _implements; }
+		ExpressionList* getImplements() { return _implements; }
 		vector<PropertyDeclaration*> getProperties() { return _properties; }
 		vector<FunctionDeclaration*> getFunctions() { return _functions; }
 
+		void setImplements(ExpressionList *implements) { _implements = implements; }
 		void setName(unicode_string id) { _name = id; }
-		void addImplements(unicode_string interface) { _implements.push_back(interface); }
+		//void addImplements(Expression *interface) { _implements->addExpression(interface); }
 		void addProperty(PropertyDeclaration* property) { _properties.push_back(property); }
 		void addFunction(FunctionDeclaration* function);
 	};
@@ -438,27 +440,28 @@ namespace AST
 	class TypeDeclaration : public Statement
 	{
 		unicode_string _name;
-		vector<unicode_string> _interfaces;
+		ExpressionList* _interfaces;
 		vector<VariableDeclaration*> _variableDeclarations;
 		vector<FunctionDeclaration*> _functionDeclarations;
 		vector<PropertyDeclaration*> _propertyDeclarations;
 
 	public:
 		TypeDeclaration() {};
-		virtual ~TypeDeclaration() { _interfaces.clear(); _variableDeclarations.clear(); _functionDeclarations.clear(); _propertyDeclarations.clear(); }
+		virtual ~TypeDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
 		unicode_string getName() { return _name; }
-		vector<unicode_string> getInterfaces() { return _interfaces; }
+		ExpressionList* getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
 		vector<FunctionDeclaration*> getFunctionDeclarations() { return _functionDeclarations; }
 		vector<PropertyDeclaration*> getPropertyDeclarations() { return _propertyDeclarations; }
 
 		void setName(unicode_string id) { _name = id; }
-		void addInterface(unicode_string interface) { _interfaces.push_back(interface); }
+		void setInterfaces(ExpressionList* interfaces) { _interfaces = interfaces; }
+		//void addInterface(unicode_string interface) { _interfaces.push_back(interface); }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }

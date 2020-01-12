@@ -74,10 +74,10 @@ void partB(DST::NamespaceDeclaration *node)
 		{
 			auto decl = (DST::InterfaceDeclaration*)i.second.first;
 
-			for (auto i : decl->getBase()->getImplements())
+			/*for (auto i : decl->getBase()->getImplements())
 			{
 
-			}
+			}*/
 
 			//auto tempDecl = new DST::InterfaceDeclaration(decl);
 			//node->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
