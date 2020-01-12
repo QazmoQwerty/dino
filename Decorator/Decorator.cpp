@@ -1,6 +1,7 @@
 #include "Decorator.h"
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
+stack<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
@@ -16,6 +17,7 @@ void Decorator::setup()
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
+	//_currentNamespace = NULL
 }
 
 DST::TypeSpecifierType *Decorator::getPrimitiveType(std::string name)
@@ -35,7 +37,7 @@ DST::Node *Decorator::decorate(AST::Node * node)
 	else return decorate(dynamic_cast<AST::Statement*>(node));
 }
 
-DST::NamespaceDeclaration *partA(AST::NamespaceDeclaration *node)
+DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
 {
 	auto shallowDecl = new DST::NamespaceDeclaration(node);
 	for (auto i : node->getStatement()->getStatements())
@@ -62,8 +64,9 @@ DST::NamespaceDeclaration *partA(AST::NamespaceDeclaration *node)
 	return shallowDecl;
 }
 
-void partB(DST::NamespaceDeclaration *node)
+void Decorator::partB(DST::NamespaceDeclaration *node)
 {
+	_currentNamespace.push(node);
 	for (auto i : node->getMembers())
 	{
 		if (i.second.first->getStatementType() == ST_NAMESPACE_DECLARATION)
@@ -73,22 +76,29 @@ void partB(DST::NamespaceDeclaration *node)
 		else if (i.second.first->getStatementType() == ST_INTERFACE_DECLARATION)
 		{
 			auto decl = (DST::InterfaceDeclaration*)i.second.first;
-
-			/*for (auto i : decl->getBase()->getImplements())
-			{
-
-			}*/
-
-			//auto tempDecl = new DST::InterfaceDeclaration(decl);
-			//node->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
+			if (decl->getBase()->getImplements())
+				for (auto i : decl->getBase()->getImplements()->getExpressions())
+				{
+					auto dec = decorate(i);
+					if (dec->getType()->getExactType() != EXACT_INTERFACE)
+						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
+					decl->addImplements(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
+				}
 		}
 		else if (i.second.first->getStatementType() == ST_TYPE_DECLARATION)
 		{
-			auto decl = (AST::TypeDeclaration*)i.second.first;
-			auto tempDecl = new DST::TypeDeclaration(decl);
-			node->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
+			auto decl = (DST::TypeDeclaration*)i.second.first;
+			if (decl->getBase()->getInterfaces())
+				for (auto i : decl->getBase()->getInterfaces()->getExpressions())
+				{
+					auto dec = decorate(i);
+					if (dec->getType()->getExactType() != EXACT_SPECIFIER)
+						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
+					decl->addInterface(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
+				}
 		}
 	}
+	_currentNamespace.pop();
 }
 
 DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * node)
@@ -99,11 +109,9 @@ DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * nod
 	auto mainNs = (AST::NamespaceDeclaration*)node->getStatements()[0];
 
 	auto ns = partA(mainNs);
+	partB(ns);
 
-	
-
-
-	return nullptr;
+	return ns;
 }
 
 DST::Expression * Decorator::decorate(AST::Expression * node)
@@ -181,6 +189,16 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 {
 	unicode_string name = node->getVarId();
 	
+	if (auto t = _currentNamespace.top()->getMemberType(name))
+	{
+		return new DST::Variable(node, t);
+		//switch (t->getExactType())
+		//{
+		////case EXACT_NAMESPACE: return new DST::NAME
+		//}
+	}
+		
+
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (auto var = _variables[scope][name]) {
 			if (var->getExactType() == EXACT_SPECIFIER)

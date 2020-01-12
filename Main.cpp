@@ -80,7 +80,8 @@ int main(int argc, char *argv[])
 
 		std::cout << "Finished parsing..." << std::endl;
 
-		DST::Node* dst = Decorator::decorate(ast);
+		//DST::Node* dst = Decorator::decorate(ast);
+		DST::Node* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
 		dstToFile("DstDisplay.gv", dst, false);
 
 		std::cout << "Finished decorating..." << std::endl;

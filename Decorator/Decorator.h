@@ -3,7 +3,9 @@
 #include "DstNode.h"
 
 #define CONDITION_TYPE unicode_string("bool")
+#include <stack>
 
+using std::stack;
 using std::unordered_map;
 
 class Decorator
@@ -12,9 +14,12 @@ public:
 	static void setup();
 	static DST::Node *decorate(AST::Node *node);
 	static void clear();
+	static DST::NamespaceDeclaration *decorateProgram(AST::StatementBlock* node);
 
 private:
-	static DST::NamespaceDeclaration *decorateProgram(AST::StatementBlock* node);
+	static DST::NamespaceDeclaration *partA(AST::NamespaceDeclaration *node);
+	static void partB(DST::NamespaceDeclaration *node);
+
 
 	static DST::Expression *decorate(AST::Expression *node);
 	static DST::Statement *decorate(AST::Statement *node);
@@ -52,6 +57,7 @@ private:
 	static bool isCondition(DST::Expression *node);
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
+	static stack<DST::NamespaceDeclaration*> _currentNamespace;
 	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;
 

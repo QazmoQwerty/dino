@@ -658,16 +658,17 @@ namespace DST
 		
 		AST::InterfaceDeclaration *getBase() { return _base; }
 		vector<InterfaceDeclaration*> getImplements() { return _implements; }
+		void addImplements(InterfaceDeclaration *implement) { _implements.push_back(implement); }
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id) { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
-		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual bool isDeclaration() { return true; }
 
 		unicode_string getName() { return _base->getName(); }
-		virtual string toString() { return "<TypeDeclaration>\\n" + getName().to_string(); };
+		virtual string toString() { return "<InterfaceDeclaration>\\n" + getName().to_string() + "\\nimplements " + std::to_string(_implements.size()); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -675,23 +676,27 @@ namespace DST
 	{
 		unicode_string _name;
 		AST::TypeDeclaration *_base;
-		//vector<InterfaceDeclaration*> _interfaces;
+		vector<InterfaceDeclaration*> _interfaces;
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> _decls;
 	public:
 		TypeDeclaration(unicode_string name) : _name(name), _base(NULL) {}
 		TypeDeclaration(AST::TypeDeclaration *base) : _name(base->getName()), _base(base) {}
 		virtual ~TypeDeclaration() { if (_base) delete _base; _decls.clear(); } 
 
+		AST::TypeDeclaration *getBase() { return _base; }
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
+		vector<InterfaceDeclaration*> getInterface() { return _interfaces; }
+		void addInterface(InterfaceDeclaration *interface) { _interfaces.push_back(interface); }
+
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
 		virtual bool isDeclaration() { return true; }
 
 		unicode_string getName() { return _name; }
-		virtual string toString() { return "<TypeDeclaration>\\n" + _name.to_string(); };
+		virtual string toString() { return "<TypeDeclaration>\\n" + _name.to_string() + "\\nimplements " + std::to_string(_interfaces.size()); };
 		virtual vector<Node*> getChildren();
 	};
 
@@ -764,7 +769,7 @@ namespace DST
 		unordered_map<unicode_string, std::pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
 
 		Statement *getMember(unicode_string id) { return _decls[id].first; }
-		Type *getMemberType(unicode_string id) { return _decls[id].second; }
+		Type *getMemberType(unicode_string id) { if (_decls.count(id) == 0) return NULL; return _decls[id].second; }
 		void addMember(unicode_string name, Statement * decl, Type * type);
 	};
 
