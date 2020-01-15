@@ -619,7 +619,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
 
-
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))
 	{
 		case RT_BOOLEAN: 

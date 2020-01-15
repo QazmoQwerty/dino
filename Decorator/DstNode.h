@@ -364,7 +364,7 @@ namespace DST
 
 	public:
 		BinaryOperation(AST::BinaryOperation *base) : _base(base) {};
-		BinaryOperation(AST::BinaryOperation *base, Expression *left, Expression *right) : _base(base), _left(left), _right(right) {};
+		BinaryOperation(AST::BinaryOperation *base, Expression *left, Expression *right);
 		virtual ~BinaryOperation() { if (_base) delete _base; if (_type) delete _type; 
 							if (_left) delete _left; if (_right) delete _right; }
 		void setType(Type *type) { _type = type; };

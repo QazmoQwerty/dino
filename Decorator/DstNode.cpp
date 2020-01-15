@@ -21,6 +21,14 @@ vector<DST::Node*> DST::Variable::getChildren()
 	return v;
 }
 
+DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
+{
+	if (!_left->getType()->readable())
+		throw DinoException("left value is write-only", EXT_GENERAL, _left->getLine());
+	if (!_right->getType()->readable())
+		throw DinoException("right value is write-only", EXT_GENERAL, _left->getLine());
+};
+
 vector<DST::Node*> DST::BinaryOperation::getChildren()
 {
 	vector<Node*> v;
