@@ -766,6 +766,7 @@ namespace DST
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 		virtual bool isDeclaration() { return true; }
 
+		AST::NamespaceDeclaration *getBase() { return _base; }
 		unordered_map<unicode_string, std::pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
 
 		Statement *getMember(unicode_string id) { return _decls[id].first; }

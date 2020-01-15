@@ -1,7 +1,7 @@
 #include "Decorator.h"
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
-stack<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
+vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
@@ -66,7 +66,7 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
 
 void Decorator::partB(DST::NamespaceDeclaration *node)
 {
-	_currentNamespace.push(node);
+	_currentNamespace.push_back(node);
 	for (auto i : node->getMembers())
 	{
 		switch (i.second.first->getStatementType())
@@ -104,12 +104,12 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 			break;
 		}
 	}
-	_currentNamespace.pop();
+	_currentNamespace.pop_back();
 }
 
 void Decorator::partC(DST::NamespaceDeclaration *node)
 {
-	_currentNamespace.push(node);
+	_currentNamespace.push_back(node);
 	for (auto i : node->getMembers())
 	{
 		switch (i.second.first->getStatementType())
@@ -144,32 +144,75 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 		case ST_TYPE_DECLARATION:
 		{
 			auto decl = (DST::TypeDeclaration*)i.second.first;
-			// TODO
+			for (auto var : decl->getBase()->getVariableDeclarations())
+			{
+				auto varDecl = new DST::VariableDeclaration(var);
+				varDecl->setType(evalType(var->getVarType()));
+				decl->addDeclaration(varDecl, varDecl->getType());
+			}
+			for (auto func : decl->getBase()->getFunctionDeclarations())
+			{
+				enterBlock();
+				auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
+				for (auto param : func->getParameters())
+					funcDecl->addParameter(decorate(param));
+				auto type = new DST::FunctionType();
+				type->addReturn(funcDecl->getReturnType());	// TODO - functions that return multiple types
+				for (auto param : funcDecl->getParameters())
+					type->addParameter(param->getType());
+				decl->addDeclaration(funcDecl, type);
+				leaveBlock();
+			}
+			for (auto prop : decl->getBase()->getPropertyDeclarations())
+			{
+				auto retType = evalType(prop->getVarDecl()->getVarType());
+				auto type = new DST::PropertyType(retType, prop->getGet(), prop->getSet());
+				decl->addDeclaration(new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
+			}
 			break;
 		}
+		}
+	}
+	for (auto i : node->getBase()->getStatement()->getStatements())
+	{
+		switch (i->getStatementType())
+		{
 		case ST_FUNCTION_DECLARATION:
 		{
-			auto decl = (DST::FunctionDeclaration*)i.second.first;
-			// TODO
+			auto func = (AST::FunctionDeclaration*)i;
+			enterBlock();
+			auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
+			for (auto param : func->getParameters())
+				funcDecl->addParameter(decorate(param));
+			leaveBlock();
+			auto type = new DST::FunctionType();
+			type->addReturn(funcDecl->getReturnType());	// TODO - functions that return multiple types
+			for (auto param : funcDecl->getParameters())
+				type->addParameter(param->getType());
+			node->addMember(func->getVarDecl()->getVarId(), funcDecl, type);
 			break;
 		}
 		case ST_PROPERTY_DECLARATION:
 		{
-			auto decl = (DST::PropertyDeclaration*)i.second.first;
-			// TODO
+			auto prop = (AST::PropertyDeclaration*)i;
+			auto retType = evalType(prop->getVarDecl()->getVarType());
+			auto type = new DST::PropertyType(retType, prop->getGet(), prop->getSet());
+			node->addMember(prop->getVarDecl()->getVarId(), new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
 			break;
 		}
 		case ST_VARIABLE_DECLARATION:
 		{
-			auto decl = (DST::VariableDeclaration*)i.second.first;
-			// TODO
+			auto decl = (AST::VariableDeclaration*)i;
+			auto varDecl = new DST::VariableDeclaration(decl);
+			varDecl->setType(evalType(decl->getVarType()));
+			node->addMember(decl->getVarId(), varDecl, varDecl->getType());
 			break;
 		}
-		default: 
+		default:
 			break;
 		}
 	}
-	_currentNamespace.pop();
+	_currentNamespace.pop_back();
 }
 
 DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * node)
@@ -260,16 +303,16 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 DST::Expression *Decorator::decorate(AST::Identifier * node)
 {
 	unicode_string name = node->getVarId();
-	
-	if (auto t = _currentNamespace.top()->getMemberType(name))
+
+	for (int i = _currentNamespace.size() - 1; i >= 0; i--)
 	{
-		if (t->getLine() == 13)
-			std::cout << "here";
-		return new DST::Variable(node, t);
-		//switch (t->getExactType())
-		//{
-		////case EXACT_NAMESPACE: return new DST::NAME
-		//}
+		if (auto var = _currentNamespace[i]->getMemberType(name)) {
+			if (var->getExactType() == EXACT_SPECIFIER)
+				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
+			/*else if (var->getExactType() == EXACT_INTERFACE)
+				return new DST::BasicType(node, (DST::??TODO???*)var);*/
+			return new DST::Variable(node, var);
+		}
 	}
 		
 
@@ -277,7 +320,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 		if (auto var = _variables[scope][name]) {
 			if (var->getExactType() == EXACT_SPECIFIER)
 				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
-			return new DST::Variable(node, _variables[scope][name]);
+			return new DST::Variable(node, var);
 		}
 	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
 }

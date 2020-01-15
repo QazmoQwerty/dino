@@ -58,7 +58,7 @@ private:
 	static bool isCondition(DST::Expression *node);
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
-	static stack<DST::NamespaceDeclaration*> _currentNamespace;
+	static vector<DST::NamespaceDeclaration*> _currentNamespace;
 	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;
 
