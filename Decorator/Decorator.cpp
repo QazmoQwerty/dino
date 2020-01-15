@@ -52,7 +52,8 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
 		{
 			auto decl = (AST::InterfaceDeclaration*)i;
 			auto tempDecl = new DST::InterfaceDeclaration(decl);
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
+			//shallowDecl->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
+			shallowDecl->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
 		}
 		else if (i->getStatementType() == ST_TYPE_DECLARATION)
 		{
@@ -81,9 +82,10 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getImplements()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_INTERFACE)
+					if (dec->getType()->getExactType() != EXACT_SPECIFIER && ((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
 						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
-					decl->addImplements(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
+					//decl->addImplements(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
+					decl->addImplements(((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
 			break;
 		}
@@ -94,9 +96,10 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getInterfaces()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_INTERFACE)
+					if (dec->getType()->getExactType() != EXACT_SPECIFIER && ((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
 						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
-					decl->addInterface(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
+					//decl->addInterface(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
+					decl->addInterface(((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
 			break;
 		}
@@ -533,7 +536,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 
 		DST::Type *memberType = NULL;
 		if (type->getExactType() == EXACT_BASIC)
-			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getTypeDecl()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
 		else if (type->getExactType() == EXACT_NAMESPACE)
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());

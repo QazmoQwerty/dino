@@ -130,7 +130,7 @@ namespace DST
 
 	class TypeDeclaration;
 
-	class TypeSpecifierType : public Type
+	/*class TypeSpecifierType : public Type
 	{
 		private:
 			TypeDeclaration *_typeDecl;
@@ -142,11 +142,31 @@ namespace DST
 			virtual bool writeable() { return false; }
 			TypeDeclaration *getTypeDecl() { return _typeDecl; }
 			virtual string toShortString() { return "typeid"; };
-	};
-
+	};*/
 	class InterfaceDeclaration;
 
-	class InterfaceSpecifierType : public Type
+	class TypeSpecifierType : public Type
+	{
+		private:
+			TypeDeclaration *_typeDecl;
+			InterfaceDeclaration *_interfaceDecl;
+		public:
+			TypeSpecifierType(DST::TypeDeclaration *decl) : Type(NULL), _typeDecl(decl), _interfaceDecl(NULL) {}
+			TypeSpecifierType(DST::InterfaceDeclaration *decl) : Type(NULL), _typeDecl(NULL), _interfaceDecl(decl) {}
+			virtual ~TypeSpecifierType();
+			virtual ExactType getExactType() { return EXACT_SPECIFIER; }
+			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
+			virtual bool writeable() { return false; }
+			TypeDeclaration *getTypeDecl() { return _typeDecl; }
+			InterfaceDeclaration *getInterfaceDecl() { return _interfaceDecl; }
+
+			unicode_string getTypeName();
+			Type *getMemberType(unicode_string name);
+			virtual string toShortString() { return "typeid"; };
+	};
+
+
+	/*class InterfaceSpecifierType : public Type
 	{
 	private:
 		InterfaceDeclaration *_interfaceDecl;
@@ -158,7 +178,7 @@ namespace DST
 		virtual bool writeable() { return false; }
 		InterfaceDeclaration *getInterfaceDecl() { return _interfaceDecl; }
 		virtual string toShortString() { return "interfaceId"; };
-	};
+	};*/
 
 	class NamespaceDeclaration;
 

@@ -364,10 +364,10 @@ vector<DST::Node*> DST::FunctionLiteral::getChildren()
 
 DST::Type *DST::BasicType::getMember(unicode_string id) 
 { 
-	return _typeSpec->getTypeDecl()->getMemberType(id); 
+	return _typeSpec->getMemberType(id); 
 }
 
-unicode_string DST::BasicType::getTypeId() { return _typeSpec->getTypeDecl()->getName(); }
+unicode_string DST::BasicType::getTypeId() { return _typeSpec->getTypeName(); }
 
 vector<DST::Node*> DST::Conversion::getChildren()
 {
@@ -386,12 +386,26 @@ void * DST::Literal::getValue()
 	}
 }
 
-DST::TypeSpecifierType::~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; }
+DST::TypeSpecifierType::~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; if (_interfaceDecl) delete _interfaceDecl; }
+
+unicode_string DST::TypeSpecifierType::getTypeName()
+{
+	if (_typeDecl) return _typeDecl->getName();
+	if (_interfaceDecl) return _interfaceDecl->getName();
+	return unicode_string();
+}
+
+DST::Type * DST::TypeSpecifierType::getMemberType(unicode_string name)
+{
+	if (_typeDecl) return _typeDecl->getMemberType(name);
+	if (_interfaceDecl) return _interfaceDecl->getMemberType(name);
+	return NULL;
+}
 
 DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }
 
-DST::InterfaceSpecifierType::~InterfaceSpecifierType()
-{
-	if (_interfaceDecl)
-		delete _interfaceDecl;
-}
+//DST::InterfaceSpecifierType::~InterfaceSpecifierType()
+//{
+//	if (_interfaceDecl)
+//		delete _interfaceDecl;
+//}
