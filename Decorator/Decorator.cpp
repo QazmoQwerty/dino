@@ -92,7 +92,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getInterfaces()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_SPECIFIER)
+					if (dec->getType()->getExactType() != EXACT_INTERFACE)
 						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
 					decl->addInterface(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
@@ -191,6 +191,8 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 	
 	if (auto t = _currentNamespace.top()->getMemberType(name))
 	{
+		if (t->getLine() == 13)
+			std::cout << "here";
 		return new DST::Variable(node, t);
 		//switch (t->getExactType())
 		//{
