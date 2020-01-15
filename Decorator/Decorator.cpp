@@ -232,15 +232,38 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 		{
 			auto decl = (DST::TypeDeclaration*)i.second.first;
 			// TODO - add function/property contents (remember to add a this pointer!)
-			for (auto i : decl->getMembers())
+			for (auto member : decl->getMembers())
 			{
-				if (i.second.first->getStatementType() == ST_FUNCTION_DECLARATION)
+				if (member.second.first->getStatementType() == ST_FUNCTION_DECLARATION)
 				{
-
+					auto decl = (DST::FunctionDeclaration*)member.second.first;
+					enterBlock();
+					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					for (auto param : decl->getParameters())	// Add function parameters to variables map
+						_variables[currentScope()][param->getVarId()] = param->getType();
+					decl->setContent(decorate(decl->getBase()->getContent()));
+					if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
+						throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+					leaveBlock();
 				}
-				else if (i.second.first->getStatementType() == ST_PROPERTY_DECLARATION)
+				else if (member.second.first->getStatementType() == ST_PROPERTY_DECLARATION)
 				{
-
+					auto decl = (DST::PropertyDeclaration*)member.second.first;
+					auto retType = ((DST::PropertyType*)member.second.second)->getReturn();
+					enterBlock();
+					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					if (decl->getBase()->getGet())
+					{
+						decl->setGet(decorate(decl->getBase()->getGet()));
+						if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
+							throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+					}
+					if (decl->getBase()->getSet())
+					{
+						_variables[currentScope()][unicode_string("value")] = retType;
+						decl->setSet(decorate(decl->getBase()->getSet()));
+					}
+					leaveBlock();
 				}
 			}
 			break;
