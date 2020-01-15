@@ -218,6 +218,41 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 	_currentNamespace.pop_back();
 }
 
+void Decorator::partD(DST::NamespaceDeclaration *node)
+{
+	_currentNamespace.push_back(node);
+	for (auto i : node->getMembers())
+	{
+		switch (i.second.first->getStatementType())
+		{
+		case ST_NAMESPACE_DECLARATION:
+			partD((DST::NamespaceDeclaration*)i.second.first);
+			break;
+		case ST_TYPE_DECLARATION:
+		{
+			auto decl = (DST::TypeDeclaration*)i.second.first;
+			// TODO - add function/property contentes
+			break;
+		}
+		case ST_FUNCTION_DECLARATION:
+		{
+			auto decl = (DST::FunctionDeclaration*)i.second.first;
+			// TODO - add function content
+			break;
+		}
+		case ST_PROPERTY_DECLARATION:
+		{
+			auto decl = (DST::PropertyDeclaration*)i.second.first;
+			// TODO - add property content
+			break;
+		}
+		default: 
+			break;
+		}
+	}
+	_currentNamespace.pop_back();
+}
+
 DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * node)
 {
 	if (node->getStatements()[0]->getStatementType() != ST_NAMESPACE_DECLARATION)
@@ -228,7 +263,7 @@ DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * nod
 	auto ns = partA(mainNs);
 	partB(ns);
 	partC(ns);
-
+	partD(ns);
 	return ns;
 }
 
