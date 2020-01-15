@@ -162,7 +162,7 @@ void DST::InterfaceDeclaration::addDeclaration(Statement * decl, Type * type)
 	switch (decl->getStatementType())
 	{
 	case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
-	case ST_VARIABLE_DECLARATION: varId = ((VariableDeclaration*)decl)->getVarId(); break;
+	case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getName(); break;
 	default: throw DinoException("Interface declarations may only specify property, and function declarations.", EXT_GENERAL, decl->getLine());
 	}
 	if (_decls.count(varId))

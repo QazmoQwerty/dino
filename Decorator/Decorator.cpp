@@ -69,11 +69,12 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 	_currentNamespace.push(node);
 	for (auto i : node->getMembers())
 	{
-		if (i.second.first->getStatementType() == ST_NAMESPACE_DECLARATION)
+		switch (i.second.first->getStatementType())
 		{
+		case ST_NAMESPACE_DECLARATION:
 			partB((DST::NamespaceDeclaration*)i.second.first);
-		}
-		else if (i.second.first->getStatementType() == ST_INTERFACE_DECLARATION)
+			break;
+		case ST_INTERFACE_DECLARATION:
 		{
 			auto decl = (DST::InterfaceDeclaration*)i.second.first;
 			if (decl->getBase()->getImplements())
@@ -84,8 +85,9 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
 					decl->addImplements(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
+			break;
 		}
-		else if (i.second.first->getStatementType() == ST_TYPE_DECLARATION)
+		case ST_TYPE_DECLARATION:
 		{
 			auto decl = (DST::TypeDeclaration*)i.second.first;
 			if (decl->getBase()->getInterfaces())
@@ -96,6 +98,75 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
 					decl->addInterface(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
+			break;
+		}
+		default:
+			break;
+		}
+	}
+	_currentNamespace.pop();
+}
+
+void Decorator::partC(DST::NamespaceDeclaration *node)
+{
+	_currentNamespace.push(node);
+	for (auto i : node->getMembers())
+	{
+		switch (i.second.first->getStatementType())
+		{
+		case ST_NAMESPACE_DECLARATION:
+			partC((DST::NamespaceDeclaration*)i.second.first);
+			break;
+		case ST_INTERFACE_DECLARATION:
+		{
+			auto decl = (DST::InterfaceDeclaration*)i.second.first;
+			for (auto func : decl->getBase()->getFunctions())
+			{
+				enterBlock();
+				auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
+				for (auto param : func->getParameters())
+					funcDecl->addParameter(decorate(param));
+				auto type = new DST::FunctionType();
+				type->addReturn(funcDecl->getReturnType());	// TODO - functions that return multiple types
+				for (auto param : funcDecl->getParameters())
+					type->addParameter(param->getType());
+				decl->addDeclaration(funcDecl, type);
+				leaveBlock();
+			}
+			for (auto prop : decl->getBase()->getProperties())
+			{
+				auto retType = evalType(prop->getVarDecl()->getVarType());
+				auto type = new DST::PropertyType(retType, prop->getGet(), prop->getSet());
+				decl->addDeclaration(new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
+			}
+			break;
+		}
+		case ST_TYPE_DECLARATION:
+		{
+			auto decl = (DST::TypeDeclaration*)i.second.first;
+			// TODO
+			break;
+		}
+		case ST_FUNCTION_DECLARATION:
+		{
+			auto decl = (DST::FunctionDeclaration*)i.second.first;
+			// TODO
+			break;
+		}
+		case ST_PROPERTY_DECLARATION:
+		{
+			auto decl = (DST::PropertyDeclaration*)i.second.first;
+			// TODO
+			break;
+		}
+		case ST_VARIABLE_DECLARATION:
+		{
+			auto decl = (DST::VariableDeclaration*)i.second.first;
+			// TODO
+			break;
+		}
+		default: 
+			break;
 		}
 	}
 	_currentNamespace.pop();
@@ -110,6 +181,7 @@ DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * nod
 
 	auto ns = partA(mainNs);
 	partB(ns);
+	partC(ns);
 
 	return ns;
 }
