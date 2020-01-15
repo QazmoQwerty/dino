@@ -707,6 +707,7 @@ namespace DST
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
+		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
 		vector<InterfaceDeclaration*> getInterface() { return _interfaces; }
@@ -738,6 +739,8 @@ namespace DST
 		virtual vector<Node*> getChildren();
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
+		AST::FunctionDeclaration *getBase() { return _base; }
+
 		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
@@ -765,10 +768,11 @@ namespace DST
 		unicode_string getName() { return _base->getVarDecl()->getVarId(); }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 		unicode_string getPropId() { return _base->getVarDecl()->getVarId(); }
-		/*void setGet(Statement* get) { _get = get; }
-		void setSet(Statement* set) { _set = set; }
-		Statement* getGet() { return _get; }
-		Statement* getSet() { return _set; }*/
+		void setGet(StatementBlock* get) { _get = get; }
+		void setSet(StatementBlock* set) { _set = set; }
+		StatementBlock* getGet() { return _get; }
+		StatementBlock* getSet() { return _set; }
+		AST::PropertyDeclaration *getBase() { return _base; };
 	};
 
 	class NamespaceDeclaration : public Statement

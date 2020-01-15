@@ -231,19 +231,49 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 		case ST_TYPE_DECLARATION:
 		{
 			auto decl = (DST::TypeDeclaration*)i.second.first;
-			// TODO - add function/property contentes
+			// TODO - add function/property contents (remember to add a this pointer!)
+			for (auto i : decl->getMembers())
+			{
+				if (i.second.first->getStatementType() == ST_FUNCTION_DECLARATION)
+				{
+
+				}
+				else if (i.second.first->getStatementType() == ST_PROPERTY_DECLARATION)
+				{
+
+				}
+			}
 			break;
 		}
 		case ST_FUNCTION_DECLARATION:
 		{
 			auto decl = (DST::FunctionDeclaration*)i.second.first;
-			// TODO - add function content
+			enterBlock();
+			for (auto i : decl->getParameters())	// Add function parameters to variabes map
+				_variables[currentScope()][i->getVarId()] = i->getType();
+			decl->setContent(decorate(decl->getBase()->getContent()));
+			if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
+				throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+			leaveBlock();
 			break;
 		}
 		case ST_PROPERTY_DECLARATION:
 		{
 			auto decl = (DST::PropertyDeclaration*)i.second.first;
-			// TODO - add property content
+			auto retType = ((DST::PropertyType*)i.second.second)->getReturn();
+			if (decl->getBase()->getGet())
+			{
+				decl->setGet(decorate(decl->getBase()->getGet()));
+				if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
+					throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+			}
+			if (decl->getBase()->getSet())
+			{
+				enterBlock();
+				_variables[currentScope()][unicode_string("value")] = retType;
+				decl->setSet(decorate(decl->getBase()->getSet()));
+				leaveBlock();
+			}
 			break;
 		}
 		default: 

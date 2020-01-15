@@ -433,7 +433,7 @@ namespace AST
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
 		StatementBlock* getGet() { return _get; }
-		StatementBlock* getSet() { return _get; }
+		StatementBlock* getSet() { return _set; }
 		VariableDeclaration* getVarDecl() { return _decl; }
 	};
 
