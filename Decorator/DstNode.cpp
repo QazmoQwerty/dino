@@ -417,3 +417,20 @@ DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }
 //	if (_interfaceDecl)
 //		delete _interfaceDecl;
 //}
+
+bool DST::PointerType::equals(Type * other)
+{
+	return other != nullptr && other->getExactType() == EXACT_POINTER && ((PointerType*)other)->_type->equals(_type);
+}
+
+string DST::PointerType::toShortString()
+{
+	return "@" + _type->toShortString();
+}
+
+vector<DST::Node*> DST::PointerType::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_type);
+	return v;
+}

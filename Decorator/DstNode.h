@@ -220,6 +220,20 @@ namespace DST
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 	};
 
+	class PointerType : public Type
+	{
+		Type* _type;
+	public:
+		PointerType(AST::Expression *base, Type *ptrTo) : Type(base), _type(ptrTo) { }
+		PointerType(Type *ptrTo) : Type(NULL), _type(ptrTo) { }
+		virtual ~PointerType() { if (_type) delete _type; }
+		ExactType getExactType() { return EXACT_POINTER; }
+		virtual bool equals(Type *other);
+		virtual string toShortString();
+		virtual vector<Node*> getChildren();
+		virtual string toString() { return "<PointerType>" + toShortString(); };
+	};
+
 	class TypeList : public Type
 	{
 		vector<Type*> _types;

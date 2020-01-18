@@ -509,6 +509,11 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 
 			return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)values)->getExpressions());
 		}
+		case OT_AT:
+		{
+			auto val = decorate(node->getExpression());
+
+		}
 		default: return NULL;
 	}
 }
