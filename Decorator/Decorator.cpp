@@ -342,6 +342,8 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		return decorate(dynamic_cast<AST::ExpressionList*>(node));
 	case ET_FUNCTION_CALL:
 		return decorate(dynamic_cast<AST::FunctionCall*>(node));
+	case ET_CONDITIONAL_EXPRESSION:
+		return decorate(dynamic_cast<AST::ConditionalExpression*>(node));
 	default: 
 		return NULL;
 	}
@@ -523,6 +525,29 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 
 	return new DST::UnaryOperation(node, val);
 	return NULL;
+}
+
+//bool Decorator::isBool(DST::Type *type) { return DST::BasicType(getPrimitiveType("bool")).equals(type); }
+
+DST::Expression * Decorator::decorate(AST::ConditionalExpression * node)
+{
+	auto expr = new DST::ConditionalExpression(node);
+	expr->setCondition(decorate(node->getCondition()));
+	expr->setThenBranch(decorate(node->getThenBranch()));
+	expr->setElseBranch(decorate(node->getElseBranch()));
+
+	if (!expr->getCondition())
+		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+	if (!isCondition(expr->getCondition()))
+		throw DinoException("Condition must be of bool type", EXT_GENERAL, node->getLine());
+	if (!expr->getThenBranch())
+		throw DinoException("Expected then branch of conditional expression", EXT_GENERAL, node->getLine());
+	if (!expr->getElseBranch())
+		throw DinoException("Expected else branch of conditional expression", EXT_GENERAL, node->getLine());
+	if (!expr->getThenBranch()->getType()->equals(expr->getElseBranch()->getType()))
+		throw DinoException("Operand types are incompatible (\"" + expr->getThenBranch()->getType()->toShortString() + 
+							"\" and \"" + expr->getElseBranch()->getType()->toShortString() + "\")", EXT_GENERAL, node->getLine());
+	return expr;
 }
 
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)

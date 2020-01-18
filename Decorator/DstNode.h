@@ -417,6 +417,32 @@ namespace DST
 		bool isPostfix() { return _base->isPostfix(); }
 	};
 
+	class ConditionalExpression : public Expression
+	{
+		AST::ConditionalExpression *_base;
+		Expression* _condition;
+		Expression* _thenBranch;
+		Expression* _elseBranch;
+
+	public:
+		ConditionalExpression(AST::ConditionalExpression *base) : _base(base) {};
+		virtual ~ConditionalExpression() { if (_condition) delete _condition; if (_thenBranch) delete _thenBranch; if (_elseBranch) delete _elseBranch; }
+		virtual ExpressionType getExpressionType() { return ET_CONDITIONAL_EXPRESSION; };
+		virtual string toString() { return _base->toString() + "\\nType: " + getType()->toShortString(); };
+		virtual vector<Node*> getChildren();
+		virtual Type *getType() { return _thenBranch->getType(); }
+		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+
+		void setCondition(Expression* condition) { _condition = condition; }
+		void setThenBranch(Expression* thenBranch) { _thenBranch = thenBranch; }
+		void setElseBranch(Expression* elseBranch) { _elseBranch = elseBranch; }
+
+		Expression* getCondition() { return _condition; }
+		Expression* getThenBranch() { return _thenBranch; }
+		Expression* getElseBranch() { return _elseBranch; }
+
+	};
+
 	class MemberAccess : public Expression
 	{
 		AST::BinaryOperation *_base;

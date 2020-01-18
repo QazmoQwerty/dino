@@ -33,6 +33,7 @@ private:
 	static DST::Expression *decorate(AST::FunctionCall *node);
 	static DST::FunctionLiteral *decorate(AST::Function *node);
 	static DST::Expression * decorate(AST::UnaryOperation * node);
+	static DST::Expression * decorate(AST::ConditionalExpression * node);
 
 	// Statements
 	static DST::NamespaceDeclaration *decorate(AST::NamespaceDeclaration *node);
@@ -56,6 +57,7 @@ private:
 	static DST::Type *evalType(AST::Expression *node);
 
 	static bool isCondition(DST::Expression *node);
+	//static bool isBool(DST::Type *type);
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
 	static vector<DST::NamespaceDeclaration*> _currentNamespace;

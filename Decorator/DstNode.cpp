@@ -44,6 +44,15 @@ vector<DST::Node*> DST::UnaryOperation::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::ConditionalExpression::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_condition);
+	v.push_back(_thenBranch);
+	v.push_back(_elseBranch);
+	return v;
+}
+
 void DST::UnaryOperation::setType()
 {
 	switch (_base->getOperator()._type)
