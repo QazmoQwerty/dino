@@ -326,6 +326,10 @@ DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * nod
 	auto ns = partA(mainNs);
 	partB(ns);
 	partC(ns);
+	
+	if (!_main)
+		throw DinoException("No entry point (main function)", EXT_GENERAL, node->getLine());
+	
 	partD(ns);
 	return ns;
 }
