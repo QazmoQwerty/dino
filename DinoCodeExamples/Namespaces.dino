@@ -1,0 +1,39 @@
+namespace program {
+
+	namespace main_program {
+		void print(string str)
+
+		void main() {
+			int x1
+			int x2
+
+			x1 := 10
+			x2 := 20
+		
+			print("sum: " + string(math.add(x1, x2)))
+			print("avg: " + string(mathV2.avg(x1, x2)))
+		
+			math.in_math.print_add(x1, x2)
+		}
+	}
+
+	namespace math {
+		int add(int a, int b) {
+			return a + b
+		}
+		int div(int a, int b) {
+			return a / b
+		}
+		namespace in_math {
+			void print_add(int a, int b) {
+				main_program.print(string(add(a, b)))
+			}
+		}
+	}
+
+	namespace mathV2 {
+		int avg (int a, int b) {
+			return math.div(math.add(a, b), 2)
+		}
+	}
+}
