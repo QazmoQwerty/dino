@@ -37,6 +37,37 @@ vector<DST::Node*> DST::BinaryOperation::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::UnaryOperation::getChildren()
+{
+	vector<Node*> v;
+	v.push_back(_expression);
+	return v;
+}
+
+void DST::UnaryOperation::setType()
+{
+	switch (_base->getOperator()._type)
+	{
+	case OT_AT:	// dereference
+		if (_expression->getType()->getExactType() != EXACT_POINTER)
+			throw DinoException("Cannot dereference a non-pointer type", EXT_GENERAL, getLine());
+		_type = ((DST::PointerType*)_expression->getType())->getPtrType();
+		break;
+	case OT_NEW:	// dynamic memory allocation
+		if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
+			throw DinoException("Expected a type specifier", EXT_GENERAL, getLine());
+		_type = new DST::PointerType(new BasicType((TypeSpecifierType*)_expression->getType()));
+		break;
+	case OT_BITWISE_AND:	// address-of
+		_type = new DST::PointerType(_expression->getType());
+		break;
+	case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
+		_type = _expression->getType();
+		break;
+	default: throw DinoException("Unimplemented unary operator", EXT_GENERAL, getLine());
+	}
+}
+
 vector<DST::Node*> DST::MemberAccess::getChildren()
 {
 	vector<Node*> v;
@@ -420,7 +451,17 @@ DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }
 
 bool DST::PointerType::equals(Type * other)
 {
-	return other != nullptr && other->getExactType() == EXACT_POINTER && ((PointerType*)other)->_type->equals(_type);
+	if (other == nullptr) 
+		return false;
+
+	if (other->getExactType() != EXACT_POINTER)
+		return false;
+
+	bool b = ((PointerType*)other)->_type->equals(_type);
+
+	return b;
+
+	//return other != nullptr && other->getExactType() == /EXACT_POINTER && ((PointerType*)other)->_type->equals(_type);
 }
 
 string DST::PointerType::toShortString()

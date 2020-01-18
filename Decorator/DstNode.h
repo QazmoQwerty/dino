@@ -165,7 +165,6 @@ namespace DST
 			virtual string toShortString() { return "typeid"; };
 	};
 
-
 	/*class InterfaceSpecifierType : public Type
 	{
 	private:
@@ -227,6 +226,7 @@ namespace DST
 		PointerType(AST::Expression *base, Type *ptrTo) : Type(base), _type(ptrTo) { }
 		PointerType(Type *ptrTo) : Type(NULL), _type(ptrTo) { }
 		virtual ~PointerType() { if (_type) delete _type; }
+		Type *getPtrType() { return _type; } // returns what type the pointer points to
 		ExactType getExactType() { return EXACT_POINTER; }
 		virtual bool equals(Type *other);
 		virtual string toShortString();
@@ -391,6 +391,30 @@ namespace DST
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+	};
+
+	class UnaryOperation : public Expression
+	{
+		AST::UnaryOperation *_base;
+		Type *_type;
+		Expression* _expression;
+		void setType();
+
+	public:
+		UnaryOperation(AST::UnaryOperation *base) : _base(base) {  };
+		UnaryOperation(AST::UnaryOperation *base, Expression *expression) : _base(base), _expression(expression) { setType(); };
+		virtual ~UnaryOperation() { if (_expression) delete _expression; }
+		virtual ExpressionType getExpressionType() { return ET_UNARY_OPERATION; };
+		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
+		virtual vector<Node*> getChildren();
+
+		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual Type *getType() { return _type; }
+		void setType(Type *type) { _type = type; }
+		void setExpression(Expression* expression) { _expression = expression; }
+		Operator getOperator() { return _base->getOperator(); }
+		Expression* getExpression() { return _expression; }
+		bool isPostfix() { return _base->isPostfix(); }
 	};
 
 	class MemberAccess : public Expression

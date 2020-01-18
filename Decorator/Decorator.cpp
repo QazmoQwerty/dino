@@ -492,30 +492,37 @@ DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
 
 DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 {
-	switch (node->getOperator()._type)
+	auto val = decorate(node->getExpression());
+	if (node->getOperator()._type == OT_SQUARE_BRACKETS_OPEN)	// Array Literal
 	{
-		case OT_SQUARE_BRACKETS_OPEN: 
+		if (!val)
+			throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine());
+		else if (val->getExpressionType() == ET_LIST)
 		{
-			auto values = decorate(node->getExpression());
 			DST::Type *prevType = NULL;
-			for (auto val : ((DST::ExpressionList*)values)->getExpressions())
-			{
-				if (prevType && !val->getType()->equals(prevType))
-					throw DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
-				prevType = val->getType();
-			}
+				for (auto val : ((DST::ExpressionList*)val)->getExpressions())
+				{
+					if (prevType && !val->getType()->equals(prevType))
+						throw DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
+						prevType = val->getType();
+				}
 			if (!prevType)
-				throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine()); // TODO: check this one with shalev.
-
-			return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)values)->getExpressions());
+				throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine());
+			return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)val)->getExpressions());
 		}
-		case OT_AT:
+		else
 		{
-			auto val = decorate(node->getExpression());
-
+			vector<DST::Expression*> v;
+			v.push_back(val);
+			return new DST::ArrayLiteral(val->getType(), v);
 		}
-		default: return NULL;
 	}
+	
+	if (node->getOperator()._type == OT_AT && val->getExpressionType() == ET_TYPE)	// Pointer Type
+		return new DST::PointerType(node, (DST::Type*)val);
+
+	return new DST::UnaryOperation(node, val);
+	return NULL;
 }
 
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
