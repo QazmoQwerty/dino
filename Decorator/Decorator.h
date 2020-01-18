@@ -29,7 +29,7 @@ private:
 	static DST::Expression *decorate(AST::Identifier *node);
 	static DST::Expression *decorate(AST::BinaryOperation *node);
 	static DST::Expression *decorate(AST::Literal *node);
-	static DST::ExpressionList *decorate(AST::ExpressionList *node);
+	static DST::Expression *decorate(AST::ExpressionList *node);
 	static DST::Expression *decorate(AST::FunctionCall *node);
 	static DST::FunctionLiteral *decorate(AST::Function *node);
 	static DST::Expression * decorate(AST::UnaryOperation * node);

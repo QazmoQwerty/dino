@@ -239,6 +239,7 @@ namespace DST
 		vector<Type*> _types;
 	public:
 		TypeList(AST::Expression *base) : Type(base) { }
+		TypeList(AST::Expression *base, vector<Type*> types) : Type(base), _types(types) { }
 		virtual ~TypeList() { _types.clear(); }
 		void addType(Type *type) { _types.push_back(type); }
 		vector<Type*> getTypes() { return _types; }
@@ -542,6 +543,12 @@ namespace DST
 		vector<Expression*> _expressions;
 	public:
 		ExpressionList(AST::Expression *base) : _base(base) { _type = new TypeList(base); };
+		ExpressionList(AST::Expression *base, vector<Expression*> expressions) : _base(base), _expressions(expressions) 
+		{ 
+			_type = new TypeList(base);
+			for (auto i : _expressions) 
+				_type->addType(i->getType());
+		};
 		virtual ~ExpressionList() { if (_base) delete _base; if (_type) delete _type; _expressions.clear(); }
 		TypeList *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_LIST; };

@@ -598,7 +598,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		}
 		arguments = list;
 	}
-	else arguments = decorate((AST::ExpressionList*)node->getArguments());
+	else arguments = (DST::ExpressionList*)decorate((AST::ExpressionList*)node->getArguments());	// TODO - fix unsafe conversion
 
 	if (funcId->getExpressionType() == ET_TYPE)	// function type OR conversion
 	{
@@ -740,12 +740,28 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 	return lit;
 }
 
-DST::ExpressionList * Decorator::decorate(AST::ExpressionList * node)
+DST::Expression * Decorator::decorate(AST::ExpressionList * node)
 {
-	auto list = new DST::ExpressionList(node);
+	vector<DST::Expression*> vec;
+
+	bool isTypeList = true;
 	for (auto i : node->getExpressions())
-		list->addExpression(decorate(i));
-	return list;
+	{
+		auto dec = decorate(i);
+		if (dec->getExpressionType() != ET_TYPE)
+			isTypeList = false;
+		vec.push_back(dec);
+	}
+
+	if (isTypeList)
+	{
+		auto list = new DST::TypeList(node);
+		for (auto i : vec)
+			list->addType((DST::Type*)i);
+		return list;
+	}
+
+	return new DST::ExpressionList(node, vec);
 }
 
 DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node)
