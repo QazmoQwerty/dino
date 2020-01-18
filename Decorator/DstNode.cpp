@@ -344,6 +344,14 @@ vector<DST::Node*> DST::FunctionType::getChildren()
 	return vector<Node*>();
 }
 
+void DST::TypeList::addType(Type * type)
+{
+	if (type->getExactType() == EXACT_TYPELIST)
+		for (auto i : ((TypeList*)type)->getTypes())
+			_types.push_back(i);
+	else _types.push_back(type);
+}
+
 bool DST::TypeList::equals(Type * other)
 {
 	if (other->getExactType() == EXACT_BASIC)
