@@ -710,13 +710,14 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				else bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH));
 			}
 			break;
-		case RT_LEFT: 
-			bo->setType(bo->getLeft()->getType());
-			break;
 		case RT_VOID: 
 			throw DinoException("Could not decorate, unimplemented operator.", EXT_GENERAL, node->getLine());
 
-		default: break;
+		default: 
+			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
+				throw DinoException("left-type != right-type", EXT_GENERAL, node->getLine());
+			bo->setType(bo->getLeft()->getType());
+			break;
 	}
 
 	return bo;
