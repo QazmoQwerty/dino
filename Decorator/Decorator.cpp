@@ -1,6 +1,9 @@
 #include "Decorator.h"
 
+#define MAIN_FUNC "main"
+
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
+DST::FunctionDeclaration* _main;
 vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
@@ -193,6 +196,13 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			for (auto param : funcDecl->getParameters())
 				type->addParameter(param->getType());
 			node->addMember(func->getVarDecl()->getVarId(), funcDecl, type);
+			
+			if (func->getVarDecl()->getVarId() == MAIN_FUNC)
+			{
+				if (_main)
+					throw DinoException("Main function can't be declared more than once", EXT_GENERAL, node->getLine());
+				_main = funcDecl;
+			}
 			break;
 		}
 		case ST_PROPERTY_DECLARATION:
