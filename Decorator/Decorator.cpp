@@ -1,10 +1,11 @@
 #include "Decorator.h"
 
-#define MAIN_FUNC "main"
+#define MAIN_FUNC "Main"
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
-DST::FunctionDeclaration* _main;
+DST::FunctionDeclaration* Decorator::_main;
 vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
+DST::TypeDeclaration *Decorator::_currentTypeDecl;
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
@@ -20,7 +21,7 @@ void Decorator::setup()
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
-	//_currentNamespace = NULL
+	_currentTypeDecl = NULL;
 }
 
 DST::TypeSpecifierType *Decorator::getPrimitiveType(std::string name)
@@ -241,6 +242,7 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 		case ST_TYPE_DECLARATION:
 		{
 			auto decl = (DST::TypeDeclaration*)i.second.first;
+			_currentTypeDecl = decl;
 			// TODO - add function/property contents (remember to add a this pointer!)
 			for (auto member : decl->getMembers())
 			{
@@ -276,6 +278,7 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 					leaveBlock();
 				}
 			}
+			_currentTypeDecl = NULL;
 			break;
 		}
 		case ST_FUNCTION_DECLARATION:
@@ -416,12 +419,9 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 		if (auto var = _currentNamespace[i]->getMemberType(name)) {
 			if (var->getExactType() == EXACT_SPECIFIER)
 				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
-			/*else if (var->getExactType() == EXACT_INTERFACE)
-				return new DST::BasicType(node, (DST::??TODO???*)var);*/
 			return new DST::Variable(node, var);
 		}
 	}
-		
 
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (auto var = _variables[scope][name]) {
@@ -429,6 +429,13 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
 			return new DST::Variable(node, var);
 		}
+
+	if (_currentTypeDecl) if (auto var = _currentTypeDecl->getMemberType(name))
+	{
+		if (var->getExactType() == EXACT_SPECIFIER)
+			return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
+		return new DST::Variable(node, var);
+	}
 	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
 }
 
@@ -674,17 +681,21 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			type = ((DST::PropertyType*)type)->getReturn();
 
 		DST::Type *memberType = NULL;
+		unicode_string varId = ((AST::Identifier*)node->getRight())->getVarId();
 		if (type->getExactType() == EXACT_BASIC)
-			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+		{
+			if (_currentTypeDecl != ((DST::BasicType*)type)->getTypeSpecifier()->getTypeDecl() && !varId[0].isUpper())
+				throw DinoException("Cannot access private member \"" + varId.to_string() + "\"", EXT_GENERAL, node->getLine());
+			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getMemberType(varId);
+		}
 		else if (type->getExactType() == EXACT_NAMESPACE)
-			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(((AST::Identifier*)node->getRight())->getVarId());
+		{
+			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
+		}
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)
 			throw DinoException("Unkown identifier", EXT_GENERAL, node->getLine());
-		//if (!(((AST::Identifier*)node->getRight())->getVarId())[0].isUpper())
-		//	throw DinoException("Cannot access private member", EXT_GENERAL, node->getLine());
-		//auto right = new DST::Variable((AST::Identifier*)node->getRight(), memberType);
 		
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);

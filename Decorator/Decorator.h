@@ -61,6 +61,8 @@ private:
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
 	static vector<DST::NamespaceDeclaration*> _currentNamespace;
+	static DST::TypeDeclaration *_currentTypeDecl;
+	static DST::FunctionDeclaration* _main;
 	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;
 
