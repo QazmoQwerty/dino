@@ -750,8 +750,10 @@ namespace DST
 		AST::InterfaceDeclaration *getBase() { return _base; }
 		vector<InterfaceDeclaration*> getImplements() { return _implements; }
 		void addImplements(InterfaceDeclaration *implement) { _implements.push_back(implement); }
+		bool implements(InterfaceDeclaration* inter);
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id) { return _decls[id].first; }
+		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getDeclarations() { return _decls; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
@@ -781,8 +783,9 @@ namespace DST
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
-		vector<InterfaceDeclaration*> getInterface() { return _interfaces; }
+		vector<InterfaceDeclaration*> getInterfaces() { return _interfaces; }
 		void addInterface(InterfaceDeclaration *interface) { _interfaces.push_back(interface); }
+		bool implements(InterfaceDeclaration *inter);
 
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
 		virtual bool isDeclaration() { return true; }

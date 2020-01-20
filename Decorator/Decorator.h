@@ -21,6 +21,7 @@ private:
 	static void partB(DST::NamespaceDeclaration *node);
 	static void partC(DST::NamespaceDeclaration *node);
 	static void partD(DST::NamespaceDeclaration *node);
+	static void partE(DST::NamespaceDeclaration *node);
 
 	static DST::Expression *decorate(AST::Expression *node);
 	static DST::Statement *decorate(AST::Statement *node);

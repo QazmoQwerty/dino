@@ -229,7 +229,34 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 	_currentNamespace.pop_back();
 }
 
+
 void Decorator::partD(DST::NamespaceDeclaration *node)
+{
+	for (auto i : node->getMembers())
+	{
+		switch (i.second.first->getStatementType())
+		{
+			case ST_INTERFACE_DECLARATION:
+			{
+				auto decl = (DST::InterfaceDeclaration*)i.second.first;
+				for (auto i : decl->getImplements())
+					decl->implements(i); // check if interface implements the interface.
+				break;
+			}
+			case ST_TYPE_DECLARATION:
+			{
+				auto decl = (DST::TypeDeclaration*)i.second.first;
+				for (auto i : decl->getInterfaces())
+					decl->implements(i); // check if type implements the interface.
+				break;
+			}
+		}
+
+	}
+}
+
+
+void Decorator::partE(DST::NamespaceDeclaration *node)
 {
 	_currentNamespace.push_back(node);
 	for (auto i : node->getMembers())
@@ -237,7 +264,7 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 		switch (i.second.first->getStatementType())
 		{
 		case ST_NAMESPACE_DECLARATION:
-			partD((DST::NamespaceDeclaration*)i.second.first);
+			partE((DST::NamespaceDeclaration*)i.second.first);
 			break;
 		case ST_TYPE_DECLARATION:
 		{
@@ -333,7 +360,7 @@ DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * nod
 	if (!_main)
 		throw DinoException("No entry point (main function)", EXT_GENERAL, node->getLine());
 	
-	partD(ns);
+	partE(ns);
 	return ns;
 }
 
