@@ -750,7 +750,7 @@ namespace DST
 		AST::InterfaceDeclaration *getBase() { return _base; }
 		vector<InterfaceDeclaration*> getImplements() { return _implements; }
 		void addImplements(InterfaceDeclaration *implement) { _implements.push_back(implement); }
-		bool notImplements(InterfaceDeclaration* inter);
+		void notImplements(InterfaceDeclaration* inter);
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id) { return _decls[id].first; }
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getDeclarations() { return _decls; }

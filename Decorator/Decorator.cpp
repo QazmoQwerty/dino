@@ -247,7 +247,15 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 			{
 				auto decl = (DST::TypeDeclaration*)i.second.first;
 				for (auto i : decl->getInterfaces())
-					decl->implements(i); // check if type implements the interface.
+				{
+					// check if type implements the interface.
+					decl->implements(i);
+					
+					// check if the interfaces that the type implements are distinct
+					for (auto otherI : decl->getInterfaces())
+						if(i != otherI) 
+							otherI->notImplements(i);
+				}
 				break;
 			}
 		}

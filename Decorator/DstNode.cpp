@@ -232,7 +232,7 @@ void DST::InterfaceDeclaration::addDeclaration(Statement * decl, Type * type)
 	_decls[varId] = std::make_pair(decl, type);
 }
 
-bool DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
+void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 {
 	for (auto decl : inter->getDeclarations())
 	{
@@ -243,7 +243,6 @@ bool DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 	{
 		notImplements(inter);
 	}
-	return true;
 }
 
 vector<DST::Node*> DST::InterfaceDeclaration::getChildren()
