@@ -280,7 +280,9 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					for (auto param : decl->getParameters())	// Add function parameters to variables map
 						_variables[currentScope()][param->getVarId()] = param->getType();
 					decl->setContent(decorate(decl->getBase()->getContent()));
-					if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
+					if (!decl->getContent())
+						throw DinoException("Method must have a body.", EXT_GENERAL, node->getLine());
+					if (!decl->getContent()->hasReturnType(decl->getReturnType()))
 						throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
 					leaveBlock();
 				}
