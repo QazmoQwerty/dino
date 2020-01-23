@@ -1,6 +1,6 @@
 #include "Decorator.h"
 
-#define MAIN_FUNC "Main"
+#define MAIN_FUNC "main"
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
 DST::FunctionDeclaration* Decorator::_main;
@@ -240,7 +240,7 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 			{
 				auto decl = (DST::InterfaceDeclaration*)i.second.first;
 				for (auto i : decl->getImplements())
-					decl->implements(i); // check if interface implements the interface.
+					decl->notImplements(i); // check if interface does not implement something that it inherits.
 				break;
 			}
 			case ST_TYPE_DECLARATION:
@@ -251,7 +251,6 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 				break;
 			}
 		}
-
 	}
 }
 
@@ -360,6 +359,7 @@ DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * nod
 	if (!_main)
 		throw DinoException("No entry point (main function)", EXT_GENERAL, node->getLine());
 	
+	partD(ns);
 	partE(ns);
 	return ns;
 }

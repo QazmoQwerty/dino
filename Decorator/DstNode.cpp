@@ -190,6 +190,10 @@ bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
 		if (!(_decls.count(decl.first) != 0 && _decls[decl.first].second->equals(_decls[decl.first].second)))
 			throw DinoException("Type " + _name.to_string() + " does not implement " + decl.first.to_string() + " of " + inter->getName().to_string(), EXT_GENERAL, _base->getLine());
 	}
+	for (auto i : inter->getImplements())
+	{
+		implements(i);
+	}
 	return true;
 }
 
@@ -228,12 +232,16 @@ void DST::InterfaceDeclaration::addDeclaration(Statement * decl, Type * type)
 	_decls[varId] = std::make_pair(decl, type);
 }
 
-bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
+bool DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 {
 	for (auto decl : inter->getDeclarations())
 	{
-		if (!(_decls.count(decl.first) != 0 && _decls[decl.first].second->equals(_decls[decl.first].second)))
-			throw DinoException("Type " + getName().to_string() + " does not implement " + decl.first.to_string() + " of " + inter->getName().to_string(), EXT_GENERAL, _base->getLine());
+		if (_decls.count(decl.first) != 0)
+			throw DinoException("Interface '" + getName().to_string() + "' already has '" + decl.first.to_string() + "' of '" + inter->getName().to_string() + "'", EXT_GENERAL, _base->getLine());
+	}
+	for (auto i : inter->getImplements())
+	{
+		notImplements(inter);
 	}
 	return true;
 }
