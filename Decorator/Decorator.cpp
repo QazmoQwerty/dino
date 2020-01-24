@@ -134,7 +134,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 				for (auto param : func->getParameters())
 					funcDecl->addParameter(decorate(param));
 				auto type = new DST::FunctionType();
-				type->addReturn(funcDecl->getReturnType());	// TODO - functions that return multiple types
+				type->addReturn(funcDecl->getReturnType());
 				for (auto param : funcDecl->getParameters())
 					type->addParameter(param->getType());
 				decl->addDeclaration(funcDecl, type);
@@ -164,7 +164,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 				for (auto param : func->getParameters())
 					funcDecl->addParameter(decorate(param));
 				auto type = new DST::FunctionType();
-				type->addReturn(funcDecl->getReturnType());	// TODO - functions that return multiple types
+				type->addReturn(funcDecl->getReturnType());	
 				for (auto param : funcDecl->getParameters())
 					type->addParameter(param->getType());
 				decl->addDeclaration(funcDecl, type);
@@ -193,7 +193,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 				funcDecl->addParameter(decorate(param));
 			leaveBlock();
 			auto type = new DST::FunctionType();
-			type->addReturn(funcDecl->getReturnType());	// TODO - functions that return multiple types
+			type->addReturn(funcDecl->getReturnType());
 			for (auto param : funcDecl->getParameters())
 				type->addParameter(param->getType());
 			node->addMember(func->getVarDecl()->getVarId(), funcDecl, type);
@@ -287,7 +287,6 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 		{
 			auto decl = (DST::TypeDeclaration*)i.second.first;
 			_currentTypeDecl = decl;
-			// TODO - add function/property contents (remember to add a this pointer!)
 			for (auto member : decl->getMembers())
 			{
 				if (member.second.first->getStatementType() == ST_FUNCTION_DECLARATION)
@@ -496,7 +495,7 @@ DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
 		decl->addParameter(decorate(i));
 
 	auto type = new DST::FunctionType();
-	type->addReturn(decl->getReturnType());	// TODO - functions that return multiple types
+	type->addReturn(decl->getReturnType());
 	for (auto i : decl->getParameters())
 		type->addParameter(i->getType());
 	_variables[currentScope() - 1][decl->getVarDecl()->getVarId()] = type;
@@ -854,7 +853,6 @@ DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node
 		case ST_NAMESPACE_DECLARATION: 	name = ((DST::NamespaceDeclaration*)d)->getName(); break;
 		case ST_PROPERTY_DECLARATION:  	name = ((DST::PropertyDeclaration*)d)->getName(); break;
 		case ST_FUNCTION_DECLARATION:  	name = ((DST::FunctionDeclaration*)d)->getVarDecl()->getVarId(); break;
-			// 	case ST_INTERFACE_DECLARATION: TODO
 		case ST_VARIABLE_DECLARATION:  	name = ((DST::VariableDeclaration*)d)->getVarId(); break;
 		case ST_TYPE_DECLARATION: 		name = ((DST::TypeDeclaration*)d)->getName(); break;
 		default: throw DinoException("Expected a declaration", EXT_GENERAL, d->getLine());
