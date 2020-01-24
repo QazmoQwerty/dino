@@ -461,14 +461,6 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 {
 	unicode_string name = node->getVarId();
 
-	for (int i = _currentNamespace.size() - 1; i >= 0; i--)
-	{
-		if (auto var = _currentNamespace[i]->getMemberType(name)) {
-			if (var->getExactType() == EXACT_SPECIFIER)
-				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
-			return new DST::Variable(node, var);
-		}
-	}
 
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (auto var = _variables[scope][name]) {
@@ -483,6 +475,16 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 			return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
 		return new DST::Variable(node, var);
 	}
+
+	for (int i = _currentNamespace.size() - 1; i >= 0; i--)
+	{
+		if (auto var = _currentNamespace[i]->getMemberType(name)) {
+			if (var->getExactType() == EXACT_SPECIFIER)
+				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
+			return new DST::Variable(node, var);
+		}
+	}
+
 	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
 }
 
