@@ -14,7 +14,7 @@ public:
 	static void setup();
 	static DST::Node *decorate(AST::Node *node);
 	static void clear();
-	static DST::NamespaceDeclaration *decorateProgram(AST::StatementBlock* node);
+	static DST::Program *decorateProgram(AST::StatementBlock* node);
 
 private:
 	static DST::NamespaceDeclaration *partA(AST::NamespaceDeclaration *node);
@@ -63,6 +63,7 @@ private:
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
 	static vector<DST::NamespaceDeclaration*> _currentNamespace;
 	static DST::TypeDeclaration *_currentTypeDecl;
+	static DST::Program *_currentProgram;
 	static DST::FunctionDeclaration* _main;
 	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;

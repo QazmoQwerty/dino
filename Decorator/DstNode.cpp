@@ -524,3 +524,13 @@ vector<DST::Node*> DST::PointerType::getChildren()
 	v.push_back(_type);
 	return v;
 }
+
+vector<DST::Node*> DST::Program::getChildren()
+{
+	vector <Node*> v;
+	for (auto i : _namespaces)
+		v.push_back(i.second);
+	return v;
+}
+
+void DST::Program::addNamespace(NamespaceDeclaration * decl ) { _namespaces[decl->getName()] = decl; }

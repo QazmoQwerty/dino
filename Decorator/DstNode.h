@@ -106,6 +106,27 @@ namespace DST
 		virtual bool isExpression() { return true; };
 	};
 
+	class NamespaceDeclaration;
+
+	class Program : public Node 
+	{
+	private:
+		//vector<NamespaceDeclaration*> _namespaces;
+		unordered_map<unicode_string, NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
+	public:
+		virtual bool isStatement() { return false; }
+		virtual bool isExpression() { return false; }
+		virtual string toString() { return "<Program>"; };
+		virtual vector<Node*> getChildren();
+
+		//void addNamespace(NamespaceDeclaration *decl) { _namespaces.push_back(decl); }
+		//vector<NamespaceDeclaration*> getNamespaces() { return _namespaces; }
+
+		void addNamespace(NamespaceDeclaration *decl);
+		NamespaceDeclaration *getNamespace(unicode_string name) { return _namespaces[name]; }
+		unordered_map<unicode_string, NamespaceDeclaration*, UnicodeHasherFunction> getNamespaces() { return _namespaces; }
+	};
+
 	/********************** Expressions **********************/
 
 	class Type : public Expression

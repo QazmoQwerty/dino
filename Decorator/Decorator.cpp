@@ -6,6 +6,8 @@ vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorat
 DST::FunctionDeclaration* Decorator::_main;
 vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 DST::TypeDeclaration *Decorator::_currentTypeDecl;
+DST::Program *Decorator::_currentProgram;
+
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
@@ -362,23 +364,32 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 	_currentNamespace.pop_back();
 }
 
-DST::NamespaceDeclaration * Decorator::decorateProgram(AST::StatementBlock * node)
+DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 {
-	if (node->getStatements()[0]->getStatementType() != ST_NAMESPACE_DECLARATION)
-		throw "everything must be in a namespace!";
+	_currentProgram = new DST::Program();
+	for (auto i : node->getStatements())
+	{
+		if (i->getStatementType() != ST_NAMESPACE_DECLARATION)
+			throw "everything must be in a namespace!";
+		_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i));
+	}
 
-	auto mainNs = (AST::NamespaceDeclaration*)node->getStatements()[0];
+	for (auto i : _currentProgram->getNamespaces())
+		partB(i.second);
 
-	auto ns = partA(mainNs);
-	partB(ns);
-	partC(ns);
+	for (auto i : _currentProgram->getNamespaces())
+		partC(i.second);
 	
 	if (!_main)
-		throw DinoException("No entry point (main function)", EXT_GENERAL, node->getLine());
+		throw DinoException("No entry point (Main function)", EXT_GENERAL, node->getLine());
 	
-	partD(ns);
-	partE(ns);
-	return ns;
+	for (auto i : _currentProgram->getNamespaces())
+		partD(i.second);
+
+	for (auto i : _currentProgram->getNamespaces())
+		partE(i.second);
+
+	return _currentProgram;
 }
 
 DST::Expression * Decorator::decorate(AST::Expression * node)
@@ -481,6 +492,10 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 			return new DST::Variable(node, var);
 		}
 	}
+
+	if (_currentProgram) 
+		if (auto var = _currentProgram->getNamespace(name))
+			return new DST::Variable(node, new DST::NamespaceType(var));
 
 	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
 }
