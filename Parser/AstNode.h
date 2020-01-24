@@ -358,6 +358,24 @@ namespace AST
 		Expression* getExpression() { return _expression; }
 	};
 
+	class ConstDeclaration : public Statement
+	{
+		unicode_string _name;
+		Expression* _expression;
+
+	public:
+		virtual ~ConstDeclaration() { if (_expression) delete _expression; }
+		virtual StatementType getStatementType() { return ST_CONST_DECLARATION; };
+		virtual string toString() { return string() + "<ConstDeclaration>\\n" + _name.to_string(); };
+		virtual vector<Node*> getChildren();
+
+		void setName(unicode_string name) { _name = name; }
+		void setExpression(Expression* expression) { _expression = expression; }
+
+		unicode_string getName() { return _name; }
+		Expression* getExpression() { return _expression; }
+	};
+
 	class FunctionDeclaration : public Statement
 	{
 	private:

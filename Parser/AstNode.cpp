@@ -296,3 +296,11 @@ vector<AST::Node*> AST::Identifier::getChildren()
 {
 	return vector<Node*>();
 }
+
+vector<AST::Node*> AST::ConstDeclaration::getChildren()
+{
+	return { _expression };
+	/*vector<Node*> v;
+	v.push_back(_expression);
+	return v;*/
+}

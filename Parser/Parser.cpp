@@ -159,6 +159,14 @@ AST::Node * Parser::std(Token * token)
 	{
 		switch (((OperatorToken*)token)->_operator._type)	
 		{
+			case(OT_CONST): {
+				auto node = new AST::ConstDeclaration();
+				node->setName(expectIdentifier());
+				expectOperator(OT_ASSIGN_EQUAL);
+				node->setExpression(parseExpression());
+				node->setLine(token->_line);
+				return node;
+			}
 			case(OT_WHILE): {
 				auto node = new AST::WhileLoop();
 				node->setCondition(parseExpression());
