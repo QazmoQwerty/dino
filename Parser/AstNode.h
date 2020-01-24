@@ -368,6 +368,8 @@ namespace AST
 		virtual StatementType getStatementType() { return ST_CONST_DECLARATION; };
 		virtual string toString() { return string() + "<ConstDeclaration>\\n" + _name.to_string(); };
 		virtual vector<Node*> getChildren();
+		virtual bool isDeclaration() { return true; }
+
 
 		void setName(unicode_string name) { _name = name; }
 		void setExpression(Expression* expression) { _expression = expression; }

@@ -112,15 +112,20 @@ namespace DST
 	{
 	protected:
 		AST::Expression *_base;
+		bool _isReadable;
+		bool _isWritable;
 	public:
-		Type(AST::Expression *base) : _base(base) { }
+		Type(AST::Expression *base) : _base(base) { _isReadable = _isWritable = true; }
+		Type(AST::Expression *base, bool isReadable, bool isWritable) : _base(base) { _isReadable = isReadable;  _isWritable = isWritable; }
 		virtual ~Type() { if (_base) delete _base; }
 		virtual Type *getType();
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
 		virtual bool equals(Type *other) = 0;
-		virtual bool readable() { return true; }
-		virtual bool writeable() { return true; }
+		void setNotReadable() { _isReadable = false; }
+		void setNotWritable() { _isWritable = false; }
+		virtual bool readable() { return _isReadable; }
+		virtual bool writeable() { return _isWritable; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toShortString() = 0;
@@ -304,6 +309,24 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	/*class ConstType : public Type
+	{
+		Type *_type;
+
+	public:
+		ConstType(Type *type) : Type(NULL), _type(type) { }
+		virtual ~ConstType() { if (_type) delete _type; }
+		ExactType getExactType() { return EXACT_CONST; }
+		virtual bool writable() { return false; }
+
+		virtual bool equals(Type *other) { return _type->equals(other); }
+		Type *getNonConstType() { return _type; }
+
+		virtual string toShortString() { return "const" + _type->toShortString(); };
+		virtual string toString() { return "<ConstType>\\n" + toShortString(); };
+		virtual vector<Node*> getChildren();
+	};*/
+
 	class ArrayType : public Type
 	{
 		Type *_valueType;
@@ -323,7 +346,7 @@ namespace DST
 				((ArrayType*)other)->_valueType->equals(_valueType);
 		}
 		size_t getLength() { return _length; }
-		Type *getType() { return _valueType; }
+		Type *getElementType() { return _valueType; }
 
 		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length) ? std::to_string(_length) : "") + "]"; };
 		virtual string toString() { return "<ArrayType>\\n" + toShortString(); };
@@ -735,6 +758,25 @@ namespace DST
 
 		Operator getOperator() { return _base->getOperator(); }
 		Expression* getExpression() { return _expression; }
+	};
+
+	class ConstDeclaration : public Statement
+	{
+		AST::ConstDeclaration *_base;
+		Expression* _expression;
+
+	public:
+		ConstDeclaration(AST::ConstDeclaration *base) : _base(base) { }
+		virtual ~ConstDeclaration() { if (_expression) delete _expression; }
+		virtual StatementType getStatementType() { return ST_CONST_DECLARATION; };
+		virtual string toString() { return _base->toString(); };
+		virtual vector<Node*> getChildren();
+		void setExpression(Expression* expression) { _expression = expression; }
+		Expression* getExpression() { return _expression; }
+		unicode_string getName() { return _base->getName(); }
+		AST::ConstDeclaration *getBase() { return _base; }
+
+		virtual bool isDeclaration() { return true; }
 	};
 
 	class InterfaceDeclaration : public Statement

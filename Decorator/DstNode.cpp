@@ -300,6 +300,11 @@ vector<DST::Node*> DST::UnaryOperationStatement::getChildren()
 	return v;
 }
 
+vector<DST::Node*> DST::ConstDeclaration::getChildren()
+{
+	return { _expression };
+}
+
 vector<DST::Node*> DST::VariableDeclaration::getChildren()
 {
 	vector<Node*> v;

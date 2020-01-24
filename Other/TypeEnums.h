@@ -217,6 +217,7 @@ enum ExpressionType
 enum ExactType 
 {
 	EXACT_BASIC,
+	EXACT_CONST,
 	EXACT_ARRAY,
 	EXACT_TYPELIST,
 	EXACT_FUNCTION,

@@ -222,6 +222,16 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			node->addMember(decl->getVarId(), varDecl, varDecl->getType());
 			break;
 		}
+		case ST_CONST_DECLARATION:
+		{
+			auto decl = (AST::ConstDeclaration*)i;
+			auto constDecl = new DST::ConstDeclaration(decl);
+			auto exp = decorate(decl->getExpression());
+			exp->getType()->setNotWritable();
+			constDecl->setExpression(exp);
+			node->addMember(decl->getName(), constDecl, constDecl->getExpression()->getType());
+			break;
+		}
 		default:
 			break;
 		}
@@ -732,7 +742,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)
-			throw DinoException("Unkown identifier", EXT_GENERAL, node->getLine());
+			throw DinoException("Unkown identifier \"" + varId.to_string() + "\"", EXT_GENERAL, node->getLine());
 		
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
