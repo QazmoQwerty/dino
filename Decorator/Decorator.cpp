@@ -239,7 +239,6 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 	_currentNamespace.pop_back();
 }
 
-
 void Decorator::partD(DST::NamespaceDeclaration *node)
 {
 	for (auto i : node->getMembers())
@@ -271,7 +270,6 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 		}
 	}
 }
-
 
 void Decorator::partE(DST::NamespaceDeclaration *node)
 {

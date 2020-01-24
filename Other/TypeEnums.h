@@ -138,6 +138,7 @@ enum OperatorType
 	OT_SWITCH,
 	OT_CASE,
 	OT_DEFAULT,
+	OT_INCLUDE,
 
 
 	// Misc:

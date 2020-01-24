@@ -3,6 +3,8 @@
 int _lineNum;
 int _index;
 
+set<string> Parser::_parsedFiles;
+
 Token * Parser::getToken(unsigned int index)
 {
 	if (index >= _tokens.size())
@@ -132,6 +134,24 @@ int Parser::leftPrecedence(OperatorToken * token, int category)
 	return prec;
 }
 
+AST::Node * Parser::parseFile(string fileName)
+{
+	if (_parsedFiles.count(fileName))
+		return new AST::StatementBlock();
+	_parsedFiles.insert(fileName);
+	std::ifstream t;
+	try { t = std::ifstream(fileName); }
+	catch (exception e) { std::cout << e.what() << std::endl; exit(0); }
+	std::stringstream buffer;
+	buffer << t.rdbuf();
+	std::string str = buffer.str();
+	auto lexed = Lexer::lex(str);
+	auto vec = Preprocessor::preprocess(lexed);
+	Parser p = Parser(vec);
+	AST::Node* ast = p.parseBlock();
+	return ast;
+}
+
 AST::Node * Parser::parse(int lastPrecedence)
 {
 	if (   peekToken()->_type == TT_LINE_BREAK		     || isOperator(peekToken(), OT_SQUARE_BRACKETS_CLOSE)
@@ -159,6 +179,22 @@ AST::Node * Parser::std(Token * token)
 	{
 		switch (((OperatorToken*)token)->_operator._type)	
 		{
+			case(OT_INCLUDE): {
+				/*if (eatOperator(OT_PARENTHESIS_OPEN))
+				{
+					while (!eatOperator(OT_PARENTHESIS_CLOSE))
+					{
+
+					}
+				}*/
+				auto t = nextToken();
+				if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType == LT_STRING)
+				{
+					string fileName = ((LiteralToken<string>*)t)->_value;
+					return parseFile(fileName);
+				}
+				
+			}
 			case(OT_CONST): {
 				auto node = new AST::ConstDeclaration();
 				node->setName(expectIdentifier());

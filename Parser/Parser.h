@@ -10,9 +10,21 @@
 #include "../Other/TypeEnums.h"
 #include "AstNode.h"
 
+#include <fstream>
+#include <iostream>
+#include <sstream> 
+#include <set>
+
+#include "../Lexer/Lexer.h"
+#include "../Lexer/Preprocessor.h"
+
+using std::set;
+
 class Parser
 {
 public:
+	static AST::Node * parseFile(string fileName);
+
 	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = 0; }
 	Token* getToken(unsigned int index);
 	Token* peekToken() { return getToken(_index); }
@@ -36,6 +48,7 @@ public:
 	int precedence(Token* token, int category);
 	int leftPrecedence(OperatorToken* token, int category);
 private:
+	static set<string> _parsedFiles;
 
 	bool isOperator(Token * token, OperatorType type) { return token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == type; };
 	bool eatOperator(OperatorType type) { if (isOperator(peekToken(), type)) { nextToken(); return true; } return false; }

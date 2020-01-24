@@ -45,15 +45,15 @@ int main(int argc, char *argv[])
 	outputAstFile = !cmdOptionExists(argv, argv + argc, "-noAst");
 	executeInterpret = !cmdOptionExists(argv, argv + argc, "-noRun");
 
-	try {
-		if (argc <= 1)
-			t = std::ifstream(/*"DinoCodeExamples/Test.dino"*/"Test.dino");
-		else t = std::ifstream(argv[1]);
-	}
-	catch (exception e) {
-		std::cout << e.what() << std::endl;
-		exit(0);
-	}
+	//try {
+	//	if (argc <= 1)
+	//		t = std::ifstream(/*"DinoCodeExamples/Test.dino"*/"Test.dino");
+	//	else t = std::ifstream(argv[1]);
+	//}
+	//catch (exception e) {
+	//	std::cout << e.what() << std::endl;
+	//	exit(0);
+	//}
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	DST::setup();
 	try
 	{
-		auto lexed = Lexer::lex(str);
+		/*auto lexed = Lexer::lex(str);
 		auto vec = Preprocessor::preprocess(lexed);
 
 		std::cout << "Finished lexing..." << std::endl;
@@ -73,7 +73,8 @@ int main(int argc, char *argv[])
 			for (auto i : vec) printToken(i);
 
 		Parser p = Parser(vec);
-		AST::Node* ast = p.parseBlock();
+		AST::Node* ast = p.parseBlock();*/
+		AST::Node *ast = Parser::parseFile(argc <= 1 ? "Test.dino" : argv[1]);
 
 		if (outputAstFile)
 			astToFile("AstDisplay.gv", ast, showLineAST);

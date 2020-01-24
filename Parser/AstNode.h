@@ -230,7 +230,12 @@ namespace AST
 		virtual vector<Node*> getChildren();
 
 		vector<Statement*> getStatements() { return _statements; }
-		void addStatement(Statement* statement) { _statements.push_back(statement); }
+		void addStatement(Statement* statement) { 
+			if (statement && statement->getStatementType() == ST_STATEMENT_BLOCK)
+				for (auto i : ((StatementBlock*)statement)->_statements)
+					_statements.push_back(i);
+			else _statements.push_back(statement); 
+		}
 	};
 
 	class IfThenElse : public Statement
