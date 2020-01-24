@@ -1,6 +1,6 @@
 #include "Decorator.h"
 
-#define MAIN_FUNC "main"
+#define MAIN_FUNC "Main"
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
 DST::FunctionDeclaration* Decorator::_main;
