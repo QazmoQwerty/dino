@@ -40,6 +40,7 @@ namespace CodeGenerator
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
     static std::unordered_map<std::string, AllocaInst*> _namedValues;
+    static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;
     static llvm::BasicBlock *_currFuncExit;
 
@@ -56,6 +57,7 @@ namespace CodeGenerator
     llvm::Function *getParentFunction(); 
 
     AllocaInst *CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) ; 
+    llvm::GlobalVariable *createGlobalVariable(DST::VariableDeclaration *node);
 
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);

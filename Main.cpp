@@ -28,7 +28,7 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char *argv[])
 {
-	//CodeGenerator::setup();
+	CodeGenerator::setup();
 
 	std::ifstream t;
 	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;

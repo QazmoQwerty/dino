@@ -53,6 +53,9 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
                         ret = declareFunction((DST::FunctionDeclaration*)member);
                     else declareFunction((DST::FunctionDeclaration*)member);
                     break;
+                case ST_VARIABLE_DECLARATION:
+                    createGlobalVariable((DST::VariableDeclaration*)member);
+                    break;
                 default: break;
             }
         }
@@ -74,6 +77,33 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
     }
 
     return ret;
+}
+
+/*llvm::Constant * getZeroValue(llvm::Type *type)
+{
+    
+}*/
+
+llvm::GlobalVariable * CodeGenerator::createGlobalVariable(DST::VariableDeclaration *node)
+{
+    auto type = evalType(node->getType());
+    auto name = node->getVarId().to_string();
+    _module->getOrInsertGlobal(name, type);
+    auto glob = _module->getNamedGlobal(name);
+    glob->setInitializer(llvm::Constant::getNullValue(type));
+    _globalValues[name] = glob;
+    glob->print(llvm::errs());
+    return glob;
+    // if (!_builder.GetInsertBlock())
+    //     throw "will this ever happen? idk...";
+    // auto func = _builder.GetInsertBlock()->getParent();
+
+    // // Create an alloca for the variable in the entry block.
+    // AllocaInst *alloca = CreateEntryBlockAlloca(func, type, name);
+    // _namedValues[name] = alloca;
+    // return alloca;
+
+    
 }
 
 Value *CodeGenerator::codeGen(DST::Node *node) 
@@ -180,10 +210,14 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 
 Value *CodeGenerator::codeGen(DST::Assignment* node)
 {
-    AllocaInst *left;
+    Value *left;
     Value *right;
     if (node->getLeft()->getExpressionType() == ET_IDENTIFIER)
-        left = _namedValues[((DST::Variable*)node->getLeft())->getVarId().to_string()]; // temporary for tests
+    {
+        if (auto val = _namedValues[((DST::Variable*)node->getLeft())->getVarId().to_string()])
+            left = val;
+        else left = _globalValues[((DST::Variable*)node->getLeft())->getVarId().to_string()]; // temporary for tests
+    }
     else left = codeGen((DST::VariableDeclaration*)node->getLeft());
     right = codeGen(node->getRight());
 
@@ -198,8 +232,8 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         case OT_ASSIGN_MULTIPLY:
             return _builder.CreateStore(_builder.CreateMul(_builder.CreateLoad(left), right, "addtmp"), left);
         default: throw DinoException("Unimplemented assignment operator", EXT_GENERAL, node->getLine());
-    }
     
+    }
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
@@ -244,8 +278,12 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
 
 Value *CodeGenerator::codeGen(DST::Variable *node)
 {
-    auto v = _namedValues[node->getVarId().to_string()];
+    Value *v = NULL;
     
+    if (auto var = _namedValues[node->getVarId().to_string()])
+        v = var;
+    else v = _globalValues[node->getVarId().to_string()];
+
     return _builder.CreateLoad(v, node->getVarId().to_string().c_str());
 }
 
