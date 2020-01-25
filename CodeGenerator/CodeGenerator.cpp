@@ -82,6 +82,7 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
                 _currentNamespace.pop_back();
                 break;
             case ST_FUNCTION_DECLARATION:
+                std::cout << "calling codegenfunction" << std::endl;
                 codegenFunction((DST::FunctionDeclaration*)member);
                 break;
             default: break;
@@ -270,6 +271,10 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         else for (int i = _currentNamespace.size() - 1; i >= 0 && left == NULL; i--)
             left = _currentNamespace[i]->values[((DST::Variable*)node->getLeft())->getVarId().to_string()];
         //left = _globalValues[((DST::Variable*)node->getLeft())->getVarId().to_string()]; // temporary for tests
+    }
+    else if (node->getLeft()->getExpressionType() == ET_MEMBER_ACCESS)
+    {
+        // TODO
     }
     else left = codeGen((DST::VariableDeclaration*)node->getLeft());
     right = codeGen(node->getRight());
