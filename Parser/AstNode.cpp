@@ -1,5 +1,5 @@
 #include "AstNode.h"
-#include "..\Decorator\DstNode.h"
+#include "../Decorator/DstNode.h"
 
 vector<AST::Node*> AST::StatementBlock::getChildren()
 {

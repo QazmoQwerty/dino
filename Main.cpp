@@ -1,4 +1,4 @@
-﻿#include <fstream>
+﻿//#include <fstream>
 #include <iostream>
 #include <sstream> 
 
@@ -6,7 +6,7 @@
 #include "Lexer/Preprocessor.h"
 #include "Parser/AstNode.h"
 #include "Other/AstToFile.h"
-//#include "CodeGenerator/CodeGenerator.h"
+#include "CodeGenerator/CodeGenerator.h"
 #include "Parser/Parser.h"
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
@@ -54,9 +54,9 @@ int main(int argc, char *argv[])
 	//	std::cout << e.what() << std::endl;
 	//	exit(0);
 	//}
-	std::stringstream buffer;
-	buffer << t.rdbuf();
-	std::string str = buffer.str();
+	//std::stringstream buffer;
+	//buffer << t.rdbuf();
+	//std::string str = buffer.str();
 
 	OperatorsMap::setup();
 	Lexer::setup();
