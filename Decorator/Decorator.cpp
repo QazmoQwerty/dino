@@ -741,6 +741,10 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (type->getExactType() == EXACT_PROPERTY && ((DST::PropertyType*)type)->hasGet())
 			type = ((DST::PropertyType*)type)->getReturn();
 
+		if (type->getExactType() == EXACT_POINTER)
+			type = ((DST::PointerType*)type)->getPtrType();
+			
+
 		DST::Type *memberType = NULL;
 		unicode_string varId = ((AST::Identifier*)node->getRight())->getVarId();
 		if (type->getExactType() == EXACT_BASIC)
