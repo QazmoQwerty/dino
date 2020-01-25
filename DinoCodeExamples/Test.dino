@@ -1,0 +1,32 @@
+/*int Mul(int a, int b) {
+    return a * b
+}
+
+int Pow(int a, int n) {
+    int ret := 1
+    for int i := 0 | i < n | i += 1:
+        ret := Mul(ret, a)
+    return ret
+}
+
+int Main() {
+    return Pow()
+}*/
+
+/*int(int) a := (int c) int { return c + 1 }
+int x := a(10)*/
+
+namespace Foo1 {
+    int a
+
+    /*namespace Foo2 {
+        int a
+        int b
+
+        int A {
+            get: return b + a
+        }
+    }
+
+    int C: get: return a + 10*/
+}
