@@ -48,7 +48,10 @@ namespace CodeGenerator
     void execute(llvm::Function *func);
 
     // Returns a pointer to the Main function
-    llvm::Function *startCodeGen(DST::StatementBlock *node);
+    llvm::Function *startCodeGen(DST::Program *node);
+
+    llvm::Function * declareFunction(DST::FunctionDeclaration *node);
+    void codegenFunction(DST::FunctionDeclaration *node);
 
     llvm::Function *getParentFunction(); 
 

@@ -82,16 +82,16 @@ int main(int argc, char *argv[])
 		std::cout << "Finished parsing..." << std::endl;
 
 		//DST::Node* dst = Decorator::decorate(ast);
-		DST::Node* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
+		DST::Program* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
 		dstToFile("DstDisplay.gv", dst, false);
 
 		std::cout << "Finished decorating..." << std::endl;
 
-		//auto mainFunc = CodeGenerator::startCodeGen(dynamic_cast<DST::StatementBlock*>(dst));
-		//CodeGenerator::execute(mainFunc);
-		//auto irCode = CodeGenerator::codeGen(dynamic_cast<DST::StatementBlock*>(dst)->getStatements()[0]);
-		//irCode->print(llvm::errs());
-		//CodeGenerator::execute((llvm::Function*)irCode);
+		auto mainFunc = CodeGenerator::startCodeGen(dst);
+
+		std::cout << "Finished generating IR..." << std::endl;
+		CodeGenerator::execute(mainFunc);
+
 		Decorator::clear();
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }
