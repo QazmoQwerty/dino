@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
 		Parser p = Parser(vec);
 		AST::Node* ast = p.parseBlock();*/
-		AST::Node *ast = Parser::parseFile(argc <= 1 ? "Test.dino" : argv[1]);
+		AST::Node *ast = Parser::parseFile(argc <= 1 ? "DinoCodeExamples/Test.dino" : argv[1]);
 
 		if (outputAstFile)
 			astToFile("AstDisplay.gv", ast, showLineAST);

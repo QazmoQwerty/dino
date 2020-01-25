@@ -40,9 +40,18 @@ namespace CodeGenerator
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
     static std::unordered_map<std::string, AllocaInst*> _namedValues;
-    static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
+    //static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;
     static llvm::BasicBlock *_currFuncExit;
+
+    typedef struct NamespaceMembers {
+        std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
+        std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
+    } NamespaceMembers;
+
+    static std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
+
+    static std::vector<NamespaceMembers*> _currentNamespace;
 
     void setup();
 
@@ -51,8 +60,13 @@ namespace CodeGenerator
     // Returns a pointer to the Main function
     llvm::Function *startCodeGen(DST::Program *node);
 
+    llvm::Function * declareNamespaceMembers(DST::NamespaceDeclaration *node);
+    void defineNamespaceMembers(DST::NamespaceDeclaration *node);
+
     llvm::Function * declareFunction(DST::FunctionDeclaration *node);
     void codegenFunction(DST::FunctionDeclaration *node);
+
+    NamespaceMembers *getNamespaceMembers(DST::Expression *node);
 
     llvm::Function *getParentFunction(); 
 
@@ -66,7 +80,7 @@ namespace CodeGenerator
     Value *codeGen(DST::BinaryOperation *node);
     Value *codeGen(DST::Assignment *node);
     Value *codeGen(DST::FunctionCall *node);
-
+    Value *codeGen(DST::MemberAccess *node);
 
     llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");
     Value *codeGen(DST::Variable *node);

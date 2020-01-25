@@ -37,52 +37,79 @@ void CodeGenerator::execute(llvm::Function *func)
     llvm::outs() << "Result: " << GV.IntVal << "\n";
 }
 
+llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaration *node)
+{
+    llvm::Function *ret = NULL;
+    for (auto p : node->getMembers())
+    {
+        auto member = p.second.first;
+        switch (member->getStatementType())
+        {
+            case ST_NAMESPACE_DECLARATION:
+            {
+                auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
+                _currentNamespace.push_back(currentNs);
+                if (auto var = declareNamespaceMembers((DST::NamespaceDeclaration*)member))
+                    ret = var;
+                _currentNamespace.pop_back();
+                break;
+            }
+            case ST_FUNCTION_DECLARATION:
+                if (((DST::FunctionDeclaration*)member)->getVarDecl()->getVarId().to_string() == "Main")
+                    ret = declareFunction((DST::FunctionDeclaration*)member);
+                else declareFunction((DST::FunctionDeclaration*)member);
+                break;
+            case ST_VARIABLE_DECLARATION:
+                createGlobalVariable((DST::VariableDeclaration*)member);
+                break;
+            default: break;
+        }
+    }
+    return ret;
+}
+
+void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
+{
+    for (auto p : node->getMembers())
+    {
+        auto member = p.second.first;
+        switch (member->getStatementType())
+        {
+            case ST_NAMESPACE_DECLARATION:
+                _currentNamespace.push_back(_currentNamespace.back()->namespaces[p.first]);
+                std::cout << _currentNamespace.back()->namespaces[p.first] << std::endl;
+                defineNamespaceMembers((DST::NamespaceDeclaration*)member);
+                _currentNamespace.pop_back();
+                break;
+            case ST_FUNCTION_DECLARATION:
+                codegenFunction((DST::FunctionDeclaration*)member);
+                break;
+            default: break;
+        }
+    }
+}
+
 // Returns a pointer to the Main function
 llvm::Function *CodeGenerator::startCodeGen(DST::Program *node) 
 {
     llvm::Function *ret = NULL;
     for (auto i : node->getNamespaces())
     {
-        for (auto p : i.second->getMembers())
-        {
-            auto member = p.second.first;
-            switch (member->getStatementType())
-            {
-                case ST_FUNCTION_DECLARATION:
-                    if (((DST::FunctionDeclaration*)member)->getVarDecl()->getVarId().to_string() == "Main")
-                        ret = declareFunction((DST::FunctionDeclaration*)member);
-                    else declareFunction((DST::FunctionDeclaration*)member);
-                    break;
-                case ST_VARIABLE_DECLARATION:
-                    createGlobalVariable((DST::VariableDeclaration*)member);
-                    break;
-                default: break;
-            }
-        }
+        auto currentNs = _namespaces[i.first] = new NamespaceMembers();
+        _currentNamespace.push_back(currentNs);
+        if (auto var = declareNamespaceMembers(i.second))
+            ret = var;
+        _currentNamespace.pop_back();
     }
     
     for (auto i : node->getNamespaces())
     {
-        for (auto p : i.second->getMembers())
-        {
-            auto member = p.second.first;
-            switch (member->getStatementType())
-            {
-                case ST_FUNCTION_DECLARATION:
-                    codegenFunction((DST::FunctionDeclaration*)member);
-                    break;
-                default: break;
-            }
-        }
+        _currentNamespace.push_back(_namespaces[i.first]);
+        defineNamespaceMembers(i.second);
+        _currentNamespace.pop_back();
     }
-
     return ret;
 }
-
-/*llvm::Constant * getZeroValue(llvm::Type *type)
-{
-    
-}*/
 
 llvm::GlobalVariable * CodeGenerator::createGlobalVariable(DST::VariableDeclaration *node)
 {
@@ -91,7 +118,8 @@ llvm::GlobalVariable * CodeGenerator::createGlobalVariable(DST::VariableDeclarat
     _module->getOrInsertGlobal(name, type);
     auto glob = _module->getNamedGlobal(name);
     glob->setInitializer(llvm::Constant::getNullValue(type));
-    _globalValues[name] = glob;
+    _currentNamespace.back()->values[name] = glob;
+    //_globalValues[name] = glob;
     glob->print(llvm::errs());
     return glob;
     // if (!_builder.GetInsertBlock())
@@ -180,6 +208,29 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     }
 }
 
+CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Expression *node)
+{
+    if (node->getExpressionType() == ET_MEMBER_ACCESS)
+    {
+        auto members = getNamespaceMembers(((DST::MemberAccess*)node)->getLeft());
+        return members->namespaces[((DST::MemberAccess*)node)->getRight()];
+    }
+    if (node->getExpressionType() == ET_IDENTIFIER)
+        return _namespaces[((DST::Variable*)node)->getVarId()];
+    else throw "TODO - write a proper error";
+}
+
+Value *CodeGenerator::codeGen(DST::MemberAccess *node)
+{
+    if (node->getLeft()->getType()->getExactType() == EXACT_NAMESPACE)
+    {
+        auto members = getNamespaceMembers(node->getLeft());
+        return members->values[node->getRight()];
+    }
+    else throw "types are not implemented yet!";
+    //auto left = _namespaces[node->getLeft()]
+}
+
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
     Value *left = codeGen(node->getLeft());
@@ -210,13 +261,15 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 
 Value *CodeGenerator::codeGen(DST::Assignment* node)
 {
-    Value *left;
-    Value *right;
+    Value *left = NULL;
+    Value *right = NULL;
     if (node->getLeft()->getExpressionType() == ET_IDENTIFIER)
     {
         if (auto val = _namedValues[((DST::Variable*)node->getLeft())->getVarId().to_string()])
             left = val;
-        else left = _globalValues[((DST::Variable*)node->getLeft())->getVarId().to_string()]; // temporary for tests
+        else for (int i = _currentNamespace.size() - 1; i >= 0 && left == NULL; i--)
+            left = _currentNamespace[i]->values[((DST::Variable*)node->getLeft())->getVarId().to_string()];
+        //left = _globalValues[((DST::Variable*)node->getLeft())->getVarId().to_string()]; // temporary for tests
     }
     else left = codeGen((DST::VariableDeclaration*)node->getLeft());
     right = codeGen(node->getRight());
@@ -282,7 +335,12 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
     
     if (auto var = _namedValues[node->getVarId().to_string()])
         v = var;
-    else v = _globalValues[node->getVarId().to_string()];
+    else 
+    {
+        for (int i = _currentNamespace.size() - 1; i >= 0 && v == NULL; i--)
+            v = _currentNamespace[i]->values[node->getVarId().to_string()];
+        //v = _globalValues[node->getVarId().to_string()];
+    }
 
     return _builder.CreateLoad(v, node->getVarId().to_string().c_str());
 }
@@ -326,14 +384,23 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node)
     auto funcType = llvm::FunctionType::get(returnType, types, false);
     auto funcId = node->getVarDecl()->getVarId().to_string();
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
-
+    /*funcType->print(llvm::errs()); TODO - remove
+    func->getType()->print(llvm::errs());
+    std::cout << func->getType()->isFunctionTy() << std::endl;
+    func->print(llvm::errs());*/
     // Set names for all arguments.
     unsigned Idx = 0;
     for (auto &arg : func->args())
         arg.setName(params[Idx++]->getVarId().to_string());
 
-    if (node->getContent() == nullptr)
-        return func;
+    _currentNamespace.back()->values[node->getVarDecl()->getVarId()] = func;
+    
+
+    auto back = _currentNamespace.back();
+
+
+    // if (node->getContent() == nullptr)
+    //     return func;
 
     return func;
 }
@@ -350,9 +417,19 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node)
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());*/
 
     auto funcName = node->getVarDecl()->getVarId().to_string();
-    llvm::Function *func = _module->getFunction(funcName);
-    if (func == nullptr)
+    auto funcPtr = _currentNamespace.back()->values[node->getVarDecl()->getVarId()];
+    llvm::Function *func = NULL;
+    if (funcPtr == nullptr)
         throw DinoException("Unknown function \"" + funcName + "\" referenced", EXT_GENERAL, node->getLine());
+    if (funcPtr->getType()->isFunctionTy())
+        func = (llvm::Function*)funcPtr;
+    else if (funcPtr->getType()->isPointerTy() && ((llvm::PointerType*)funcPtr->getType())->getElementType()->isFunctionTy())
+        func = (llvm::Function*)funcPtr;
+    else throw DinoException("\"" + funcName + "\" is not a function", EXT_GENERAL, node->getLine());
+
+    // llvm::Function *func = _module->getFunction(funcName);
+    // if (func == nullptr)
+    //     throw DinoException("Unknown function \"" + funcName + "\" referenced", EXT_GENERAL, node->getLine());
     auto params = node->getParameters();
 
     // Set names for all arguments.
