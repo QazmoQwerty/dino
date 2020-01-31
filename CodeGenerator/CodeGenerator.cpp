@@ -59,6 +59,9 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
                     ret = declareFunction((DST::FunctionDeclaration*)member);
                 else declareFunction((DST::FunctionDeclaration*)member);
                 break;
+            case ST_PROPERTY_DECLARATION:
+                declareProperty((DST::PropertyDeclaration*)member);
+                break;
             case ST_VARIABLE_DECLARATION:
                 createGlobalVariable((DST::VariableDeclaration*)member);
                 break;
@@ -79,6 +82,9 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
                 _currentNamespace.push_back(_currentNamespace.back()->namespaces[p.first]);
                 defineNamespaceMembers((DST::NamespaceDeclaration*)member);
                 _currentNamespace.pop_back();
+                break;
+            case ST_PROPERTY_DECLARATION:
+                codegenProperty((DST::PropertyDeclaration*)member);
                 break;
             case ST_FUNCTION_DECLARATION:
                 codegenFunction((DST::FunctionDeclaration*)member);
@@ -314,6 +320,17 @@ AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Ty
     return TmpB.CreateAlloca(type, nullptr, varName);
 }
 
+bool CodeGenerator::isFunc(llvm::Value *funcPtr)
+{
+    if (funcPtr == nullptr)
+        throw false;
+    if (funcPtr->getType()->isFunctionTy())
+        return true;
+    else if (funcPtr->getType()->isPointerTy() && ((llvm::PointerType*)funcPtr->getType())->getElementType()->isFunctionTy())
+        return true;
+    else return false;
+}
+
 Value *CodeGenerator::codeGen(DST::FunctionCall *node)
 {
     /*if (node->getFunctionId()->getExpressionType() == ET_IDENTIFIER)
@@ -335,11 +352,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
     }*/
     llvm::Value *funcPtr = codeGenLval(node->getFunctionId());
     llvm::Function *func = NULL;
-    if (funcPtr == nullptr)
-        throw DinoException("expression is not a function!", EXT_GENERAL, node->getLine());
-    if (funcPtr->getType()->isFunctionTy())
-        func = (llvm::Function*)funcPtr;
-    else if (funcPtr->getType()->isPointerTy() && ((llvm::PointerType*)funcPtr->getType())->getElementType()->isFunctionTy())
+    if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
     else throw DinoException("expression is not a function!", EXT_GENERAL, node->getLine());
 
@@ -357,7 +370,6 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
     args.push_back(codeGen(i));
             
     return _builder.CreateCall(func, args, "calltmp");
-
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
@@ -424,7 +436,101 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             return llvm::Type::getVoidTy(_context);
         else throw DinoException("Only int/bool/void is currently supported in code generation!", EXT_GENERAL, node->getLine());
     }
+    else if (node->getExactType() == EXACT_PROPERTY)
+        return evalType(((DST::PropertyType*)node)->getReturn());
     else throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
+}
+
+void CodeGenerator::declareProperty(DST::PropertyDeclaration *node)
+{
+    auto propType = evalType(node->getReturnType());
+
+    if (node->getSet())
+    {
+        vector<llvm::Type*> getParams, setParams;
+        setParams.push_back(propType);  // Add "value" parameter to set function
+        auto setFuncType = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), setParams, false);
+        unicode_string setFuncName = node->getName();
+        setFuncName += ".s";
+        llvm::Function *setFunc = llvm::Function::Create(setFuncType, llvm::Function::ExternalLinkage, setFuncName.to_string(), _module.get());
+        _currentNamespace.back()->values[setFuncName] = setFunc;
+        for (auto &arg : setFunc->args())
+            arg.setName("value");
+    }
+
+    if (node->getGet())
+    {
+        vector<llvm::Type*> getParams;
+        auto getFuncType = llvm::FunctionType::get(propType, getParams, false);
+        unicode_string getFuncName = node->getName();
+        getFuncName += ".g";
+        llvm::Function *getFunc = llvm::Function::Create(getFuncType, llvm::Function::ExternalLinkage, getFuncName.to_string(), _module.get());
+        _currentNamespace.back()->values[getFuncName] = getFunc;
+    }
+}
+
+void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node)
+{
+    if (node->getGet())
+    {
+        unicode_string getFuncName = node->getName();
+        getFuncName += ".g";
+        auto getFuncPtr = _currentNamespace.back()->values[getFuncName];
+        llvm::Function *getFunc = NULL;
+        if (isFunc(getFuncPtr))
+            getFunc = (llvm::Function*)getFuncPtr;
+        else throw DinoException("\"" + getFuncName.to_string() + "\" is not a function", EXT_GENERAL, node->getLine());
+
+        // Create a new basic block to start insertion into.
+        llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", getFunc);
+        _builder.SetInsertPoint(bb);
+        for (auto i : node->getGet()->getStatements()) 
+        {
+            auto val = codeGen(i);
+            if (val == nullptr)
+                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+        }
+        if (!_builder.GetInsertBlock()->getTerminator())
+            _builder.CreateRetVoid();
+        llvm::verifyFunction(*getFunc, &llvm::errs());
+
+        if (!_builder.GetInsertBlock()->getTerminator())
+            _builder.CreateRetVoid();
+    }
+
+    if (node->getSet())
+    {
+        unicode_string setFuncName = node->getName();
+        setFuncName += ".s";
+        auto setFuncPtr = _currentNamespace.back()->values[setFuncName];
+        llvm::Function *setFunc = NULL;
+        if (isFunc(setFuncPtr))
+            setFunc = (llvm::Function*)setFuncPtr;
+        else throw DinoException("\"" + setFuncName.to_string() + "\" is not a function", EXT_GENERAL, node->getLine());
+
+        // Create a new basic block to start insertion into.
+        llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", setFunc);
+        _builder.SetInsertPoint(bb);
+
+        // Record the function arguments in the NamedValues map.
+        _namedValues.clear();
+        for (llvm::Argument &arg : setFunc->args())
+        {
+            AllocaInst *alloca = CreateEntryBlockAlloca(setFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
+            _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+            _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
+        }
+
+        for (auto i : node->getSet()->getStatements()) 
+        {
+            auto val = codeGen(i);
+            if (val == nullptr)
+                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+        }
+        if (!_builder.GetInsertBlock()->getTerminator())
+            _builder.CreateRetVoid();
+        llvm::verifyFunction(*setFunc, &llvm::errs());
+    }
 }
 
 llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node)
@@ -450,35 +556,19 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node)
 
 void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node)
 {
-    /*vector<llvm::Type*> types;
-    auto params = node->getParameters();
-    for (auto i : params) 
-        types.push_back(evalType(i->getType()));
-    auto returnType = evalType(node->getReturnType());
-    auto funcType = llvm::FunctionType::get(returnType, types, false);
-    auto funcId = node->getVarDecl()->getVarId().to_string();
-    llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());*/
-
     auto funcName = node->getVarDecl()->getVarId().to_string();
     auto funcPtr = _currentNamespace.back()->values[node->getVarDecl()->getVarId()];
     llvm::Function *func = NULL;
-    if (funcPtr == nullptr)
-        throw DinoException("Unknown function \"" + funcName + "\" referenced", EXT_GENERAL, node->getLine());
-    if (funcPtr->getType()->isFunctionTy())
-        func = (llvm::Function*)funcPtr;
-    else if (funcPtr->getType()->isPointerTy() && ((llvm::PointerType*)funcPtr->getType())->getElementType()->isFunctionTy())
+    if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
     else throw DinoException("\"" + funcName + "\" is not a function", EXT_GENERAL, node->getLine());
 
-    // llvm::Function *func = _module->getFunction(funcName);
-    // if (func == nullptr)
-    //     throw DinoException("Unknown function \"" + funcName + "\" referenced", EXT_GENERAL, node->getLine());
     auto params = node->getParameters();
 
-    // Set names for all arguments.
-    unsigned Idx = 0;
-    for (auto &arg : func->args())
-        arg.setName(params[Idx++]->getVarId().to_string());
+    // // Set names for all arguments.
+    // unsigned Idx = 0;
+    // for (auto &arg : func->args())
+    //     arg.setName(params[Idx++]->getVarId().to_string());
 
     // Create a new basic block to start insertion into.
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
@@ -501,10 +591,9 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node)
     }
 
     if (!_builder.GetInsertBlock()->getTerminator())
-        _builder.CreateBr(_builder.GetInsertBlock());
+        _builder.CreateRetVoid();
     
-    if (!llvm::verifyFunction(*func, &llvm::errs()))
-        llvm::errs() << "Function Vertified!\n---------------------------\n";
+    llvm::verifyFunction(*func, &llvm::errs());
 }
 
 llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)

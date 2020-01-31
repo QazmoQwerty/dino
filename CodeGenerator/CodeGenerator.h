@@ -67,6 +67,11 @@ namespace CodeGenerator
     llvm::Function * declareFunction(DST::FunctionDeclaration *node);
     void codegenFunction(DST::FunctionDeclaration *node);
 
+    void declareProperty(DST::PropertyDeclaration *node);
+    void codegenProperty(DST::PropertyDeclaration *node);
+
+    bool isFunc(llvm::Value *funcPtr);
+
     NamespaceMembers *getNamespaceMembers(DST::Expression *node);
 
     llvm::Function *getParentFunction(); 

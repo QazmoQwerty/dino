@@ -425,7 +425,7 @@ bool DST::PropertyType::equals(Type * other)
 
 string DST::PropertyType::toShortString()
 {
-	return _return->toShortString();
+	return _return->toShortString() + ((_hasGet && _hasSet) ? "{get|set}" : _hasGet ? "{get}" : "{set}");
 }
 
 void DST::setup()

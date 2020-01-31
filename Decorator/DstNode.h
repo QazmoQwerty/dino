@@ -905,6 +905,7 @@ namespace DST
 		unicode_string getName() { return _base->getVarDecl()->getVarId(); }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 		unicode_string getPropId() { return _base->getVarDecl()->getVarId(); }
+		Type *getReturnType() { return _type; }
 		void setGet(StatementBlock* get) { _get = get; }
 		void setSet(StatementBlock* set) { _set = set; }
 		StatementBlock* getGet() { return _get; }

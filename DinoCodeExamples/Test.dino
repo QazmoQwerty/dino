@@ -1,11 +1,10 @@
 namespace Foo1 {
 
+    // namespace Ns1 {
+    //     int glob
 
-    namespace Ns1 {
-        int glob
-
-        int Foo(): return glob
-    }
+    //     int Foo(): return glob
+    // }
     // namespace Ns2 {
     //     int glob
     // }
@@ -19,11 +18,19 @@ namespace Foo1 {
         return n * Fact(n - 1)
     }*/
 
+    int glob
+
+    void Foo(int value1) {
+        glob := value1
+    }
+
+    int A {
+        get: return 10
+        set: glob := value
+    }
+
     int Main() {
-        Ns1.glob := 20
-        int a := Ns1.Foo()
-        Ns1.glob := 10
-        int b := Ns1.Foo()
-        return a + b
+        //int a := A
+        return 10
     }
 }
