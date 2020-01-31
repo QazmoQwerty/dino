@@ -45,8 +45,15 @@ namespace CodeGenerator
     static llvm::AllocaInst *_currRetPtr;
     static llvm::BasicBlock *_currFuncExit;
 
+    typedef struct TypeDefinition {
+        llvm::StructType *structType;
+        std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
+        std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> functions;
+    } TypeDefinition;
+
     typedef struct NamespaceMembers {
         std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
+        std::unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
         std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
     } NamespaceMembers;
 
@@ -66,6 +73,8 @@ namespace CodeGenerator
 
     llvm::Function * declareFunction(DST::FunctionDeclaration *node);
     void codegenFunction(DST::FunctionDeclaration *node);
+
+    void declareType(DST::TypeDeclaration *node);
 
     void declareProperty(DST::PropertyDeclaration *node);
     void codegenProperty(DST::PropertyDeclaration *node);

@@ -471,7 +471,7 @@ namespace AST
 		vector<PropertyDeclaration*> _propertyDeclarations;
 
 	public:
-		TypeDeclaration() {};
+		TypeDeclaration() : _interfaces(NULL) {};
 		virtual ~TypeDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };

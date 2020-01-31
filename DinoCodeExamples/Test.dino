@@ -6,16 +6,32 @@
 
 
 namespace Prog {
-    namespace Ns {
-        int a
-        int A {
-            get: return a * a
-            set: a := value
+    // namespace Ns {
+    //     int a
+    //     int A {
+    //         get: return a * a
+    //         set: a := value
+    //     }
+    // }
+
+    namespace Foo {
+        type Test2 {
+            int a
+            int b
         }
     }
 
+    type Test {
+        int a
+        bool b
+    }
+
     int Main() {
-        Ns.A := 5
-        return Ns.A
+        // Ns.A := 5
+        // return Ns.A
+        //Test t
+        //Foo.Test2 t2
+        A.A b
+        //return 100
     }
 }
