@@ -579,7 +579,7 @@ namespace AST
 		Identifier(unicode_string varId) : Expression() { _varId = varId; };
 		Identifier() : Expression() {};
 		void setVarId(unicode_string varId) { _varId = varId; }
-		unicode_string getVarId() { return _varId; }
+		unicode_string &getVarId() { return _varId; }
 		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; };
 		virtual string toString() { return "<Identifier>\\n" + _varId.to_string(); };
 		virtual vector<Node*> getChildren();

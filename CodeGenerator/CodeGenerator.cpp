@@ -232,6 +232,17 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 
 Value *CodeGenerator::codeGen(DST::MemberAccess *node)
 {
+    if (node->getType()->getExactType() == EXACT_PROPERTY)
+    {
+        node->getRight() += ".g";
+        auto lval = codeGenLval(node);
+        if (!isFunc(lval))
+            throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+        auto func = (llvm::Function*)lval;
+        if (func->arg_size() != 0)
+            throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+        return _builder.CreateCall(func, {}, "calltmp");
+    }
     return _builder.CreateLoad(codeGenLval(node), "accesstmp");
 }
 
@@ -280,22 +291,21 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
 {
     Value *left = NULL;
     Value *right = NULL;
-    /*if (node->getLeft()->getExpressionType() == ET_IDENTIFIER)
-    {
-        if (auto val = _namedValues[((DST::Variable*)node->getLeft())->getVarId().to_string()])
-            left = val;
-        else for (int i = _currentNamespace.size() - 1; i >= 0 && left == NULL; i--)
-            left = _currentNamespace[i]->values[((DST::Variable*)node->getLeft())->getVarId().to_string()];
-        //left = _globalValues[((DST::Variable*)node->getLeft())->getVarId().to_string()]; // temporary for tests
-    }
-    else if (node->getLeft()->getExpressionType() == ET_MEMBER_ACCESS)
-    {
-        auto val = codeGen(node->getLeft());
-        // TODO
-    }
-    else left = codeGen((DST::VariableDeclaration*)node->getLeft());*/
     left = codeGenLval(node->getLeft());
     right = codeGen(node->getRight());
+
+    /*if (node->getLeft()->getType()->getExactType() == EXACT_PROPERTY) // TODO
+    {
+        if (node->getOperator()._type != OT_ASSIGN_EQUAL)
+            throw DinoException("", EXT_GENERAL, node->getLine());
+        
+        
+        if (!isFunc(left))
+            throw DinoException("expression is not a function", EXT_GENERAL, node->getLine());
+
+        auto func = (llvm::Function*)left;
+
+    }*/
 
     switch (node->getOperator()._type) 
     {
@@ -323,7 +333,7 @@ AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Ty
 bool CodeGenerator::isFunc(llvm::Value *funcPtr)
 {
     if (funcPtr == nullptr)
-        throw false;
+        return false;
     if (funcPtr->getType()->isFunctionTy())
         return true;
     else if (funcPtr->getType()->isPointerTy() && ((llvm::PointerType*)funcPtr->getType())->getElementType()->isFunctionTy())
@@ -333,23 +343,6 @@ bool CodeGenerator::isFunc(llvm::Value *funcPtr)
 
 Value *CodeGenerator::codeGen(DST::FunctionCall *node)
 {
-    /*if (node->getFunctionId()->getExpressionType() == ET_IDENTIFIER)
-    {
-        auto funcName = ((DST::Variable*)node->getFunctionId())->getVarId().to_string();
-        llvm::Function *funcPtr = _module->getFunction(funcName);
-        if (funcPtr == nullptr)
-            throw DinoException("Unknown function \"" + funcName + "\" referenced", EXT_GENERAL, node->getLine());
-        
-        
-        // if (funcPtr->arg_size() != node->getArguments()->getExpressions().size())
-        //     throw DinoException("Incorrect # arguments passed", EXT_GENERAL, node->getLine());
-
-        std::vector<Value *> args;
-        for (auto i : node->getArguments()->getExpressions())
-            args.push_back(codeGen(i));
-                
-        return _builder.CreateCall(funcPtr, args, "calltmp");
-    }*/
     llvm::Value *funcPtr = codeGenLval(node->getFunctionId());
     llvm::Function *func = NULL;
     if (isFunc(funcPtr))
@@ -394,17 +387,17 @@ Value *CodeGenerator::codeGenLval(DST::Variable *node)
 
 Value *CodeGenerator::codeGen(DST::Variable *node)
 {
-    /*Value *v = NULL;
-    
-    if (auto var = _namedValues[node->getVarId().to_string()])
-        v = var;
-    else 
+    if (node->getType()->getExactType() == EXACT_PROPERTY)
     {
-        for (int i = _currentNamespace.size() - 1; i >= 0 && v == NULL; i--)
-            v = _currentNamespace[i]->values[node->getVarId().to_string()];
-        //v = _globalValues[node->getVarId().to_string()];
-    }*/
-
+        node->getVarId() += ".g";
+        auto lval = codeGenLval(node);
+        if (!isFunc(lval))
+            throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+        auto func = (llvm::Function*)lval;
+        if (func->arg_size() != 0)
+            throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+        return _builder.CreateCall(func, {}, "calltmp");
+    }
     return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
 }
 

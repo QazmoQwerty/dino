@@ -411,7 +411,7 @@ namespace DST
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		unicode_string getVarId() { return _base->getVarId(); }
+		unicode_string &getVarId() { return _base->getVarId(); }
 	};
 
 	class BinaryOperation : public Expression
@@ -507,7 +507,7 @@ namespace DST
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_MEMBER_ACCESS; }
 		Expression *getLeft() { return _left; }
-		unicode_string getRight() { return ((AST::Identifier*)_base->getRight())->getVarId(); }
+		unicode_string &getRight() { return ((AST::Identifier*)_base->getRight())->getVarId(); }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toString() { return "<MemberAccess>\n." + getRight().to_string() + "\nType: " + _type->toShortString(); };

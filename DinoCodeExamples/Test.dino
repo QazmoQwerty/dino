@@ -18,19 +18,22 @@ namespace Foo1 {
         return n * Fact(n - 1)
     }*/
 
-    int glob
+    // int glob
 
-    void Foo(int value1) {
-        glob := value1
+    // void Foo(int value1) {
+    //     glob := value1
+    // }
+
+    namespace Foo2 {
+        int B: get: return 20
     }
 
     int A {
         get: return 10
-        set: glob := value
+        //set: glob := value
     }
 
     int Main() {
-        //int a := A
-        return 10
+        return Foo2.B + A
     }
 }
