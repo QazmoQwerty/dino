@@ -73,6 +73,13 @@ namespace CodeGenerator
     AllocaInst *CreateEntryBlockAlloca(llvm::Function *func, llvm::Type *type, const string &varName) ; 
     llvm::GlobalVariable *createGlobalVariable(DST::VariableDeclaration *node);
 
+    Value *codeGenLval(DST::Expression *node);
+    Value *codeGenLval(DST::Variable *node);
+    Value *codeGenLval(DST::MemberAccess *node);
+    AllocaInst *codeGenLval(DST::VariableDeclaration *node);
+
+
+
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);
     Value *codeGen(DST::Expression *node);
