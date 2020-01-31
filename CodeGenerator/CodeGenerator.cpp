@@ -47,7 +47,6 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
         {
             case ST_NAMESPACE_DECLARATION:
             {
-                std::cout << "entering ns: " << p.first.to_string() << std::endl;
                 auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
                 _currentNamespace.push_back(currentNs);
                 if (auto var = declareNamespaceMembers((DST::NamespaceDeclaration*)member))
@@ -61,7 +60,6 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
                 else declareFunction((DST::FunctionDeclaration*)member);
                 break;
             case ST_VARIABLE_DECLARATION:
-                std::cout << "creating global: " << ((DST::VariableDeclaration*)member)->getVarId().to_string() << std::endl;
                 createGlobalVariable((DST::VariableDeclaration*)member);
                 break;
             default: break;
@@ -78,11 +76,8 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
         switch (member->getStatementType())
         {
             case ST_NAMESPACE_DECLARATION:
-                std::cout << "entering ns:" << p.first.to_string() << std::endl;
                 _currentNamespace.push_back(_currentNamespace.back()->namespaces[p.first]);
-                std::cout << _currentNamespace.back()->namespaces[p.first] << std::endl;
                 defineNamespaceMembers((DST::NamespaceDeclaration*)member);
-                std::cout << "leaving ns:" << p.first.to_string() << std::endl;
                 _currentNamespace.pop_back();
                 break;
             case ST_FUNCTION_DECLARATION:
@@ -113,7 +108,6 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
         defineNamespaceMembers(i.second);
         _currentNamespace.pop_back();
     }
-    std::cout << "finished B\n";
     return ret;
 }
 
@@ -123,7 +117,6 @@ llvm::GlobalVariable * CodeGenerator::createGlobalVariable(DST::VariableDeclarat
     auto name = node->getVarId().to_string();
     auto glob = new llvm::GlobalVariable(*_module, type, false, llvm::GlobalVariable::CommonLinkage, llvm::Constant::getNullValue(type), name);
     _currentNamespace.back()->values[node->getVarId()] = glob;
-    glob->print(llvm::errs());
     return glob;
 }
 
@@ -207,12 +200,10 @@ CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Express
     if (node->getExpressionType() == ET_MEMBER_ACCESS)
     {
         auto x = (DST::MemberAccess*)node;
-        std::cout << "getting " << x->getRight().to_string() << std::endl;
         auto members = getNamespaceMembers(((DST::MemberAccess*)node)->getLeft());
         return members->namespaces[((DST::MemberAccess*)node)->getRight()];
     }
     if (node->getExpressionType() == ET_IDENTIFIER) {
-        std::cout << "name: " << ((DST::Variable*)node)->getVarId().to_string() << std::endl;
         if (_currentNamespace.back())
             if (auto ns = _currentNamespace.back()->namespaces[((DST::Variable*)node)->getVarId()])
                 return ns;
@@ -223,23 +214,15 @@ CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Express
 
 Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 {
-    std::cout << "codegenning memberaccess lval\n";
     if (node->getLeft()->getType()->getExactType() == EXACT_NAMESPACE)
     {
         auto members = getNamespaceMembers(node->getLeft());
         
         if (!members)
             return NULL;
-        std::cout << "getting global: " << node->getRight().to_string() << std::endl;
-        for (auto i : members->values)
-        {
-            std::cout << i.first.to_string() << '\n';
-            std::cout << i.second << '\n';
-        }
         return members->values[node->getRight()];
     }
     else throw "types are not implemented yet!";
-    //auto left = _namespaces[node->getLeft()]
 }
 
 Value *CodeGenerator::codeGen(DST::MemberAccess *node)
@@ -279,7 +262,6 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
 {
     if (node == nullptr)
         return NULL;
-    std::cout << "codegenning lval\n";
     switch (node->getExpressionType()) 
     {
         case ET_IDENTIFIER: return codeGenLval((DST::Variable*)node);
@@ -432,23 +414,13 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node)
     auto funcType = llvm::FunctionType::get(returnType, types, false);
     auto funcId = node->getVarDecl()->getVarId().to_string();
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
-    /*funcType->print(llvm::errs()); TODO - remove
-    func->getType()->print(llvm::errs());
-    std::cout << func->getType()->isFunctionTy() << std::endl;
-    func->print(llvm::errs());*/
+
     // Set names for all arguments.
     unsigned Idx = 0;
     for (auto &arg : func->args())
         arg.setName(params[Idx++]->getVarId().to_string());
 
     _currentNamespace.back()->values[node->getVarDecl()->getVarId()] = func;
-    
-
-    auto back = _currentNamespace.back();
-
-
-    // if (node->getContent() == nullptr)
-    //     return func;
 
     return func;
 }
@@ -684,8 +656,6 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
     llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(_context, "ifcont");
     llvm::BranchInst *br = _builder.CreateCondBr(cond, thenBB, elseBB);
-    parent->print(llvm::errs());
-    thenBB->print(llvm::errs());
     parent->getBasicBlockList().push_back(thenBB);
     _builder.SetInsertPoint(thenBB);
     if (node->getThenBranch())
