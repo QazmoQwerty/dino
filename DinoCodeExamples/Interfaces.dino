@@ -1,39 +1,36 @@
 namespace program {
 
 	namespace main_program {
-		void print(string str)
+		void print(int n)
 
-		void main() {
-			int x1
-			int x2
-			math m
-			mathV2 m2
+		void Main() {
+			Square s
+			s.Side := 5
 
-			x1 := 10
-			x2 := 20
-			
-			print("sum: " + string(m.add(x1, x2)))
-			print("avg: " + string(m2.avg(x1, x2)))
+			ISquare i := &s
+			IShape shape := i
+			print(ISquare(shape).P())
 		}
 	}
-
-	type math is Imath { // TODO: check if math really implements Imath
-		int add(int a, int b) {
-			return a + b
+	type Square is ISquare {
+		int x
+		int P() {
+			return x * 4;
 		}
-		int div(int a, int b) {
-			return a / b
+		int Side { 
+			get { return x }
+			set { x := value }
 		}
-	}
 
-	type mathV2 {
-		int avg (int a, int b) {
-			math m
-			return m.div(m.add(a, b), 2)
+		int Area() {
+			return x * x
 		}
 	}
-
-	interface Imath {
-		int div(int a, int b)
+	interface IShape {
+		int Area()
+	}
+	interface ISquare is IShape {
+		int Side { get | set }
+		int P()
 	}
 }

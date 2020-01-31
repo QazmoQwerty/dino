@@ -814,6 +814,7 @@ namespace DST
 		vector<InterfaceDeclaration*> getImplements() { return _implements; }
 		void addImplements(InterfaceDeclaration *implement) { _implements.push_back(implement); }
 		void notImplements(InterfaceDeclaration* inter);
+		bool implements(InterfaceDeclaration* inter);
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id) { return _decls[id].first; }
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getDeclarations() { return _decls; }
@@ -848,6 +849,7 @@ namespace DST
 
 		vector<InterfaceDeclaration*> getInterfaces() { return _interfaces; }
 		void addInterface(InterfaceDeclaration *interface) { _interfaces.push_back(interface); }
+		bool validateImplements(InterfaceDeclaration *inter);
 		bool implements(InterfaceDeclaration *inter);
 
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
