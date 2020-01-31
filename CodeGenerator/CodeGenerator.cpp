@@ -291,22 +291,30 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
 {
     Value *left = NULL;
     Value *right = NULL;
-    left = codeGenLval(node->getLeft());
-    right = codeGen(node->getRight());
 
-    /*if (node->getLeft()->getType()->getExactType() == EXACT_PROPERTY) // TODO
+    if (node->getLeft()->getType()->getExactType() == EXACT_PROPERTY) // TODO
     {
-        if (node->getOperator()._type != OT_ASSIGN_EQUAL)
-            throw DinoException("", EXT_GENERAL, node->getLine());
-        
+        if (node->getLeft()->getExpressionType() == ET_IDENTIFIER)
+            ((DST::Variable*)node->getLeft())->getVarId() += ".s";
+        else if (node->getLeft()->getExpressionType() == ET_MEMBER_ACCESS)
+            ((DST::MemberAccess*)node->getLeft())->getRight() += ".s";
+
+        left = codeGenLval(node->getLeft());
+        right = codeGen(node->getRight());
         
         if (!isFunc(left))
             throw DinoException("expression is not a function", EXT_GENERAL, node->getLine());
 
         auto func = (llvm::Function*)left;
+        std::vector<Value *> args;
+        args.push_back(right);
 
-    }*/
+        _builder.CreateCall(func, args);
+        return right;
+    }
 
+    left = codeGenLval(node->getLeft());
+    right = codeGen(node->getRight());
     switch (node->getOperator()._type) 
     {
         case OT_ASSIGN_EQUAL:
@@ -360,9 +368,9 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
 
     std::vector<Value *> args;
     for (auto i : node->getArguments()->getExpressions())
-    args.push_back(codeGen(i));
+        args.push_back(codeGen(i));
             
-    return _builder.CreateCall(func, args, "calltmp");
+    return _builder.CreateCall(func, args);
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)

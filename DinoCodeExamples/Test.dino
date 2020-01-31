@@ -1,39 +1,21 @@
-namespace Foo1 {
 
-    // namespace Ns1 {
-    //     int glob
 
-    //     int Foo(): return glob
-    // }
-    // namespace Ns2 {
-    //     int glob
-    // }
 
-    
-    //int Foo(): return glob
 
-    /*int Fact(int n) {
-        if n = 0: 
-            return 1
-        return n * Fact(n - 1)
-    }*/
 
-    // int glob
 
-    // void Foo(int value1) {
-    //     glob := value1
-    // }
 
-    namespace Foo2 {
-        int B: get: return 20
-    }
-
-    int A {
-        get: return 10
-        //set: glob := value
+namespace Prog {
+    namespace Ns {
+        int a
+        int A {
+            get: return a * a
+            set: a := value
+        }
     }
 
     int Main() {
-        return Foo2.B + A
+        Ns.A := 5
+        return Ns.A
     }
 }
