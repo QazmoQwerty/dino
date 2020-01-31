@@ -145,8 +145,9 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			for (auto prop : decl->getBase()->getProperties())
 			{
 				auto retType = evalType(prop->getVarDecl()->getVarType());
-				auto type = new DST::PropertyType(retType, prop->getGet(), prop->getSet());
+				auto type = new DST::PropertyType(retType, prop->hasGet(), prop->hasSet());
 				decl->addDeclaration(new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
+				
 			}
 			break;
 		}
@@ -260,7 +261,7 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getInterfaces())
 				{
 					// check if type implements the interface.
-					decl->implements(i);
+					decl->validateImplements(i);
 					
 					// check if the interfaces that the type implements are distinct
 					for (auto otherI : decl->getInterfaces())
@@ -960,6 +961,9 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 		delete ret;
 		ret = arr;
 	}
+	else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
+		return new DST::PointerType((DST::Type*)ret);
+	}
 	else if (ret->getExpressionType() != ET_TYPE)
 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
 	return (DST::Type*)ret;
@@ -983,5 +987,14 @@ void Decorator::clear()
 	leaveBlock();
 	for (auto i : _toDelete)
 		if (i != nullptr)
-			delete i;
+		{
+			try
+			{
+				delete i;
+			}
+			catch (...)
+			{
+				// continue;
+			}
+		}
 }

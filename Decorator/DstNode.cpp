@@ -183,7 +183,7 @@ void DST::TypeDeclaration::addDeclaration(Statement * decl, Type * type)
 	_decls[varId] = std::make_pair(decl, type);
 }
 
-bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
+bool DST::TypeDeclaration::validateImplements(InterfaceDeclaration * inter)
 {
 	for (auto decl : inter->getDeclarations())
 	{
@@ -192,9 +192,24 @@ bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
 	}
 	for (auto i : inter->getImplements())
 	{
-		implements(i);
+		validateImplements(i);
 	}
 	return true;
+}
+
+bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
+{
+	for (auto i : _interfaces)
+	{
+		if (i->getName() == inter->getName())
+			return true;
+		for (auto subi : i->getImplements())
+		{
+			if (subi->getName() == inter->getName())
+				return true;
+		}
+	}
+	return false;
 }
 
 vector<DST::Node*> DST::TypeDeclaration::getChildren()
@@ -243,6 +258,39 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 	{
 		notImplements(inter);
 	}
+}
+
+bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
+{
+	if(getName() == inter->getName())
+		return true;
+	
+	for (auto i : _implements)
+		return i->implements(inter);
+
+	return false;
+}
+
+ DST::Statement* DST::InterfaceDeclaration::getDeclaration(unicode_string id)
+{
+	if (_decls.count(id))
+		return _decls[id].first;
+
+	for (auto i : _implements)
+		return i->getDeclaration(id);
+
+	return NULL;
+}
+
+DST::Type *DST::InterfaceDeclaration::getMemberType(unicode_string id)
+{
+	if(_decls.count(id))
+		return _decls[id].second;
+	
+	for (auto i : _implements)
+		return i->getMemberType(id);
+
+	return NULL;
 }
 
 vector<DST::Node*> DST::InterfaceDeclaration::getChildren()
@@ -505,10 +553,19 @@ bool DST::PointerType::equals(Type * other)
 
 	if (other->getExactType() != EXACT_POINTER)
 		return false;
-
-	bool b = ((PointerType*)other)->_type->equals(_type);
-
-	return b;
+	
+	auto inter = ((TypeSpecifierType*)(_type->getType()))->getInterfaceDecl();
+	if (inter)
+	{
+		auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getTypeDecl();
+		auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getInterfaceDecl();
+		if (otype)
+			return otype->implements(inter);
+		else if (ointer)
+			return inter->implements(ointer) || ointer->implements(inter);
+		else return false;
+	}
+	else return ((PointerType*)other)->_type->equals(_type);
 
 	//return other != nullptr && other->getExactType() == /EXACT_POINTER && ((PointerType*)other)->_type->equals(_type);
 }
