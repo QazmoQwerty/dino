@@ -217,7 +217,6 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     if (node->getLeft()->getType()->getExactType() == EXACT_NAMESPACE)
     {
         auto members = getNamespaceMembers(node->getLeft());
-        
         if (!members)
             return NULL;
         return members->values[node->getRight()];
@@ -317,7 +316,7 @@ AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Ty
 
 Value *CodeGenerator::codeGen(DST::FunctionCall *node)
 {
-    if (node->getFunctionId()->getExpressionType() == ET_IDENTIFIER)
+    /*if (node->getFunctionId()->getExpressionType() == ET_IDENTIFIER)
     {
         auto funcName = ((DST::Variable*)node->getFunctionId())->getVarId().to_string();
         llvm::Function *funcPtr = _module->getFunction(funcName);
@@ -333,8 +332,32 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
             args.push_back(codeGen(i));
                 
         return _builder.CreateCall(funcPtr, args, "calltmp");
-    }
-    return NULL;
+    }*/
+    llvm::Value *funcPtr = codeGenLval(node->getFunctionId());
+    llvm::Function *func = NULL;
+    if (funcPtr == nullptr)
+        throw DinoException("expression is not a function!", EXT_GENERAL, node->getLine());
+    if (funcPtr->getType()->isFunctionTy())
+        func = (llvm::Function*)funcPtr;
+    else if (funcPtr->getType()->isPointerTy() && ((llvm::PointerType*)funcPtr->getType())->getElementType()->isFunctionTy())
+        func = (llvm::Function*)funcPtr;
+    else throw DinoException("expression is not a function!", EXT_GENERAL, node->getLine());
+
+    funcPtr->print(llvm::errs());
+
+    func->print(llvm::errs());
+    if (func->arg_size() != node->getArguments()->getExpressions().size())
+        throw DinoException(string("Incorrect # arguments passed (needed ") + 
+            std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
+            , EXT_GENERAL, node->getLine());
+        
+
+    std::vector<Value *> args;
+    for (auto i : node->getArguments()->getExpressions())
+    args.push_back(codeGen(i));
+            
+    return _builder.CreateCall(func, args, "calltmp");
+
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
@@ -343,7 +366,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
     {
         case OT_RETURN:
             return _builder.CreateRet(codeGen(node->getExpression()));
-        default: return NULL;
+        default: throw DinoException("Unimplemented unary operation statement!", EXT_GENERAL, node->getLine());
     }
 }
 

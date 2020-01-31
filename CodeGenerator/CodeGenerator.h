@@ -29,6 +29,7 @@
 
 
 #include "../Decorator/DstNode.h"
+#include <string>
 #define CONDITION_TYPE unicode_string("bool")
 
 using llvm::Value;
