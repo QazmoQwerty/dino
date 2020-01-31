@@ -28,7 +28,7 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char *argv[])
 {
-	//CodeGenerator::setup();
+	CodeGenerator::setup();
 
 	std::ifstream t;
 	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
 		Parser p = Parser(vec);
 		AST::Node* ast = p.parseBlock();*/
-		AST::Node *ast = Parser::parseFile(argc <= 1 ? "Test.dino" : argv[1]);
+		AST::Node *ast = Parser::parseFile(argc <= 1 ? "DinoCodeExamples/Test.dino" : argv[1]);
 
 		if (outputAstFile)
 			astToFile("AstDisplay.gv", ast, showLineAST);
@@ -82,16 +82,16 @@ int main(int argc, char *argv[])
 		std::cout << "Finished parsing..." << std::endl;
 
 		//DST::Node* dst = Decorator::decorate(ast);
-		DST::Node* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
+		DST::Program* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
 		dstToFile("DstDisplay.gv", dst, false);
 
 		std::cout << "Finished decorating..." << std::endl;
 
-		//auto mainFunc = CodeGenerator::startCodeGen(dynamic_cast<DST::StatementBlock*>(dst));
-		//CodeGenerator::execute(mainFunc);
-		//auto irCode = CodeGenerator::codeGen(dynamic_cast<DST::StatementBlock*>(dst)->getStatements()[0]);
-		//irCode->print(llvm::errs());
-		//CodeGenerator::execute((llvm::Function*)irCode);
+		auto mainFunc = CodeGenerator::startCodeGen(dst);
+
+		std::cout << "Finished generating IR..." << std::endl;
+		CodeGenerator::execute(mainFunc);
+
 		Decorator::clear();
 	} 
 	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }

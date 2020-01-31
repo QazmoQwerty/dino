@@ -471,7 +471,7 @@ namespace AST
 		vector<PropertyDeclaration*> _propertyDeclarations;
 
 	public:
-		TypeDeclaration() {};
+		TypeDeclaration() : _interfaces(NULL) {};
 		virtual ~TypeDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
@@ -579,7 +579,7 @@ namespace AST
 		Identifier(unicode_string varId) : Expression() { _varId = varId; };
 		Identifier() : Expression() {};
 		void setVarId(unicode_string varId) { _varId = varId; }
-		unicode_string getVarId() { return _varId; }
+		unicode_string &getVarId() { return _varId; }
 		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; };
 		virtual string toString() { return "<Identifier>\\n" + _varId.to_string(); };
 		virtual vector<Node*> getChildren();
