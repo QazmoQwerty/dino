@@ -264,11 +264,33 @@ bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
 {
 	if(getName() == inter->getName())
 		return true;
+	
 	for (auto i : _implements)
-	{
 		return i->implements(inter);
-	}
+
 	return false;
+}
+
+ DST::Statement* DST::InterfaceDeclaration::getDeclaration(unicode_string id)
+{
+	if (_decls.count(id))
+		return _decls[id].first;
+
+	for (auto i : _implements)
+		return i->getDeclaration(id);
+
+	return NULL;
+}
+
+DST::Type *DST::InterfaceDeclaration::getMemberType(unicode_string id)
+{
+	if(_decls.count(id))
+		return _decls[id].second;
+	
+	for (auto i : _implements)
+		return i->getMemberType(id);
+
+	return NULL;
 }
 
 vector<DST::Node*> DST::InterfaceDeclaration::getChildren()

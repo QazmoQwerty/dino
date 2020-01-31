@@ -8,8 +8,7 @@ namespace program {
 			s.Side := 5
 
 			ISquare i := &s
-			IShape shape := i
-			print(ISquare(shape).P())
+			print(i.Area())
 		}
 	}
 	type Square is ISquare {

@@ -816,9 +816,9 @@ namespace DST
 		void notImplements(InterfaceDeclaration* inter);
 		bool implements(InterfaceDeclaration* inter);
 		void addDeclaration(Statement *decl, Type *type);
-		Statement* getDeclaration(unicode_string id) { return _decls[id].first; }
+		Statement* getDeclaration(unicode_string id);
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getDeclarations() { return _decls; }
-		Type* getMemberType(unicode_string id) { return _decls[id].second; }
+		Type* getMemberType(unicode_string id);
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
