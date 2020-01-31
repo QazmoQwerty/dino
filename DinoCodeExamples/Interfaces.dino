@@ -5,9 +5,9 @@ namespace program {
 
 		void Main() {
 			Square s
-			s.Side := 5
 
 			ISquare i := &s
+			i.Side := 5
 			print(i.Area())
 		}
 	}
@@ -30,6 +30,5 @@ namespace program {
 	}
 	interface ISquare is IShape {
 		int Side { get | set }
-		int P()
 	}
 }

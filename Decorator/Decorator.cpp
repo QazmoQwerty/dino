@@ -145,8 +145,9 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			for (auto prop : decl->getBase()->getProperties())
 			{
 				auto retType = evalType(prop->getVarDecl()->getVarType());
-				auto type = new DST::PropertyType(retType, prop->getGet(), prop->getSet());
+				auto type = new DST::PropertyType(retType, prop->hasGet(), prop->hasSet());
 				decl->addDeclaration(new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
+				
 			}
 			break;
 		}
