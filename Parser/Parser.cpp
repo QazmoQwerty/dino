@@ -136,7 +136,8 @@ int Parser::leftPrecedence(OperatorToken * token, int category)
 	return prec;
 }
 
-AST::Node * Parser::parseFile(string fileName)
+
+AST::StatementBlock * Parser::parseFile(string fileName)
 {
 	if (_parsedFiles.count(fileName))
 		return new AST::StatementBlock();
@@ -148,10 +149,23 @@ AST::Node * Parser::parseFile(string fileName)
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
 	auto lexed = Lexer::lex(str);
+	std::cout << "File: " << fileName << std::endl;
 	auto vec = Preprocessor::preprocess(lexed);
+	// for (auto i : vec) 
+	// 	printToken(i);
 	Parser p = Parser(vec);
-	AST::Node* ast = p.parseBlock();
-	return ast;
+	return p.parseBlock();
+}
+
+AST::StatementBlock * Parser::includeFile()
+{
+	auto t = nextToken();
+	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType == LT_STRING)
+	{
+		string fileName = ((LiteralToken<string>*)t)->_value;
+		return parseFile(fileName);
+	}
+	else throw DinoException("Expected a file path", EXT_GENERAL, peekToken()->_line);
 }
 
 AST::Node * Parser::parse(int lastPrecedence)
@@ -182,20 +196,18 @@ AST::Node * Parser::std(Token * token)
 		switch (((OperatorToken*)token)->_operator._type)	
 		{
 			case(OT_INCLUDE): {
-				/*if (eatOperator(OT_PARENTHESIS_OPEN))
+				if (eatOperator(OT_PARENTHESIS_OPEN))
 				{
+					auto block = includeFile();
+					eatLineBreak();
 					while (!eatOperator(OT_PARENTHESIS_CLOSE))
 					{
-
+						block->addStatement(includeFile());
+						eatLineBreak();
 					}
-				}*/
-				auto t = nextToken();
-				if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType == LT_STRING)
-				{
-					string fileName = ((LiteralToken<string>*)t)->_value;
-					return parseFile(fileName);
+					return block;
 				}
-				
+				else return includeFile();
 			}
 			case(OT_CONST): {
 				auto node = new AST::ConstDeclaration();

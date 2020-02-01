@@ -1,6 +1,10 @@
 
 
-
+//include ("Types.dino" "Interfaces.dino")
+include (
+    "DinoCodeExamples/Types.dino"
+    "DinoCodeExamples/Interfaces.dino"
+)
 
 
 
