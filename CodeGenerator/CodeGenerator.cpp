@@ -231,6 +231,15 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             return NULL;
         return members->values[node->getRight()];
     }
+    else if (node->getLeft()->getType()->getExactType() == EXACT_BASIC)
+    {
+        auto bt = (DST::BasicType*)node->getLeft()->getType();
+        auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        auto idx = llvm::ConstantInt::get(_context, llvm::APInt( /* 32 bit width */ 32, typeDef->variableIndexes[node->getRight()], /* signed */ false));
+        auto left = codeGenLval(node->getLeft());
+        auto type = evalType(bt->getMember(node->getRight()));
+        return _builder.CreateGEP(type, left, idx, node->getRight().to_string());
+    }
     else throw "types are not implemented yet!";
 }
 
@@ -439,13 +448,13 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             return llvm::Type::getInt64Ty(_context);
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
             return llvm::Type::getVoidTy(_context);
-        else {
+        else 
+        {
             auto bt = (DST::BasicType*)node;
             if (bt->getTypeSpecifier() && bt->getTypeSpecifier()->getTypeDecl())
                 return _types[bt->getTypeSpecifier()->getTypeDecl()]->structType;
             throw DinoException("Type " + node->toShortString() + "does not exist", EXT_GENERAL, node->getLine());
         }
-        
     }
     else if (node->getExactType() == EXACT_PROPERTY)
         return evalType(((DST::PropertyType*)node)->getReturn());
@@ -456,16 +465,18 @@ void CodeGenerator::declareType(DST::TypeDeclaration *node)
 {
     //auto st = new llvm::StructType(_context);
     std::vector<llvm::Type*> members;
+    auto def = new TypeDefinition();
+    int count = 0;
     for (auto i : node->getMembers())
     {
         if (i.second.first->getStatementType() == ST_VARIABLE_DECLARATION)
         {
             auto decl = (DST::VariableDeclaration*)i.second.first;
+            def->variableIndexes[decl->getVarId()] = count++;
             members.push_back(evalType(decl->getType()));
         }
     }
 
-    auto def = new TypeDefinition();
     def->structType = llvm::StructType::create(_context, node->getName().to_string());
     def->structType->setBody(members);
     _types[node] = _currentNamespace.back()->types[node->getName()] = def;

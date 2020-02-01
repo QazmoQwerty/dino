@@ -16,12 +16,16 @@ namespace Prog {
     // }
 
     type Test {
-        int a
-        bool b
+        int A
+        bool B
     }
 
     int Main() {
         Test b
-        return 100
+        b.B := true
+        if b.B:
+            b.A := 10
+        else: b.A := 20
+        return b.A
     }
 }
