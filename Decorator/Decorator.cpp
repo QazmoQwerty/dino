@@ -735,6 +735,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	if (node->getOperator()._type == OT_PERIOD) 
 	{
 		auto left = decorate(node->getLeft());
+
 		auto type = left->getType();
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
@@ -744,7 +745,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 
 		if (type->getExactType() == EXACT_POINTER)
 			type = ((DST::PointerType*)type)->getPtrType();
-			
 
 		DST::Type *memberType = NULL;
 		unicode_string varId = ((AST::Identifier*)node->getRight())->getVarId();
@@ -757,12 +757,19 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		else if (type->getExactType() == EXACT_NAMESPACE)
 		{
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
+
+			//std::cout << memberType->toShortString() << std::endl;
+			
 		}
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)
 			throw DinoException("Unkown identifier \"" + varId.to_string() + "\"", EXT_GENERAL, node->getLine());
 		
+		// TODO - are we leaking memory here?
+		if (memberType->getExactType() == EXACT_SPECIFIER)
+			return new DST::BasicType((DST::TypeSpecifierType*)memberType);	
+
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
 		return access;

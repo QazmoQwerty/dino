@@ -1,14 +1,4 @@
 
-
-//include ("Types.dino" "Interfaces.dino")
-include (
-    "DinoCodeExamples/Types.dino"
-    "DinoCodeExamples/Interfaces.dino"
-)
-
-
-
-
 namespace Prog {
     // namespace Ns {
     //     int a
@@ -25,19 +15,17 @@ namespace Prog {
     //     }
     // }
 
-    // type Test {
-    //     int a
-    //     bool b
-    // }
+    type Test {
+        int a
+        bool b
+    }
 
     int Main() {
         // Ns.A := 5
         // return Ns.A
         //Test t
         //Foo.Test2 t2
-        A.A b
-        @Ns.Square b
-        Ns.Squre@ c
-        //return 100
+        Prog.Test b
+        return 100
     }
 }
