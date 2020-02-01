@@ -14,17 +14,17 @@ namespace Prog {
     //     }
     // }
 
-    namespace Foo {
-        type Test2 {
-            int a
-            int b
-        }
-    }
+    // namespace Foo {
+    //     type Test2 {
+    //         int a
+    //         int b
+    //     }
+    // }
 
-    type Test {
-        int a
-        bool b
-    }
+    // type Test {
+    //     int a
+    //     bool b
+    // }
 
     int Main() {
         // Ns.A := 5
@@ -32,6 +32,8 @@ namespace Prog {
         //Test t
         //Foo.Test2 t2
         A.A b
+        @Ns.Square b
+        Ns.Squre@ c
         //return 100
     }
 }

@@ -114,6 +114,8 @@ AST::StatementBlock * Parser::parseInnerBlock()
 */
 int Parser::precedence(Token * token, int category)
 {
+	if (token->_type == TT_IDENTIFIER)
+		return 135;
 	if (token->_type != TT_OPERATOR)
 		return 0;
 	auto op = ((OperatorToken*)token)->_operator;
@@ -168,7 +170,7 @@ AST::Node * Parser::parse(int lastPrecedence)
 	if (left == NULL) return NULL;
 
 	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN)
-		&& (peekToken()->_type == TT_IDENTIFIER || precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence))
+		&& (/*peekToken()->_type == TT_IDENTIFIER || */precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence))
 		left = led(left, nextToken());
 	return left;
 }
