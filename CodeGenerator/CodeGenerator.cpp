@@ -439,7 +439,13 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             return llvm::Type::getInt64Ty(_context);
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
             return llvm::Type::getVoidTy(_context);
-        throw DinoException("Only int/bool/void is currently supported in code generation!", EXT_GENERAL, node->getLine());
+        else {
+            auto bt = (DST::BasicType*)node;
+            if (bt->getTypeSpecifier() && bt->getTypeSpecifier()->getTypeDecl())
+                return _types[bt->getTypeSpecifier()->getTypeDecl()]->structType;
+            throw DinoException("Type " + node->toShortString() + "does not exist", EXT_GENERAL, node->getLine());
+        }
+        
     }
     else if (node->getExactType() == EXACT_PROPERTY)
         return evalType(((DST::PropertyType*)node)->getReturn());
@@ -462,7 +468,7 @@ void CodeGenerator::declareType(DST::TypeDeclaration *node)
     auto def = new TypeDefinition();
     def->structType = llvm::StructType::create(_context, node->getName().to_string());
     def->structType->setBody(members);
-    _currentNamespace.back()->types[node->getName()] = def;
+    _types[node] = _currentNamespace.back()->types[node->getName()] = def;
 }
 
 void CodeGenerator::declareProperty(DST::PropertyDeclaration *node)

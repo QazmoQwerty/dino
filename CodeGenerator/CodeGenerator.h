@@ -61,6 +61,8 @@ namespace CodeGenerator
 
     static std::vector<NamespaceMembers*> _currentNamespace;
 
+    static std::unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
+
     void setup();
 
     void execute(llvm::Function *func);

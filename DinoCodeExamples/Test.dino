@@ -21,11 +21,7 @@ namespace Prog {
     }
 
     int Main() {
-        // Ns.A := 5
-        // return Ns.A
-        //Test t
-        //Foo.Test2 t2
-        Prog.Test b
+        Test b
         return 100
     }
 }
