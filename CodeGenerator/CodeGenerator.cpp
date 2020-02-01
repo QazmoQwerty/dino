@@ -101,6 +101,9 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
 llvm::Function *CodeGenerator::startCodeGen(DST::Program *node) 
 {
     llvm::Function *ret = NULL;
+
+
+
     for (auto i : node->getNamespaces())
     {
         auto currentNs = _namespaces[i.first] = new NamespaceMembers();
@@ -235,10 +238,12 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     {
         auto bt = (DST::BasicType*)node->getLeft()->getType();
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
-        auto idx = llvm::ConstantInt::get(_context, llvm::APInt( /* 32 bit width */ 32, typeDef->variableIndexes[node->getRight()], /* signed */ false));
-        auto left = codeGenLval(node->getLeft());
-        auto type = evalType(bt->getMember(node->getRight()));
-        return _builder.CreateGEP(type, left, idx, node->getRight().to_string());
+        return _builder.CreateInBoundsGEP(
+            typeDef->structType, 
+            codeGenLval(node->getLeft()), 
+            { _builder.getInt32(0), _builder.getInt32(typeDef->variableIndexes[node->getRight()]) }, 
+            node->getRight().to_string()
+        );
     }
     else throw "types are not implemented yet!";
 }

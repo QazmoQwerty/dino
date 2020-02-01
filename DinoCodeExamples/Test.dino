@@ -15,17 +15,23 @@ namespace Prog {
     //     }
     // }
 
-    type Test {
-        int A
-        bool B
+    type Foo {
+        int FooA
+        int FooB
+    }
+
+    type Bar {
+        int BarA
+        Foo BarB
     }
 
     int Main() {
-        Test b
-        b.B := true
-        if b.B:
-            b.A := 10
-        else: b.A := 20
-        return b.A
+        Bar a
+        // a.BarB.FooB := 10
+        a.BarB.FooA := 10
+        a.BarB.FooB := 1
+        a.BarA := 100
+        
+        return a.BarA + a.BarB.FooA + a.BarB.FooB
     }
 }
