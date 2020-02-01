@@ -37,6 +37,29 @@ void CodeGenerator::execute(llvm::Function *func)
     llvm::outs() << "Result: " << GV.IntVal << "\n";
 }
 
+void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
+{
+    for (auto p : node->getMembers())
+    {
+        auto member = p.second.first;
+        switch (member->getStatementType())
+        {
+            case ST_NAMESPACE_DECLARATION:
+            {
+                auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
+                _currentNamespace.push_back(currentNs);
+                declareNamespaceTypes((DST::NamespaceDeclaration*)member);
+                _currentNamespace.pop_back();
+                break;
+            }
+            case ST_TYPE_DECLARATION:
+                declareType((DST::TypeDeclaration*)member);
+                break;
+            default: break;
+        }
+    }
+}
+
 llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaration *node)
 {
     llvm::Function *ret = NULL;
@@ -47,7 +70,7 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
         {
             case ST_NAMESPACE_DECLARATION:
             {
-                auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
+                auto currentNs = _currentNamespace.back()->namespaces[p.first] /*= new NamespaceMembers()*/;
                 _currentNamespace.push_back(currentNs);
                 if (auto var = declareNamespaceMembers((DST::NamespaceDeclaration*)member))
                     ret = var;
@@ -55,7 +78,8 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
                 break;
             }
             case ST_TYPE_DECLARATION:
-                declareType((DST::TypeDeclaration*)member);
+                // declareType((DST::TypeDeclaration*)member);
+                declareTypeContent((DST::TypeDeclaration*)member);
                 break;
             case ST_FUNCTION_DECLARATION:
                 if (((DST::FunctionDeclaration*)member)->getVarDecl()->getVarId().to_string() == "Main")
@@ -102,20 +126,33 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
 {
     llvm::Function *ret = NULL;
 
-
-
     for (auto i : node->getNamespaces())
     {
         auto currentNs = _namespaces[i.first] = new NamespaceMembers();
         _currentNamespace.push_back(currentNs);
+        declareNamespaceTypes(i.second);
+        _currentNamespace.pop_back();
+    }
+
+    for (auto i : node->getNamespaces())
+    {
+        _currentNamespace.push_back(_namespaces[i.first]);
         if (auto var = declareNamespaceMembers(i.second))
             ret = var;
         _currentNamespace.pop_back();
     }
+
+    // for (auto i : node->getNamespaces())
+    // {
+    //     auto currentNs = _namespaces[i.first] = new NamespaceMembers();
+    //     _currentNamespace.push_back(currentNs);
+    //     if (auto var = declareNamespaceMembers(i.second))
+    //         ret = var;
+    //     _currentNamespace.pop_back();
+    // }
     
     for (auto i : node->getNamespaces())
     {
-        auto ns = _namespaces[i.first];
         _currentNamespace.push_back(_namespaces[i.first]);
         defineNamespaceMembers(i.second);
         _currentNamespace.pop_back();
@@ -245,7 +282,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else throw "types are not implemented yet!";
+    else throw DinoException("Expression must be of class or namespace type", EXT_GENERAL, node->getLine());
 }
 
 Value *CodeGenerator::codeGen(DST::MemberAccess *node)
@@ -468,9 +505,33 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
 
 void CodeGenerator::declareType(DST::TypeDeclaration *node)
 {
-    //auto st = new llvm::StructType(_context);
-    std::vector<llvm::Type*> members;
+    // std::vector<llvm::Type*> members;
+    // auto def = new TypeDefinition();
+    // int count = 0;
+    // for (auto i : node->getMembers())
+    // {
+    //     if (i.second.first->getStatementType() == ST_VARIABLE_DECLARATION)
+    //     {
+    //         auto decl = (DST::VariableDeclaration*)i.second.first;
+    //         def->variableIndexes[decl->getVarId()] = count++;
+    //         members.push_back(evalType(decl->getType()));
+    //     }
+    // }
+
+    // def->structType = llvm::StructType::create(_context, node->getName().to_string());
+    // def->structType->setBody(members);
+    // _types[node] = _currentNamespace.back()->types[node->getName()] = def;
+
     auto def = new TypeDefinition();
+    def->structType = llvm::StructType::create(_context, node->getName().to_string());
+    _types[node] = _currentNamespace.back()->types[node->getName()] = def;
+}
+
+void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
+{
+    auto def = _types[node];
+
+    std::vector<llvm::Type*> members;
     int count = 0;
     for (auto i : node->getMembers())
     {
@@ -481,10 +542,7 @@ void CodeGenerator::declareType(DST::TypeDeclaration *node)
             members.push_back(evalType(decl->getType()));
         }
     }
-
-    def->structType = llvm::StructType::create(_context, node->getName().to_string());
     def->structType->setBody(members);
-    _types[node] = _currentNamespace.back()->types[node->getName()] = def;
 }
 
 void CodeGenerator::declareProperty(DST::PropertyDeclaration *node)

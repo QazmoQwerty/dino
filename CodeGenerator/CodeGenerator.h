@@ -70,6 +70,7 @@ namespace CodeGenerator
     // Returns a pointer to the Main function
     llvm::Function *startCodeGen(DST::Program *node);
 
+    void declareNamespaceTypes(DST::NamespaceDeclaration *node);
     llvm::Function * declareNamespaceMembers(DST::NamespaceDeclaration *node);
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 
@@ -77,6 +78,7 @@ namespace CodeGenerator
     void codegenFunction(DST::FunctionDeclaration *node);
 
     void declareType(DST::TypeDeclaration *node);
+    void declareTypeContent(DST::TypeDeclaration *node);
 
     void declareProperty(DST::PropertyDeclaration *node);
     void codegenProperty(DST::PropertyDeclaration *node);
