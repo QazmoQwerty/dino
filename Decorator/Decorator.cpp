@@ -294,7 +294,8 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				{
 					auto decl = (DST::FunctionDeclaration*)member.second.first;
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
+					
 					for (auto param : decl->getParameters())	// Add function parameters to variables map
 						_variables[currentScope()][param->getVarId()] = param->getType();
 					decl->setContent(decorate(decl->getBase()->getContent()));
@@ -309,7 +310,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					auto decl = (DST::PropertyDeclaration*)member.second.first;
 					auto retType = ((DST::PropertyType*)member.second.second)->getReturn();
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
 					if (decl->getBase()->getGet())
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
@@ -607,7 +608,6 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 		return new DST::PointerType(node, (DST::Type*)val);
 
 	return new DST::UnaryOperation(node, val);
-	return NULL;
 }
 
 //bool Decorator::isBool(DST::Type *type) { return DST::BasicType(getPrimitiveType("bool")).equals(type); }
@@ -735,6 +735,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	if (node->getOperator()._type == OT_PERIOD) 
 	{
 		auto left = decorate(node->getLeft());
+
 		auto type = left->getType();
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
@@ -744,7 +745,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 
 		if (type->getExactType() == EXACT_POINTER)
 			type = ((DST::PointerType*)type)->getPtrType();
-			
 
 		DST::Type *memberType = NULL;
 		unicode_string varId = ((AST::Identifier*)node->getRight())->getVarId();
@@ -757,12 +757,19 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		else if (type->getExactType() == EXACT_NAMESPACE)
 		{
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
+
+			//std::cout << memberType->toShortString() << std::endl;
+			
 		}
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)
 			throw DinoException("Unkown identifier \"" + varId.to_string() + "\"", EXT_GENERAL, node->getLine());
 		
+		// TODO - are we leaking memory here?
+		if (memberType->getExactType() == EXACT_SPECIFIER)
+			return new DST::BasicType((DST::TypeSpecifierType*)memberType);	
+
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
 		return access;
@@ -961,9 +968,9 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 		delete ret;
 		ret = arr;
 	}
-	else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
+	/*else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
 		return new DST::PointerType((DST::Type*)ret);
-	}
+	}*/
 	else if (ret->getExpressionType() != ET_TYPE)
 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
 	return (DST::Type*)ret;

@@ -23,7 +23,8 @@ using std::set;
 class Parser
 {
 public:
-	static AST::Node * parseFile(string fileName);
+	static AST::StatementBlock * parseFile(string fileName);
+	AST::StatementBlock * includeFile();
 
 	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = 0; }
 	Token* getToken(unsigned int index);
