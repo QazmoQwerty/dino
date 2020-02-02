@@ -43,16 +43,16 @@ namespace Prog {
 
     // type Foo { int A | Foo2 B }
 
-    // type Foo2 { int C }
+    type Foo { 
+        int Num
+        void Set(int a): this.Num := a
+        int Get(): return this.Num
+    }
 
     int Main() {
-        int x := 20
-        int@ a := &x
-        @a := 10
-        return x
-        // Foo f
-        // f.A := 8
-        // f.B.C := 9
-        // return Bar(f)
+        Foo a
+        a.Set(20)
+        a.Num += 10
+        return a.Get()
     }
 }

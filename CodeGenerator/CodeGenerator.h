@@ -48,7 +48,7 @@ namespace CodeGenerator
     typedef struct TypeDefinition {
         llvm::StructType *structType;
         std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
-        std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> functions;
+        std::unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
     } TypeDefinition;
 
     typedef struct NamespaceMembers {
@@ -63,6 +63,8 @@ namespace CodeGenerator
 
     static std::unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
 
+    static llvm::AllocaInst *_currThisPtr = NULL;
+
     void setup();
 
     void execute(llvm::Function *func);
@@ -75,7 +77,7 @@ namespace CodeGenerator
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 
     llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
-    void codegenFunction(DST::FunctionDeclaration *node);
+    void codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef = NULL);
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);

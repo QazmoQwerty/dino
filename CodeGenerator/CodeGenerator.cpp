@@ -279,6 +279,18 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
+    else if (node->getLeft()->getType()->getExactType() == EXACT_POINTER && 
+            ((DST::PointerType*)node->getLeft()->getType())->getPtrType()->getExactType() == EXACT_BASIC)
+    {
+        auto bt = (DST::BasicType*)((DST::PointerType*)node->getLeft()->getType())->getPtrType();
+        auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        return _builder.CreateInBoundsGEP(
+            typeDef->structType, 
+            _builder.CreateLoad(codeGenLval(node->getLeft())), 
+            { _builder.getInt32(0), _builder.getInt32(typeDef->variableIndexes[node->getRight()]) }, 
+            node->getRight().to_string()
+        );
+    }
     else throw DinoException("Expression must be of class or namespace type", EXT_GENERAL, node->getLine());
 }
 
@@ -442,15 +454,53 @@ bool CodeGenerator::isFunc(llvm::Value *funcPtr)
 
 Value *CodeGenerator::codeGen(DST::FunctionCall *node)
 {
+    if (node->getFunctionId()->getExpressionType() == ET_MEMBER_ACCESS)
+    {
+        auto ty = ((DST::MemberAccess*)node->getFunctionId())->getLeft()->getType();
+        if (ty->getExactType() == EXACT_BASIC || ty->getExactType() == EXACT_POINTER)
+        {
+            auto &funcId = ((DST::MemberAccess*)node->getFunctionId())->getRight();
+            TypeDefinition *typeDef = NULL;
+            llvm::Function *func = NULL;    
+            if (ty->getExactType() == EXACT_BASIC)
+                typeDef = _types[((DST::BasicType*)ty)->getTypeSpecifier()->getTypeDecl()];
+            else 
+            {
+                if (((DST::PointerType*)ty)->getPtrType()->getExactType() != EXACT_BASIC)
+                    throw DinoException("Internal decorator error?", EXT_GENERAL, node->getLine());
+                typeDef = _types[((DST::BasicType*)((DST::PointerType*)ty)->getPtrType())->getTypeSpecifier()->getTypeDecl()];
+            }
+            
+            func = typeDef->functions[funcId];
+
+            if (func->arg_size() != node->getArguments()->getExpressions().size() + 1) // + 1 since we are also passing a "this" ptr
+                throw DinoException(string("Incorrect # arguments passed (needed ") + 
+                    std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
+                    , EXT_GENERAL, node->getLine());
+                
+
+            std::vector<Value *> args;
+            if (ty->getExactType() == EXACT_POINTER)
+                args.push_back(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()));    // the "this" pointer
+            //else args.push_back(_builder.CreateGEP(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()), _builder.getInt32(0)));
+
+            else args.push_back(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()));
+
+            for (auto i : node->getArguments()->getExpressions())
+                args.push_back(codeGen(i));
+                    
+            return _builder.CreateCall(func, args);
+
+        }
+    }
+
+
     llvm::Value *funcPtr = codeGenLval(node->getFunctionId());
     llvm::Function *func = NULL;
     if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
     else throw DinoException("expression is not a function!", EXT_GENERAL, node->getLine());
 
-    funcPtr->print(llvm::errs());
-
-    func->print(llvm::errs());
     if (func->arg_size() != node->getArguments()->getExpressions().size())
         throw DinoException(string("Incorrect # arguments passed (needed ") + 
             std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
@@ -539,7 +589,6 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
     else if (node->getExactType() == EXACT_POINTER)
     {
         auto ty = evalType(((DST::PointerType*)node)->getPtrType());
-        ty->getPointerTo()->print(llvm::errs());
         return ty->getPointerTo();
     }
     else throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
@@ -570,7 +619,7 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
                 break;
             }
             case ST_FUNCTION_DECLARATION:
-                //declareFunction()
+                declareFunction((DST::FunctionDeclaration*)i.second.first, def);
                 break;
             case ST_PROPERTY_DECLARATION:
                 break;
@@ -583,6 +632,18 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
 void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
 {
     auto def = _types[node];
+    for (auto i : node->getMembers())
+    {
+        switch (i.second.first->getStatementType())
+        {
+            case ST_FUNCTION_DECLARATION:
+                codegenFunction((DST::FunctionDeclaration*)i.second.first, def);
+                break;
+            case ST_PROPERTY_DECLARATION:
+                break;
+            default: break;
+        }
+    }
 }
 
 void CodeGenerator::declareProperty(DST::PropertyDeclaration *node)
@@ -682,7 +743,7 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
     vector<llvm::Type*> types;
     auto params = node->getParameters();
     if (typeDef)
-        types.push_back(typeDef->structType);
+        types.push_back(typeDef->structType->getPointerTo());
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
     auto returnType = evalType(node->getReturnType());
@@ -692,22 +753,33 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
     // Set names for all arguments.
     unsigned Idx = 0;
+    bool b = true;
     for (auto &arg : func->args())
     {
-        if (Idx == 0 && typeDef != nullptr)
+        if (Idx == 0 && typeDef != nullptr && b)
+        {
             arg.setName("this");
+            b = false;
+        }
         else arg.setName(params[Idx++]->getVarId().to_string());
     }
 
     _currentNamespace.back()->values[node->getVarDecl()->getVarId()] = func;
-
+    if (typeDef)
+        typeDef->functions[node->getVarDecl()->getVarId()] = func;
     return func;
 }
 
-void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node)
+void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
+
+    std::cout << "codegenning " << node->getVarDecl()->getVarId().to_string() << std::endl;
+
     auto funcName = node->getVarDecl()->getVarId().to_string();
-    auto funcPtr = _currentNamespace.back()->values[node->getVarDecl()->getVarId()];
+    llvm::Value *funcPtr = NULL;
+    if (typeDef)
+        funcPtr = typeDef->functions[node->getVarDecl()->getVarId()];
+    else funcPtr = _currentNamespace.back()->values[node->getVarDecl()->getVarId()];
     llvm::Function *func = NULL;
     if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
@@ -721,11 +793,16 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node)
 
     // Record the function arguments in the NamedValues map.
     _namedValues.clear();
+    bool isFirst = true;
     for (llvm::Argument &arg : func->args())
     {
         AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
         _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
         _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
+
+        if (isFirst && typeDef != nullptr)
+            _currThisPtr = alloca;
+        isFirst = false;
     }
 
     for (auto i : node->getContent()->getStatements()) 

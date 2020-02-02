@@ -294,7 +294,8 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				{
 					auto decl = (DST::FunctionDeclaration*)member.second.first;
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
+					
 					for (auto param : decl->getParameters())	// Add function parameters to variables map
 						_variables[currentScope()][param->getVarId()] = param->getType();
 					decl->setContent(decorate(decl->getBase()->getContent()));
@@ -309,7 +310,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					auto decl = (DST::PropertyDeclaration*)member.second.first;
 					auto retType = ((DST::PropertyType*)member.second.second)->getReturn();
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
 					if (decl->getBase()->getGet())
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
