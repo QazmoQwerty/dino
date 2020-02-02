@@ -74,11 +74,12 @@ namespace CodeGenerator
     llvm::Function * declareNamespaceMembers(DST::NamespaceDeclaration *node);
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 
-    llvm::Function * declareFunction(DST::FunctionDeclaration *node);
+    llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenFunction(DST::FunctionDeclaration *node);
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);
+    void codegenTypeMembers(DST::TypeDeclaration *node);
 
     void declareProperty(DST::PropertyDeclaration *node);
     void codegenProperty(DST::PropertyDeclaration *node);
@@ -96,12 +97,14 @@ namespace CodeGenerator
     Value *codeGenLval(DST::Variable *node);
     Value *codeGenLval(DST::MemberAccess *node);
     AllocaInst *codeGenLval(DST::VariableDeclaration *node);
+    Value *codeGenLval(DST::UnaryOperation* node);
 
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);
     Value *codeGen(DST::Expression *node);
     Value *codeGen(DST::Literal *node);
     Value *codeGen(DST::BinaryOperation *node);
+    Value *codeGen(DST::UnaryOperation *node);
     Value *codeGen(DST::Assignment *node);
     Value *codeGen(DST::FunctionCall *node);
     Value *codeGen(DST::MemberAccess *node);

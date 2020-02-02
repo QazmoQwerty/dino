@@ -15,24 +15,44 @@ namespace Prog {
     //     }
     // }
 
-    type Bar {
-        int BarA
-        Foo BarB
-    }
-    
-    type Foo {
-        int FooA
-        int FooB
-    }
+    // type Bar {
+    //     int BarA
+    //     Foo BarB
+    // }
 
+    // type Foo {
+    //     int FooA
+    //     int FooB
+    // }
+
+    // int Qaz(Foo a): return a.BarA + a.BarB.FooA + a.BarB.FooB
+
+    // int Main() {
+    //     Bar a
+    //     // a.BarB.FooB := 10
+    //     a.BarB.FooA := 10
+    //     a.BarB.FooB := 1
+    //     a.BarA := 100
+        
+    //     // return a.BarA + a.BarB.FooA + a.BarB.FooB
+    //     return Qaz(a)
+    // }
+
+
+    // int Bar(Foo a): return a.A * a.B.C
+
+    // type Foo { int A | Foo2 B }
+
+    // type Foo2 { int C }
 
     int Main() {
-        Bar a
-        // a.BarB.FooB := 10
-        a.BarB.FooA := 10
-        a.BarB.FooB := 1
-        a.BarA := 100
-        
-        return a.BarA + a.BarB.FooA + a.BarB.FooB
+        int x := 20
+        int@ a := &x
+        @a := 10
+        return x
+        // Foo f
+        // f.A := 8
+        // f.B.C := 9
+        // return Bar(f)
     }
 }

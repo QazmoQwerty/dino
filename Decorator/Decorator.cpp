@@ -607,7 +607,6 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 		return new DST::PointerType(node, (DST::Type*)val);
 
 	return new DST::UnaryOperation(node, val);
-	return NULL;
 }
 
 //bool Decorator::isBool(DST::Type *type) { return DST::BasicType(getPrimitiveType("bool")).equals(type); }
@@ -968,9 +967,9 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 		delete ret;
 		ret = arr;
 	}
-	else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
+	/*else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
 		return new DST::PointerType((DST::Type*)ret);
-	}
+	}*/
 	else if (ret->getExpressionType() != ET_TYPE)
 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
 	return (DST::Type*)ret;

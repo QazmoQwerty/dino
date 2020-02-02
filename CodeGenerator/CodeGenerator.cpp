@@ -32,6 +32,9 @@ void CodeGenerator::execute(llvm::Function *func)
     llvm::errs() << "---------\nstarting with Interpreter...\n";
 
     std::vector<llvm::GenericValue> noargs;
+    
+    if (llvm::verifyFunction(*func, &llvm::errs()))
+        std::cout << "Huh\n";
     llvm::GenericValue GV = EE->runFunction(func, noargs);
 
     llvm::outs() << "Result: " << GV.IntVal << "\n";
@@ -116,6 +119,8 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
             case ST_FUNCTION_DECLARATION:
                 codegenFunction((DST::FunctionDeclaration*)member);
                 break;
+            case ST_TYPE_DECLARATION:
+                codegenTypeMembers((DST::TypeDeclaration*)member);
             default: break;
         }
     }
@@ -141,15 +146,6 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
             ret = var;
         _currentNamespace.pop_back();
     }
-
-    // for (auto i : node->getNamespaces())
-    // {
-    //     auto currentNs = _namespaces[i.first] = new NamespaceMembers();
-    //     _currentNamespace.push_back(currentNs);
-    //     if (auto var = declareNamespaceMembers(i.second))
-    //         ret = var;
-    //     _currentNamespace.pop_back();
-    // }
     
     for (auto i : node->getNamespaces())
     {
@@ -204,6 +200,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
     switch (node->getExpressionType()) 
     {
         case ET_BINARY_OPERATION: return codeGen((DST::BinaryOperation*)node);
+        case ET_UNARY_OPERATION: return codeGen((DST::UnaryOperation*)node);
         case ET_LITERAL: return codeGen((DST::Literal*)node);
         case ET_ASSIGNMENT: return codeGen((DST::Assignment*)node);
         case ET_IDENTIFIER: return codeGen((DST::Variable*)node);
@@ -329,6 +326,44 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
     
 }
 
+Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
+{
+    //Value *val = codeGen(node->getExpression());
+    switch (node->getOperator()._type)
+    {
+        case OT_ADD:
+            return codeGen(node->getExpression());
+        case OT_SUBTRACT:
+            return NULL;
+
+        case OT_AT:
+            return _builder.CreateLoad(codeGen(node->getExpression()));
+        case OT_BITWISE_AND:
+            return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
+
+        //case OT_
+            //return _builder.CreateAdd(left, right, "addtmp");
+        default:
+            return NULL;
+    }
+    
+}
+
+Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
+{
+    Value *val = codeGenLval(node->getExpression());
+    switch (node->getOperator()._type)
+    {
+        case OT_AT:
+            return _builder.CreateLoad(val);
+        case OT_BITWISE_AND:
+            return _builder.CreateGEP(val, _builder.getInt32(0));
+        default:
+            return NULL;
+    }
+    
+}
+
 Value *CodeGenerator::codeGenLval(DST::Expression *node)
 {
     if (node == nullptr)
@@ -338,6 +373,7 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_IDENTIFIER: return codeGenLval((DST::Variable*)node);
         case ET_VARIABLE_DECLARATION: return codeGenLval((DST::VariableDeclaration*)node);
         case ET_MEMBER_ACCESS: return codeGenLval((DST::MemberAccess*)node);
+        case ET_UNARY_OPERATION: return codeGenLval((DST::UnaryOperation*)node);
         default: return NULL;
     }
 }
@@ -500,28 +536,17 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
     }
     else if (node->getExactType() == EXACT_PROPERTY)
         return evalType(((DST::PropertyType*)node)->getReturn());
+    else if (node->getExactType() == EXACT_POINTER)
+    {
+        auto ty = evalType(((DST::PointerType*)node)->getPtrType());
+        ty->getPointerTo()->print(llvm::errs());
+        return ty->getPointerTo();
+    }
     else throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
 }
 
 void CodeGenerator::declareType(DST::TypeDeclaration *node)
 {
-    // std::vector<llvm::Type*> members;
-    // auto def = new TypeDefinition();
-    // int count = 0;
-    // for (auto i : node->getMembers())
-    // {
-    //     if (i.second.first->getStatementType() == ST_VARIABLE_DECLARATION)
-    //     {
-    //         auto decl = (DST::VariableDeclaration*)i.second.first;
-    //         def->variableIndexes[decl->getVarId()] = count++;
-    //         members.push_back(evalType(decl->getType()));
-    //     }
-    // }
-
-    // def->structType = llvm::StructType::create(_context, node->getName().to_string());
-    // def->structType->setBody(members);
-    // _types[node] = _currentNamespace.back()->types[node->getName()] = def;
-
     auto def = new TypeDefinition();
     def->structType = llvm::StructType::create(_context, node->getName().to_string());
     _types[node] = _currentNamespace.back()->types[node->getName()] = def;
@@ -535,14 +560,29 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     int count = 0;
     for (auto i : node->getMembers())
     {
-        if (i.second.first->getStatementType() == ST_VARIABLE_DECLARATION)
+        switch (i.second.first->getStatementType())
         {
-            auto decl = (DST::VariableDeclaration*)i.second.first;
-            def->variableIndexes[decl->getVarId()] = count++;
-            members.push_back(evalType(decl->getType()));
+            case ST_VARIABLE_DECLARATION:
+            {
+                auto decl = (DST::VariableDeclaration*)i.second.first;
+                def->variableIndexes[decl->getVarId()] = count++;
+                members.push_back(evalType(decl->getType()));
+                break;
+            }
+            case ST_FUNCTION_DECLARATION:
+                //declareFunction()
+                break;
+            case ST_PROPERTY_DECLARATION:
+                break;
+            default: break;
         }
     }
     def->structType->setBody(members);
+}
+
+void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
+{
+    auto def = _types[node];
 }
 
 void CodeGenerator::declareProperty(DST::PropertyDeclaration *node)
@@ -637,10 +677,12 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node)
     }
 }
 
-llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node)
+llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
     vector<llvm::Type*> types;
     auto params = node->getParameters();
+    if (typeDef)
+        types.push_back(typeDef->structType);
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
     auto returnType = evalType(node->getReturnType());
@@ -651,7 +693,11 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node)
     // Set names for all arguments.
     unsigned Idx = 0;
     for (auto &arg : func->args())
-        arg.setName(params[Idx++]->getVarId().to_string());
+    {
+        if (Idx == 0 && typeDef != nullptr)
+            arg.setName("this");
+        else arg.setName(params[Idx++]->getVarId().to_string());
+    }
 
     _currentNamespace.back()->values[node->getVarDecl()->getVarId()] = func;
 
@@ -668,11 +714,6 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node)
     else throw DinoException("\"" + funcName + "\" is not a function", EXT_GENERAL, node->getLine());
 
     auto params = node->getParameters();
-
-    // // Set names for all arguments.
-    // unsigned Idx = 0;
-    // for (auto &arg : func->args())
-    //     arg.setName(params[Idx++]->getVarId().to_string());
 
     // Create a new basic block to start insertion into.
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
