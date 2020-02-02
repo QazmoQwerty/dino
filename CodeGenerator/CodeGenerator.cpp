@@ -73,7 +73,7 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
         {
             case ST_NAMESPACE_DECLARATION:
             {
-                auto currentNs = _currentNamespace.back()->namespaces[p.first] /*= new NamespaceMembers()*/;
+                auto currentNs = _currentNamespace.back()->namespaces[p.first];
                 _currentNamespace.push_back(currentNs);
                 if (auto var = declareNamespaceMembers((DST::NamespaceDeclaration*)member))
                     ret = var;
@@ -81,7 +81,6 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
                 break;
             }
             case ST_TYPE_DECLARATION:
-                // declareType((DST::TypeDeclaration*)member);
                 declareTypeContent((DST::TypeDeclaration*)member);
                 break;
             case ST_FUNCTION_DECLARATION:
@@ -340,21 +339,16 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 
 Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
 {
-    //Value *val = codeGen(node->getExpression());
     switch (node->getOperator()._type)
     {
         case OT_ADD:
             return codeGen(node->getExpression());
         case OT_SUBTRACT:
             return NULL;
-
         case OT_AT:
             return _builder.CreateLoad(codeGen(node->getExpression()));
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
-
-        //case OT_
-            //return _builder.CreateAdd(left, right, "addtmp");
         default:
             return NULL;
     }
@@ -425,9 +419,9 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         case OT_ASSIGN_ADD:
             return _builder.CreateStore(_builder.CreateAdd(_builder.CreateLoad(left), right, "addtmp"), left);
         case OT_ASSIGN_SUBTRACT:
-            return _builder.CreateStore(_builder.CreateSub(_builder.CreateLoad(left), right, "addtmp"), left);
+            return _builder.CreateStore(_builder.CreateSub(_builder.CreateLoad(left), right, "subtmp"), left);
         case OT_ASSIGN_MULTIPLY:
-            return _builder.CreateStore(_builder.CreateMul(_builder.CreateLoad(left), right, "addtmp"), left);
+            return _builder.CreateStore(_builder.CreateMul(_builder.CreateLoad(left), right, "multmp"), left);
         default: throw DinoException("Unimplemented assignment operator", EXT_GENERAL, node->getLine());
     
     }
@@ -478,12 +472,9 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
                     std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
                     , EXT_GENERAL, node->getLine());
                 
-
             std::vector<Value *> args;
             if (ty->getExactType() == EXACT_POINTER)
-                args.push_back(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()));    // the "this" pointer
-            //else args.push_back(_builder.CreateGEP(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()), _builder.getInt32(0)));
-
+                args.push_back(codeGen(((DST::MemberAccess*)node->getFunctionId())->getLeft()));    // the "this" pointer
             else args.push_back(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()));
 
             for (auto i : node->getArguments()->getExpressions())

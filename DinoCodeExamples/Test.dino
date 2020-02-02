@@ -50,7 +50,8 @@ namespace Prog {
     }
 
     int Main() {
-        Foo a
+        Foo b
+        Foo@ a := &b
         a.Set(20)
         a.Num += 10
         return a.Get()
