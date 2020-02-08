@@ -26,6 +26,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/Interpreter.h"
+#include "llvm/IR/DataLayout.h"
 
 
 #include "../Decorator/DstNode.h"
@@ -40,6 +41,8 @@ namespace CodeGenerator
     static llvm::LLVMContext _context;
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
+    static llvm::DataLayout *_dataLayout(new llvm::DataLayout(_module.get()));
+
     static std::unordered_map<std::string, AllocaInst*> _namedValues;
     //static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;

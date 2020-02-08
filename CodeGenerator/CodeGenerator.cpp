@@ -339,8 +339,21 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 
 Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
 {
+    static llvm::Function *malloc = NULL;
+
     switch (node->getOperator()._type)
     {
+        case OT_NEW:
+        {
+            if (malloc == NULL)
+            {
+                auto type = llvm::FunctionType::get(llvm::Type::getVoidTy(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
+                malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
+            }
+            auto type = evalType((DST::Type*)node->getExpression());
+            int size = _dataLayout->getTypeAllocSize(type);
+            return _builder.CreateBitCast( _builder.CreateCall(malloc, { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
+        }
         case OT_ADD:
             return codeGen(node->getExpression());
         case OT_SUBTRACT:
@@ -507,10 +520,27 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
 {
+    static llvm::Function *free = NULL;
+    
     switch (node->getOperator()._type)
     {
         case OT_RETURN:
             return _builder.CreateRet(codeGen(node->getExpression()));
+
+        case OT_DELETE:
+        {
+            if (free == NULL)
+            {
+                auto type = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), { llvm::Type::getVoidTy(_context)->getPointerTo() }, false);
+                free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "free", _module.get());
+            }
+            auto ptr = codeGenLval(node->getExpression());
+            
+            auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getVoidTy(_context)->getPointerTo(), "castTmp");
+
+            _builder.CreateCall(free, { cast });
+            return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
+        }
         default: throw DinoException("Unimplemented unary operation statement!", EXT_GENERAL, node->getLine());
     }
 }
@@ -575,14 +605,14 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             throw DinoException("Type " + node->toShortString() + "does not exist", EXT_GENERAL, node->getLine());
         }
     }
-    else if (node->getExactType() == EXACT_PROPERTY)
+    if (node->getExactType() == EXACT_PROPERTY)
         return evalType(((DST::PropertyType*)node)->getReturn());
-    else if (node->getExactType() == EXACT_POINTER)
+    if (node->getExactType() == EXACT_POINTER)
     {
         auto ty = evalType(((DST::PointerType*)node)->getPtrType());
         return ty->getPointerTo();
     }
-    else throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
+    throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
 }
 
 void CodeGenerator::declareType(DST::TypeDeclaration *node)
