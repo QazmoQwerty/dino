@@ -622,7 +622,9 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             throw DinoException("Type " + node->toShortString() + "does not exist", EXT_GENERAL, node->getLine());
         }
     }
-    if (node->getExactType() == EXACT_PROPERTY)
+    else if (node->getExactType() == EXACT_ARRAY)
+        return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), ((DST::ArrayType*)node)->getLength());
+    else if (node->getExactType() == EXACT_PROPERTY)
         return evalType(((DST::PropertyType*)node)->getReturn());
     if (node->getExactType() == EXACT_POINTER)
     {

@@ -1,43 +1,6 @@
-
 namespace Prog {
-    type Node {
-        Node@ next
-        int data
-        void SetData(int data): this.data := data
-        void SetNext(int index, Node@ next) {
-            if index = 0 or next = null:
-                this.next := next 
-            else: this.next.SetNext(index - 1, next)
-        }
-        void Add(int data) {
-            if this.next = null {
-                Node@ n := new Node
-                n.data := data
-                this.next := n
-            }
-            else: this.next.Add(data)
-        }
-        int Get()
-    }
-
     int Main() {
-        Foo@ f := new Foo
-        f.Set(1, 3)
-        int res := f.Get()
-        delete f
-        return res
-    }
-
-
-    interface Error: 
-        string Msg: get
-
-    type NullPointerError is Error {
-        string Msg: get: return "NullPointerError"
-    }
-
-    (int, Error) Foo() {
-        return 1, new NullPointerError
-        return 1, null
+        int[5] x := [1, 2, 3, 4, 5]
+        return x[3]
     }
 }
