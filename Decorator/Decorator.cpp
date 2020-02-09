@@ -739,14 +739,19 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		auto left = decorate(node->getLeft());
 
 		auto type = left->getType();
+
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
+
+		if (type->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)type)->getTypes().size() == 1)
+			type = ((DST::TypeList*)type)->getTypes()[0];
 
 		if (type->getExactType() == EXACT_PROPERTY && ((DST::PropertyType*)type)->hasGet())
 			type = ((DST::PropertyType*)type)->getReturn();
 
 		if (type->getExactType() == EXACT_POINTER)
 			type = ((DST::PointerType*)type)->getPtrType();
+			
 
 		DST::Type *memberType = NULL;
 		unicode_string varId = ((AST::Identifier*)node->getRight())->getVarId();
@@ -757,12 +762,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getMemberType(varId);
 		}
 		else if (type->getExactType() == EXACT_NAMESPACE)
-		{
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
-
-			//std::cout << memberType->toShortString() << std::endl;
-			
-		}
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)

@@ -1,70 +1,30 @@
 
 namespace Prog {
-    // namespace Ns {
-    //     int a
-    //     int A {
-    //         get: return a * a
-    //         set: a := value
-    //     }
-    // }
-
-    // namespace Foo {
-    //     type Test2 {
-    //         int a
-    //         int b
-    //     }
-    // }
-
-    // type Bar {
-    //     int BarA
-    //     Foo BarB
-    // }
-
-    // type Foo {
-    //     int FooA
-    //     int FooB
-    // }
-
-    // int Qaz(Foo a): return a.BarA + a.BarB.FooA + a.BarB.FooB
-
-    // int Main() {
-    //     Bar a
-    //     // a.BarB.FooB := 10
-    //     a.BarB.FooA := 10
-    //     a.BarB.FooB := 1
-    //     a.BarA := 100
-        
-    //     // return a.BarA + a.BarB.FooA + a.BarB.FooB
-    //     return Qaz(a)
-    // }
-
-
-    // int Bar(Foo a): return a.A * a.B.C
-
-    // type Foo { int A | Foo2 B }
-
-    /*type Foo { 
-        int Num
-        //void Set(int a): this.Num := a
-        //int Get(): return this.Num
-    }*/
+    type Node {
+        Node@ next
+        int data
+        void SetData(int data): this.data := data
+        void SetNext(int index, Node@ next) {
+            if index = 0 or next = null:
+                this.next := next 
+            else: this.next.SetNext(index - 1, next)
+        }
+        void Add(int data) {
+            if this.next = null {
+                Node@ n := new Node
+                n.data := data
+                this.next := n
+            }
+            else: this.next.Add(data)
+        }
+        int Get()
+    }
 
     int Main() {
-        /*Foo b
-        Foo@ a := &b*/
-
-        /*Foo@ a := new Foo
-        //a.Set(20)
-        //a.Num += 10
-        a.Num := 10
-        //int a := a.Num
-        //delete a
-        return a.Num*/
-        int@ a
-        if a = null: 
-            return 10
-        else: 
-            return 20
-        //return 10
+        Foo@ f := new Foo
+        f.Set(1, 3)
+        int res := f.Get()
+        delete f
+        return res
     }
 }
