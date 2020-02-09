@@ -60,13 +60,11 @@ namespace Prog {
         //int a := a.Num
         //delete a
         return a.Num*/
-        int@ a := new int
-        if a = null:
+        int@ a
+        if a = null: 
             return 10
-        @a := 10
-        @a *= 20
-        int b := @a
-        delete a
-        return b
+        else: 
+            return 20
+        //return 10
     }
 }

@@ -551,6 +551,9 @@ bool DST::PointerType::equals(Type * other)
 	if (other == nullptr) 
 		return false;
 
+	if (other->getExactType() == EXACT_NULL)
+		return true;
+
 	if (other->getExactType() != EXACT_POINTER)
 		return false;
 	

@@ -260,6 +260,17 @@ namespace DST
 		virtual string toString() { return "<PointerType>" + toShortString(); };
 	};
 
+	class NullType : public Type 
+	{
+	public:
+		NullType() : Type(NULL) {}
+		ExactType getExactType() { return EXACT_NULL; }
+		virtual bool equals(Type *other) { return other->equals(this); };
+		virtual string toShortString() { return "<NullType>"; };
+		virtual vector<Node*> getChildren() { return {}; };
+		virtual string toString() { return toShortString(); };
+	};
+
 	class TypeList : public Type
 	{
 		vector<Type*> _types;

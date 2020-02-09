@@ -236,6 +236,9 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
         return llvm::ConstantInt::get(_context, llvm::APInt( /* 1 bit width */ 1, ((AST::Boolean*)node->getBase())->getValue()));
     case LT_INTEGER:
         return llvm::ConstantInt::get(_context, llvm::APInt( /* 64 bit width */ 64, ((AST::Integer*)node->getBase())->getValue(), /* signed */ true));
+    case LT_NULL:
+        return llvm::Constant::getNullValue(_builder.getVoidTy()->getPointerTo());;
+        //return _builder.getInt32(NULL);
     default:
         return NULL;
     }
@@ -324,7 +327,11 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_SMALLER:
             return _builder.CreateICmpULT(left, right, "cmptmp");
         case OT_EQUAL:
-            return _builder.CreateICmpEQ(left, right, "cmptmp");
+        {
+            if (left->getType() == right->getType())
+                return _builder.CreateICmpEQ(left, right, "cmptmp");
+            return _builder.CreateICmpEQ(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
+        }
         case OT_NOT_EQUAL:
             return _builder.CreateICmpNE(left, right, "cmptmp");
         case OT_LOGICAL_AND:
@@ -1006,10 +1013,13 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
     Value *cond = codeGen(node->getCondition());
 
     auto parent = getParentFunction();
-    
+
     llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
-    llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(_context, "ifcont");
+
+    llvm::BasicBlock *mergeBB = NULL;
+    if (!(node->getThenBranch() && node->getElseBranch() && node->getThenBranch()->hasReturn() && node->getElseBranch()->hasReturn()))
+        mergeBB = llvm::BasicBlock::Create(_context, "ifcont"); // No need to create a continue branch if it's unreachable
     llvm::BranchInst *br = _builder.CreateCondBr(cond, thenBB, elseBB);
     parent->getBasicBlockList().push_back(thenBB);
     _builder.SetInsertPoint(thenBB);
@@ -1022,7 +1032,8 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
                 throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
         }
     }
-    if (!_builder.GetInsertBlock()->getTerminator())
+
+    if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
         _builder.CreateBr(mergeBB);
 
     parent->getBasicBlockList().push_back(elseBB);
@@ -1036,10 +1047,12 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
                 throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
         }
     } 
-    if (!_builder.GetInsertBlock()->getTerminator())
+    if (mergeBB)
+    {
+        if (!_builder.GetInsertBlock()->getTerminator())
             _builder.CreateBr(mergeBB);
-
-    parent->getBasicBlockList().push_back(mergeBB);
-    _builder.SetInsertPoint(mergeBB);
+        parent->getBasicBlockList().push_back(mergeBB);
+        _builder.SetInsertPoint(mergeBB);
+    }
     return br;
 }

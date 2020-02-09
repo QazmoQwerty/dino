@@ -7,6 +7,7 @@ DST::FunctionDeclaration* Decorator::_main;
 vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 DST::TypeDeclaration *Decorator::_currentTypeDecl;
 DST::Program *Decorator::_currentProgram;
+DST::NullType *Decorator::_nullType;
 
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
@@ -23,6 +24,7 @@ void Decorator::setup()
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
+	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 }
 
@@ -833,7 +835,7 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 	case (LT_FRACTION):		lit->setType(new DST::BasicType(getPrimitiveType("float")));	break;
 	case (LT_INTEGER):		lit->setType(new DST::BasicType(getPrimitiveType("int")));	break;
 	case (LT_STRING):		lit->setType(new DST::BasicType(getPrimitiveType("string"))); break;
-	case (LT_NULL):			lit->setType(new DST::BasicType(getPrimitiveType("null")));	break;
+	case (LT_NULL):			lit->setType(_nullType);	break;
 	default: break;
 	}
 	return lit;
