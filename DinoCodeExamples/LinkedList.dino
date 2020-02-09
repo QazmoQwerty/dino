@@ -57,7 +57,7 @@ namespace Prog {
 
 		void InsertAtEnd(int data) {
 			if this.next = null {
-				int n := CreateNode(data, null).data
+				//int n := CreateNode(data, null).data
 				this.next ≡ CreateNode(data, null)
 			}
 				

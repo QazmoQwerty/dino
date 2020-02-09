@@ -27,4 +27,17 @@ namespace Prog {
         delete f
         return res
     }
+
+
+    interface Error: 
+        string Msg: get
+
+    type NullPointerError is Error {
+        string Msg: get: return "NullPointerError"
+    }
+
+    (int, Error) Foo() {
+        return 1, new NullPointerError
+        return 1, null
+    }
 }

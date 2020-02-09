@@ -491,15 +491,25 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
                 throw DinoException(string("Incorrect # arguments passed (needed ") + 
                     std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
                     , EXT_GENERAL, node->getLine());
-                
+            
             std::vector<Value *> args;
             if (ty->getExactType() == EXACT_POINTER)
                 args.push_back(codeGen(((DST::MemberAccess*)node->getFunctionId())->getLeft()));    // the "this" pointer
             else args.push_back(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()));
 
-            for (auto i : node->getArguments()->getExpressions())
-                args.push_back(codeGen(i));
-                    
+            /*for (auto i : node->getArguments()->getExpressions())
+            {
+                auto gen = codeGen(i);
+                 
+                //args.push_back();
+            }*/
+            for (int i = 0; i < node->getArguments()->getExpressions().size(); i++)
+            {
+                auto gen = codeGen(node->getArguments()->getExpressions()[i]);
+                if (gen->getType() != func->getType()->getFunctionParamType(i))
+                    args.push_back(_builder.CreateBitCast(gen, func->getType()->getFunctionParamType(i), "castTmp"));
+                else args.push_back(gen);
+            }
             return _builder.CreateCall(func, args);
 
         }
@@ -637,7 +647,7 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     int count = 0;
     for (auto i : node->getMembers())
     {
-        switch (i.second.first->getStatementType())
+        if (i.second.first) switch (i.second.first->getStatementType())
         {
             case ST_VARIABLE_DECLARATION:
             {
@@ -662,7 +672,7 @@ void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
     auto def = _types[node];
     for (auto i : node->getMembers())
     {
-        switch (i.second.first->getStatementType())
+        if (i.second.first) switch (i.second.first->getStatementType())
         {
             case ST_FUNCTION_DECLARATION:
                 codegenFunction((DST::FunctionDeclaration*)i.second.first, def);
