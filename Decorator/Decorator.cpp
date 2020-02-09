@@ -607,7 +607,6 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 		return new DST::PointerType(node, (DST::Type*)val);
 
 	return new DST::UnaryOperation(node, val);
-	return NULL;
 }
 
 //bool Decorator::isBool(DST::Type *type) { return DST::BasicType(getPrimitiveType("bool")).equals(type); }
@@ -783,8 +782,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				if (!((bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER) ||
 					 (bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(&intType))))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
-				if(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::ArrayType*)bo->getLeft()->getType())->getLength() <= *((unsigned int*)((DST::Literal*)(bo->getRight()))->getValue()))
-					throw DinoException("index out of range", EXT_GENERAL, node->getLine());
 				bo->setType(bo->getLeft()->getType()->getType());
 			}
 			// array declaration
@@ -958,7 +955,7 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 	if (ret->getExpressionType() == ET_BINARY_OPERATION)	// TODO - change this
 	{
 		auto arr = ret->getType();
-		delete ret;
+		//delete ret;
 		ret = arr;
 	}
 	else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {

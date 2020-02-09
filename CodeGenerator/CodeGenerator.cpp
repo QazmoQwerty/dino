@@ -441,6 +441,8 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             return llvm::Type::getVoidTy(_context);
         throw DinoException("Only int/bool/void is currently supported in code generation!", EXT_GENERAL, node->getLine());
     }
+    else if (node->getExactType() == EXACT_ARRAY)
+        return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), ((DST::ArrayType*)node)->getLength());
     else if (node->getExactType() == EXACT_PROPERTY)
         return evalType(((DST::PropertyType*)node)->getReturn());
     else throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
