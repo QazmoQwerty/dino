@@ -124,6 +124,8 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 					if ((isVoid && ((DST::UnaryOperationStatement*)i)->getExpression() == NULL) ||
 						((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
 						return true;
+					std::cout << returnType->toShortString() << std::endl;
+					std::cout << ((DST::UnaryOperationStatement*)i)->getExpression()->getType()->toShortString() << std::endl;
 					throw DinoException("Return value type does not match function type.", EXT_GENERAL, i->getLine());
 				}
 				break;
@@ -434,8 +436,10 @@ void DST::TypeList::addType(Type * type)
 
 bool DST::TypeList::equals(Type * other)
 {
-	if (other->getExactType() == EXACT_BASIC)
-		return _types.size() == 1 && _types[0]->equals(other);
+	// if (other->getExactType() == EXACT_BASIC)
+	// 	return _types.size() == 1 && _types[0]->equals(other);
+	if (_types.size() == 1)
+		return _types[0]->equals(other);
 	if (other->getExactType() != EXACT_TYPELIST)
 		return false;
 	auto othr = (TypeList*)other;
@@ -550,6 +554,12 @@ bool DST::PointerType::equals(Type * other)
 {
 	if (other == nullptr) 
 		return false;
+
+	if (other->getExactType() == EXACT_NULL)
+		return true;
+
+	if (other->getExactType() == EXACT_TYPELIST)
+		return equals(((TypeList*)other)->getTypes()[0]);
 
 	if (other->getExactType() != EXACT_POINTER)
 		return false;

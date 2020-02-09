@@ -26,6 +26,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/Interpreter.h"
+#include "llvm/IR/DataLayout.h"
 
 
 #include "../Decorator/DstNode.h"
@@ -40,6 +41,8 @@ namespace CodeGenerator
     static llvm::LLVMContext _context;
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
+    static llvm::DataLayout *_dataLayout(new llvm::DataLayout(_module.get()));
+
     static std::unordered_map<std::string, AllocaInst*> _namedValues;
     //static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;
@@ -48,7 +51,7 @@ namespace CodeGenerator
     typedef struct TypeDefinition {
         llvm::StructType *structType;
         std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
-        std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> functions;
+        std::unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
     } TypeDefinition;
 
     typedef struct NamespaceMembers {
@@ -61,6 +64,10 @@ namespace CodeGenerator
 
     static std::vector<NamespaceMembers*> _currentNamespace;
 
+    static std::unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
+
+    static llvm::AllocaInst *_currThisPtr = NULL;
+
     void setup();
 
     void execute(llvm::Function *func);
@@ -68,13 +75,16 @@ namespace CodeGenerator
     // Returns a pointer to the Main function
     llvm::Function *startCodeGen(DST::Program *node);
 
+    void declareNamespaceTypes(DST::NamespaceDeclaration *node);
     llvm::Function * declareNamespaceMembers(DST::NamespaceDeclaration *node);
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 
-    llvm::Function * declareFunction(DST::FunctionDeclaration *node);
-    void codegenFunction(DST::FunctionDeclaration *node);
+    llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
+    void codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef = NULL);
 
     void declareType(DST::TypeDeclaration *node);
+    void declareTypeContent(DST::TypeDeclaration *node);
+    void codegenTypeMembers(DST::TypeDeclaration *node);
 
     void declareProperty(DST::PropertyDeclaration *node);
     void codegenProperty(DST::PropertyDeclaration *node);
@@ -92,14 +102,14 @@ namespace CodeGenerator
     Value *codeGenLval(DST::Variable *node);
     Value *codeGenLval(DST::MemberAccess *node);
     AllocaInst *codeGenLval(DST::VariableDeclaration *node);
-
-
+    Value *codeGenLval(DST::UnaryOperation* node);
 
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);
     Value *codeGen(DST::Expression *node);
     Value *codeGen(DST::Literal *node);
     Value *codeGen(DST::BinaryOperation *node);
+    Value *codeGen(DST::UnaryOperation *node);
     Value *codeGen(DST::Assignment *node);
     Value *codeGen(DST::FunctionCall *node);
     Value *codeGen(DST::MemberAccess *node);

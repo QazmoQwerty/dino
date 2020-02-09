@@ -7,6 +7,7 @@ DST::FunctionDeclaration* Decorator::_main;
 vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 DST::TypeDeclaration *Decorator::_currentTypeDecl;
 DST::Program *Decorator::_currentProgram;
+DST::NullType *Decorator::_nullType;
 
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
@@ -23,6 +24,7 @@ void Decorator::setup()
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
+	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 }
 
@@ -294,7 +296,8 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				{
 					auto decl = (DST::FunctionDeclaration*)member.second.first;
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
+					
 					for (auto param : decl->getParameters())	// Add function parameters to variables map
 						_variables[currentScope()][param->getVarId()] = param->getType();
 					decl->setContent(decorate(decl->getBase()->getContent()));
@@ -309,7 +312,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					auto decl = (DST::PropertyDeclaration*)member.second.first;
 					auto retType = ((DST::PropertyType*)member.second.second)->getReturn();
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::BasicType((DST::TypeSpecifierType*)i.second.second);
+					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
 					if (decl->getBase()->getGet())
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
@@ -734,9 +737,14 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	if (node->getOperator()._type == OT_PERIOD) 
 	{
 		auto left = decorate(node->getLeft());
+
 		auto type = left->getType();
+
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
+
+		if (type->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)type)->getTypes().size() == 1)
+			type = ((DST::TypeList*)type)->getTypes()[0];
 
 		if (type->getExactType() == EXACT_PROPERTY && ((DST::PropertyType*)type)->hasGet())
 			type = ((DST::PropertyType*)type)->getReturn();
@@ -754,14 +762,16 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getMemberType(varId);
 		}
 		else if (type->getExactType() == EXACT_NAMESPACE)
-		{
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
-		}
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)
 			throw DinoException("Unkown identifier \"" + varId.to_string() + "\"", EXT_GENERAL, node->getLine());
 		
+		// TODO - are we leaking memory here?
+		if (memberType->getExactType() == EXACT_SPECIFIER)
+			return new DST::BasicType((DST::TypeSpecifierType*)memberType);	
+
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
 		return access;
@@ -823,7 +833,7 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 	case (LT_FRACTION):		lit->setType(new DST::BasicType(getPrimitiveType("float")));	break;
 	case (LT_INTEGER):		lit->setType(new DST::BasicType(getPrimitiveType("int")));	break;
 	case (LT_STRING):		lit->setType(new DST::BasicType(getPrimitiveType("string"))); break;
-	case (LT_NULL):			lit->setType(new DST::BasicType(getPrimitiveType("null")));	break;
+	case (LT_NULL):			lit->setType(_nullType);	break;
 	default: break;
 	}
 	return lit;
@@ -958,9 +968,9 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 		//delete ret;
 		ret = arr;
 	}
-	else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
+	/*else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
 		return new DST::PointerType((DST::Type*)ret);
-	}
+	}*/
 	else if (ret->getExpressionType() != ET_TYPE)
 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
 	return (DST::Type*)ret;

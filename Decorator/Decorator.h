@@ -65,6 +65,7 @@ private:
 	static DST::TypeDeclaration *_currentTypeDecl;
 	static DST::Program *_currentProgram;
 	static DST::FunctionDeclaration* _main;
+	static DST::NullType *_nullType;
 	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;
 
