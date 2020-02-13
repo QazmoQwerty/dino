@@ -103,6 +103,7 @@ namespace CodeGenerator
     Value *codeGenLval(DST::MemberAccess *node);
     AllocaInst *codeGenLval(DST::VariableDeclaration *node);
     Value *codeGenLval(DST::UnaryOperation* node);
+    Value *codeGenLval(DST::BinaryOperation* node);
 
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);

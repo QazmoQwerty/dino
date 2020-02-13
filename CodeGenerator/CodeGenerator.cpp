@@ -386,8 +386,12 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
             return _builder.CreateGEP(val, _builder.getInt32(0));
         default:
             return NULL;
-    }
-    
+    }    
+}
+
+Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
+{
+    throw "codeGenLval(BinaryOperation) is not implemented";
 }
 
 Value *CodeGenerator::codeGenLval(DST::Expression *node)
@@ -400,6 +404,7 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_VARIABLE_DECLARATION: return codeGenLval((DST::VariableDeclaration*)node);
         case ET_MEMBER_ACCESS: return codeGenLval((DST::MemberAccess*)node);
         case ET_UNARY_OPERATION: return codeGenLval((DST::UnaryOperation*)node);
+        case ET_BINARY_OPERATION: return codeGenLval((DST::BinaryOperation*)node);
         default: return NULL;
     }
 }

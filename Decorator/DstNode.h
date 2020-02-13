@@ -4,7 +4,7 @@
 
 namespace DST
 {
-	static const int UNKNOWN_ARRAY_LENGTH = 0;
+	static const int UNKNOWN_ARRAY_LENGTH = -1;
 	static int idCount = 0;
 
 	class BasicType;
@@ -362,12 +362,12 @@ namespace DST
 	class ArrayType : public Type
 	{
 		Type *_valueType;
-		size_t _length;	// size = 0 means size is unknown.
+		size_t _length;	// size = -1 means size is unknown.
 
 	public:
 		ArrayType(AST::Expression *base) : Type(base) {  }
 		ArrayType(Type *valueType, size_t length) : Type(NULL), _valueType(valueType), _length(length) { }
-		ArrayType(Type *valueType) : ArrayType(valueType, 0) {}
+		ArrayType(Type *valueType) : ArrayType(valueType, DST::UNKNOWN_ARRAY_LENGTH) {}
 		virtual ~ArrayType() { if (_valueType) delete _valueType; }
 		ExactType getExactType() { return EXACT_ARRAY; }
 		virtual Type *getType() { return _valueType; }
@@ -417,7 +417,7 @@ namespace DST
 		Variable(AST::Identifier *base, Type *type) : _base(base), _type(type) {};
 		virtual ~Variable() { if (_base) delete _base; if (_type) delete _type; }
 		void setType(Type *type) { _type = type; };
-		virtual Type *getType() { return _type; }
+		virtual Type *getType() { return _type; };
 		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
@@ -790,7 +790,7 @@ namespace DST
 		void setExpression(Expression* expression) { _expression = expression; }
 
 		Operator getOperator() { return _base->getOperator(); }
-		Expression* getExpression() { return _expression; }
+		Expression* getExpression() { return _expression; };
 	};
 
 	class ConstDeclaration : public Statement
