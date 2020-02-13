@@ -788,10 +788,11 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			// array access
 			if (bo->getLeft()->getExpressionType() == ET_IDENTIFIER)
 			{
-				if (!((bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER) ||
-					((DST::BasicType*)bo->getRight()->getType())->getTypeId() == unicode_string("int")))
+				DST::BasicType *intType = new DST::BasicType(getPrimitiveType("int"));
+				if(!bo->getRight()->getType()->equals(intType))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
 				bo->setType(bo->getLeft()->getType()->getType());
+				//delete intType; - can't do that, it will delete the _typespec of any other int.
 			}
 			// array declaration
 			else
