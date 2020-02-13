@@ -6,7 +6,7 @@
 #include "Lexer/Preprocessor.h"
 #include "Parser/AstNode.h"
 #include "Other/AstToFile.h"
-#include "CodeGenerator/CodeGenerator.h"
+//#include "CodeGenerator/CodeGenerator.h"
 #include "Parser/Parser.h"
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
@@ -28,7 +28,7 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char *argv[])
 {
-	CodeGenerator::setup();
+	//CodeGenerator::setup();
 
 	std::ifstream t;
 	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
 		Parser p = Parser(vec);
 		AST::Node* ast = p.parseBlock();*/
-		AST::Node *ast = Parser::parseFile(argc <= 1 ? "DinoCodeExamples/LinkedList.dino" : argv[1]);
+		AST::Node *ast = Parser::parseFile(argc <= 1 ? "../../dino/DinoCodeExamples/Test.dino" : argv[1]);
 
 		if (outputAstFile)
 			astToFile("AstDisplay.gv", ast, showLineAST);
@@ -87,10 +87,10 @@ int main(int argc, char *argv[])
 
 		std::cout << "Finished decorating..." << std::endl;
 
-		auto mainFunc = CodeGenerator::startCodeGen(dst);
+		//auto mainFunc = CodeGenerator::startCodeGen(dst);
 
 		std::cout << "Finished generating IR..." << std::endl;
-		CodeGenerator::execute(mainFunc);
+		//CodeGenerator::execute(mainFunc);
 
 		Decorator::clear();
 	} 

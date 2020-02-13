@@ -788,9 +788,8 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			// array access
 			if (bo->getLeft()->getExpressionType() == ET_IDENTIFIER)
 			{
-				DST::BasicType intType(getPrimitiveType("int"));
 				if (!((bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER) ||
-					 (bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(&intType))))
+					 (bo->getRight()->getExpressionType() == ET_IDENTIFIER && bo->getRight()->getType()->equals(getPrimitiveType("int")))))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
 				bo->setType(bo->getLeft()->getType()->getType());
 			}

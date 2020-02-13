@@ -370,6 +370,7 @@ namespace DST
 		ArrayType(Type *valueType) : ArrayType(valueType, 0) {}
 		virtual ~ArrayType() { if (_valueType) delete _valueType; }
 		ExactType getExactType() { return EXACT_ARRAY; }
+		virtual Type *getType() { return _valueType; }
 
 		virtual bool equals(Type *other)
 		{
