@@ -111,6 +111,7 @@ namespace CodeGenerator
     Value *codeGen(DST::BinaryOperation *node);
     Value *codeGen(DST::UnaryOperation *node);
     Value *codeGen(DST::Assignment *node);
+    Value *codeGen(DST::Conversion *node);
     Value *codeGen(DST::FunctionCall *node);
     Value *codeGen(DST::MemberAccess *node);
 
