@@ -389,12 +389,12 @@ AST::Node * Parser::std(Token * token)
 				op->setLine(token->_line);
 				return op;
 			}
-			case(OT_RETURN):{
-			auto op = new AST::UnaryOperationStatement();
-			op->setOperator(((OperatorToken*)token)->_operator);
-			op->setExpression(parseOptionalExpression());
-			op->setLine(token->_line);
-			return op;
+			case(OT_RETURN): case(OT_EXTERN):{
+				auto op = new AST::UnaryOperationStatement();
+				op->setOperator(((OperatorToken*)token)->_operator);
+				op->setExpression(parseOptionalExpression());
+				op->setLine(token->_line);
+				return op;
 			}
 			default: 
 				return NULL;

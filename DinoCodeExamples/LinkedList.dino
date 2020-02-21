@@ -1,18 +1,18 @@
 
-namespace Prog {
-	int Main() {
-		LinkedList list
-		list.Init()
-		for int i ≡ 0 | i < 10 | i+=1:
-			list.InsertAtBack(i)
+namespace LL {
+	// int Main() {
+	// 	LinkedList list
+	// 	list.Init()
+	// 	for int i ≡ 0 | i < 10 | i+=1:
+	// 		list.InsertAtBack(i)
 		
-		list.Remove(1)
-		list.Remove(4)
-		int ret := list.Size()
-		list.Clear()
-		return ret
-		//return list.GetValue(2)
-	}
+	// 	list.Remove(1)
+	// 	list.Remove(4)
+	// 	int ret := list.Size()
+	// 	list.Clear()
+	// 	return ret
+	// 	//return list.GetValue(2)
+	// }
 
 	ListNode@ CreateNode(int data, ListNode@ next) {
 		ListNode@ node ≡ new ListNode

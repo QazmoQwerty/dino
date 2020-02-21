@@ -1,0 +1,11 @@
+
+namespace Std {
+    int rand(): extern
+    int time(int@ arg): extern
+    void srand(int seed): extern
+
+    int Main() {
+        srand(time(null))
+        return rand()
+    }
+}

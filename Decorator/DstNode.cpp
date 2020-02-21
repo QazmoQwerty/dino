@@ -119,6 +119,8 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 	{
 		switch (i->getStatementType()) {
 			case ST_UNARY_OPERATION:
+				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_EXTERN)
+					return true;
 				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_RETURN)
 				{
 					if (isVoid) 

@@ -23,6 +23,7 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 					switch (((OperatorToken*)preparsedTokens->back())->_operator._type)
 					{
 						case(OT_RETURN):
+						case(OT_EXTERN):
 						case(OT_INCREMENT):
 						case(OT_DECREMENT):
 						case(OT_CURLY_BRACES_CLOSE):

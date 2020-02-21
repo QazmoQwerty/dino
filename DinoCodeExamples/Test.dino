@@ -1,6 +1,22 @@
+include "DinoCodeExamples/LinkedList.dino"
+
 namespace Prog {
+    // int Main() {
+    //     int[5] x := [1, 2, 3, 4, 5]
+    //     return x[3]
+    // }
+
     int Main() {
-        int[5] x := [1, 2, 3, 4, 5]
-        return x[3]
-    }
+		LL.LinkedList list
+		list.Init()
+		for int i ≡ 0 | i < 10 | i+=1:
+			list.InsertAtBack(i)
+		
+		list.Remove(1)
+		list.Remove(4)
+		int ret := list.Size()
+		list.Clear()
+		return ret
+		//return list.GetValue(2)
+	}
 }

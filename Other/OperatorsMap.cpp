@@ -40,37 +40,11 @@ bool OperatorsMap::isWord(OperatorType type)
 
 bool OperatorsMap::isUnary(OperatorType type)
 {
-	/*OperatorType unaryTypes[] = {
-		OT_ADD,
-		OT_SUBTRACT,
-		OT_LOGICAL_NOT,
-		OT_BITWISE_NOT,
-		OT_INCREMENT,
-		OT_DECREMENT,
-		OT_PARENTHESIS_OPEN,
-		OT_CURLY_BRACES_OPEN,
-		OT_WHILE,
-		OT_DO,
-		OT_IF,
-		OT_ELSE,
-		OT_UNLESS,
-		OT_IS,
-		OT_FOR,
-		OT_RETURN,
-		OT_DELETE,
-		OT_TYPE,
-		OT_INTERFACE,
-		OT_NAMESPACE,
-		OT_NEW,
-		OT_AT,
-	};
-	return std::find(std::begin(unaryTypes), std::end(unaryTypes), type) != std::end(unaryTypes);*/
-
 	switch (type) 
 	{
 		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT: case OT_INCREMENT: case OT_DECREMENT: case OT_PARENTHESIS_OPEN:
 		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_IS: case OT_FOR: case OT_RETURN:
-		case OT_DELETE: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE:
+		case OT_DELETE: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE: case OT_EXTERN:
 			return true;
 		default: 
 			return false;
@@ -79,13 +53,6 @@ bool OperatorsMap::isUnary(OperatorType type)
 
 bool OperatorsMap::isBinary(OperatorType type)
 {
-	/*OperatorType nonBinaryTypes[] = {
-		OT_INCREMENT,
-		OT_DECREMENT,
-		OT_LOGICAL_NOT,
-		OT_BITWISE_NOT,
-	};
-	return std::find(std::begin(nonBinaryTypes), std::end(nonBinaryTypes), type) == std::end(nonBinaryTypes);*/
 	switch(type) 
 	{
 		case OT_INCREMENT: case OT_DECREMENT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
@@ -97,37 +64,14 @@ bool OperatorsMap::isBinary(OperatorType type)
 
 bool OperatorsMap::isKeyword(Operator op)
 {
-	//return op._binaryPrecedence == NONE && op._prefixPrecedence == NONE && op._postfixPrecedence == NONE;
-	/*OperatorType keywordTypes[] = {
-		OT_SWITCH,
-		OT_CASE,
-		OT_DEFAULT,
-		OT_WHILE,
-		OT_FOR,
-		OT_DO,
-		OT_IF,
-		OT_ELSE,
-		OT_UNLESS,
-		OT_RETURN,
-		OT_TYPE,
-		OT_INTERFACE,
-		OT_NAMESPACE,
-		OT_DELETE,
-		OT_GET,
-		OT_SET,
-	};
-	return std::find(std::begin(keywordTypes), std::end(keywordTypes), op._type) != std::end(keywordTypes);*/
-
 	switch (op._type) 
 	{
-		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS:
+		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_EXTERN:
 		case OT_RETURN: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_DELETE: case OT_GET: case OT_SET: case OT_CONST: case OT_INCLUDE:
 			return true;
 		default: 
 			return false;
 	}
-
-	
 }
 
 bool OperatorsMap::isAssignment(OperatorType type)
@@ -375,4 +319,5 @@ void OperatorsMap::setup()
 	_wordsMap[UTF8("interface")]	= { OT_INTERFACE,	UTF8("interface"),	KEYWORD };
 	_wordsMap[UTF8("namespace")]	= { OT_NAMESPACE,	UTF8("namespace"),	KEYWORD };
 	_wordsMap[UTF8("const")]		= { OT_CONST,		UTF8("const"),		KEYWORD };
+	_wordsMap[UTF8("extern")]		= { OT_EXTERN,		UTF8("extern"),		KEYWORD };
 }

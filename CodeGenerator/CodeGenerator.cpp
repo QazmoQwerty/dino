@@ -235,8 +235,12 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     {
     case LT_BOOLEAN:
         return llvm::ConstantInt::get(_context, llvm::APInt( /* 1 bit width */ 1, ((AST::Boolean*)node->getBase())->getValue()));
+    case LT_CHARACTER:
+        return llvm::ConstantInt::get(_context, llvm::APInt( /* 8 bit width */ 8, ((AST::Character*)node->getBase())->getValue()));
     case LT_INTEGER:
         return llvm::ConstantInt::get(_context, llvm::APInt( /* 64 bit width */ 64, ((AST::Integer*)node->getBase())->getValue(), /* signed */ true));
+    case LT_FRACTION:
+        return llvm::ConstantFP::get(_context, llvm::APFloat(((AST::Fraction*)node->getBase())->getValue()));
     case LT_NULL:
         return llvm::Constant::getNullValue(_builder.getVoidTy()->getPointerTo());;
         //return _builder.getInt32(NULL);
@@ -639,6 +643,8 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
     {
         if (((DST::BasicType*)node)->getTypeId() == CONDITION_TYPE)
             return llvm::Type::getInt1Ty(_context);
+        else if (((DST::BasicType*)node)->getTypeId() == unicode_string("char"))
+            return llvm::Type::getInt8Ty(_context);
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("int"))
             return llvm::Type::getInt64Ty(_context);
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
@@ -844,7 +850,6 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
 {
     std::cout << "codegenning " << "." << node->getVarDecl()->getVarId().to_string() << std::endl;
 
-    auto funcName = node->getVarDecl()->getVarId().to_string();
     llvm::Value *funcPtr = NULL;
     if (typeDef)
         funcPtr = typeDef->functions[node->getVarDecl()->getVarId()];
@@ -852,7 +857,16 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     llvm::Function *func = NULL;
     if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
-    else throw DinoException("\"" + funcName + "\" is not a function", EXT_GENERAL, node->getLine());
+    else throw DinoException("\"" + node->getVarDecl()->getVarId().to_string() + "\" is not a function", EXT_GENERAL, node->getLine());
+
+    if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN)
+    {
+        // externally defined function
+        llvm::verifyFunction(*func, &llvm::errs());
+        return;
+    }
+
 
     auto params = node->getParameters();
 

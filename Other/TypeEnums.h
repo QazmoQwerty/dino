@@ -127,6 +127,7 @@ enum OperatorType
 	OT_UNLESS,
 	OT_IS,
 	OT_RETURN,
+	OT_EXTERN,
 	OT_DELETE,
 	OT_TYPE,
 	OT_INTERFACE,
