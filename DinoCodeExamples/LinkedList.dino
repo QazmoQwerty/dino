@@ -5,8 +5,12 @@ namespace Prog {
 		list.Init()
 		for int i ≡ 0 | i < 10 | i+=1:
 			list.InsertAtBack(i)
-
-		return list.GetValue(4)
+		
+		list.Remove(1)
+		list.Remove(4)
+		int ret := list.Size()
+		list.Clear()
+		return ret
 		//return list.GetValue(2)
 	}
 
@@ -32,14 +36,14 @@ namespace Prog {
 			set: next ≡ value
 		}*/
 
-		int GetData(): return this.data
+		int GetData(): return data
 
 		void Init(int data, ListNode@ next) { this.data ≡ data | this.next ≡ next }
 
 		ListNode@ GetNext(int index) {
-			if index = 0 or this.next = null:
+			if index = 0 or next = null:
 				return this
-			return this.next.GetNext(index - 1)
+			return next.GetNext(index - 1)
 		}
 
 		ListNode@ Insert(int index, int data) {
@@ -47,24 +51,21 @@ namespace Prog {
 				return CreateNode(data, this)
 			if next = null:
 				return null	// List index out of bounds
-			else: if this.next.next = null and index = 2:
-				this.next.next ≡ CreateNode(data, null)
-			else: this.next ≡ this.next.Insert(index - 1, data)
+			else: if next.next = null and index = 2:
+				next.next ≡ CreateNode(data, null)
+			else: next ≡ next.Insert(index - 1, data)
 			return this
 		}
 
 		int Size() {
-			if this.next = null: return 1
-			return 1 + this.next.Size()
+			if next = null: return 1
+			return 1 + next.Size()
 		}
 
 		void InsertAtEnd(int data) {
-			if this.next = null {
-				//int n := CreateNode(data, null).data
-				this.next ≡ CreateNode(data, null)
-			}
-				
-			else: this.next.InsertAtEnd(data)
+			if next = null:
+				next ≡ CreateNode(data, null)
+			else: next.InsertAtEnd(data)
 		}
 
 		/*void Show() {
@@ -76,20 +77,20 @@ namespace Prog {
 		}*/
 
 		void Remove(int index) {
-			if next = null or index < 0:
+			if next = null or index < 1:
 				return // index out of bounds
-			else: if index = 0 {
-				ListNode@ temp ≡ this.next 
-				this.next ≡ this.next.next
+			else: if index = 1 {
+				ListNode@ temp ≡ next 
+				next ≡ next.next
 				delete temp
 			}
-			else: this.next.Remove(index - 1)
+			else: next.Remove(index - 1)
 		}
 
 		void DeleteChildren() {
-			unless this.next = null:
-				this.next.DeleteChildren()
-			delete this.next
+			unless next = null:
+				next.DeleteChildren()
+			delete next
 		}
 	}
 
@@ -98,25 +99,21 @@ namespace Prog {
 
 		void Init(): first ≡ null
 
-		int GetValue(int index) {
-			ListNode@ a := first.GetNext(index)
-			return a.GetData()
-			//return this.first.GetNext(index).GetData()
-		}
+		int GetValue(int index): return first.GetNext(index).GetData()
 
 		int Size() {
-			if this.first = null:
+			if first = null:
 				return 0
-			return this.first.Size()
+			return first.Size()
 		}
 
 		void Insert(int index, int data) {
-			if this.first = null:
-				this.first ≡ CreateNode(data, null)
-			else: this.first ≡ this.first.Insert(index, data)
+			if first = null:
+				first ≡ CreateNode(data, null)
+			else: first ≡ first.Insert(index, data)
 		}
 
-		void InsertAtFront(int data): this.first ≡ CreateNode(data, this.first)
+		void InsertAtFront(int data): first ≡ CreateNode(data, first)
 
 		void InsertAtBack(int data) {
 			if first = null:
@@ -126,11 +123,11 @@ namespace Prog {
 
 		void Remove(int index) {
 			if index = 0 {
-				ListNode@ temp ≡ this.first
-				this.first ≡ this.first.GetNext(0)
+				ListNode@ temp ≡ first
+				first ≡ first.GetNext(1)
 				delete temp
 			}
-			else: this.first.Remove(index)
+			else: first.Remove(index)
 		}
 
 		/*void Show() {
@@ -141,7 +138,7 @@ namespace Prog {
 		}*/
 
 		void Clear() {
-			this.first.DeleteChildren()
+			first.DeleteChildren()
 			delete first
 		}
 	}

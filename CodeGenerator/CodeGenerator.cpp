@@ -264,16 +264,20 @@ CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Express
 
 Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 {
-    if (node->getLeft()->getType()->getExactType() == EXACT_NAMESPACE)
+    auto leftType = node->getLeft()->getType();
+    if (leftType->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)leftType)->size() == 1)
+        leftType = ((DST::TypeList*)leftType)->getTypes()[0];
+
+    if (leftType->getExactType() == EXACT_NAMESPACE)
     {
         auto members = getNamespaceMembers(node->getLeft());
         if (!members)
             return NULL;
         return members->values[node->getRight()];
     }
-    else if (node->getLeft()->getType()->getExactType() == EXACT_BASIC)
+    else if (leftType->getExactType() == EXACT_BASIC)
     {
-        auto bt = (DST::BasicType*)node->getLeft()->getType();
+        auto bt = (DST::BasicType*)leftType;
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
@@ -282,10 +286,10 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else if (node->getLeft()->getType()->getExactType() == EXACT_POINTER && 
-            ((DST::PointerType*)node->getLeft()->getType())->getPtrType()->getExactType() == EXACT_BASIC)
+    else if (leftType->getExactType() == EXACT_POINTER && 
+            ((DST::PointerType*)leftType)->getPtrType()->getExactType() == EXACT_BASIC)
     {
-        auto bt = (DST::BasicType*)((DST::PointerType*)node->getLeft()->getType())->getPtrType();
+        auto bt = (DST::BasicType*)((DST::PointerType*)leftType)->getPtrType();
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
@@ -294,7 +298,14 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else throw DinoException("Expression must be of class or namespace type", EXT_GENERAL, node->getLine());
+    
+    else 
+    {
+        std::cout << leftType->toShortString() << '\n';
+        std::cout << (leftType->getExactType()) << '\n';
+        std::cout << (((DST::PointerType*)leftType)->getPtrType()->getExactType() == EXACT_BASIC) << '\n';
+        throw DinoException("Expression must be of class or namespace type", EXT_GENERAL, node->getLine());
+    }
 }
 
 Value *CodeGenerator::codeGen(DST::MemberAccess *node)
@@ -479,6 +490,8 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
     if (node->getFunctionId()->getExpressionType() == ET_MEMBER_ACCESS)
     {
         auto ty = ((DST::MemberAccess*)node->getFunctionId())->getLeft()->getType();
+        if (ty->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)ty)->size() == 1)
+            ty = ((DST::TypeList*)ty)->getTypes()[0];
         if (ty->getExactType() == EXACT_BASIC || ty->getExactType() == EXACT_POINTER)
         {
             auto &funcId = ((DST::MemberAccess*)node->getFunctionId())->getRight();
