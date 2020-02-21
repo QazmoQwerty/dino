@@ -483,9 +483,18 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 
 	if (_currentTypeDecl) if (auto var = _currentTypeDecl->getMemberType(name))
 	{
-		if (var->getExactType() == EXACT_SPECIFIER)
-			return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
-		return new DST::Variable(node, var);
+		auto thisId = new AST::Identifier(unicode_string("this"));
+		auto bop = new AST::BinaryOperation();
+		bop->setLeft(thisId);
+		bop->setRight(node);
+		bop->setOperator(OperatorsMap::getOperatorByDefinition(OT_PERIOD).second);
+		auto acc = new DST::MemberAccess(bop, decorate(thisId));
+		acc->setType(var);
+		return acc;
+
+		//if (var->getExactType() == EXACT_SPECIFIER)
+		//	return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
+		//return new DST::Variable(node, var);
 	}
 
 	for (int i = _currentNamespace.size() - 1; i >= 0; i--)
@@ -660,8 +669,9 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		throw DinoException("lvalue is read-only", EXT_GENERAL, node->getLine());
 	if (!assignment->getRight()->getType()->readable())
 		throw DinoException("rvalue is write-only", EXT_GENERAL, node->getLine());
-
-	if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))
+	if (assignment->getRight()->getType()->getExactType() == EXACT_NULL)
+		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));
+	else if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))
 		throw DinoException("Assignment of different types invalid.", EXT_GENERAL, node->getLine());
 	assignment->setType(assignment->getLeft()->getType());
 	return assignment;

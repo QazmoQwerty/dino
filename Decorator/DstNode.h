@@ -557,7 +557,7 @@ namespace DST
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
-
+		Expression *getExpression() { return _expression; }
 		virtual string toString() { return "<Conversion>\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
@@ -991,6 +991,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
+		void setRight(Expression *right) { _right = right; }
 		Operator getOperator() { return _base->getOperator(); }
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();

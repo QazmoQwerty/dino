@@ -206,6 +206,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
         case ET_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         case ET_MEMBER_ACCESS: return codeGen((DST::MemberAccess*)node);
+        case ET_CONVERSION: return codeGen((DST::Conversion*)node);
         default: return NULL;
     }
 }
@@ -326,6 +327,8 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateMul(left, right, "multmp");
         case OT_SMALLER:
             return _builder.CreateICmpULT(left, right, "cmptmp");
+        case OT_SMALLER_EQUAL:
+            return _builder.CreateICmpULE(left, right, "cmptmp");
         case OT_EQUAL:
         {
             if (left->getType() == right->getType())
@@ -402,6 +405,11 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_UNARY_OPERATION: return codeGenLval((DST::UnaryOperation*)node);
         default: return NULL;
     }
+}
+
+Value *CodeGenerator::codeGen(DST::Conversion* node)
+{
+    return _builder.CreateBitCast(codeGen(node->getExpression()), evalType(node->getType()), "cnvrttmp");
 }
 
 Value *CodeGenerator::codeGen(DST::Assignment* node)
@@ -492,24 +500,22 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
                     std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
                     , EXT_GENERAL, node->getLine());
             
-            std::vector<Value *> args;
+            std::vector<Value*> args;
             if (ty->getExactType() == EXACT_POINTER)
                 args.push_back(codeGen(((DST::MemberAccess*)node->getFunctionId())->getLeft()));    // the "this" pointer
             else args.push_back(codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft()));
 
-            /*for (auto i : node->getArguments()->getExpressions())
+        
+            int i = -1;
+            for (auto &arg : func->args())
             {
-                auto gen = codeGen(i);
-                 
-                //args.push_back();
-            }*/
-            for (int i = 0; i < node->getArguments()->getExpressions().size(); i++)
-            {
-                auto gen = codeGen(node->getArguments()->getExpressions()[i]);
-                if (gen->getType() != func->getType()->getFunctionParamType(i))
-                    args.push_back(_builder.CreateBitCast(gen, func->getType()->getFunctionParamType(i), "castTmp"));
+                if (i == -1) { i++; continue; }
+                auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
+                if (gen->getType() != arg.getType())
+                    args.push_back(_builder.CreateBitCast(gen, arg.getType(), "castTmp"));
                 else args.push_back(gen);
             }
+
             return _builder.CreateCall(func, args);
 
         }
@@ -529,8 +535,15 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
         
 
     std::vector<Value *> args;
-    for (auto i : node->getArguments()->getExpressions())
-        args.push_back(codeGen(i));
+
+    int i = 0;
+    for (auto &arg : func->args())
+    {
+        auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
+        if (gen->getType() != arg.getType())
+            args.push_back(_builder.CreateBitCast(gen, arg.getType(), "castTmp"));
+        else args.push_back(gen);
+    }
             
     return _builder.CreateCall(func, args);
 }
@@ -563,7 +576,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
 }
 
 Value *CodeGenerator::codeGenLval(DST::Variable *node)
-{   
+{
     if (auto var = _namedValues[node->getVarId().to_string()])
         return var;
     else for (int i = _currentNamespace.size() - 1; i >= 0; i--)
@@ -585,7 +598,10 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
             throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
         return _builder.CreateCall(func, {}, "calltmp");
     }
-    return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
+    auto t = codeGenLval(node);
+    auto str = node->getVarId().to_string().c_str();
+    return _builder.CreateLoad(t, str);
+    //return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
 }
 
 AllocaInst *CodeGenerator::codeGenLval(DST::VariableDeclaration *node) { return codeGen(node); }
@@ -675,6 +691,7 @@ void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
         if (i.second.first) switch (i.second.first->getStatementType())
         {
             case ST_FUNCTION_DECLARATION:
+                std::cout << "type: " << node->getName().to_string() << " ";
                 codegenFunction((DST::FunctionDeclaration*)i.second.first, def);
                 break;
             case ST_PROPERTY_DECLARATION:
@@ -810,8 +827,7 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
 void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
-
-    std::cout << "codegenning " << node->getVarDecl()->getVarId().to_string() << std::endl;
+    std::cout << "codegenning " << "." << node->getVarDecl()->getVarId().to_string() << std::endl;
 
     auto funcName = node->getVarDecl()->getVarId().to_string();
     llvm::Value *funcPtr = NULL;
