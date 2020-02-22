@@ -10,6 +10,7 @@ void CodeGenerator::setup()
 
 void CodeGenerator::writeBitcodeToFile(string fileName) 
 {
+    //llvm::errs() << *_module.get();
     fstream file(fileName);
     std::error_code ec;
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
@@ -255,7 +256,7 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     case LT_FRACTION:
         return llvm::ConstantFP::get(_context, llvm::APFloat(((AST::Fraction*)node->getBase())->getValue()));
     case LT_NULL:
-        return llvm::Constant::getNullValue(_builder.getVoidTy()->getPointerTo());;
+        return llvm::Constant::getNullValue(_builder.getInt8Ty()->getPointerTo());  // 'void*' is invalid in llvm IR
         //return _builder.getInt32(NULL);
     default:
         return NULL;
@@ -393,7 +394,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         {
             if (malloc == NULL)
             {
-                auto type = llvm::FunctionType::get(llvm::Type::getVoidTy(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
+                auto type = llvm::FunctionType::get(llvm::Type::getInt8Ty(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
                 malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
             }
             auto type = evalType((DST::Type*)node->getExpression());
@@ -603,12 +604,12 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
         {
             if (free == NULL)
             {
-                auto type = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), { llvm::Type::getVoidTy(_context)->getPointerTo() }, false);
+                auto type = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), { llvm::Type::getInt8Ty(_context)->getPointerTo() }, false);
                 free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "free", _module.get());
             }
             auto ptr = codeGenLval(node->getExpression());
             
-            auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getVoidTy(_context)->getPointerTo(), "castTmp");
+            auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
 
             _builder.CreateCall(free, { cast });
             return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
@@ -688,6 +689,9 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         return evalType(((DST::PropertyType*)node)->getReturn());
     if (node->getExactType() == EXACT_POINTER)
     {
+        if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC  // void* is invalid in llvm IR
+            && ((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))
+            return llvm::Type::getInt8Ty(_context)->getPointerTo();
         auto ty = evalType(((DST::PointerType*)node)->getPtrType());
         return ty->getPointerTo();
     }
@@ -737,7 +741,6 @@ void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
         if (i.second.first) switch (i.second.first->getStatementType())
         {
             case ST_FUNCTION_DECLARATION:
-                std::cout << "type: " << node->getName().to_string() << " ";
                 codegenFunction((DST::FunctionDeclaration*)i.second.first, def);
                 break;
             case ST_PROPERTY_DECLARATION:
@@ -875,7 +878,7 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
 void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
-    std::cout << "codegenning " << "." << node->getVarDecl()->getVarId().to_string() << std::endl;
+    //std::cout << "codegenning " << "." << node->getVarDecl()->getVarId().to_string() << std::endl;
 
     llvm::Value *funcPtr = NULL;
     if (typeDef)
