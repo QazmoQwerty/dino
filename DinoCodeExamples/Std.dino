@@ -1,21 +1,31 @@
 
 namespace Std {
-    //int rand(): extern
-    //int time(int@ arg): extern
-    //void srand(int seed): extern
+    namespace NumPrinter {
+        int putchar(int c): extern
+        int PutChar(int c): return putchar(c)
+    } 
+    void PrintNum(int num) {
+        int a := 1
+        while a <= num / 10: a *= 10
+        while a > 0 {
+            NumPrinter.PutChar(num % (a * 10) / a + 48)
+            a /= 10
+        }
+    }
 
-    int putchar(char c): extern
+    void Newline(): NumPrinter.PutChar(10)
 
     int Main() {
-        //srand(time(null))
-        // for int i := 0 | i < 10 | i+=1:
-        //     putchar(i + 48)
-        putchar('h')
-        putchar('e')
-        putchar('l')
-        putchar('l')
-        putchar('o')
-        //putchar('\n')
+        PrintNum(0)
+        Newline()
+        PrintNum(1)
+        Newline()
+        PrintNum(10)
+        Newline()
+        PrintNum(40)
+        Newline()
+        PrintNum(123321)
+        Newline()
         return 0
     }
 }

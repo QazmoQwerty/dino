@@ -69,7 +69,7 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 						throw "Error: missing file name after '-bc'";
 					else options->bcFileName = argv[i];
 				}	
-				else if (strcmp(argv[i], "-o"))
+				else if (strcmp(argv[i], "-o") == 0)
 				{
 					options->outputExe = true;
 					if (++i >= argc)
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	DST::setup();
 	try
 	{
-		AST::Node *ast = Parser::parseFile(cmd->fileName);
+		AST::Node *ast = Parser::parseFile(cmd->fileName, cmd->showLexerOutput);
 
 		if (cmd->outputAstFiles) 
 		{
@@ -126,7 +126,19 @@ int main(int argc, char *argv[])
 		if (cmd->outputBc) 
 		{
 			CodeGenerator::writeBitcodeToFile(cmd->bcFileName);
-			std::cout << "outputted .bc file";
+			llvm::errs() << "outputted .bc file\n";
+		}
+
+		if (cmd->outputExe)
+		{
+			if (!cmd->outputBc)
+			{
+				cmd->bcFileName = "temp.bc";
+				CodeGenerator::writeBitcodeToFile(cmd->bcFileName);
+			}
+			system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
+			system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
+			llvm::errs() << "outputted .exe file\n";
 		}
 
 		Decorator::clear();

@@ -13,9 +13,7 @@ void CodeGenerator::writeBitcodeToFile(string fileName)
     fstream file(fileName);
     std::error_code ec;
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
-    std::cout << ec.message() << std::endl;
     llvm::WriteBitcodeToFile(_module.get(), out);
-    std::cout << ec.message() << std::endl;
 }
 
 void CodeGenerator::execute(llvm::Function *func)
@@ -355,10 +353,18 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateSub(left, right, "subtmp");
         case OT_MULTIPLY:
             return _builder.CreateMul(left, right, "multmp");
+        case OT_DIVIDE:
+            return _builder.CreateSDiv(left, right, "divtmp");
+        case OT_MODULUS:
+            return _builder.CreateSRem(left, right, "divtmp");
         case OT_SMALLER:
             return _builder.CreateICmpULT(left, right, "cmptmp");
         case OT_SMALLER_EQUAL:
             return _builder.CreateICmpULE(left, right, "cmptmp");
+        case OT_GREATER:
+            return _builder.CreateICmpUGT(left, right, "cmptmp");
+        case OT_GREATER_EQUAL:
+            return _builder.CreateICmpUGE(left, right, "cmptmp");
         case OT_EQUAL:
         {
             if (left->getType() == right->getType())
@@ -372,7 +378,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_LOGICAL_OR:
             return _builder.CreateOr(left, right, "ortmp");
         default:
-            return NULL;
+            throw DinoException("Unimplemented Binary operation!", EXT_GENERAL, node->getLine());
     }
     
 }
@@ -480,6 +486,10 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             return _builder.CreateStore(_builder.CreateSub(_builder.CreateLoad(left), right, "subtmp"), left);
         case OT_ASSIGN_MULTIPLY:
             return _builder.CreateStore(_builder.CreateMul(_builder.CreateLoad(left), right, "multmp"), left);
+        case OT_ASSIGN_DIVIDE:
+            return _builder.CreateStore(_builder.CreateSDiv(_builder.CreateLoad(left), right, "multmp"), left);
+        case OT_ASSIGN_MODULUS:
+            return _builder.CreateStore(_builder.CreateSRem(_builder.CreateLoad(left), right, "multmp"), left);
         default: throw DinoException("Unimplemented assignment operator", EXT_GENERAL, node->getLine());
     
     }
