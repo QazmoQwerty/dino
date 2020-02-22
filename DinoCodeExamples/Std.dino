@@ -7,8 +7,8 @@ namespace Std {
         int PutChar(int c): return putchar(c)
     } 
     void PrintNum(int num) {
-        int a := 1
-        while a <= num / 10: a *= 10
+        int a ≡ 1
+        while a ≤ num / 10: a *= 10
         while a > 0 {
             NumPrinter.PutChar(num % (a * 10) / a + 48)
             a /= 10
