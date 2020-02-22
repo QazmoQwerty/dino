@@ -6,31 +6,17 @@ namespace Prog {
     //     return x[3]
     // }
 
-	//void@ malloc(int n): extern
-	//void free(void@ n): return
+	type Foo {
+		int A
+		int B {
+			get: return A
+			set: A := 10
+		}
+	}
 
     int Main() {
-		// LL.LinkedList list
-		// list.Init()
-		// for int i ≡ 0 | i < 10 | i+=1:
-		// 	list.InsertAtBack(i)
-		
-		// list.Remove(1)
-		// list.Remove(4)
-		// int ret := list.Size()
-		// list.Clear()
-		// return ret
-		//return list.GetValue(2)
-
-		//int@ a := (int@)(malloc(8))
-		//free((void@)(a))
-		
-		//return 10
-
-		int@ a := new int
-		@a := 10
-		int b := @a
-		delete a
-		return b
+		// Foo a
+		// a.A := 10
+		return 10
 	}
 }

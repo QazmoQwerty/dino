@@ -726,6 +726,7 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
                 declareFunction((DST::FunctionDeclaration*)i.second.first, def);
                 break;
             case ST_PROPERTY_DECLARATION:
+                declareProperty((DST::PropertyDeclaration*)i.second.first, def);
                 break;
             default: break;
         }
@@ -744,47 +745,69 @@ void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
                 codegenFunction((DST::FunctionDeclaration*)i.second.first, def);
                 break;
             case ST_PROPERTY_DECLARATION:
+                codegenProperty((DST::PropertyDeclaration*)i.second.first, def);
                 break;
             default: break;
         }
     }
 }
 
-void CodeGenerator::declareProperty(DST::PropertyDeclaration *node)
+void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
     auto propType = evalType(node->getReturnType());
 
     if (node->getSet())
     {
-        vector<llvm::Type*> getParams, setParams;
+        vector<llvm::Type*> setParams;
+        if (typeDef)
+            setParams.push_back(typeDef->structType->getPointerTo());
         setParams.push_back(propType);  // Add "value" parameter to set function
         auto setFuncType = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), setParams, false);
         unicode_string setFuncName = node->getName();
         setFuncName += ".set";
         llvm::Function *setFunc = llvm::Function::Create(setFuncType, llvm::Function::ExternalLinkage, setFuncName.to_string(), _module.get());
         _currentNamespace.back()->values[setFuncName] = setFunc;
+        bool b = true;
         for (auto &arg : setFunc->args())
-            arg.setName("value");
+        {
+            if (typeDef && b) 
+            {
+                b = false;
+                arg.setName("this");    
+            }
+            else arg.setName("value");
+        }     
+        if (typeDef)
+            typeDef->functions[setFuncName] = setFunc;
     }
 
     if (node->getGet())
     {
         vector<llvm::Type*> getParams;
+        if (typeDef)
+            getParams.push_back(typeDef->structType->getPointerTo());
         auto getFuncType = llvm::FunctionType::get(propType, getParams, false);
         unicode_string getFuncName = node->getName();
         getFuncName += ".get";
         llvm::Function *getFunc = llvm::Function::Create(getFuncType, llvm::Function::ExternalLinkage, getFuncName.to_string(), _module.get());
         _currentNamespace.back()->values[getFuncName] = getFunc;
+        for (auto &arg : getFunc->args())
+            arg.setName("this");
+        if (typeDef)
+            typeDef->functions[getFuncName] = getFunc;
     }
 }
 
-void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node)
+void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef)
 {
     if (node->getGet())
     {
         unicode_string getFuncName = node->getName();
         getFuncName += ".get";
-        auto getFuncPtr = _currentNamespace.back()->values[getFuncName];
+        llvm::Value *getFuncPtr = NULL;
+        if (typeDef)
+            getFuncPtr = typeDef->functions[getFuncName];
+        else getFuncPtr = _currentNamespace.back()->values[getFuncName];
         llvm::Function *getFunc = NULL;
         if (isFunc(getFuncPtr))
             getFunc = (llvm::Function*)getFuncPtr;
@@ -793,6 +816,18 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node)
         // Create a new basic block to start insertion into.
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", getFunc);
         _builder.SetInsertPoint(bb);
+
+        if (typeDef)
+        {
+            for (llvm::Argument &arg : getFunc->args()) // create entry block alloca for 'this' ptr
+            {
+                AllocaInst *alloca = CreateEntryBlockAlloca(getFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
+                _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+                _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
+                _currThisPtr = alloca;
+            }
+        }
+
         for (auto i : node->getGet()->getStatements()) 
         {
             auto val = codeGen(i);
@@ -811,7 +846,10 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node)
     {
         unicode_string setFuncName = node->getName();
         setFuncName += ".set";
-        auto setFuncPtr = _currentNamespace.back()->values[setFuncName];
+        llvm::Value *setFuncPtr = NULL;
+        if (typeDef)
+            setFuncPtr = typeDef->functions[setFuncName];
+        else setFuncPtr = _currentNamespace.back()->values[setFuncName];
         llvm::Function *setFunc = NULL;
         if (isFunc(setFuncPtr))
             setFunc = (llvm::Function*)setFuncPtr;
@@ -823,11 +861,17 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node)
 
         // Record the function arguments in the NamedValues map.
         _namedValues.clear();
+
+        bool isFirst = false;
         for (llvm::Argument &arg : setFunc->args())
         {
             AllocaInst *alloca = CreateEntryBlockAlloca(setFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
             _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
             _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
+            
+            if (typeDef && isFirst)
+                _currThisPtr = alloca;
+            isFirst = false;
         }
 
         for (auto i : node->getSet()->getStatements()) 
@@ -913,7 +957,7 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
         _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
 
-        if (isFirst && typeDef != nullptr)
+        if (isFirst && typeDef)
             _currThisPtr = alloca;
         isFirst = false;
     }

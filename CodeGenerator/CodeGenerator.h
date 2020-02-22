@@ -87,14 +87,15 @@ namespace CodeGenerator
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 
     llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
-    void codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef = NULL);
+    void codegenFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
+
+    void declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+    void codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);
     void codegenTypeMembers(DST::TypeDeclaration *node);
 
-    void declareProperty(DST::PropertyDeclaration *node);
-    void codegenProperty(DST::PropertyDeclaration *node);
 
     bool isFunc(llvm::Value *funcPtr);
 
