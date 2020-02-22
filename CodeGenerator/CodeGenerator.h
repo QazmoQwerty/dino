@@ -27,14 +27,20 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/Interpreter.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/Support/FileSystem.h"
+//#include "llvm/Bitcode/ReaderWriter.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
 
 
 #include "../Decorator/DstNode.h"
 #include <string>
+#include <fstream>
+
 #define CONDITION_TYPE unicode_string("bool")
 
 using llvm::Value;
 using llvm::AllocaInst;
+using std::fstream;
 
 namespace CodeGenerator 
 {
@@ -70,6 +76,7 @@ namespace CodeGenerator
 
     void setup();
 
+    void writeBitcodeToFile(string fileName);
     void execute(llvm::Function *func);
 
     // Returns a pointer to the Main function

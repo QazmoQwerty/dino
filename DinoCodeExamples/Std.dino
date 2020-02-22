@@ -1,11 +1,21 @@
 
 namespace Std {
-    int rand(): extern
-    int time(int@ arg): extern
-    void srand(int seed): extern
+    //int rand(): extern
+    //int time(int@ arg): extern
+    //void srand(int seed): extern
+
+    int putchar(char c): extern
 
     int Main() {
-        srand(time(null))
-        return rand()
+        //srand(time(null))
+        // for int i := 0 | i < 10 | i+=1:
+        //     putchar(i + 48)
+        putchar('h')
+        putchar('e')
+        putchar('l')
+        putchar('l')
+        putchar('o')
+        //putchar('\n')
+        return 0
     }
 }

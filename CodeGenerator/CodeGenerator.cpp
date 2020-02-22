@@ -8,10 +8,21 @@ void CodeGenerator::setup()
     llvm::InitializeNativeTargetAsmParser();
 }
 
+void CodeGenerator::writeBitcodeToFile(string fileName) 
+{
+    fstream file(fileName);
+    std::error_code ec;
+    llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
+    std::cout << ec.message() << std::endl;
+    llvm::WriteBitcodeToFile(_module.get(), out);
+    std::cout << ec.message() << std::endl;
+}
+
 void CodeGenerator::execute(llvm::Function *func)
 {
     // Create Interpreter
     llvm::Module *M = _module.get();
+    
     std::string errStr;
     llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).setEngineKind(llvm::EngineKind::Interpreter).create();
 
@@ -129,6 +140,10 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
 llvm::Function *CodeGenerator::startCodeGen(DST::Program *node) 
 {
     llvm::Function *ret = NULL;
+
+    // auto type = llvm::FunctionType::get(llvm::Type::getInt64Ty(_context), { llvm::Type::getInt64Ty(_context), llvm::Type::getInt8Ty(_context)->getPointerTo()->getPointerTo() }, false);
+    // auto mainFunc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "main", _module.get());
+
 
     for (auto i : node->getNamespaces())
     {
@@ -825,6 +840,8 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
     auto returnType = evalType(node->getReturnType());
     auto funcType = llvm::FunctionType::get(returnType, types, false);
     auto funcId = node->getVarDecl()->getVarId().to_string();
+    if (funcId == "Main")
+        funcId = "main";
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
 
     // Set names for all arguments.
