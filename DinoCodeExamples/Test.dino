@@ -1,32 +1,13 @@
 //include "DinoCodeExamples/LinkedList.dino"
 
 namespace Prog {
-    // int Main() {
-    //     int[5] x := [1, 2, 3, 4, 5]
-    //     return x[3]
-    // }
-
-	// type Foo {
-	// 	int A
-	// 	int B {
-	// 		get: return A
-	// 		set: A := 10
-	// 	}
-	// }
-
-	// (int, string) Foo(): return 1, "wow"
-
-    // int Main() {
-	// 	// Foo a
-	// 	// a.A := 10
-
-
-	// 	return 10
-	// }
+	int putchar(int a): extern
+	char Print(char c): return putchar(c as int) as char
 
 	int Main() {
-		//int a := 10
-		char b := '0'
-		return b as int
+		
+		Print('h')
+		Print('w')
+		return Print('\n') as int
 	}
 }
