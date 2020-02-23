@@ -140,10 +140,6 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
 {
     llvm::Function *ret = NULL;
 
-    // auto type = llvm::FunctionType::get(llvm::Type::getInt64Ty(_context), { llvm::Type::getInt64Ty(_context), llvm::Type::getInt8Ty(_context)->getPointerTo()->getPointerTo() }, false);
-    // auto mainFunc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "main", _module.get());
-
-
     for (auto i : node->getNamespaces())
     {
         auto currentNs = _namespaces[i.first] = new NamespaceMembers();
@@ -745,7 +741,9 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("char"))
             return llvm::Type::getInt8Ty(_context);
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("int"))
-            return llvm::Type::getInt64Ty(_context);
+            return llvm::Type::getInt32Ty(_context);
+        // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("float"))
+        //     return _builder.getFloatTy();
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
             return llvm::Type::getVoidTy(_context);
         else 
