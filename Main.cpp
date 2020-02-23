@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 			}
 			system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
 			system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
-			llvm::errs() << "outputted .exe file\n";
+			llvm::errs() << "outputted ELF file\n";
 		}
 
 		Decorator::clear();
