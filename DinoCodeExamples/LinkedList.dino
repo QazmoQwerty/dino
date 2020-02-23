@@ -1,19 +1,5 @@
 
 namespace LL {
-	// int Main() {
-	// 	LinkedList list
-	// 	list.Init()
-	// 	for int i ≡ 0 | i < 10 | i+=1:
-	// 		list.InsertAtBack(i)
-		
-	// 	list.Remove(1)
-	// 	list.Remove(4)
-	// 	int ret := list.Size()
-	// 	list.Clear()
-	// 	return ret
-	// 	//return list.GetValue(2)
-	// }
-
 	ListNode@ CreateNode(int data, ListNode@ next) {
 		ListNode@ node ≡ new ListNode
 		// node.Data ≡ data
@@ -26,17 +12,17 @@ namespace LL {
 		int data
 		ListNode@ next
 	
-		/*int Data {
+		int Data {
 			get: return data
 			set: data ≡ value
 		}
 
-		ListNode Next {
+		ListNode@ Next {
 			get: return next
 			set: next ≡ value
-		}*/
+		}
 
-		int GetData(): return data
+		//int GetData(): return data
 
 		void Init(int data, ListNode@ next) { this.data ≡ data | this.next ≡ next }
 
@@ -99,7 +85,8 @@ namespace LL {
 
 		void Init(): first ≡ null
 
-		int GetValue(int index): return first.GetNext(index).GetData()
+		int GetValue(int index): 
+			return first.GetNext(index).Data
 
 		int Size() {
 			if first = null:
@@ -124,7 +111,8 @@ namespace LL {
 		void Remove(int index) {
 			if index = 0 {
 				ListNode@ temp ≡ first
-				first ≡ first.GetNext(1)
+				//first ≡ first.GetNext(1)
+				first ≡ first.Next
 				delete temp
 			}
 			else: first.Remove(index)

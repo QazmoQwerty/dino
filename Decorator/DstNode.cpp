@@ -577,6 +577,9 @@ bool DST::PointerType::equals(Type * other)
 	if (other->getExactType() == EXACT_TYPELIST)
 		return equals(((TypeList*)other)->getTypes()[0]);
 
+	if (other->getExactType() == EXACT_PROPERTY)
+		return equals(((PropertyType*)other)->getReturn());
+
 	if (other->getExactType() != EXACT_POINTER)
 		return false;
 	
@@ -592,8 +595,6 @@ bool DST::PointerType::equals(Type * other)
 		else return false;
 	}
 	else return ((PointerType*)other)->_type->equals(_type);
-
-	//return other != nullptr && other->getExactType() == /EXACT_POINTER && ((PointerType*)other)->_type->equals(_type);
 }
 
 string DST::PointerType::toShortString()
