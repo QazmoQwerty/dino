@@ -787,6 +787,9 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		return access;
 	}
 
+	if (node->getOperator()._type == OT_AS)
+		return new DST::Conversion(NULL, evalType(node->getRight()), decorate(node->getLeft()));
+
 	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
 
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))

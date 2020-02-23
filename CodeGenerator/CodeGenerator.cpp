@@ -201,7 +201,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_DO_WHILE_LOOP: return codeGen((DST::DoWhileLoop*)node);
         case ST_FOR_LOOP: return codeGen((DST::ForLoop*)node);
         case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
-        default: return NULL;
+        default: throw DinoException("Unimplemented codegen for statement", EXT_GENERAL, node->getLine());;
     }
     TypeDefinition t;
 }
@@ -221,7 +221,8 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         case ET_MEMBER_ACCESS: return codeGen((DST::MemberAccess*)node);
         case ET_CONVERSION: return codeGen((DST::Conversion*)node);
-        default: return NULL;
+        //case ET_TYPE: return evalType((DST::Type*)node);
+        default: throw DinoException("Unimplemented codegen for expression", EXT_GENERAL, node->getLine());
     }
 }
 
@@ -259,7 +260,7 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
         return llvm::Constant::getNullValue(_builder.getInt8Ty()->getPointerTo());  // 'void*' is invalid in llvm IR
         //return _builder.getInt32(NULL);
     default:
-        return NULL;
+        throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
     }
 }
 
@@ -434,13 +435,13 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         case OT_ADD:
             return codeGen(node->getExpression());
         case OT_SUBTRACT:
-            return NULL;
+            throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
         case OT_AT:
             return _builder.CreateLoad(codeGen(node->getExpression()));
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
         default:
-            return NULL;
+            throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
     }
     
 }
@@ -476,7 +477,15 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
 
 Value *CodeGenerator::codeGen(DST::Conversion* node)
 {
-    return _builder.CreateBitCast(codeGen(node->getExpression()), evalType(node->getType()), "cnvrttmp");
+    auto type = evalType(node->getType());
+    auto exp = codeGen(node->getExpression());
+    unsigned int targetSz = type->getPrimitiveSizeInBits();
+    unsigned int currSz = exp->getType()->getPrimitiveSizeInBits();        
+    if (targetSz < currSz)
+        return _builder.CreateTrunc(exp, type, "cnvrttmp");
+    else if (targetSz > currSz)
+        return _builder.CreateZExt(exp, type, "cnvrttmp");  // TODO - exending cast for unsigned intergers
+    else return _builder.CreateBitCast(exp, type, "cnvrttmp");
 }
 
 Value *CodeGenerator::codeGen(DST::Assignment* node)

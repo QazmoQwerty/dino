@@ -24,19 +24,9 @@ namespace Prog {
 	// 	return 10
 	// }
 
-	type Foo {
-		int a
-		void F(): a := 10
-		int A { 
-			get: return a 
-			set: a := value
-		}
-	}
-
 	int Main() {
-		Foo@ f := new Foo
-		f.A := 20
-		return f.A
-		//int a := B.A
+		//int a := 10
+		char b := '0'
+		return b as int
 	}
 }
