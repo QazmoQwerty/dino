@@ -11,10 +11,10 @@ namespace Prog {
 	namespace NS: const c1 := '\n'
 
 	int Main() {
-		var a := 'c'
-		var b := '\n'
-		Print(a)
-		return Print(b) as int + 1
+		char a := '0'
+		char b := '1'
+		a, b := b, a
+		return a as int
 		// Foo(&Print)
 		// Print('h')
 		// Print('w')

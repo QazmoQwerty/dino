@@ -591,6 +591,21 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         return right;
     }
 
+    if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
+    {
+        if (node->getRight()->getExpressionType() != ET_LIST)
+            throw DinoException("Multi-return functions are not implemented yet", EXT_GENERAL, node->getLine());
+        vector<Value*> lefts, rights;
+        for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
+            lefts.push_back(codeGenLval(i));
+        for (auto i : ((DST::ExpressionList*)node->getRight())->getExpressions())
+            rights.push_back(codeGen(i));
+        Value *lastStore = NULL;
+        for (int i = 0; i < lefts.size(); i++)
+            lastStore = _builder.CreateStore(rights[i], lefts[i]);
+        return lastStore;   // Temporary fix.
+    }
+
     left = codeGenLval(node->getLeft());
     right = codeGen(node->getRight());
     switch (node->getOperator()._type) 
