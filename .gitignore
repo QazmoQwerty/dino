@@ -1,0 +1,9 @@
+.vs/
+Debug/
+*.gv
+*.exe
+.vscode/
+*.bc
+*.ll
+*.s
+test

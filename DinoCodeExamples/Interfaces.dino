@@ -1,0 +1,34 @@
+namespace program {
+
+	namespace main_program {
+		void print(int n)
+
+		void Main() {
+			Square s
+
+			ISquare i := &s
+			i.Side := 5
+			print(i.Area())
+		}
+	}
+	type Square is ISquare {
+		int x
+		int P() {
+			return x * 4;
+		}
+		int Side { 
+			get { return x }
+			set { x := value }
+		}
+
+		int Area() {
+			return x * x
+		}
+	}
+	interface IShape {
+		int Area()
+	}
+	interface ISquare is IShape {
+		int Side { get | set }
+	}
+}
