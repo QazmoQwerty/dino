@@ -22,7 +22,7 @@ void CodeGenerator::execute(llvm::Function *func)
 
     llvm::errs() << "We are trying to construct this LLVM module:\n\n---------\n" << *M;
     llvm::errs() << "verifying... ";
-    if (llvm::verifyModule(*M)) {
+    if (llvm::verifyModule(*M, &llvm::errs())) {
         llvm::errs() << ": Error constructing function!\n";
         return;
     }
@@ -206,6 +206,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
         case ET_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         case ET_MEMBER_ACCESS: return codeGen((DST::MemberAccess*)node);
+        case ET_ARRAY: return codeGen((DST::ArrayLiteral*)node);
         default: return NULL;
     }
 }
@@ -314,8 +315,11 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
 
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
-    Value *left = codeGen(node->getLeft());
+    Value *left;
+    if(node->getOperator()._type != OT_SQUARE_BRACKETS_OPEN)
+        left = codeGen(node->getLeft());
     Value *right = codeGen(node->getRight());
+    
     switch (node->getOperator()._type)
     {
         case OT_ADD:
@@ -338,6 +342,12 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateAnd(left, right, "andtmp");
         case OT_LOGICAL_OR:
             return _builder.CreateOr(left, right, "ortmp");
+
+        case OT_SQUARE_BRACKETS_OPEN:
+        {
+            llvm::Type *elementTy = llvm::PointerType::get(evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType()), 0);   
+            return _builder.CreateLoad(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
+        }
         default:
             return NULL;
     }
@@ -375,6 +385,19 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
     
 }
 
+Value *CodeGenerator::codeGen(DST::ArrayLiteral *node)
+{
+    vector<llvm::Constant*> IRvalues;
+    llvm::Type *atype = evalType(node->getType());
+    llvm::Type *vtype = evalType(node->getArray()[0]->getType());
+
+    for(auto val : node->getArray())
+    {
+        IRvalues.push_back((llvm::Constant*)codeGen(val));
+    }
+    return llvm::ConstantArray::get((llvm::ArrayType*)atype, IRvalues);
+}
+
 Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
 {
     Value *val = codeGenLval(node->getExpression());
@@ -391,7 +414,18 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
 
 Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
 {
-    throw "codeGenLval(BinaryOperation) is not implemented";
+    Value *val = codeGenLval(node->getLeft());
+    switch (node->getOperator()._type)
+    {
+        case OT_SQUARE_BRACKETS_OPEN:
+        {
+            Value *ptr = _builder.CreateInBoundsGEP(val, codeGen(node->getRight()));
+            llvm::Type *elementTy = evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType());
+            return _builder.CreatePointerCast(ptr, llvm::PointerType::get(elementTy, 0));
+        }
+        default:
+            return NULL;
+    }
 }
 
 Value *CodeGenerator::codeGenLval(DST::Expression *node)
@@ -606,6 +640,11 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
     // Create an alloca for the variable in the entry block.
     AllocaInst *alloca = CreateEntryBlockAlloca(func, type, name);
     _namedValues[name] = alloca;
+
+    /*if(type->isArrayTy())
+    {
+        _builder.CreateStore(llvm::ConstantAggregateZero::get(type), alloca); 
+    }*/
     return alloca;
 }
 

@@ -27,6 +27,9 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/Interpreter.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/ConstantRange.h"
 
 
 #include "../Decorator/DstNode.h"
@@ -114,6 +117,8 @@ namespace CodeGenerator
     Value *codeGen(DST::Assignment *node);
     Value *codeGen(DST::FunctionCall *node);
     Value *codeGen(DST::MemberAccess *node);
+    Value *codeGen(DST::ArrayLiteral *node);
+
 
     llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");
     Value *codeGen(DST::Variable *node);
