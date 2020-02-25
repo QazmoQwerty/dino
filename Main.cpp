@@ -1,4 +1,4 @@
-﻿//#include <fstream>
+﻿#include <fstream>
 #include <iostream>
 #include <sstream> 
 
@@ -117,7 +117,6 @@ int main(int argc, char *argv[])
 			dstToFile("DstDisplay.gv", dst, false);
 		
 		auto mainFunc = CodeGenerator::startCodeGen(dst);
-
 		std::cout << "Finished generating IR..." << std::endl;
 
 		if (cmd->executeInterpret)
