@@ -135,8 +135,9 @@ namespace DST
 		AST::Expression *_base;
 		bool _isReadable;
 		bool _isWritable;
+		bool _isConst;
 	public:
-		Type(AST::Expression *base) : _base(base) { _isReadable = _isWritable = true; }
+		Type(AST::Expression *base) : _base(base) { _isReadable = _isWritable = true; _isConst = false; }
 		Type(AST::Expression *base, bool isReadable, bool isWritable) : _base(base) { _isReadable = isReadable;  _isWritable = isWritable; }
 		virtual ~Type() { if (_base) delete _base; }
 		virtual Type *getType();
@@ -145,8 +146,10 @@ namespace DST
 		virtual bool equals(Type *other) = 0;
 		void setNotReadable() { _isReadable = false; }
 		void setNotWritable() { _isWritable = false; }
+		void setConst() { _isConst = true; }
 		virtual bool readable() { return _isReadable; }
 		virtual bool writeable() { return _isWritable; }
+		bool isConst() { return _isConst; }
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toShortString() = 0;

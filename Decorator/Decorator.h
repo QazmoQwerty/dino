@@ -48,6 +48,7 @@ private:
 	static DST::PropertyDeclaration * decorate(AST::PropertyDeclaration * node);
 	static DST::UnaryOperationStatement * decorate(AST::UnaryOperationStatement * node);
 	static DST::TypeDeclaration * decorate(AST::TypeDeclaration * node);
+	static DST::ConstDeclaration * decorate(AST::ConstDeclaration *node);
 	
 	// ExpressionStatements
 	static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);

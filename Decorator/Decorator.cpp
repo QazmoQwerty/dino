@@ -233,6 +233,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			auto constDecl = new DST::ConstDeclaration(decl);
 			auto exp = decorate(decl->getExpression());
 			exp->getType()->setNotWritable();
+			exp->getType()->setConst();
 			constDecl->setExpression(exp);
 			node->addMember(decl->getName(), constDecl, constDecl->getExpression()->getType());
 			break;
@@ -444,6 +445,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::FunctionDeclaration*>(node));
 	case ST_VARIABLE_DECLARATION:
 		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
+	case ST_CONST_DECLARATION:
+		return decorate(dynamic_cast<AST::ConstDeclaration*>(node));
 	case ST_ASSIGNMENT:
 		return decorate(dynamic_cast<AST::Assignment*>(node));
 	case ST_STATEMENT_BLOCK:
@@ -644,6 +647,19 @@ DST::Expression * Decorator::decorate(AST::ConditionalExpression * node)
 	return expr;
 }
 
+DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
+{
+	auto decl = new DST::ConstDeclaration(node);
+	decl->setExpression(decorate(node->getExpression()));
+	unicode_string name = node->getName();
+	if (_variables[currentScope()].count(name))
+		throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
+	decl->getExpression()->getType()->setNotWritable();
+	decl->getExpression()->getType()->setConst();
+	_variables[currentScope()][name] = decl->getExpression()->getType();
+	return decl;
+}
+
 DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 {
 	auto decl = new DST::VariableDeclaration(node);
@@ -652,11 +668,6 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 
 	if (_variables[currentScope()].count(name))
 		throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
-	/*for (int scope = currentScope(); scope >= 0; scope--)
-	{
-		if (_variables[scope].count(name))
-			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
-	}*/
 	_variables[currentScope()][name] = decl->getType();
 	return decl;
 }
