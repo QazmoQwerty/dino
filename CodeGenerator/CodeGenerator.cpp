@@ -104,6 +104,12 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
             case ST_VARIABLE_DECLARATION:
                 createGlobalVariable((DST::VariableDeclaration*)member);
                 break;
+            case ST_CONST_DECLARATION:
+            {
+                auto decl = (DST::ConstDeclaration*)member;
+                _currentNamespace.back()->values[decl->getName()] = codeGen(decl->getExpression());
+                break;
+            }
             default: break;
         }
     }
@@ -192,6 +198,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_STATEMENT_BLOCK: return codeGen((DST::StatementBlock*)node);
         case ST_UNARY_OPERATION: return codeGen((DST::UnaryOperationStatement*)node);
         case ST_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
+        case ST_CONST_DECLARATION: return codeGen((DST::ConstDeclaration*)node);
         case ST_IF_THEN_ELSE: return codeGen((DST::IfThenElse*)node);
         case ST_WHILE_LOOP: return codeGen((DST::WhileLoop*)node);
         case ST_DO_WHILE_LOOP: return codeGen((DST::DoWhileLoop*)node);
@@ -249,7 +256,7 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     case LT_CHARACTER:
         return llvm::ConstantInt::get(_context, llvm::APInt( /* 8 bit width */ 8, ((AST::Character*)node->getBase())->getValue()));
     case LT_INTEGER:
-        return llvm::ConstantInt::get(_context, llvm::APInt( /* 64 bit width */ 64, ((AST::Integer*)node->getBase())->getValue(), /* signed */ true));
+        return llvm::ConstantInt::get(_context, llvm::APInt( /* 32 bit width */ 32, ((AST::Integer*)node->getBase())->getValue(), /* signed */ true));
     case LT_FRACTION:
         return llvm::ConstantFP::get(_context, llvm::APFloat(((AST::Fraction*)node->getBase())->getValue()));
     case LT_NULL:
@@ -366,6 +373,8 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 throw DinoException("Unimplemented Error no.3 | " + leftTy->toShortString() + std::to_string(leftTy->getExactType()), EXT_GENERAL, node->getLine());   // TODO
         }
     }
+    if (node->getType()->isConst())
+        return codeGenLval(node);
     return _builder.CreateLoad(codeGenLval(node), "accesstmp");
 }
 
@@ -749,12 +758,19 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
         return _builder.CreateCall(func, {}, "calltmp");
     }
     auto t = codeGenLval(node);
+    if (node->getType()->isConst())
+        return t;
     auto str = node->getVarId().to_string().c_str();
     return _builder.CreateLoad(t, str);
     //return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
 }
 
 AllocaInst *CodeGenerator::codeGenLval(DST::VariableDeclaration *node) { return codeGen(node); }
+
+Value *CodeGenerator::codeGen(DST::ConstDeclaration *node) 
+{
+    return _namedValues[node->getName().to_string()] = codeGen(node->getExpression());
+}
 
 AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node) 
 {

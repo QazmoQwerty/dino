@@ -4,13 +4,19 @@ namespace Prog {
 	int putchar(int a): extern
 	char Print(char c): return putchar(c as int) as char
  
-	void Foo((char(char))@ f): (@f)('a')
+	//void Foo((char(char))@ f): (@f)('a')
+	const c1 := 'a'
+	const c2 := '\n'
+
+	namespace NS: const c1 := '\n'
 
 	int Main() {
-		
-		Foo(&Print)
-		Print('h')
-		Print('w')
-		return Print('\n') as int
+
+		Print(c1)
+		return Print(NS.c1) as int + 1
+		// Foo(&Print)
+		// Print('h')
+		// Print('w')
+		// return Print('\n') as int
 	}
 }
