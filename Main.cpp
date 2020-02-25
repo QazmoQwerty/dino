@@ -12,84 +12,133 @@
 #include "Decorator/Decorator.h"
 #include <stdio.h>
 
-char* getCmdOption(char ** begin, char ** end, const std::string & option)
+typedef struct cmdOptions 
 {
-	/*char ** itr = std::find(begin, end, option);
-	if (itr != end && ++itr != end)
-		return *itr;*/
-	return 0;
+	const char *fileName;
+	bool showHelp = false;
+	bool showLexerOutput = false; 
+	bool outputAstFiles = false; 
+	bool showLineAST = false;
+	bool executeInterpret = false;
+	bool showIR = false;
+	bool outputBc = false;
+	const char *bcFileName;
+	bool outputExe = false;
+	const char *exeFileName;
+} cmdOptions;
+
+void showHelp() 
+{
+	std::cout << "Dino.exe [filepath] [args]" << std::endl
+		<< "-help (show this help message)" << std::endl
+		<< "-showlex (prints the output of the lexer)" << std::endl
+		<< "-outAst (output a .gv file of the AST and DST)" << std::endl
+		<< "-lineAst (show line numbers in the AST and DST files)" << std::endl
+		<< "-i (run the program in an LLVM interpreter for testing purposes)" << std::endl
+		<< "-bc [filepath] (output a .bc file to \"filepath\")" << std::endl
+		<< "-o [filepath] (output a .exe file to \"filepath\")" << std::endl << std::endl;
 }
 
-bool cmdOptionExists(char** begin, char** end, const std::string& option)
+cmdOptions *getCmdOptions(int argc, char *argv[]) 
 {
-	//return std::find(begin, end, option) != end;
-	return false;
-}	
+	auto options = new cmdOptions();
+
+	try 
+	{
+		if (argc > 1 && strcmp(argv[1], "-help") == 0) {
+			showHelp();
+			exit(0);
+		}
+		else 
+		{
+			if (argc == 1)
+				throw "incorrect usage! (use -help for more info)";
+			options->fileName = argv[1];
+			for(int i = 2; i < argc; i++) 
+			{
+				if 		(strcmp(argv[i], "-help") == 0) 		options->showHelp = true;
+				else if (strcmp(argv[i], "-showLex") == 0) 	options->showLexerOutput = true;
+				else if (strcmp(argv[i], "-outAst") == 0) 	options->outputAstFiles = true;
+				else if (strcmp(argv[i], "-lineAst") == 0) 	options->showLineAST = true;
+				else if (strcmp(argv[i], "-showIR") == 0) 	options->showIR = true;
+				else if (strcmp(argv[i], "-i") == 0)	options->executeInterpret = true;
+				else if (strcmp(argv[i], "-bc") == 0)
+				{
+					options->outputBc = true;
+					if (++i >= argc)
+						throw "Error: missing file name after '-bc'";
+					else options->bcFileName = argv[i];
+				}	
+				else if (strcmp(argv[i], "-o") == 0)
+				{
+					options->outputExe = true;
+					if (++i >= argc)
+						throw "Error: missing file name after '-o'";
+					else options->exeFileName = argv[i];
+				}
+			}
+		}
+		if (options->showHelp)
+			showHelp();
+	} 
+	catch (const char * c) 
+	{
+		std::cout << c << std::endl;
+		delete options;
+		exit(0);
+	}
+	return options;
+}
 
 int main(int argc, char *argv[])
 {
+	auto cmd = getCmdOptions(argc, argv);
+
 	CodeGenerator::setup();
-
-	std::ifstream t;
-	bool showLexerOutput = false, outputAstFile = true, executeInterpret = true, showLineAST = false;
-
-	if (cmdOptionExists(argv, argv + argc, "-help"))
-	{
-		std::cout << "Dino.exe [filepath] [args]" << std::endl;
-		std::cout << "-showlex (prints out the output of the lexer)" << std::endl;
-		std::cout << "-noAst (stops the program from outputting a .gv file of the AST)" << std::endl;
-		std::cout << "-noRun (stops the interpreter from executing the program)" << std::endl << std::endl;
-		return 0;
-	}
-	showLexerOutput = cmdOptionExists(argv, argv + argc, "-showlex");
-	outputAstFile = !cmdOptionExists(argv, argv + argc, "-noAst");
-	executeInterpret = !cmdOptionExists(argv, argv + argc, "-noRun");
-
-	//try {
-	//	if (argc <= 1)
-	//		t = std::ifstream(/*"DinoCodeExamples/Test.dino"*/"Test.dino");
-	//	else t = std::ifstream(argv[1]);
-	//}
-	//catch (exception e) {
-	//	std::cout << e.what() << std::endl;
-	//	exit(0);
-	//}
-	//std::stringstream buffer;
-	//buffer << t.rdbuf();
-	//std::string str = buffer.str();
-
 	OperatorsMap::setup();
 	Lexer::setup();
 	Decorator::setup();
 	DST::setup();
 	try
 	{
-		/*auto lexed = Lexer::lex(str);
-		auto vec = Preprocessor::preprocess(lexed);
+		AST::Node *ast = Parser::parseFile(cmd->fileName, cmd->showLexerOutput);
 
-		std::cout << "Finished lexing..." << std::endl;
-
-		if (showLexerOutput or true)
-			for (auto i : vec) printToken(i);
-
-		Parser p = Parser(vec);
-		AST::Node* ast = p.parseBlock();*/
-		AST::Node *ast = Parser::parseFile(argc <= 1 ? "DinoCodeExamples/Test.dino" : argv[1]);
-
-		if (outputAstFile)
-			astToFile("AstDisplay.gv", ast, showLineAST);
-
+		if (cmd->outputAstFiles) 
+		{
+			astToFile("AstDisplay.gv", ast, cmd->showLineAST);
+			std::cout << "Wrote \"AstDisplay.gv\"..." << std::endl;	
+		}
 		std::cout << "Finished parsing..." << std::endl;
 
-		//DST::Node* dst = Decorator::decorate(ast);
 		DST::Program* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
-		dstToFile("DstDisplay.gv", dst, false);
 
 		std::cout << "Finished decorating..." << std::endl;
-
+		if (cmd->outputAstFiles)
+			dstToFile("DstDisplay.gv", dst, false);
+		
 		auto mainFunc = CodeGenerator::startCodeGen(dst);
 		std::cout << "Finished generating IR..." << std::endl;
-		CodeGenerator::execute(mainFunc);
+
+		if (cmd->executeInterpret)
+			CodeGenerator::execute(mainFunc);
+
+		if (cmd->outputBc) 
+		{
+			CodeGenerator::writeBitcodeToFile(cmd->bcFileName);
+			llvm::errs() << "outputted .bc file\n";
+		}
+
+		if (cmd->outputExe)
+		{
+			if (!cmd->outputBc)
+			{
+				cmd->bcFileName = "temp.bc";
+				CodeGenerator::writeBitcodeToFile(cmd->bcFileName);
+			}
+			system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
+			system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
+			llvm::errs() << "outputted ELF file\n";
+		}
 
 		Decorator::clear();
 	} 

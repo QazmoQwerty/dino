@@ -30,14 +30,19 @@
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/ConstantRange.h"
-
+#include "llvm/Support/FileSystem.h"
+//#include "llvm/Bitcode/ReaderWriter.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
 
 #include "../Decorator/DstNode.h"
 #include <string>
+#include <fstream>
+
 #define CONDITION_TYPE unicode_string("bool")
 
 using llvm::Value;
 using llvm::AllocaInst;
+using std::fstream;
 
 namespace CodeGenerator 
 {
@@ -73,6 +78,7 @@ namespace CodeGenerator
 
     void setup();
 
+    void writeBitcodeToFile(string fileName);
     void execute(llvm::Function *func);
 
     // Returns a pointer to the Main function
@@ -83,14 +89,15 @@ namespace CodeGenerator
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 
     llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
-    void codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef = NULL);
+    void codegenFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
+
+    void declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+    void codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);
     void codegenTypeMembers(DST::TypeDeclaration *node);
 
-    void declareProperty(DST::PropertyDeclaration *node);
-    void codegenProperty(DST::PropertyDeclaration *node);
 
     bool isFunc(llvm::Value *funcPtr);
 
@@ -115,6 +122,7 @@ namespace CodeGenerator
     Value *codeGen(DST::BinaryOperation *node);
     Value *codeGen(DST::UnaryOperation *node);
     Value *codeGen(DST::Assignment *node);
+    Value *codeGen(DST::Conversion *node);
     Value *codeGen(DST::FunctionCall *node);
     Value *codeGen(DST::MemberAccess *node);
     Value *codeGen(DST::ArrayLiteral *node);

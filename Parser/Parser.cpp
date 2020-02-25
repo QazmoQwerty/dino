@@ -137,7 +137,7 @@ int Parser::leftPrecedence(OperatorToken * token, int category)
 }
 
 
-AST::StatementBlock * Parser::parseFile(string fileName)
+AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
 {
 	if (_parsedFiles.count(fileName))
 		return new AST::StatementBlock();
@@ -151,8 +151,9 @@ AST::StatementBlock * Parser::parseFile(string fileName)
 	auto lexed = Lexer::lex(str);
 	std::cout << "File: " << fileName << std::endl;
 	auto vec = Preprocessor::preprocess(lexed);
-	// for (auto i : vec) 
-	// 	printToken(i);
+	if (showLexerOutput)
+		for (auto i : vec) 
+			printToken(i);
 	Parser p = Parser(vec);
 	return p.parseBlock();
 }
@@ -389,12 +390,12 @@ AST::Node * Parser::std(Token * token)
 				op->setLine(token->_line);
 				return op;
 			}
-			case(OT_RETURN):{
-			auto op = new AST::UnaryOperationStatement();
-			op->setOperator(((OperatorToken*)token)->_operator);
-			op->setExpression(parseOptionalExpression());
-			op->setLine(token->_line);
-			return op;
+			case(OT_RETURN): case(OT_EXTERN):{
+				auto op = new AST::UnaryOperationStatement();
+				op->setOperator(((OperatorToken*)token)->_operator);
+				op->setExpression(parseOptionalExpression());
+				op->setLine(token->_line);
+				return op;
 			}
 			default: 
 				return NULL;

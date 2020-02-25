@@ -183,11 +183,23 @@ LiteralToken<char> * createCharacterLiteralToken(unicode_string value, int line)
 {
 	if (value.length() == 0)
 		throw DinoException("Empty char constant", EXT_LEXER, line);
+	if (value.length() > 1) 
+	{
+		if (value.length() == 2 && value[0].getValue() == ESCAPE_CHAR) 
+		{
+			if (value[1].getValue() == 't')
+				value = unicode_string("\t");
+			else if (value[1].getValue() == 'r')
+				value = unicode_string("\r");
+			else if (value[1].getValue() == 'n')
+				value = unicode_string("\n");
+			else throw DinoException("Too many characters in character constant", EXT_LEXER, line);
+		}
+		else throw DinoException("Too many characters in character constant", EXT_LEXER, line);
+	}
 	unicode_string tempData = value;
 	/*if (value[0] == '\\' && value.length() >= 2)
 		value = getSpecialCharConstant(value[1]);*/
-	if (value.length() != 1)
-		throw DinoException("Too many characters in character constant", EXT_LEXER, line);
 	LiteralToken<char> * token = new struct LiteralToken<char>;
 	token->_data = unicode_string("'");
 	token->_data += tempData;

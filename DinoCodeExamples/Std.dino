@@ -1,0 +1,38 @@
+
+include "DinoCodeExamples/LinkedList.dino"
+
+namespace Std {
+    namespace NumPrinter {
+        int putchar(int c): extern
+        int PutChar(int c): return putchar(c)
+    } 
+    void PrintNum(int num) {
+        int a ≡ 1
+        while a ≤ num / 10: a *= 10
+        while a > 0 {
+            NumPrinter.PutChar(num % (a * 10) / a + 48)
+            a /= 10
+        }
+    }
+
+    void Newline(): NumPrinter.PutChar(10)
+
+    int Main() {
+		LL.LinkedList list
+		list.Init()
+		for int i ≡ 0 | i < 10 | i+=1:
+			list.InsertAtBack(i)
+    
+		list.Remove(1)
+		list.Remove(4)
+
+        for int i ≡ 0 | i < list.Size() | i+=1 {
+			PrintNum(list.GetValue(i))
+            Newline()
+        }
+
+		list.Clear()
+		return 0
+	}
+
+}

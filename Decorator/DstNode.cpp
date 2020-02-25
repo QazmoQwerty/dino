@@ -119,11 +119,27 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 	{
 		switch (i->getStatementType()) {
 			case ST_UNARY_OPERATION:
+				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_EXTERN)
+					return true;
 				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_RETURN)
 				{
-					if ((isVoid && ((DST::UnaryOperationStatement*)i)->getExpression() == NULL) ||
-						((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
-						return true;
+					if (isVoid) 
+					{
+						if (((DST::UnaryOperationStatement*)i)->getExpression() == NULL)
+							return true;
+					}
+					else
+					{
+						if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->getExactType() == EXACT_NULL)
+						{
+							auto a = new DST::Conversion(NULL, returnType, ((DST::UnaryOperationStatement*)i)->getExpression());
+							((DST::UnaryOperationStatement*)i)->setExpression(a);
+							return true;
+						}
+						if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
+							return true;
+					}
+					std::cout << isVoid << std::endl;
 					std::cout << returnType->toShortString() << std::endl;
 					std::cout << ((DST::UnaryOperationStatement*)i)->getExpression()->getType()->toShortString() << std::endl;
 					throw DinoException("Return value type does not match function type.", EXT_GENERAL, i->getLine());
@@ -561,6 +577,9 @@ bool DST::PointerType::equals(Type * other)
 	if (other->getExactType() == EXACT_TYPELIST)
 		return equals(((TypeList*)other)->getTypes()[0]);
 
+	if (other->getExactType() == EXACT_PROPERTY)
+		return equals(((PropertyType*)other)->getReturn());
+
 	if (other->getExactType() != EXACT_POINTER)
 		return false;
 	
@@ -576,8 +595,6 @@ bool DST::PointerType::equals(Type * other)
 		else return false;
 	}
 	else return ((PointerType*)other)->_type->equals(_type);
-
-	//return other != nullptr && other->getExactType() == /EXACT_POINTER && ((PointerType*)other)->_type->equals(_type);
 }
 
 string DST::PointerType::toShortString()

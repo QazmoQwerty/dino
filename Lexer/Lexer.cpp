@@ -199,9 +199,9 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 				index++;
 
 				delete token;
-				token = (temp->_operator._type == OT_SINGLE_QUOTE) ?
-					createCharacterLiteralToken(temp->_data, line) :
-					token = createStringLiteralToken(temp->_data, line);
+				if (temp->_operator._type == OT_SINGLE_QUOTE)
+					token = createCharacterLiteralToken(temp->_data, line);
+				else token = createStringLiteralToken(temp->_data, line);
 				delete temp;
 			}
 			else
