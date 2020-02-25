@@ -5,13 +5,15 @@ namespace Prog {
 	char Print(char c): return putchar(c as int) as char
  
 	//void Foo((char(char))@ f): (@f)('a')
+	const c1 := 'a'
+	const c2 := '\n'
+
+	namespace NS: const c1 := '\n'
 
 	int Main() {
-		const c1 := 'a'
-		const c2 := '\n'
 
 		Print(c1)
-		return Print(c2) as int
+		return Print(NS.c1) as int + 1
 		// Foo(&Print)
 		// Print('h')
 		// Print('w')
