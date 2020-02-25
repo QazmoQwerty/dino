@@ -3,9 +3,12 @@
 namespace Prog {
 	int putchar(int a): extern
 	char Print(char c): return putchar(c as int) as char
+ 
+	void Foo((char(char))@ f): (@f)('a')
 
 	int Main() {
 		
+		Foo(&Print)
 		Print('h')
 		Print('w')
 		return Print('\n') as int

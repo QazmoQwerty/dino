@@ -1026,7 +1026,8 @@ namespace DST
 		void setArguments(ExpressionList* arguments) 
 		{
 			if (!((FunctionType*)_funcPtr->getType())->getParameters()->equals(arguments->getType()))
-				throw DinoException("Argument types do not match function parameters", EXT_GENERAL, getLine());
+				throw DinoException(string("Argument types do not match function parameters.\nArguments are: ") + arguments->getType()->toShortString()
+				 + "\nShould be: " + ((FunctionType*)_funcPtr->getType())->getParameters()->toShortString(), EXT_GENERAL, getLine());
 			_arguments = arguments; 
 		}
 

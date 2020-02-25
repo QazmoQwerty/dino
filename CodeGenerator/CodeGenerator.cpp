@@ -809,6 +809,20 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         auto ty = evalType(((DST::PointerType*)node)->getPtrType());
         return ty->getPointerTo();
     }
+    else if (node->getExactType() == EXACT_FUNCTION)
+    {
+        auto ft = (DST::FunctionType*)node;
+        vector<llvm::Type*> params;
+        for(auto i : ft->getParameters()->getTypes())
+            params.push_back(evalType(i));
+        return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false);
+    }
+    else if (node->getExactType() == EXACT_TYPELIST)
+    {
+        auto tl = (DST::TypeList*)node;
+        if (tl->size() == 1)
+            return evalType(tl->getTypes()[0]);
+    }
     throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
 }
 

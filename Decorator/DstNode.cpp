@@ -424,6 +424,8 @@ vector<DST::Node*> DST::FunctionCall::getChildren()
 
 bool DST::FunctionType::equals(Type * other)
 {
+	if (other->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)other)->size() == 1)
+		return equals(((DST::TypeList*)other)->getTypes()[0]);
 	if (other->getExactType() != EXACT_FUNCTION)
 		return false;
 	auto othr = (FunctionType*)other;
@@ -583,16 +585,19 @@ bool DST::PointerType::equals(Type * other)
 	if (other->getExactType() != EXACT_POINTER)
 		return false;
 	
-	auto inter = ((TypeSpecifierType*)(_type->getType()))->getInterfaceDecl();
-	if (inter)
+	if (_type->getExactType() == EXACT_SPECIFIER)
 	{
-		auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getTypeDecl();
-		auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getInterfaceDecl();
-		if (otype)
-			return otype->implements(inter);
-		else if (ointer)
-			return inter->implements(ointer) || ointer->implements(inter);
-		else return false;
+		auto inter = ((TypeSpecifierType*)(_type/*->getType()*/))->getInterfaceDecl();
+		if (inter)
+		{
+			auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getTypeDecl();
+			auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getInterfaceDecl();
+			if (otype)
+				return otype->implements(inter);
+			else if (ointer)
+				return inter->implements(ointer) || ointer->implements(inter);
+			else return false;
+		}
 	}
 	else return ((PointerType*)other)->_type->equals(_type);
 }
