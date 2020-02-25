@@ -27,10 +27,12 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ExecutionEngine/Interpreter.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/ConstantRange.h"
 #include "llvm/Support/FileSystem.h"
 //#include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
-
 
 #include "../Decorator/DstNode.h"
 #include <string>
@@ -111,6 +113,7 @@ namespace CodeGenerator
     Value *codeGenLval(DST::MemberAccess *node);
     AllocaInst *codeGenLval(DST::VariableDeclaration *node);
     Value *codeGenLval(DST::UnaryOperation* node);
+    Value *codeGenLval(DST::BinaryOperation* node);
 
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);
@@ -122,6 +125,8 @@ namespace CodeGenerator
     Value *codeGen(DST::Conversion *node);
     Value *codeGen(DST::FunctionCall *node);
     Value *codeGen(DST::MemberAccess *node);
+    Value *codeGen(DST::ArrayLiteral *node);
+
 
     llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");
     Value *codeGen(DST::Variable *node);
