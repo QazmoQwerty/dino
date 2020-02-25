@@ -8,6 +8,7 @@ vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 DST::TypeDeclaration *Decorator::_currentTypeDecl;
 DST::Program *Decorator::_currentProgram;
 DST::NullType *Decorator::_nullType;
+DST::UnknownType *Decorator::_unknownType;
 
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
@@ -24,6 +25,7 @@ void Decorator::setup()
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
+	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 }
@@ -474,7 +476,10 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 
 DST::Expression *Decorator::decorate(AST::Identifier * node)
 {
-	unicode_string name = node->getVarId();
+	unicode_string &name = node->getVarId();
+
+	if (name == unicode_string("var"))
+		return _unknownType;
 
 
 	for (int scope = currentScope(); scope >= 0; scope--)
@@ -680,6 +685,17 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		throw DinoException("lvalue is read-only", EXT_GENERAL, node->getLine());
 	if (!assignment->getRight()->getType()->readable())
 		throw DinoException("rvalue is write-only", EXT_GENERAL, node->getLine());
+	if (assignment->getLeft()->getType()->getExactType() == EXACT_UNKNOWN)
+	{
+		std::cout << "got here" << std::endl;
+		if (assignment->getLeft()->getExpressionType() == ET_VARIABLE_DECLARATION)
+		{
+			((DST::VariableDeclaration*)assignment->getLeft())->setType(assignment->getRight()->getType());
+			_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType();
+		}
+		else throw DinoException("Unknown type?.", EXT_GENERAL, node->getLine());	
+	}
+		//assignment->getLeft()->getType;
 	if (assignment->getRight()->getType()->getExactType() == EXACT_NULL)
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));
 	else if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))

@@ -157,6 +157,17 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class UnknownType : public Type
+	{
+	public:
+		UnknownType(AST::Expression *base) : Type(base) {}
+		UnknownType() : Type(NULL) {}
+		virtual string toShortString() { return "var"; };
+		virtual ExactType getExactType() { return EXACT_UNKNOWN; };
+		virtual bool equals(Type *other) { return other->getExactType() == getExactType(); }
+		virtual vector<Node*> getChildren() { return {}; }
+	};
+
 	class TypeDeclaration;
 
 	/*class TypeSpecifierType : public Type
