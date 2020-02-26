@@ -1,38 +1,23 @@
+//include "DinoCodeExamples/LinkedList.dino"
 
-include "DinoCodeExamples/LinkedList.dino"
+namespace Prog {
+	int putchar(int a): extern
+	char Print(char c): return putchar(c as int) as char
+ 
+	//void Foo((char(char))@ f): (@f)('a')
+	const c1 ≡ 'a'
+	const c2 ≡ '\n'
 
-namespace Std {
-    namespace NumPrinter {
-        int putchar(int c): extern
-        int PutChar(int c): return putchar(c)
-    } 
-    void PrintNum(int num) {
-        int a ≡ 1
-        while a ≤ num / 10: a *= 10
-        while a > 0 {
-            NumPrinter.PutChar(num % (a * 10) / a + 48)
-            a /= 10
-        }
-    }
+	namespace NS: const c1 ≡ '\n'
 
-    void Newline(): NumPrinter.PutChar(10)
-
-    int Main() {
-		LL.LinkedList list
-		list.Init()
-		for int i ≡ 0 | i < 10 | i+=1:
-			list.InsertAtBack(i)
-    
-		list.Remove(1)
-		list.Remove(4)
-
-        for int i ≡ 0 | i < list.Size() | i+=1 {
-			PrintNum(list.GetValue(i))
-            Newline()
-        }
-
-		list.Clear()
-		return 0
+	int Main() {
+		char a ≡ '0'
+		char b ≡ '1'
+		a, b ≡ b, a
+		return a as int
+		// Foo(&Print)
+		// Print('h')
+		// Print('w')
+		// return Print('\n') as int
 	}
-
 }

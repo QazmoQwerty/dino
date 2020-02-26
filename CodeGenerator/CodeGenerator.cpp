@@ -380,10 +380,12 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
 
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
-    Value *left;
+    Value *left, *right;
     if(node->getOperator()._type != OT_SQUARE_BRACKETS_OPEN)
+    {
         left = codeGen(node->getLeft());
-    Value *right = codeGen(node->getRight());
+        right = codeGen(node->getRight());
+    }
     
     switch (node->getOperator()._type)
     {
@@ -420,8 +422,9 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 
         case OT_SQUARE_BRACKETS_OPEN:
         {
-            llvm::Type *elementTy = llvm::PointerType::get(evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType()), 0);   
-            return _builder.CreateLoad(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
+            //llvm::Type *elementTy = llvm::PointerType::get(evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType()), 0);   
+            //return _builder.CreateLoad(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
+            return _builder.CreateLoad(codeGenLval(node));
         }
         default:
             throw DinoException("Unimplemented Binary operation!", EXT_GENERAL, node->getLine());
@@ -494,7 +497,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
     {
         case OT_SQUARE_BRACKETS_OPEN:
         {
-            Value *ptr = _builder.CreateInBoundsGEP(val, codeGen(node->getRight()));
+            Value *ptr = _builder.CreateInBoundsGEP(val, { _builder.getInt32(0), codeGen(node->getRight()) } );
             llvm::Type *elementTy = evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType());
             return _builder.CreatePointerCast(ptr, llvm::PointerType::get(elementTy, 0));
         }

@@ -3,18 +3,42 @@
 namespace Prog {
 	int putchar(int a): extern
 	char Print(char c): return putchar(c as int) as char
+	void Newline(): Print('\n')
  
-	//void Foo((char(char))@ f): (@f)('a')
-	const c1 := 'a'
-	const c2 := '\n'
+	void PrintNum(int num) {
+        int a ≡ 1
+        while a ≤ num / 10: a *= 10
+        while a > 0 {
+            putchar(num % (a * 10) / a + 48)
+            a /= 10
+        }
+    }
 
-	namespace NS: const c1 := '\n'
+	// //void Foo((char(char))@ f): (@f)('a')
+	// const c1 ≡ 'a'
+	// const c2 ≡ '\n'
+
+	// namespace NS: const c1 ≡ '\n'
 
 	int Main() {
-		char a := '0'
-		char b := '1'
-		a, b := b, a
-		return a as int
+		//var a := [1, 2, 3]
+		int[10] a
+		// char a ≡ '0'
+		// char b ≡ '1'
+		// a, b ≡ b, a
+
+		for int i := 0 | i < 10 | i+=1 {
+			a[i] := (i + 1) * (i + 1)
+		}
+
+		for int i := 0 | i < 10 | i+=1 {
+			PrintNum(a[i]) | Newline()
+		}
+		
+		
+		//putchar('0' as int + a[1])
+		//Newline()
+		return 10
 		// Foo(&Print)
 		// Print('h')
 		// Print('w')
