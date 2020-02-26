@@ -388,6 +388,8 @@ namespace DST
 
 		virtual bool equals(Type *other)
 		{
+			if (other->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)other)->size() == 1)
+				return equals(((DST::TypeList*)other)->getTypes()[0]);
 			return other->getExactType() == EXACT_ARRAY &&
 				((ArrayType*)other)->_length == _length &&
 				((ArrayType*)other)->_valueType->equals(_valueType);

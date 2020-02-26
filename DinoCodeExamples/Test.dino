@@ -14,6 +14,9 @@ namespace Prog {
         }
     }
 
+	void PrintArr(int[20] arr): 
+		for int i := 0 | i < arr.Size | i+=1 { PrintNum(arr[i]) | Newline() }
+
 	// //void Foo((char(char))@ f): (@f)('a')
 	// const c1 ≡ 'a'
 	// const c2 ≡ '\n'
@@ -22,18 +25,20 @@ namespace Prog {
 
 	int Main() {
 		//var a := [1, 2, 3]
-		int[10] a
+		int[20] a
 		// char a ≡ '0'
 		// char b ≡ '1'
 		// a, b ≡ b, a
 
-		for int i := 0 | i < 10 | i+=1 {
+		for int i := 0 | i < a.Size | i+=1 {
 			a[i] := (i + 1) * (i + 1)
 		}
 
-		for int i := 0 | i < 10 | i+=1 {
-			PrintNum(a[i]) | Newline()
-		}
+		PrintArr(a)
+
+		// for int i := 0 | i < 10 | i+=1 {
+		// 	PrintNum(a[i]) | Newline()
+		// }
 		
 		PrintNum(a.Size) | Newline()
 		
