@@ -368,6 +368,8 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 return _builder.CreateCall((llvm::Function*)func, { lval }, "calltmp");
             }
             case EXACT_ARRAY:       // Member property of array
+                if (node->getRight() == unicode_string("Size.get"))
+                    return _builder.getInt32(codeGen(node->getLeft())->getType()->getArrayNumElements());
                 throw DinoException("Unimplemented Error no.2", EXT_GENERAL, node->getLine());   // TODO
             default:
                 throw DinoException("Unimplemented Error no.3 | " + leftTy->toShortString() + std::to_string(leftTy->getExactType()), EXT_GENERAL, node->getLine());   // TODO

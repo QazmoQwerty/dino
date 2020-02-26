@@ -35,6 +35,7 @@ namespace Prog {
 			PrintNum(a[i]) | Newline()
 		}
 		
+		PrintNum(a.Size) | Newline()
 		
 		//putchar('0' as int + a[1])
 		//Newline()

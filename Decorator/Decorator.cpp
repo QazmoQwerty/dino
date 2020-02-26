@@ -800,6 +800,8 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		}
 		else if (type->getExactType() == EXACT_NAMESPACE)
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
+		else if (type->getExactType() == EXACT_ARRAY && varId == unicode_string("Size"))
+			memberType = new DST::PropertyType(new DST::BasicType(getPrimitiveType("int")), true, false);
 		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
 
 		if (memberType == nullptr)
