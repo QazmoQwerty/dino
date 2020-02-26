@@ -42,15 +42,14 @@ namespace Prog {
 		// // }
 		
 		// PrintNum(a.Size) | Newline()
-		char a := 20 as char
-		char b := 30 as char
-		char d := a + b
+		int[] a
+		return 10
 		// char c := getchar()
 		// Newline() | Print(c) | Newline()
 
 		// //putchar('0' as int + a[1])
 		//Newline()
-		return d as int
+		//return d as int
 		// Foo(&Print)
 		// Print('h')
 		// Print('w')

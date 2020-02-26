@@ -857,7 +857,15 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         }
     }
     else if (node->getExactType() == EXACT_ARRAY)
+    {
+        if (((DST::ArrayType*)node)->getLength() == -1)
+            return llvm::StructType::get(_context, {
+                 llvm::Type::getInt32Ty(_context), 
+                 evalType(((DST::ArrayType*)node)->getElementType())
+            });
         return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), ((DST::ArrayType*)node)->getLength());
+    }
+        
     else if (node->getExactType() == EXACT_PROPERTY)
         return evalType(((DST::PropertyType*)node)->getReturn());
     if (node->getExactType() == EXACT_POINTER)
