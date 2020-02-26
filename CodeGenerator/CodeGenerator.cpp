@@ -499,7 +499,10 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
     {
         case OT_SQUARE_BRACKETS_OPEN:
         {
-            Value *ptr = _builder.CreateInBoundsGEP(val, { _builder.getInt32(0), codeGen(node->getRight()) } );
+            auto val2 = codeGen(node->getRight());
+            //val2->print(llvm::errs());
+            //std::cout << std::endl;
+            Value *ptr = _builder.CreateInBoundsGEP(val, { _builder.getInt32(0), val2 } );
             llvm::Type *elementTy = evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType());
             return _builder.CreatePointerCast(ptr, llvm::PointerType::get(elementTy, 0));
         }
@@ -616,19 +619,39 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
     switch (node->getOperator()._type) 
     {
         case OT_ASSIGN_EQUAL:
-            return _builder.CreateStore(right, left);
+            _builder.CreateStore(right, left);
+            return right;
         case OT_ASSIGN_ADD:
-            return _builder.CreateStore(_builder.CreateAdd(_builder.CreateLoad(left), right, "addtmp"), left);
+        {
+            auto res = _builder.CreateAdd(_builder.CreateLoad(left), right, "addtmp");
+            _builder.CreateStore(res, left);
+            return res;
+        }
         case OT_ASSIGN_SUBTRACT:
-            return _builder.CreateStore(_builder.CreateSub(_builder.CreateLoad(left), right, "subtmp"), left);
+        {
+            auto res = _builder.CreateSub(_builder.CreateLoad(left), right, "subtmp");
+            _builder.CreateStore(res, left);
+            return res;
+        }
         case OT_ASSIGN_MULTIPLY:
-            return _builder.CreateStore(_builder.CreateMul(_builder.CreateLoad(left), right, "multmp"), left);
+        {
+            auto res = _builder.CreateMul(_builder.CreateLoad(left), right, "multmp");
+            _builder.CreateStore(res, left);
+            return res;
+        }
         case OT_ASSIGN_DIVIDE:
-            return _builder.CreateStore(_builder.CreateSDiv(_builder.CreateLoad(left), right, "multmp"), left);
+        {
+            auto res = _builder.CreateSDiv(_builder.CreateLoad(left), right, "divtmp");
+            _builder.CreateStore(res, left);
+            return res;
+        }
         case OT_ASSIGN_MODULUS:
-            return _builder.CreateStore(_builder.CreateSRem(_builder.CreateLoad(left), right, "multmp"), left);
+        {
+            auto res = _builder.CreateSRem(_builder.CreateLoad(left), right, "modtmp");
+            _builder.CreateStore(res, left);
+            return res;
+        }
         default: throw DinoException("Unimplemented assignment operator", EXT_GENERAL, node->getLine());
-    
     }
 }
 
@@ -1096,6 +1119,9 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
     else throw DinoException("\"" + node->getVarDecl()->getVarId().to_string() + "\" is not a function", EXT_GENERAL, node->getLine());
+
+    if (node->getContent() == NULL)
+        throw DinoException("Undefined function", EXT_GENERAL, node->getLine());
 
     if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
         && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN)
