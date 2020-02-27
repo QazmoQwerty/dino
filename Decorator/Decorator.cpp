@@ -834,7 +834,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				if(!bo->getRight()->getType()->equals(intType))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
 				bo->setType(bo->getLeft()->getType()->getType());
-				//delete intType; - can't do that, it will delete the _typespec of any other int.
+				_toDelete.push_back(intType);
 			}
 			// array declaration
 			else
@@ -845,9 +845,18 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				{
 					if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
 						throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
-					bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
+					//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
+					auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue()));
+					_toDelete.push_back(bo);
+					return ret;
 				}
-				else bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH));
+				else 
+				{
+					//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH));
+					auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH);
+					_toDelete.push_back(bo);
+					return ret;
+				}
 			}
 			break;
 		case RT_VOID: 
@@ -1004,16 +1013,7 @@ DST::DoWhileLoop * Decorator::decorate(AST::DoWhileLoop * node)
 DST::Type * Decorator::evalType(AST::Expression * node)
 {
 	auto ret = decorate(node);
-	if (ret->getExpressionType() == ET_BINARY_OPERATION)	// TODO - change this
-	{
-		auto arr = ret->getType();
-		//delete ret;
-		ret = arr;
-	}
-	/*else if (ret->getExpressionType() == ET_TYPE && dynamic_cast<DST::TypeSpecifierType*>(dynamic_cast<DST::BasicType*>(ret)->getType())->getInterfaceDecl()) {
-		return new DST::PointerType((DST::Type*)ret);
-	}*/
-	else if (ret->getExpressionType() != ET_TYPE)
+	if (ret->getExpressionType() != ET_TYPE)
 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
 	return (DST::Type*)ret;
 }

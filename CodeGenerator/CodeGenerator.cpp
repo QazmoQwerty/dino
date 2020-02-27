@@ -861,7 +861,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         if (((DST::ArrayType*)node)->getLength() == -1)
             return llvm::StructType::get(_context, {
                  llvm::Type::getInt32Ty(_context), 
-                 evalType(((DST::ArrayType*)node)->getElementType())
+                 evalType(((DST::ArrayType*)node)->getElementType())->getPointerTo()
             });
         return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), ((DST::ArrayType*)node)->getLength());
     }

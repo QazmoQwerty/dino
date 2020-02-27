@@ -23,9 +23,9 @@ vector<DST::Node*> DST::Variable::getChildren()
 
 DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
 {
-	if (!_left->getType()->readable())
+	if (_left && !_left->getType()->readable())
 		throw DinoException("left value is write-only", EXT_GENERAL, _left->getLine());
-	if (!_right->getType()->readable())
+	if (_right && !_right->getType()->readable())
 		throw DinoException("right value is write-only", EXT_GENERAL, _left->getLine());
 };
 
@@ -63,9 +63,12 @@ void DST::UnaryOperation::setType()
 		_type = ((DST::PointerType*)_expression->getType())->getPtrType();
 		break;
 	case OT_NEW:	// dynamic memory allocation
-		if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
-			throw DinoException("Expected a type specifier", EXT_GENERAL, getLine());
-		_type = new DST::PointerType(new BasicType((TypeSpecifierType*)_expression->getType()));
+		if (_expression->getExpressionType() != ET_TYPE)
+			throw DinoException("Expected a type", EXT_GENERAL, getLine());
+		_type = (DST::Type*)_expression;
+		// if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
+		// 	throw DinoException("Expected a type specifier", EXT_GENERAL, getLine());
+		// _type = new DST::PointerType(new BasicType((TypeSpecifierType*)_expression->getType()));
 		break;
 	case OT_BITWISE_AND:	// address-of
 		_type = new DST::PointerType(_expression->getType());
