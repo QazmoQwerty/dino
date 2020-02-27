@@ -505,22 +505,14 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
     switch (node->getOperator()._type)
     {
         case OT_SQUARE_BRACKETS_OPEN:
-        {
-            auto right = codeGen(node->getRight());
-            Value *ptr = NULL;
             if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             {
                 auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
-                //arrPtr->getType()->print(llvm::errs());
-                ptr = _builder.CreateGEP(_builder.CreateLoad(arrPtr), { right } );
+                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), { codeGen(node->getRight()) } );
             }
-            else ptr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), right } );
-            return ptr;
-            // llvm::Type *elementTy = evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType());
-            // return _builder.CreatePointerCast(ptr, llvm::PointerType::get(elementTy, 0));
-        }
+            else return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } );
         default:
-            return NULL;
+            throw DinoException("Unimplemented lval Binary operation", EXT_GENERAL, node->getLine());
     }
 }
 
