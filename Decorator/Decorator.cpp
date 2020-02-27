@@ -687,7 +687,6 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		throw DinoException("rvalue is write-only", EXT_GENERAL, node->getLine());
 	if (assignment->getLeft()->getType()->getExactType() == EXACT_UNKNOWN)
 	{
-		std::cout << "got here" << std::endl;
 		if (assignment->getLeft()->getExpressionType() == ET_VARIABLE_DECLARATION)
 		{
 			((DST::VariableDeclaration*)assignment->getLeft())->setType(assignment->getRight()->getType());

@@ -43,8 +43,8 @@ namespace Prog {
 		
 		// PrintNum(a.Size) | Newline()
 		int[] a// := new int[10]
-		//var v := new int[10]
-		return 10
+		a := new int[10]
+		return a.Size
 		// char c := getchar()
 		// Newline() | Print(c) | Newline()
 

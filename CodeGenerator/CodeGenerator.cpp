@@ -368,8 +368,15 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 return _builder.CreateCall((llvm::Function*)func, { lval }, "calltmp");
             }
             case EXACT_ARRAY:       // Member property of array
-                if (node->getRight() == unicode_string("Size.get"))
+                if (node->getRight() == unicode_string("Size.get")) {
+                    if (((DST::ArrayType*)leftTy)->getLength() == -1)
+                        return _builder.CreateLoad(_builder.CreateInBoundsGEP(
+                            codeGenLval(node->getLeft()),
+                            { _builder.getInt32(0), _builder.getInt32(0) },
+                            "sizePtrTmp")
+                        );
                     return _builder.getInt32(codeGen(node->getLeft())->getType()->getArrayNumElements());
+                }
                 throw DinoException("Unimplemented Error no.2", EXT_GENERAL, node->getLine());   // TODO
             default:
                 throw DinoException("Unimplemented Error no.3 | " + leftTy->toShortString() + std::to_string(leftTy->getExactType()), EXT_GENERAL, node->getLine());   // TODO
@@ -612,6 +619,17 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         for (int i = 0; i < lefts.size(); i++)
             lastStore = _builder.CreateStore(rights[i], lefts[i]);
         return lastStore;   // Temporary fix.
+    }
+
+    if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getLeft()->getType())->getLength() == -1)
+    {
+        left = codeGenLval(node->getLeft());
+        right = codeGen(node->getRight());
+        auto sizePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
+        auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "arrPtrTmp");
+        _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
+        //_builder.CreateStore(right, arrPtr);
+        return right;
     }
 
     left = codeGenLval(node->getLeft());
