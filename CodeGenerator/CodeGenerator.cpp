@@ -782,7 +782,14 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
                 auto type = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), { llvm::Type::getInt8Ty(_context)->getPointerTo() }, false);
                 free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "free", _module.get());
             }
-            auto ptr = codeGenLval(node->getExpression());
+            Value *ptr = codeGenLval(node->getExpression());
+            if (node->getExpression()->getType()->getExactType() == EXACT_ARRAY && 
+                ((DST::ArrayType*)node->getExpression()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+            {
+                auto sizePtr = _builder.CreateInBoundsGEP(ptr, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
+                _builder.CreateStore(_builder.getInt32(0), sizePtr);
+                ptr = _builder.CreateInBoundsGEP(codeGenLval(node->getExpression()), { _builder.getInt32(0), _builder.getInt32(1) } );
+            }
             
             auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
 
