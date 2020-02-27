@@ -67,9 +67,9 @@ void DST::UnaryOperation::setType()
 			throw DinoException("Expected a type", EXT_GENERAL, getLine());
 		if (((DST::Type*)_expression)->getExactType() == EXACT_ARRAY)	// new int[10] == int[] != (int[10])@
 		{
-			if (((DST::ArrayType*)_expression)->getLength() == -1)
+			if (((DST::ArrayType*)_expression)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
 				throw DinoException("Expected an array size specifier", EXT_GENERAL, getLine());
-			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), -1);
+			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH);
 		}
 		else _type = new DST::PointerType((DST::Type*)_expression);
 		// if (_expression->getType()->getExactType() != EXACT_SPECIFIER)

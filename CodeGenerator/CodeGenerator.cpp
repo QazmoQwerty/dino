@@ -369,7 +369,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
             }
             case EXACT_ARRAY:       // Member property of array
                 if (node->getRight() == unicode_string("Size.get")) {
-                    if (((DST::ArrayType*)leftTy)->getLength() == -1)
+                    if (((DST::ArrayType*)leftTy)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
                         return _builder.CreateLoad(_builder.CreateInBoundsGEP(
                             codeGenLval(node->getLeft()),
                             { _builder.getInt32(0), _builder.getInt32(0) },
@@ -501,17 +501,23 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
 
 Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
 {
-    Value *val = codeGenLval(node->getLeft());
+    Value *left = codeGenLval(node->getLeft());
     switch (node->getOperator()._type)
     {
         case OT_SQUARE_BRACKETS_OPEN:
         {
-            auto val2 = codeGen(node->getRight());
-            //val2->print(llvm::errs());
-            //std::cout << std::endl;
-            Value *ptr = _builder.CreateInBoundsGEP(val, { _builder.getInt32(0), val2 } );
-            llvm::Type *elementTy = evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType());
-            return _builder.CreatePointerCast(ptr, llvm::PointerType::get(elementTy, 0));
+            auto right = codeGen(node->getRight());
+            Value *ptr = NULL;
+            if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+            {
+                auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
+                //arrPtr->getType()->print(llvm::errs());
+                ptr = _builder.CreateGEP(_builder.CreateLoad(arrPtr), { right } );
+            }
+            else ptr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), right } );
+            return ptr;
+            // llvm::Type *elementTy = evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType());
+            // return _builder.CreatePointerCast(ptr, llvm::PointerType::get(elementTy, 0));
         }
         default:
             return NULL;
@@ -621,14 +627,14 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         return lastStore;   // Temporary fix.
     }
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getLeft()->getType())->getLength() == -1)
+    if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
     {
         left = codeGenLval(node->getLeft());
         right = codeGen(node->getRight());
         auto sizePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
         auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "arrPtrTmp");
         _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
-        //_builder.CreateStore(right, arrPtr);
+        _builder.CreateStore(_builder.CreateBitOrPointerCast(right, arrPtr->getType()->getPointerElementType()), arrPtr);
         return right;
     }
 
@@ -876,7 +882,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
     }
     else if (node->getExactType() == EXACT_ARRAY)
     {
-        if (((DST::ArrayType*)node)->getLength() == -1)
+        if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             return llvm::StructType::get(_context, {
                  llvm::Type::getInt32Ty(_context), 
                  evalType(((DST::ArrayType*)node)->getElementType())->getPointerTo()

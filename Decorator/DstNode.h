@@ -4,7 +4,7 @@
 
 namespace DST
 {
-	static const int UNKNOWN_ARRAY_LENGTH = -1;
+	static const int UNKNOWN_ARRAY_LENGTH = 0;
 	static int idCount = 0;
 
 	class BasicType;
@@ -373,10 +373,12 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};*/
 
+	#define UNKNOWN_ARR_SIZE 0
+
 	class ArrayType : public Type
 	{
 		Type *_valueType;
-		size_t _length;	// size = -1 means size is unknown.
+		size_t _length;	// size = 0 means size is unknown.
 
 	public:
 		ArrayType(AST::Expression *base) : Type(base) {  }
@@ -397,7 +399,7 @@ namespace DST
 		size_t getLength() { return _length; }
 		Type *getElementType() { return _valueType; }
 
-		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length) ? std::to_string(_length) : "") + "]"; };
+		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length != DST::UNKNOWN_ARRAY_LENGTH) ? std::to_string(_length) : "") + "]"; };
 		virtual string toString() { return "<ArrayType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
