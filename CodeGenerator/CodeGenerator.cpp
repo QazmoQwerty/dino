@@ -928,70 +928,68 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
 
 llvm::Type *CodeGenerator::evalType(DST::Type *node) 
 {
-    if (node->getExactType() == EXACT_BASIC)
+
+    switch (node->getExactType())
     {
-        if (((DST::BasicType*)node)->getTypeId() == CONDITION_TYPE)
-            return llvm::Type::getInt1Ty(_context);
-        else if (((DST::BasicType*)node)->getTypeId() == unicode_string("char"))
-            return llvm::Type::getInt8Ty(_context);
-        else if (((DST::BasicType*)node)->getTypeId() == unicode_string("int"))
-            return llvm::Type::getInt32Ty(_context);
-        // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("float"))
-        //     return _builder.getFloatTy();
-        else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
-            return llvm::Type::getVoidTy(_context);
-        // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("string"))
-        //     return llvm::Type::getVoidTy(_context);
-        else 
+        case EXACT_BASIC:
+            if (((DST::BasicType*)node)->getTypeId() == CONDITION_TYPE)
+                return llvm::Type::getInt1Ty(_context);
+            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("char"))
+                return llvm::Type::getInt8Ty(_context);
+            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("int"))
+                return llvm::Type::getInt32Ty(_context);
+            // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("float"))
+            //     return _builder.getFloatTy();
+            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
+                return llvm::Type::getVoidTy(_context);
+            // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("string"))
+            //     return llvm::Type::getVoidTy(_context);
+            else 
+            {
+                auto bt = (DST::BasicType*)node;
+                if (bt->getTypeSpecifier() && bt->getTypeSpecifier()->getTypeDecl())
+                    return _types[bt->getTypeSpecifier()->getTypeDecl()]->structType;
+                throw DinoException("Type " + node->toShortString() + "does not exist", EXT_GENERAL, node->getLine());
+            }
+        case EXACT_ARRAY:
+            if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+                return llvm::StructType::get(_context, {
+                    llvm::Type::getInt32Ty(_context), 
+                    evalType(((DST::ArrayType*)node)->getElementType())->getPointerTo()
+                });
+            return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), ((DST::ArrayType*)node)->getLength());
+        case EXACT_PROPERTY:
+            return evalType(((DST::PropertyType*)node)->getReturn());
+        case EXACT_POINTER:
+            if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC  // void* is invalid in llvm IR
+                && ((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))
+                return llvm::Type::getInt8Ty(_context)->getPointerTo();
+            else return evalType(((DST::PointerType*)node)->getPtrType())->getPointerTo();
+        case EXACT_FUNCTION:
         {
-            auto bt = (DST::BasicType*)node;
-            if (bt->getTypeSpecifier() && bt->getTypeSpecifier()->getTypeDecl())
-                return _types[bt->getTypeSpecifier()->getTypeDecl()]->structType;
-            throw DinoException("Type " + node->toShortString() + "does not exist", EXT_GENERAL, node->getLine());
+            auto ft = (DST::FunctionType*)node;
+            vector<llvm::Type*> params;
+            for(auto i : ft->getParameters()->getTypes())
+                params.push_back(evalType(i));
+            return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false);
         }
-    }
-    else if (node->getExactType() == EXACT_ARRAY)
-    {
-        if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
-            return llvm::StructType::get(_context, {
-                 llvm::Type::getInt32Ty(_context), 
-                 evalType(((DST::ArrayType*)node)->getElementType())->getPointerTo()
-            });
-        return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), ((DST::ArrayType*)node)->getLength());
-    }
-        
-    else if (node->getExactType() == EXACT_PROPERTY)
-        return evalType(((DST::PropertyType*)node)->getReturn());
-    if (node->getExactType() == EXACT_POINTER)
-    {
-        if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC  // void* is invalid in llvm IR
-            && ((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))
-            return llvm::Type::getInt8Ty(_context)->getPointerTo();
-        auto ty = evalType(((DST::PointerType*)node)->getPtrType());
-        return ty->getPointerTo();
-    }
-    else if (node->getExactType() == EXACT_FUNCTION)
-    {
-        auto ft = (DST::FunctionType*)node;
-        vector<llvm::Type*> params;
-        for(auto i : ft->getParameters()->getTypes())
-            params.push_back(evalType(i));
-        return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false);
-    }
-    else if (node->getExactType() == EXACT_TYPELIST)
-    {
-        auto tl = (DST::TypeList*)node;
-        if (tl->size() == 1)
-            return evalType(tl->getTypes()[0]);
-        else 
+        case EXACT_INTERFACE: 
+            return llvm::StructType::get(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo() });
+        case EXACT_TYPELIST:
         {
-            vector<llvm::Type*> types;
-            for (auto i : tl->getTypes())
-                types.push_back(evalType(i));
-            return llvm::StructType::get(_context, types);    
-        }
+            auto tl = (DST::TypeList*)node;
+            if (tl->size() == 1)
+                return evalType(tl->getTypes()[0]);
+            else 
+            {
+                vector<llvm::Type*> types;
+                for (auto i : tl->getTypes())
+                    types.push_back(evalType(i));
+                return llvm::StructType::get(_context, types);    
+            }
+        }    
+        default: throw DinoException("Specified type is not currently supported in code generation.", EXT_GENERAL, node->getLine());
     }
-    throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
 }
 
 void CodeGenerator::declareType(DST::TypeDeclaration *node)
