@@ -629,6 +629,7 @@ namespace DST
 		virtual string toString() { return "<ExpressionList>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		size_t size() { return _expressions.size(); }
 
 		void addExpression(Expression* expression) { _expressions.push_back(expression); _type->addType(expression->getType()); };
 		vector<Expression*> getExpressions() { return _expressions; }

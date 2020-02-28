@@ -52,6 +52,7 @@ namespace CodeGenerator
     static llvm::DataLayout *_dataLayout(new llvm::DataLayout(_module.get()));
 
     static std::unordered_map<std::string, Value*> _namedValues;
+    static vector<Value*> _funcReturns; // by-reference arguments for multi-return functions
     //static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;
     static llvm::BasicBlock *_currFuncExit;
@@ -98,8 +99,6 @@ namespace CodeGenerator
     void declareTypeContent(DST::TypeDeclaration *node);
     void codegenTypeMembers(DST::TypeDeclaration *node);
 
-    Value *loadValue(Value *ptr, const llvm::Twine &name = "");
-
     bool isFunc(llvm::Value *funcPtr);
 
     NamespaceMembers *getNamespaceMembers(DST::Expression *node);
@@ -124,7 +123,7 @@ namespace CodeGenerator
     Value *codeGen(DST::UnaryOperation *node);
     Value *codeGen(DST::Assignment *node);
     Value *codeGen(DST::Conversion *node);
-    Value *codeGen(DST::FunctionCall *node);
+    Value *codeGen(DST::FunctionCall *node, vector<Value*> retPtrs = {});
     Value *codeGen(DST::MemberAccess *node);
     Value *codeGen(DST::ArrayLiteral *node);
 

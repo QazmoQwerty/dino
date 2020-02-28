@@ -319,7 +319,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
-            loadValue(codeGenLval(node->getLeft())), 
+            _builder.CreateLoad(codeGenLval(node->getLeft())), 
             { _builder.getInt32(0), _builder.getInt32(typeDef->variableIndexes[node->getRight()]) }, 
             node->getRight().to_string()
         );
@@ -374,7 +374,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
             case EXACT_ARRAY:       // Member property of array
                 if (node->getRight() == unicode_string("Size.get")) {
                     if (((DST::ArrayType*)leftTy)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
-                        return loadValue(_builder.CreateInBoundsGEP(
+                        return _builder.CreateLoad(_builder.CreateInBoundsGEP(
                             codeGenLval(node->getLeft()),
                             { _builder.getInt32(0), _builder.getInt32(0) },
                             "sizePtrTmp")
@@ -388,7 +388,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
     }
     if (node->getType()->isConst())
         return codeGenLval(node);
-    return loadValue(codeGenLval(node), "accesstmp");
+    return _builder.CreateLoad(codeGenLval(node), "accesstmp");
 }
 
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
@@ -436,8 +436,8 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_SQUARE_BRACKETS_OPEN:
         {
             //llvm::Type *elementTy = llvm::PointerType::get(evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType()), 0);   
-            //return loadValue(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
-            return loadValue(codeGenLval(node));
+            //return _builder.CreateLoad(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
+            return _builder.CreateLoad(codeGenLval(node));
         }
         default:
             throw DinoException("Unimplemented Binary operation!", EXT_GENERAL, node->getLine());
@@ -467,7 +467,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         case OT_SUBTRACT:
             throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
         case OT_AT:
-            return loadValue(codeGen(node->getExpression()));
+            return _builder.CreateLoad(codeGen(node->getExpression()));
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
         default:
@@ -495,7 +495,7 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
     switch (node->getOperator()._type)
     {
         case OT_AT:
-            return loadValue(val);
+            return _builder.CreateLoad(val);
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
         default:
@@ -512,7 +512,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
             if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             {
                 auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
-                return _builder.CreateGEP(loadValue(arrPtr), { codeGen(node->getRight()) } );
+                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), { codeGen(node->getRight()) } );
             }
             else {
                 // TODO - array literal access
@@ -613,6 +613,14 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
 
     if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
     {
+        if (node->getRight()->getExpressionType() == ET_FUNCTION_CALL)
+        {
+            vector<Value*> retPtrs;
+            for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
+                retPtrs.push_back(codeGenLval(i));
+            return codeGen(((DST::FunctionCall*)node->getRight()), retPtrs);
+        }
+
         if (node->getRight()->getExpressionType() != ET_LIST)
             throw DinoException("Multi-return functions are not implemented yet", EXT_GENERAL, node->getLine());
         vector<Value*> lefts, rights;
@@ -678,31 +686,31 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         }
         case OT_ASSIGN_ADD:
         {
-            auto res = _builder.CreateAdd(loadValue(left), right, "addtmp");
+            auto res = _builder.CreateAdd(_builder.CreateLoad(left), right, "addtmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_SUBTRACT:
         {
-            auto res = _builder.CreateSub(loadValue(left), right, "subtmp");
+            auto res = _builder.CreateSub(_builder.CreateLoad(left), right, "subtmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_MULTIPLY:
         {
-            auto res = _builder.CreateMul(loadValue(left), right, "multmp");
+            auto res = _builder.CreateMul(_builder.CreateLoad(left), right, "multmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_DIVIDE:
         {
-            auto res = _builder.CreateSDiv(loadValue(left), right, "divtmp");
+            auto res = _builder.CreateSDiv(_builder.CreateLoad(left), right, "divtmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_MODULUS:
         {
-            auto res = _builder.CreateSRem(loadValue(left), right, "modtmp");
+            auto res = _builder.CreateSRem(_builder.CreateLoad(left), right, "modtmp");
             _builder.CreateStore(res, left);
             return res;
         }
@@ -718,11 +726,6 @@ AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Ty
     return TmpB.CreateAlloca(type, nullptr, varName);
 }
 
-Value *CodeGenerator::loadValue(Value *ptr, const llvm::Twine &name)
-{
-    return _builder.CreateLoad(ptr, name);
-}
-
 bool CodeGenerator::isFunc(llvm::Value *funcPtr)
 {
     if (funcPtr == nullptr)
@@ -734,7 +737,7 @@ bool CodeGenerator::isFunc(llvm::Value *funcPtr)
     else return false;
 }
 
-Value *CodeGenerator::codeGen(DST::FunctionCall *node)
+Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
 {
     if (node->getFunctionId()->getExpressionType() == ET_MEMBER_ACCESS)
     {
@@ -757,7 +760,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
             
             func = typeDef->functions[funcId];
 
-            if (func->arg_size() != node->getArguments()->getExpressions().size() + 1) // + 1 since we are also passing a "this" ptr
+            if (func->arg_size() != node->getArguments()->getExpressions().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
                 throw DinoException(string("Incorrect # arguments passed (needed ") + 
                     std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
                     , EXT_GENERAL, node->getLine());
@@ -769,13 +772,20 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
 
         
             int i = -1;
+            int i2 = 0;
             for (auto &arg : func->args())
             {
                 if (i == -1) { i++; continue; }
-                auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
-                if (gen->getType() != arg.getType())
-                    args.push_back(_builder.CreateBitCast(gen, arg.getType(), "castTmp"));
-                else args.push_back(gen);
+
+                if (i2 < retPtrs.size())
+                    args.push_back(retPtrs[i2++]);
+                else 
+                {
+                    auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
+                    if (gen->getType() != arg.getType())
+                        args.push_back(_builder.CreateBitCast(gen, arg.getType(), "castTmp"));
+                    else args.push_back(gen);
+                }
             }
 
             return _builder.CreateCall(func, args);
@@ -790,7 +800,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
         func = (llvm::Function*)funcPtr;
     else throw DinoException("expression is not a function!", EXT_GENERAL, node->getLine());
 
-    if (func->arg_size() != node->getArguments()->getExpressions().size())
+    if (func->arg_size() != node->getArguments()->getExpressions().size() + retPtrs.size())
         throw DinoException(string("Incorrect # arguments passed (needed ") + 
             std::to_string(func->arg_size()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
             , EXT_GENERAL, node->getLine());
@@ -799,12 +809,18 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node)
     std::vector<Value *> args;
 
     int i = 0;
+    int i2 = 0;
     for (auto &arg : func->args())
     {
-        auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
-        if (gen->getType() != arg.getType())
-            args.push_back(_builder.CreateBitCast(gen, arg.getType(), "castTmp"));
-        else args.push_back(gen);
+        if (i2 < retPtrs.size())
+            args.push_back(retPtrs[i2++]);
+        else
+        {
+            auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
+            if (gen->getType() != arg.getType())
+                args.push_back(_builder.CreateBitCast(gen, arg.getType(), "castTmp"));
+            else args.push_back(gen);   
+        }
     }
             
     return _builder.CreateCall(func, args);
@@ -817,7 +833,16 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
     switch (node->getOperator()._type)
     {
         case OT_RETURN:
+        {
+            if (node->getExpression()->getExpressionType() == ET_LIST)
+            {
+                auto expList = (DST::ExpressionList*)node->getExpression();
+                for (int i = 0; i < expList->size(); i++)
+                    _builder.CreateStore(codeGen(expList->getExpressions()[i]), _funcReturns[i]);
+                return _builder.CreateRetVoid();
+            }
             return _builder.CreateRet(codeGen(node->getExpression()));
+        }
 
         case OT_DELETE:
         {
@@ -835,7 +860,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
                 ptr = _builder.CreateInBoundsGEP(codeGenLval(node->getExpression()), { _builder.getInt32(0), _builder.getInt32(1) } );
             }
             
-            auto cast = _builder.CreateBitCast(loadValue(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
+            auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
 
             _builder.CreateCall(free, { cast });
             return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
@@ -871,8 +896,8 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
     if (node->getType()->isConst())
         return t;
     auto str = node->getVarId().to_string().c_str();
-    return loadValue(t, str);
-    //return loadValue(codeGenLval(node), node->getVarId().to_string().c_str());
+    return _builder.CreateLoad(t, str);
+    //return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
 }
 
 AllocaInst *CodeGenerator::codeGenLval(DST::VariableDeclaration *node) { return codeGen(node); }
@@ -1161,11 +1186,24 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 {
     vector<llvm::Type*> types;
     auto params = node->getParameters();
+
+    llvm::Type *returnType = NULL; 
+
     if (typeDef)
         types.push_back(typeDef->structType->getPointerTo());
+
+    // functions that return multiple values return them based on pointers they get as arguments
+    bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
+    if (isMultiReturnFunc)
+    {
+        for (auto i : ((DST::TypeList*)node->getReturnType())->getTypes())
+            types.push_back(evalType(i)->getPointerTo());
+        returnType = _builder.getVoidTy();
+    }
+    else returnType = evalType(node->getReturnType());
+    
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
-    auto returnType = evalType(node->getReturnType());
     auto funcType = llvm::FunctionType::get(returnType, types, false);
     auto funcId = node->getVarDecl()->getVarId().to_string();
     if (funcId == "Main")
@@ -1173,16 +1211,19 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
 
     // Set names for all arguments.
-    unsigned Idx = 0;
+    unsigned idx = 0;
+    unsigned idx2 = 0;
     bool b = true;
     for (auto &arg : func->args())
     {
-        if (Idx == 0 && typeDef != nullptr && b)
+        if (idx == 0 && typeDef != nullptr && b)
         {
             arg.setName("this");
             b = false;
         }
-        else arg.setName(params[Idx++]->getVarId().to_string());
+        else if (isMultiReturnFunc && idx2 < ((DST::TypeList*)node->getReturnType())->size())
+            arg.setName(".ret" + std::to_string(idx2++));
+        else arg.setName(params[idx++]->getVarId().to_string());
     }
 
     _currentNamespace.back()->values[node->getVarDecl()->getVarId()] = func;
@@ -1194,6 +1235,8 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
     //std::cout << "codegenning " << "." << node->getVarDecl()->getVarId().to_string() << std::endl;
+
+    bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
 
     llvm::Value *funcPtr = NULL;
     if (typeDef)
@@ -1225,14 +1268,26 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     // Record the function arguments in the NamedValues map.
     _namedValues.clear();
     bool isFirst = true;
+    unsigned idx = 0;
+    if (isMultiReturnFunc)
+        _funcReturns.clear();
     for (llvm::Argument &arg : func->args())
     {
-        AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
-        _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-        _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
+        if (!(isFirst && typeDef) && isMultiReturnFunc && idx < ((DST::TypeList*)node->getReturnType())->size())
+        {
+            _funcReturns.push_back(&arg);
+            idx++;
+        }
+        else 
+        {
+            AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
+            _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+            _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
 
-        if (isFirst && typeDef)
-            _currThisPtr = alloca;
+            if (isFirst && typeDef)
+                _currThisPtr = alloca;
+        }
+        
         isFirst = false;
     }
 

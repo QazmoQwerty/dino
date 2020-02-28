@@ -1,20 +1,24 @@
 namespace Prog {
-	int putchar(int a): extern
-	char Print(char c): return putchar(c as int) as char
-	void Newline(): Print('\n')
+	// int putchar(int a): extern
+	// char Print(char c): return putchar(c as int) as char
+	// void Newline(): Print('\n')
  
-	void PrintNum(int num) {
-        int a ≡ 1
-        while a ≤ num / 10: a *= 10
-        while a > 0 {
-            putchar(num % (a * 10) / a + 48)
-            a /= 10
-        }
-    }
+	// void PrintNum(int num) {
+    //     int a ≡ 1
+    //     while a ≤ num / 10: a *= 10
+    //     while a > 0 {
+    //         putchar(num % (a * 10) / a + 48)
+    //         a /= 10
+    //     }
+    // }
 
-	void Main() {
-		(int, int) m := 1, 12
-		int a, int b := m
-		PrintNum(a * b)
+	(int, char) Foo(int a, char b): return a, b
+	// (int, char) Foo(): return 1, '0'
+
+	int Main() {
+		int a, char c := Foo(1, '1')
+		// int a, char c := Foo()
+		return a + c as int
+		// int a := 10
 	}
 }
