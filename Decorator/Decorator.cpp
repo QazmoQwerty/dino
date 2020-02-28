@@ -685,6 +685,27 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		throw DinoException("lvalue is read-only", EXT_GENERAL, node->getLine());
 	if (!assignment->getRight()->getType()->readable())
 		throw DinoException("rvalue is write-only", EXT_GENERAL, node->getLine());
+
+	if (assignment->getLeft()->getExpressionType() == ET_LIST)
+	{
+		auto list = (DST::ExpressionList*)assignment->getLeft();
+		auto leftTypes = (DST::TypeList*)assignment->getLeft()->getType();
+		auto rightTypes = (DST::TypeList*)assignment->getRight()->getType();
+		for (int i = 0; i < list->size(); i++)
+		{
+			if (list->getExpressions()[i]->getType()->getExactType() == EXACT_UNKNOWN)
+			{
+				if (list->getExpressions()[i]->getExpressionType() == ET_VARIABLE_DECLARATION)
+				{
+					((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
+					leftTypes->getTypes()[i] = rightTypes->getTypes()[i];
+					_variables[currentScope()][((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId()] = rightTypes->getTypes()[i];
+				}
+				else throw DinoException("Unknown type?.", EXT_GENERAL, node->getLine());
+			}
+		}
+	}
+	
 	if (assignment->getLeft()->getType()->getExactType() == EXACT_UNKNOWN)
 	{
 		if (assignment->getLeft()->getExpressionType() == ET_VARIABLE_DECLARATION)
@@ -692,13 +713,16 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 			((DST::VariableDeclaration*)assignment->getLeft())->setType(assignment->getRight()->getType());
 			_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType();
 		}
-		else throw DinoException("Unknown type?.", EXT_GENERAL, node->getLine());	
+		else throw DinoException("Unknown type?.", EXT_GENERAL, node->getLine());
 	}
-		//assignment->getLeft()->getType;
+
 	if (assignment->getRight()->getType()->getExactType() == EXACT_NULL)
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));
+	
 	else if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))
-		throw DinoException("Assignment of different types invalid.", EXT_GENERAL, node->getLine());
+		throw DinoException("Assignment of different types invalid.\n\tleft type is: " + assignment->getLeft()->getType()->toShortString() + 
+							"\n\tright type is: " + assignment->getRight()->getType()->toShortString(), EXT_GENERAL, node->getLine());
+
 	assignment->setType(assignment->getLeft()->getType());
 	return assignment;
 }

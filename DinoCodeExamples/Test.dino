@@ -1,7 +1,7 @@
 namespace Prog {
-	// int putchar(int a): extern
-	// char Print(char c): return putchar(c as int) as char
-	// void Newline(): Print('\n')
+	int putchar(int a): extern
+	char Print(char c): return putchar(c as int) as char
+	void Newline(): Print('\n')
  
 	// void PrintNum(int num) {
     //     int a ≡ 1
@@ -12,13 +12,22 @@ namespace Prog {
     //     }
     // }
 
-	(int, char) Foo(int a, char b): return a, b
+	(int, char[]) Foo(int a, char b) {
+		char[] arr := new char[20]
+		for int i := 0 | i < arr.Size | i+=1:
+			arr[i] := b + i as char
+		return a, arr
+	}
 	// (int, char) Foo(): return 1, '0'
 
 	int Main() {
-		int a, char c := Foo(1, '1')
+		int a, var c := Foo(1, 'b')
+		// int a, char[] c := Foo(1, 'a')
+		for int i := 0 | i < c.Size | i+=1 {
+			Print(c[i]) | Newline()
+		}
 		// int a, char c := Foo()
-		return a + c as int
+		return 10
 		// int a := 10
 	}
 }

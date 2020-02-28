@@ -293,7 +293,7 @@ namespace DST
 		TypeList(AST::Expression *base, vector<Type*> types) : Type(base), _types(types) { }
 		virtual ~TypeList() { _types.clear(); }
 		void addType(Type *type);
-		vector<Type*> getTypes() { return _types; }
+		vector<Type*> &getTypes() { return _types; }
 		size_t size() { return _types.size(); }
 		ExactType getExactType() { return EXACT_TYPELIST; }
 		virtual bool equals(Type *other);

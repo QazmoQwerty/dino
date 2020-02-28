@@ -607,6 +607,7 @@ bool DST::PointerType::equals(Type * other)
 				return inter->implements(ointer) || ointer->implements(inter);
 			else return false;
 		}
+		else throw "TODO";
 	}
 	else return ((PointerType*)other)->_type->equals(_type);
 }
