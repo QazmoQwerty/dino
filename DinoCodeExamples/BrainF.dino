@@ -1,21 +1,11 @@
 namespace BrainF {
-
+    
     char[30000] tape
 
     char putchar(char c): extern
     char getchar(): extern
 
-    // void PrintNum(int num) {
-    //     int a ≡ 1
-    //     while a ≤ num / 10: a *= 10
-    //     while a > 0 {
-    //         putchar((num % (a * 10) / a) as char + '0')
-    //         a /= 10
-    //     }
-    //     putchar('\n')
-    // }
-
-    void Interpret(char[8] input) {
+    void Interpret(char[] input) {
         int ptr ≡ 0
         for int i ≡ 0 | i < input.Size | i+=1 {
             char curr ≡ input[i]
@@ -46,7 +36,13 @@ namespace BrainF {
         var input ≡ [',', '[', '.', '[', '-', ']', ',', ']']    
         
         // outputs the ASCII charset
-        var input2 ≡ ['.', '+', '[', '.', '+', ']']
-        Interpret(input)
+        //var input ≡ ['.', '+', '[', '.', '+', ']']
+
+        var arr ≡ new char[8]
+
+        for int i ≡ 0 | i < arr.Size | i+=1:
+            arr[i] ≡ input[i]
+        
+        Interpret(arr)
     }
 }

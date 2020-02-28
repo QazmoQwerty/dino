@@ -1,0 +1,31 @@
+namespace Std {
+    type String {
+        char[] buf
+        int currSize
+        int factor
+
+        void Init(char[] arr, maxSize, factor) {
+            buf := arr
+            this.maxSize := maxSize
+            this.factor := factor
+        }
+
+        // int MaxSize: get: return maxSize
+        // int Factor: get: return factor
+
+        int Size: get: return currSize
+
+        char GetChar(int idx): return buf[idx]
+
+        void AddChar(char c) {
+            if currSize >= buf.Size {
+                char[] newBuf := new char[buf.Size * factor]
+                for int i := 0 | i < buf.Size | i+=1:
+                    newBuf[i] := buf[i]
+                delete buf
+                buf := newBuf
+            }
+            buf[currSize+=1] := c
+        }
+    }
+}

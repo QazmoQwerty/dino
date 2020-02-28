@@ -1,8 +1,5 @@
-//include "DinoCodeExamples/LinkedList.dino"
-
 namespace Prog {
 	int putchar(int a): extern
-	// // char getchar(): extern
 	char Print(char c): return putchar(c as int) as char
 	void Newline(): Print('\n')
  
@@ -15,44 +12,9 @@ namespace Prog {
         }
     }
 
-	void PrintArr(int[] arr): 
-	 	for int i := 0 | i < arr.Size | i+=1 { PrintNum(arr[i]) | Newline() }
-
-	// //void Foo((char(char))@ f): (@f)('a')
-	// const c1 ≡ 'a'
-	// const c2 ≡ '\n'
-
-	// namespace NS: const c1 ≡ '\n'
-
-	int Main() {
-
-		int[] a := new int[20]
-
-		for int i := 0 | i < a.Size | i+=1 {
-			a[i] := i
-		}
-
-		PrintArr(a)
-
-
-		// for int i := 0 | i < a.Size | i+=1 {
-		// 	PrintNum(a[i] as int)
-		// }
-
-		// int[] a := new int[20]
-
-		// for int i := 0 | i < a.Size | i+=1 {
-		// 	a[i] := 'a' as int + i
-		// }
-
-		// for int i := 0 | i < a.Size | i+=1 {
-		// 	PrintNum(a[i])
-		// }
-		PrintNum(a.Size)
-		Newline()
-		delete a
-		PrintNum(a.Size)
-		Newline()
-		return 10
+	void Main() {
+		(int, int) m := 1, 12
+		int a, int b := m
+		PrintNum(a * b)
 	}
 }

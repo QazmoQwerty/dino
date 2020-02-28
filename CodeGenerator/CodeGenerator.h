@@ -98,6 +98,7 @@ namespace CodeGenerator
     void declareTypeContent(DST::TypeDeclaration *node);
     void codegenTypeMembers(DST::TypeDeclaration *node);
 
+    Value *loadValue(Value *ptr, const llvm::Twine &name = "");
 
     bool isFunc(llvm::Value *funcPtr);
 

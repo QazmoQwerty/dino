@@ -191,6 +191,8 @@ Value *CodeGenerator::codeGen(DST::Node *node)
 
 Value *CodeGenerator::codeGen(DST::Statement *node) 
 {
+    if (node == nullptr) 
+        return nullptr;
     switch (node->getStatementType()) 
     {
         case ST_ASSIGNMENT: return codeGen((DST::Assignment*)node);
@@ -206,13 +208,12 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         default: throw DinoException("Unimplemented codegen for statement", EXT_GENERAL, node->getLine());;
     }
-    TypeDefinition t;
 }
 
 Value *CodeGenerator::codeGen(DST::Expression *node) 
 {
     if (node == nullptr)
-        return NULL;
+        return nullptr;
     switch (node->getExpressionType()) 
     {
         case ET_BINARY_OPERATION: return codeGen((DST::BinaryOperation*)node);
@@ -262,6 +263,9 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     case LT_NULL:
         return llvm::Constant::getNullValue(_builder.getInt8Ty()->getPointerTo());  // 'void*' is invalid in llvm IR
         //return _builder.getInt32(NULL);
+        case LT_STRING:
+        return _builder.CreateGlobalString(((AST::String*)node->getBase())->getValue(), ".stringLit");
+        //_builder.CreateGlobalString()
     default:
         throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
     }
@@ -315,7 +319,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
-            _builder.CreateLoad(codeGenLval(node->getLeft())), 
+            loadValue(codeGenLval(node->getLeft())), 
             { _builder.getInt32(0), _builder.getInt32(typeDef->variableIndexes[node->getRight()]) }, 
             node->getRight().to_string()
         );
@@ -370,7 +374,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
             case EXACT_ARRAY:       // Member property of array
                 if (node->getRight() == unicode_string("Size.get")) {
                     if (((DST::ArrayType*)leftTy)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
-                        return _builder.CreateLoad(_builder.CreateInBoundsGEP(
+                        return loadValue(_builder.CreateInBoundsGEP(
                             codeGenLval(node->getLeft()),
                             { _builder.getInt32(0), _builder.getInt32(0) },
                             "sizePtrTmp")
@@ -384,7 +388,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
     }
     if (node->getType()->isConst())
         return codeGenLval(node);
-    return _builder.CreateLoad(codeGenLval(node), "accesstmp");
+    return loadValue(codeGenLval(node), "accesstmp");
 }
 
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
@@ -432,8 +436,8 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_SQUARE_BRACKETS_OPEN:
         {
             //llvm::Type *elementTy = llvm::PointerType::get(evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType()), 0);   
-            //return _builder.CreateLoad(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
-            return _builder.CreateLoad(codeGenLval(node));
+            //return loadValue(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
+            return loadValue(codeGenLval(node));
         }
         default:
             throw DinoException("Unimplemented Binary operation!", EXT_GENERAL, node->getLine());
@@ -463,7 +467,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         case OT_SUBTRACT:
             throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
         case OT_AT:
-            return _builder.CreateLoad(codeGen(node->getExpression()));
+            return loadValue(codeGen(node->getExpression()));
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
         default:
@@ -491,11 +495,11 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
     switch (node->getOperator()._type)
     {
         case OT_AT:
-            return _builder.CreateLoad(val);
+            return loadValue(val);
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
         default:
-            return NULL;
+            throw DinoException("Unimplemented lval unary operation", EXT_GENERAL, node->getLine());
     }    
 }
 
@@ -508,9 +512,12 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
             if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             {
                 auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
-                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), { codeGen(node->getRight()) } );
+                return _builder.CreateGEP(loadValue(arrPtr), { codeGen(node->getRight()) } );
             }
-            else return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } );
+            else {
+                // TODO - array literal access
+                return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } );
+            }
         default:
             throw DinoException("Unimplemented lval Binary operation", EXT_GENERAL, node->getLine());
     }
@@ -519,7 +526,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
 Value *CodeGenerator::codeGenLval(DST::Expression *node)
 {
     if (node == nullptr)
-        return NULL;
+        return nullptr;
     switch (node->getExpressionType()) 
     {
         case ET_IDENTIFIER: return codeGenLval((DST::Variable*)node);
@@ -619,51 +626,83 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         return lastStore;   // Temporary fix.
     }
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+    if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && 
+        ((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
     {
         left = codeGenLval(node->getLeft());
         right = codeGen(node->getRight());
-        auto sizePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
-        auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "arrPtrTmp");
-        _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
-        _builder.CreateStore(_builder.CreateBitOrPointerCast(right, arrPtr->getType()->getPointerElementType()), arrPtr);
-        return right;
+        if (right->getType()->isPointerTy())
+        {
+            auto sizePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
+            auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "arrPtrTmp");
+            _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
+            _builder.CreateStore(_builder.CreateBitOrPointerCast(right, arrPtr->getType()->getPointerElementType()), arrPtr);
+            return right;
+        }
+        if (right->getType() == left->getType()->getPointerElementType())
+        {
+            _builder.CreateStore(right, left);
+            return right;
+        }
+        else throw DinoException("You shouldn't have gotten here...", EXT_GENERAL, node->getLine());
     }
 
-    left = codeGenLval(node->getLeft());
-    right = codeGen(node->getRight());
+    if (node->getOperator()._type != OT_ASSIGN_EQUAL)
+    {
+        left = codeGenLval(node->getLeft());
+        right = codeGen(node->getRight());
+    }
+
     switch (node->getOperator()._type) 
     {
         case OT_ASSIGN_EQUAL:
+        {
+            left = codeGenLval(node->getLeft());
+            /* this whole section is apparantly not needed since you can load structs/arrays
+                // if ((left->getType()->isPointerTy() && left->getType()->getPointerElementType()->isStructTy()))
+                // {
+                //     right = codeGenLval(node->getRight());
+                //     _builder.CreateMemCpy(left, right, _dataLayout->getTypeAllocSize(left->getType()->getPointerElementType()), 0);
+                //     return right;
+                // }
+                // if (left->getType()->isArrayTy())
+                // {
+                //     right = codeGenLval(node->getRight());
+                //     _builder.CreateMemCpy(left, right, _dataLayout->getTypeAllocSize(left->getType()), 0);
+                //     return right;
+                // }
+            */
+            right = codeGen(node->getRight());
             _builder.CreateStore(right, left);
             return right;
+        }
         case OT_ASSIGN_ADD:
         {
-            auto res = _builder.CreateAdd(_builder.CreateLoad(left), right, "addtmp");
+            auto res = _builder.CreateAdd(loadValue(left), right, "addtmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_SUBTRACT:
         {
-            auto res = _builder.CreateSub(_builder.CreateLoad(left), right, "subtmp");
+            auto res = _builder.CreateSub(loadValue(left), right, "subtmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_MULTIPLY:
         {
-            auto res = _builder.CreateMul(_builder.CreateLoad(left), right, "multmp");
+            auto res = _builder.CreateMul(loadValue(left), right, "multmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_DIVIDE:
         {
-            auto res = _builder.CreateSDiv(_builder.CreateLoad(left), right, "divtmp");
+            auto res = _builder.CreateSDiv(loadValue(left), right, "divtmp");
             _builder.CreateStore(res, left);
             return res;
         }
         case OT_ASSIGN_MODULUS:
         {
-            auto res = _builder.CreateSRem(_builder.CreateLoad(left), right, "modtmp");
+            auto res = _builder.CreateSRem(loadValue(left), right, "modtmp");
             _builder.CreateStore(res, left);
             return res;
         }
@@ -677,6 +716,11 @@ AllocaInst *CodeGenerator::CreateEntryBlockAlloca(llvm::Function *func, llvm::Ty
 { 
     llvm::IRBuilder<> TmpB(&func->getEntryBlock(), func->getEntryBlock().begin());
     return TmpB.CreateAlloca(type, nullptr, varName);
+}
+
+Value *CodeGenerator::loadValue(Value *ptr, const llvm::Twine &name)
+{
+    return _builder.CreateLoad(ptr, name);
 }
 
 bool CodeGenerator::isFunc(llvm::Value *funcPtr)
@@ -791,7 +835,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
                 ptr = _builder.CreateInBoundsGEP(codeGenLval(node->getExpression()), { _builder.getInt32(0), _builder.getInt32(1) } );
             }
             
-            auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
+            auto cast = _builder.CreateBitCast(loadValue(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
 
             _builder.CreateCall(free, { cast });
             return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
@@ -827,8 +871,8 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
     if (node->getType()->isConst())
         return t;
     auto str = node->getVarId().to_string().c_str();
-    return _builder.CreateLoad(t, str);
-    //return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
+    return loadValue(t, str);
+    //return loadValue(codeGenLval(node), node->getVarId().to_string().c_str());
 }
 
 AllocaInst *CodeGenerator::codeGenLval(DST::VariableDeclaration *node) { return codeGen(node); }
@@ -871,6 +915,8 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         //     return _builder.getFloatTy();
         else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
             return llvm::Type::getVoidTy(_context);
+        // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("string"))
+        //     return llvm::Type::getVoidTy(_context);
         else 
         {
             auto bt = (DST::BasicType*)node;
@@ -912,6 +958,13 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         auto tl = (DST::TypeList*)node;
         if (tl->size() == 1)
             return evalType(tl->getTypes()[0]);
+        else 
+        {
+            vector<llvm::Type*> types;
+            for (auto i : tl->getTypes())
+                types.push_back(evalType(i));
+            return llvm::StructType::get(_context, types);    
+        }
     }
     throw DinoException("Only basic types are currently supported in code generation!", EXT_GENERAL, node->getLine());
 }
