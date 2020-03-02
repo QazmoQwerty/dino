@@ -10,6 +10,7 @@
 #include "Parser/Parser.h"
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
+#include "LibFileWriter/LibFileWriter.h"
 #include <stdio.h>
 
 typedef struct cmdOptions 
@@ -25,6 +26,9 @@ typedef struct cmdOptions
 	const char *bcFileName;
 	bool outputExe = false;
 	const char *exeFileName;
+	bool outputLib = false;
+	const char *libFileName;
+	const char *libBcFileName;
 } cmdOptions;
 
 void showHelp() 
@@ -76,6 +80,16 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 						throw "Error: missing file name after '-o'";
 					else options->exeFileName = argv[i];
 				}
+				else if (strcmp(argv[i], "-lib") == 0)
+				{
+					options->outputLib = true;
+					if (++i >= argc)
+						throw "Error: missing file name after '-lib'";
+					else options->libFileName = argv[i];
+					if (++i >= argc)
+						throw "Error: missing second file name after '-lib'";
+					else options->libBcFileName = argv[i];
+				}
 			}
 		}
 		if (options->showHelp)
@@ -97,7 +111,7 @@ int main(int argc, char *argv[])
 	CodeGenerator::setup();
 	OperatorsMap::setup();
 	Lexer::setup();
-	Decorator::setup();
+	Decorator::setup(cmd->outputLib);
 	DST::setup();
 	try
 	{
@@ -124,7 +138,7 @@ int main(int argc, char *argv[])
 
 		if (cmd->outputBc) 
 		{
-			CodeGenerator::writeBitcodeToFile(cmd->bcFileName);
+			CodeGenerator::writeBitcodeToFile(dst, cmd->bcFileName);
 			llvm::errs() << "outputted .bc file\n";
 		}
 
@@ -133,11 +147,18 @@ int main(int argc, char *argv[])
 			if (!cmd->outputBc)
 			{
 				cmd->bcFileName = "temp.bc";
-				CodeGenerator::writeBitcodeToFile(cmd->bcFileName);
+				CodeGenerator::writeBitcodeToFile(dst, cmd->bcFileName);
 			}
 			system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
 			system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
 			llvm::errs() << "outputted ELF file\n";
+		}
+
+		if (cmd->outputLib)
+		{
+			LibFileWriter::Write(cmd->libFileName, cmd->libBcFileName, dst);
+			CodeGenerator::writeBitcodeToFile(dst, cmd->libBcFileName);
+			std::cout << "outputted lib files" << std::endl;
 		}
 
 		Decorator::clear();

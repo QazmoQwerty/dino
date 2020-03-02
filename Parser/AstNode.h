@@ -260,6 +260,17 @@ namespace AST
 		StatementBlock* getElseBranch() { return _elseBranch; }
 	};
 
+	class Import : public Statement 
+	{
+		string _toImport;
+	public:
+		Import(string toImport) : _toImport(toImport) {}
+		string getImportPath() { return _toImport; }
+		virtual StatementType getStatementType() { return ST_IMPORT; };
+		virtual string toString() { return "<Import>\\n\"" + _toImport + "\""; };
+		virtual vector<Node*> getChildren() { return {}; };
+	};
+
 	typedef struct CaseClause {
 		Expression* _expression;
 		StatementBlock* _statement;

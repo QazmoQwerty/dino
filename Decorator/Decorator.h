@@ -11,7 +11,7 @@ using std::unordered_map;
 class Decorator
 {
 public:
-	static void setup();
+	static void setup(bool isLibrary = false);
 	static DST::Node *decorate(AST::Node *node);
 	static void clear();
 	static DST::Program *decorateProgram(AST::StatementBlock* node);
@@ -70,6 +70,7 @@ private:
 	static DST::UnknownType *_unknownType;
 	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;
+	static bool _isLibrary;
 
 	// Scope
 	static unsigned int currentScope() { return (int)_variables.size() - 1; }

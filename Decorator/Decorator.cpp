@@ -9,14 +9,16 @@ DST::TypeDeclaration *Decorator::_currentTypeDecl;
 DST::Program *Decorator::_currentProgram;
 DST::NullType *Decorator::_nullType;
 DST::UnknownType *Decorator::_unknownType;
+bool Decorator::_isLibrary;
 
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
 #define createBasicType(name) _variables[0][unicode_string(name)] = new DST::TypeSpecifierType(new DST::TypeDeclaration(unicode_string(name)));
 
-void Decorator::setup()
+void Decorator::setup(bool isLibrary)
 {
+	_isLibrary = isLibrary;
 	enterBlock();
 	createBasicType("type");
 	createBasicType("int");
@@ -376,9 +378,14 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 	_currentProgram = new DST::Program();
 	for (auto i : node->getStatements())
 	{
-		if (i->getStatementType() != ST_NAMESPACE_DECLARATION)
-			throw "everything must be in a namespace!";
-		_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i));
+		if (i->getStatementType() == ST_IMPORT)
+			_currentProgram->addImport(((AST::Import*)i)->getImportPath());
+		else
+		{ 
+			if (i->getStatementType() != ST_NAMESPACE_DECLARATION)
+				throw "everything must be in a namespace!";
+			_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i));
+		}
 	}
 
 	for (auto i : _currentProgram->getNamespaces())
@@ -387,7 +394,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 	for (auto i : _currentProgram->getNamespaces())
 		partC(i.second);
 	
-	if (!_main)
+	if (!_main && !_isLibrary)
 		throw DinoException("No entry point (Main function)", EXT_GENERAL, node->getLine());
 	
 	for (auto i : _currentProgram->getNamespaces())

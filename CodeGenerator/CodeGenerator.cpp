@@ -8,13 +8,24 @@ void CodeGenerator::setup()
     llvm::InitializeNativeTargetAsmParser();
 }
 
-void CodeGenerator::writeBitcodeToFile(string fileName) 
+void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
 {
     //llvm::errs() << *_module.get();
     fstream file(fileName);
     std::error_code ec;
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
     llvm::WriteBitcodeToFile(_module.get(), out);
+
+    if (prog->getBcFileImports().size())
+    {
+        string command = "llvm-link " + fileName;
+        for (string s : prog->getBcFileImports())
+            command += " " + s;
+        command += " -o " + fileName;
+        std::cout << "Please enter this command: \n" << command << std::endl;
+        // system(command.c_str());
+        // system(string("llvm-link" + str + " -o " + "testtt.bc").c_str());
+    }
 }
 
 void CodeGenerator::execute(llvm::Function *func)
@@ -454,7 +465,6 @@ Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
         codeGen(node->getElseBranch())
     );
 }
-
 
 Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
 {
@@ -1214,7 +1224,24 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
     auto funcType = llvm::FunctionType::get(returnType, types, false);
-    auto funcId = node->getVarDecl()->getVarId().to_string();
+
+    string funcId;
+
+    if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getExpression() != NULL)
+    {
+        // externally defined function with a func name argument
+        auto opStmnt = ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0]);
+        if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
+            throw "umm";
+        if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
+            throw "umm2";
+        auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
+        funcId = strlit->getValue();
+    }
+    else funcId = node->getVarDecl()->getVarId().to_string();
+
     if (funcId == "Main")
         funcId = "main";
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());

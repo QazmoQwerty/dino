@@ -79,7 +79,7 @@ namespace CodeGenerator
 
     void setup();
 
-    void writeBitcodeToFile(string fileName);
+    void writeBitcodeToFile(DST::Program *prog, string fileName);
     void execute(llvm::Function *func);
 
     // Returns a pointer to the Main function

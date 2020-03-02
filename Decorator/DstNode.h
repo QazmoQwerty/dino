@@ -113,10 +113,13 @@ namespace DST
 	private:
 		//vector<NamespaceDeclaration*> _namespaces;
 		unordered_map<unicode_string, NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
+		vector<string> _bcFileImports;
 	public:
 		virtual bool isStatement() { return false; }
 		virtual bool isExpression() { return false; }
 		virtual string toString() { return "<Program>"; };
+		void addImport(string bcFileName) { _bcFileImports.push_back(bcFileName); }
+		vector<string> getBcFileImports() { return _bcFileImports; }
 		virtual vector<Node*> getChildren();
 
 		//void addNamespace(NamespaceDeclaration *decl) { _namespaces.push_back(decl); }
