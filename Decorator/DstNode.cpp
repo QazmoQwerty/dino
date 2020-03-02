@@ -582,34 +582,33 @@ bool DST::PointerType::equals(Type * other)
 	if (other == nullptr) 
 		return false;
 
-	if (other->getExactType() == EXACT_NULL)
-		return true;
-
-	if (other->getExactType() == EXACT_TYPELIST)
-		return equals(((TypeList*)other)->getTypes()[0]);
-
-	if (other->getExactType() == EXACT_PROPERTY)
-		return equals(((PropertyType*)other)->getReturn());
-
-	if (other->getExactType() != EXACT_POINTER)
-		return false;
-	
-	if (_type->getExactType() == EXACT_SPECIFIER)
+	switch (other->getExactType())
 	{
-		auto inter = ((TypeSpecifierType*)(_type/*->getType()*/))->getInterfaceDecl();
-		if (inter)
-		{
-			auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getTypeDecl();
-			auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getInterfaceDecl();
-			if (otype)
-				return otype->implements(inter);
-			else if (ointer)
-				return inter->implements(ointer) || ointer->implements(inter);
-			else return false;
-		}
-		else throw "TODO";
+		case EXACT_NULL:
+			return true;
+
+		case EXACT_TYPELIST:
+			return equals(((TypeList*)other)->getTypes()[0]);
+		
+		case EXACT_PROPERTY:
+			return equals(((PropertyType*)other)->getReturn());
+		
+		case EXACT_POINTER:
+			if (_type->getExactType() != EXACT_SPECIFIER)
+				return ((PointerType*)other)->_type->equals(_type);
+			else if (auto inter = ((TypeSpecifierType*)(_type))->getInterfaceDecl())
+			{
+				auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type)->getTypeDecl();
+				auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type)->getInterfaceDecl();
+				if (otype)
+					return otype->implements(inter);
+				else if (ointer)
+					return inter->implements(ointer) || ointer->implements(inter);
+				else return false;
+			}
+		default:
+			return false;
 	}
-	else return ((PointerType*)other)->_type->equals(_type);
 }
 
 string DST::PointerType::toShortString()
