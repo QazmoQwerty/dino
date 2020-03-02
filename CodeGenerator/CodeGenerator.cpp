@@ -206,6 +206,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_DO_WHILE_LOOP: return codeGen((DST::DoWhileLoop*)node);
         case ST_FOR_LOOP: return codeGen((DST::ForLoop*)node);
         case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
+        case ST_INCREMENT: return codeGen((DST::Increment*)node);
         default: throw DinoException("Unimplemented codegen for statement", EXT_GENERAL, node->getLine());;
     }
 }
@@ -226,6 +227,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_MEMBER_ACCESS: return codeGen((DST::MemberAccess*)node);
         case ET_ARRAY: return codeGen((DST::ArrayLiteral*)node);
         case ET_CONVERSION: return codeGen((DST::Conversion*)node);
+        case ET_INCREMENT: return codeGen((DST::Increment*)node);
         case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
         default: throw DinoException("Unimplemented codegen for expression", EXT_GENERAL, node->getLine());
     }
@@ -498,6 +500,21 @@ Value *CodeGenerator::codeGen(DST::ArrayLiteral *node)
         IRvalues.push_back((llvm::Constant*)codeGen(val));
     }
     return llvm::ConstantArray::get((llvm::ArrayType*)atype, IRvalues);
+}
+
+Value *CodeGenerator::codeGen(DST::Increment *node)
+{
+    llvm::Value *lvalue = codeGenLval(node->getExpression());
+    int varSize = lvalue->getType()->getPointerElementType()->getPrimitiveSizeInBits();
+    
+    llvm::Value *inc;
+    if(node->isIncrement())
+        inc = _builder.CreateAdd(_builder.CreateLoad(lvalue), _builder.getIntN(varSize, 1));
+    else inc = _builder.CreateSub(_builder.CreateLoad(lvalue), _builder.getIntN(varSize, 1));
+    
+    _builder.CreateStore(inc, lvalue);
+    
+    return inc;
 }
 
 Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)

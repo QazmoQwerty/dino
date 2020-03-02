@@ -423,6 +423,8 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		return decorate(dynamic_cast<AST::FunctionCall*>(node));
 	case ET_CONDITIONAL_EXPRESSION:
 		return decorate(dynamic_cast<AST::ConditionalExpression*>(node));
+	case ET_INCREMENT:
+		return decorate(dynamic_cast<AST::Increment*>(node));
 	default: 
 		return NULL;
 	}
@@ -469,6 +471,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::TypeDeclaration*>(node));
 	case ST_DO_WHILE_LOOP: 
 		return decorate(dynamic_cast<AST::DoWhileLoop*>(node));
+	case ST_INCREMENT:
+		return decorate(dynamic_cast<AST::Increment*>(node));
 	default: 
 		return NULL;
 	}
@@ -519,6 +523,11 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 			return new DST::Variable(node, new DST::NamespaceType(var));
 
 	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
+}
+
+DST::Increment *Decorator::decorate(AST::Increment *node)
+{
+	return new DST::Increment(node, decorate(node->getExpression()), node->isIncrement());
 }
 
 DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)

@@ -126,6 +126,7 @@ namespace CodeGenerator
     Value *codeGen(DST::FunctionCall *node, vector<Value*> retPtrs = {});
     Value *codeGen(DST::MemberAccess *node);
     Value *codeGen(DST::ArrayLiteral *node);
+    Value *codeGen(DST::Increment *node);
     Value *codeGen(DST::ConditionalExpression *node);
 
     llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");

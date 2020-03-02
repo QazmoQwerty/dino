@@ -518,6 +518,26 @@ namespace DST
 
 	};
 
+	class Increment : public ExpressionStatement
+	{
+		AST::Increment *_base;
+		Expression *_expr;
+		Type *_type;
+		bool _increment;
+		
+	public:
+		Increment(AST::Increment *base, Expression *expr, bool isIncrement) : _base(base), _expr(expr), _increment(isIncrement), _type(_expr->getType()) {};
+		virtual ~Increment() { if (_expr) delete _expr; }
+		virtual ExpressionType getExpressionType() { return ET_INCREMENT; };
+		virtual StatementType getStatementType() { return ST_INCREMENT; };
+		virtual string toString() { return _base->toString() + "\\nType: " + getType()->toShortString(); };
+		virtual vector<Node*> getChildren() { return {}; };
+		virtual Type *getType() { return _expr->getType(); }
+		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		Expression *getExpression() { return _expr; };
+		bool isIncrement() const { return _increment; }
+	};
+
 	class MemberAccess : public Expression
 	{
 		AST::BinaryOperation *_base;

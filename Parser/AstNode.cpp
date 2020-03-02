@@ -262,13 +262,6 @@ void AST::ExpressionList::addExpression(Expression * expression)
 	else _expressions.push_back(expression);
 }
 
-vector<AST::Node*> AST::UnaryAssignment::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_expression);
-	return v;
-}
-
 vector<AST::Node*> AST::ForLoop::getChildren()
 {
 	vector<Node*> v;

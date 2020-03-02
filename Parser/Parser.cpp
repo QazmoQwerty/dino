@@ -464,7 +464,7 @@ AST::Node * Parser::nud(Token * token)
 		auto ot = ((OperatorToken*)token);
 		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT))
 		{
-			auto op = new AST::UnaryAssignment();
+			auto op = new AST::Increment(isOperator(token, OT_INCREMENT));
 			op->setLine(token->_line);
 			op->setOperator(ot->_operator);
 			op->setExpression(parseExpression(leftPrecedence(ot, PREFIX)));
@@ -609,9 +609,8 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 	{
 		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT)) 
 		{
-			auto op = new AST::UnaryAssignment();
+			auto op = new AST::Increment(isOperator(token, OT_INCREMENT));
 			op->setLine(token->_line);
-			op->setIsPostfix(true);
 			op->setOperator(((OperatorToken*)token)->_operator);
 			op->setExpression(convertToExpression(left));
 			return op;
