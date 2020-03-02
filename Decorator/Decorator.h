@@ -33,8 +33,9 @@ private:
 	static DST::Expression *decorate(AST::ExpressionList *node);
 	static DST::Expression *decorate(AST::FunctionCall *node);
 	static DST::FunctionLiteral *decorate(AST::Function *node);
-	static DST::Expression * decorate(AST::UnaryOperation * node);
-	static DST::Expression * decorate(AST::ConditionalExpression * node);
+	static DST::Expression *decorate(AST::UnaryOperation * node);
+	static DST::Expression *decorate(AST::ConditionalExpression * node);
+	static DST::Increment *decorate(AST::Increment *node);
 
 	// Statements
 	static DST::NamespaceDeclaration *decorate(AST::NamespaceDeclaration *node);

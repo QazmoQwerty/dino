@@ -137,15 +137,17 @@ namespace AST
 	{
 		Operator _operator;
 		Expression* _expression;
+		bool _isInc;
 
 	public:
-		Increment() : ExpressionStatement() {};
+		Increment(bool isIncrement) : ExpressionStatement(), _isInc(isIncrement) {};
 		virtual ~Increment() { if (_expression) delete _expression; }
 		virtual StatementType getStatementType() { return ST_INCREMENT; };
 		virtual ExpressionType getExpressionType() { return ET_INCREMENT; };
 		virtual string toString() { return "<Increment>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
+		bool isIncrement() { return _isInc; }
 		void setOperator(Operator op) { _operator = op; }
 		void setExpression(Expression* expression) { _expression = expression; }
 		Operator getOperator() { return _operator; }
@@ -192,29 +194,6 @@ namespace AST
 		void setType(Expression* type) { _type = type; }
 		unicode_string getVarId() { return _varId; }
 		Expression* getVarType() { return _type; }
-	};
-
-	class UnaryAssignment : public ExpressionStatement	// could clean up code by making this a subclass of UnaryOperation
-	{
-		Operator _operator;
-		Expression* _expression;
-		bool _isPostfix;
-
-	public:
-		UnaryAssignment() : ExpressionStatement() { _isPostfix = false; };
-		virtual ~UnaryAssignment() { if (_expression) delete _expression; }
-		virtual ExpressionType getExpressionType() { return ET_UNARY_ASSIGNMENT; };
-		virtual StatementType getStatementType() { return ST_UNARY_ASSIGNMENT; };
-		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "") + "UnaryAssignment>\\n" + _operator._str.to_string(); };
-		virtual vector<Node*> getChildren();
-
-		void setOperator(Operator op) { _operator = op; }
-		void setExpression(Expression* expression) { _expression = expression; }
-		void setIsPostfix(bool isPostfix) { _isPostfix = isPostfix; }
-
-		Operator getOperator() { return _operator; }
-		Expression* getExpression() { return _expression; }
-		bool isPostfix() { return _isPostfix; }
 	};
 
 	/********************** Statements **********************/
