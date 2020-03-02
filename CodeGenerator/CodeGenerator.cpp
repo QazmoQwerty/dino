@@ -226,6 +226,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_MEMBER_ACCESS: return codeGen((DST::MemberAccess*)node);
         case ET_ARRAY: return codeGen((DST::ArrayLiteral*)node);
         case ET_CONVERSION: return codeGen((DST::Conversion*)node);
+        case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
         default: throw DinoException("Unimplemented codegen for expression", EXT_GENERAL, node->getLine());
     }
 }
@@ -444,6 +445,16 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
     }
     
 }
+
+Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
+{
+    return _builder.CreateSelect(
+        codeGen(node->getCondition()),
+        codeGen(node->getThenBranch()),
+        codeGen(node->getElseBranch())
+    );
+}
+
 
 Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
 {
