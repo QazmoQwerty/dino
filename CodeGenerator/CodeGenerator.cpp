@@ -8,13 +8,23 @@ void CodeGenerator::setup()
     llvm::InitializeNativeTargetAsmParser();
 }
 
-void CodeGenerator::writeBitcodeToFile(string fileName) 
+void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
 {
     //llvm::errs() << *_module.get();
     fstream file(fileName);
     std::error_code ec;
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
     llvm::WriteBitcodeToFile(_module.get(), out);
+
+    if (prog->getBcFileImports().size())
+    {
+        string command = "#/bin/bash\nllvm-link " + fileName;
+        for (string s : prog->getBcFileImports())
+            command += " " + s;
+        command += " -o " + fileName;
+        std::cout << "Please enter this command: \n" << command << std::endl;
+        // system(command.c_str());
+    }
 }
 
 void CodeGenerator::execute(llvm::Function *func)
@@ -60,6 +70,7 @@ void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
             case ST_NAMESPACE_DECLARATION:
             {
                 auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
+                currentNs->decl = node;
                 _currentNamespace.push_back(currentNs);
                 declareNamespaceTypes((DST::NamespaceDeclaration*)member);
                 _currentNamespace.pop_back();
@@ -149,6 +160,7 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
     for (auto i : node->getNamespaces())
     {
         auto currentNs = _namespaces[i.first] = new NamespaceMembers();
+        currentNs->decl = i.second;
         _currentNamespace.push_back(currentNs);
         declareNamespaceTypes(i.second);
         _currentNamespace.pop_back();
@@ -278,7 +290,6 @@ CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Express
 {
     if (node->getExpressionType() == ET_MEMBER_ACCESS)
     {
-        auto x = (DST::MemberAccess*)node;
         auto members = getNamespaceMembers(((DST::MemberAccess*)node)->getLeft());
         return members->namespaces[((DST::MemberAccess*)node)->getRight()];
     }
@@ -457,7 +468,6 @@ Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
     );
 }
 
-
 Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
 {
     static llvm::Function *malloc = NULL;
@@ -493,7 +503,6 @@ Value *CodeGenerator::codeGen(DST::ArrayLiteral *node)
 {
     vector<llvm::Constant*> IRvalues;
     llvm::Type *atype = evalType(node->getType());
-    llvm::Type *vtype = evalType(node->getArray()[0]->getType());
 
     for(auto val : node->getArray())
     {
@@ -540,7 +549,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
             if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             {
                 auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
-                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), { codeGen(node->getRight()) } );
+                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), codeGen(node->getRight()) );
             }
             else {
                 // TODO - array literal access
@@ -657,7 +666,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         for (auto i : ((DST::ExpressionList*)node->getRight())->getExpressions())
             rights.push_back(codeGen(i));
         Value *lastStore = NULL;
-        for (int i = 0; i < lefts.size(); i++)
+        for (unsigned int i = 0; i < lefts.size(); i++)
             lastStore = _builder.CreateStore(rights[i], lefts[i]);
         return lastStore;   // Temporary fix.
     }
@@ -800,7 +809,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
 
         
             int i = -1;
-            int i2 = 0;
+            unsigned int i2 = 0;
             for (auto &arg : func->args())
             {
                 if (i == -1) { i++; continue; }
@@ -837,7 +846,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     std::vector<Value *> args;
 
     int i = 0;
-    int i2 = 0;
+    unsigned int i2 = 0;
     for (auto &arg : func->args())
     {
         if (i2 < retPtrs.size())
@@ -865,7 +874,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             if (node->getExpression()->getExpressionType() == ET_LIST)
             {
                 auto expList = (DST::ExpressionList*)node->getExpression();
-                for (int i = 0; i < expList->size(); i++)
+                for (unsigned int i = 0; i < expList->size(); i++)
                     _builder.CreateStore(codeGen(expList->getExpressions()[i]), _funcReturns[i]);
                 return _builder.CreateRetVoid();
             }
@@ -1087,7 +1096,14 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         auto setFuncType = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), setParams, false);
         unicode_string setFuncName = node->getName();
         setFuncName += ".set";
-        llvm::Function *setFunc = llvm::Function::Create(setFuncType, llvm::Function::ExternalLinkage, setFuncName.to_string(), _module.get());
+
+        string llvmFuncId = "";
+        for (auto i : _currentNamespace)
+            llvmFuncId += i->decl->getName().to_string() + ".";
+        if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
+        llvmFuncId += setFuncName.to_string();
+
+        llvm::Function *setFunc = llvm::Function::Create(setFuncType, llvm::Function::ExternalLinkage, llvmFuncId, _module.get());
         _currentNamespace.back()->values[setFuncName] = setFunc;
         bool b = true;
         for (auto &arg : setFunc->args())
@@ -1101,6 +1117,7 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         }     
         if (typeDef)
             typeDef->functions[setFuncName] = setFunc;
+        node->_llvmSetFuncId = setFunc->getName();
     }
 
     if (node->getGet())
@@ -1111,12 +1128,20 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         auto getFuncType = llvm::FunctionType::get(propType, getParams, false);
         unicode_string getFuncName = node->getName();
         getFuncName += ".get";
-        llvm::Function *getFunc = llvm::Function::Create(getFuncType, llvm::Function::ExternalLinkage, getFuncName.to_string(), _module.get());
+
+        string llvmFuncId = ""; // Todo - add file name as well
+        for (auto i : _currentNamespace)
+            llvmFuncId += i->decl->getName().to_string() + ".";
+        if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
+        llvmFuncId += getFuncName.to_string();
+
+        llvm::Function *getFunc = llvm::Function::Create(getFuncType, llvm::Function::ExternalLinkage, llvmFuncId, _module.get());
         _currentNamespace.back()->values[getFuncName] = getFunc;
         for (auto &arg : getFunc->args())
             arg.setName("this");
         if (typeDef)
             typeDef->functions[getFuncName] = getFunc;
+        node->_llvmGetFuncId = getFunc->getName();
     }
 }
 
@@ -1231,10 +1256,35 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
     auto funcType = llvm::FunctionType::get(returnType, types, false);
-    auto funcId = node->getVarDecl()->getVarId().to_string();
-    if (funcId == "Main")
+
+    string funcId = "";
+
+    if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getExpression() != NULL)
+    {
+        // externally defined function with a func name argument
+        auto opStmnt = ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0]);
+        if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
+            throw "umm";
+        if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
+            throw "umm2";
+        auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
+        funcId = strlit->getValue();
+    }
+    else if (node->getVarDecl()->getVarId().to_string() == "Main")
         funcId = "main";
+    else 
+    {
+        // Todo - add file name as well
+        for (auto i : _currentNamespace)
+            funcId += i->decl->getName().to_string() + ".";
+        if (typeDef) funcId += typeDef->structType->getName().str() + ".";
+        funcId += node->getVarDecl()->getVarId().to_string();
+    }
+
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
+    node->_llvmFuncId = func->getName();
 
     // Set names for all arguments.
     unsigned idx = 0;

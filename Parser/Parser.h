@@ -25,6 +25,7 @@ class Parser
 public:
 	static AST::StatementBlock * parseFile(string fileName, bool showLexerOutput = false);
 	AST::StatementBlock * includeFile();
+	AST::Import * importFile();
 
 	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = 0; }
 	Token* getToken(unsigned int index);

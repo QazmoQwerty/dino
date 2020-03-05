@@ -26,7 +26,7 @@ namespace AST
 		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		const int getLine() const { return _line; }
+		int getLine() const { return _line; }
 		
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -41,7 +41,7 @@ namespace AST
 			Function defined for AST visual representation - see AstToFile.h 
 		*/
 		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		const unsigned int getNodeId() const { return _nodeId; };
+		unsigned int getNodeId() const { return _nodeId; };
 
 		/* 
 			Returns a string representation of the node (excluding children info)
@@ -237,6 +237,17 @@ namespace AST
 		Expression* getCondition() { return _condition; }
 		StatementBlock* getThenBranch() { return _thenBranch; }
 		StatementBlock* getElseBranch() { return _elseBranch; }
+	};
+
+	class Import : public Statement 
+	{
+		string _toImport;
+	public:
+		Import(string toImport) : _toImport(toImport) {}
+		string getImportPath() { return _toImport; }
+		virtual StatementType getStatementType() { return ST_IMPORT; };
+		virtual string toString() { return "<Import>\\n\"" + _toImport + "\""; };
+		virtual vector<Node*> getChildren() { return {}; };
 	};
 
 	typedef struct CaseClause {

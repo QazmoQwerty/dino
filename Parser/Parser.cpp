@@ -158,6 +158,17 @@ AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
 	return p.parseBlock();
 }
 
+AST::Import * Parser::importFile()
+{
+	auto t = nextToken();
+	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType == LT_STRING)
+	{
+		string fileName = ((LiteralToken<string>*)t)->_value;
+		return new AST::Import(fileName);
+	}
+	else throw DinoException("Expected a file path", EXT_GENERAL, peekToken()->_line);
+}
+
 AST::StatementBlock * Parser::includeFile()
 {
 	auto t = nextToken();
@@ -196,6 +207,9 @@ AST::Node * Parser::std(Token * token)
 	{
 		switch (((OperatorToken*)token)->_operator._type)	
 		{
+			case(OT_IMPORT): {
+				return importFile();
+			}
 			case(OT_INCLUDE): {
 				if (eatOperator(OT_PARENTHESIS_OPEN))
 				{
@@ -383,14 +397,14 @@ AST::Node * Parser::std(Token * token)
 				node->setLine(token->_line);
 				return node;
 			}
-			case(OT_DELETE):{
+			case(OT_DELETE): {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setExpression(parseExpression());
 				op->setLine(token->_line);
 				return op;
 			}
-			case(OT_RETURN): case(OT_EXTERN):{
+			case(OT_RETURN): case(OT_EXTERN): {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setExpression(parseOptionalExpression());

@@ -6,4 +6,5 @@ Debug/
 *.bc
 *.ll
 *.s
+dino
 test
