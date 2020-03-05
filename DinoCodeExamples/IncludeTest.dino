@@ -1,7 +1,7 @@
 // import "test2.bc"
 
 namespace Foo {
-    int putchar(int a): extern
+    int putchar(int a): extern "putchar"
  	char Print(char c): return putchar(c as int) as char
  	//void Newline(): Print('\n')
  

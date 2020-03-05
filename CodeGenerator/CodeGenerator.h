@@ -67,6 +67,7 @@ namespace CodeGenerator
         std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
         std::unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
         std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
+        DST::NamespaceDeclaration *decl = NULL;
     } NamespaceMembers;
 
     static std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;

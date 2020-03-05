@@ -70,6 +70,7 @@ void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
             case ST_NAMESPACE_DECLARATION:
             {
                 auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
+                currentNs->decl = node;
                 _currentNamespace.push_back(currentNs);
                 declareNamespaceTypes((DST::NamespaceDeclaration*)member);
                 _currentNamespace.pop_back();
@@ -159,6 +160,7 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
     for (auto i : node->getNamespaces())
     {
         auto currentNs = _namespaces[i.first] = new NamespaceMembers();
+        currentNs->decl = i.second;
         _currentNamespace.push_back(currentNs);
         declareNamespaceTypes(i.second);
         _currentNamespace.pop_back();
@@ -1079,7 +1081,14 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         auto setFuncType = llvm::FunctionType::get(llvm::Type::getVoidTy(_context), setParams, false);
         unicode_string setFuncName = node->getName();
         setFuncName += ".set";
-        llvm::Function *setFunc = llvm::Function::Create(setFuncType, llvm::Function::ExternalLinkage, setFuncName.to_string(), _module.get());
+
+        string llvmFuncId = "";
+        for (auto i : _currentNamespace)
+            llvmFuncId += i->decl->getName().to_string() + ".";
+        if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
+        llvmFuncId += setFuncName.to_string();
+
+        llvm::Function *setFunc = llvm::Function::Create(setFuncType, llvm::Function::ExternalLinkage, llvmFuncId, _module.get());
         _currentNamespace.back()->values[setFuncName] = setFunc;
         bool b = true;
         for (auto &arg : setFunc->args())
@@ -1104,7 +1113,14 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         auto getFuncType = llvm::FunctionType::get(propType, getParams, false);
         unicode_string getFuncName = node->getName();
         getFuncName += ".get";
-        llvm::Function *getFunc = llvm::Function::Create(getFuncType, llvm::Function::ExternalLinkage, getFuncName.to_string(), _module.get());
+
+        string llvmFuncId = ""; // Todo - add file name as well
+        for (auto i : _currentNamespace)
+            llvmFuncId += i->decl->getName().to_string() + ".";
+        if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
+        llvmFuncId += getFuncName.to_string();
+
+        llvm::Function *getFunc = llvm::Function::Create(getFuncType, llvm::Function::ExternalLinkage, llvmFuncId, _module.get());
         _currentNamespace.back()->values[getFuncName] = getFunc;
         for (auto &arg : getFunc->args())
             arg.setName("this");
@@ -1226,7 +1242,7 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
         types.push_back(evalType(i->getType()));
     auto funcType = llvm::FunctionType::get(returnType, types, false);
 
-    string funcId;
+    string funcId = "";
 
     if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
         && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN
@@ -1241,10 +1257,16 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
         auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
         funcId = strlit->getValue();
     }
-    else funcId = node->getVarDecl()->getVarId().to_string();
-
-    if (funcId == "Main")
+    else if (node->getVarDecl()->getVarId().to_string() == "Main")
         funcId = "main";
+    else 
+    {
+        // Todo - add file name as well
+        for (auto i : _currentNamespace)
+            funcId += i->decl->getName().to_string() + ".";
+        if (typeDef) funcId += typeDef->structType->getName().str() + ".";
+        funcId += node->getVarDecl()->getVarId().to_string();
+    }
 
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
     node->_llvmFuncId = func->getName();

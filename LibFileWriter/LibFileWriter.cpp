@@ -92,13 +92,13 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::PropertyDeclar
 
     
 
-    string llvmGetFuncId = node->getName().to_string() + ".get";
+    // string llvmGetFuncId = node->getName().to_string() + ".get";
     if (node->getGet())
-        stream << "get: extern \"" << llvmGetFuncId << "\"\n";
+        stream << "get: extern \"" << node->_llvmGetFuncId << "\"\n";
     
-    string llvmSetFuncId = node->getName().to_string() + ".set";
+    // string llvmSetFuncId = node->getName().to_string() + ".set";
     if (node->getSet())
-        stream << "set: extern \"" << llvmSetFuncId << "\"\n";
+        stream << "set: extern \"" << node->_llvmSetFuncId << "\"\n";
 
     if (node->getGet() && node->getSet())
         stream << "}\n";
@@ -112,6 +112,6 @@ void LibFileWriter::Write(ofstream &stream, DST::FunctionDeclaration *node)
         if (i) stream << ", ";
         Write(stream, node->getParameters()[i]);
     }
-    string llvmFuncId = node->getVarDecl()->getVarId().to_string();
-    stream << "): extern \"" << llvmFuncId << "\"\n";
+    // string llvmFuncId = node->getVarDecl()->getVarId().to_string();
+    stream << "): extern \"" << node->_llvmFuncId << "\"\n";
 }
