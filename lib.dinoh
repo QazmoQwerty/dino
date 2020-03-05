@@ -1,0 +1,7 @@
+import "lib.bc"
+
+namespace Foo {
+	void PrintNum(int num): extern "PrintNum"
+	int putchar(int a): extern "putchar"
+	char Print(char c): extern "Print"
+}

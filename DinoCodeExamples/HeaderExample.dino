@@ -1,0 +1,14 @@
+"AAA.bc"
+namespace Std {
+    type String {
+        // #type.string.buf
+        // char[] buf
+        // #type.string.count
+        // int count
+        int Size: get: extern #type.String.Size.get
+        
+        char Get(int idx): extern #type.String.Size.get
+
+
+    }
+}

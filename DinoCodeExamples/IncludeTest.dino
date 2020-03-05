@@ -1,0 +1,22 @@
+// import "test2.bc"
+
+namespace Foo {
+    int putchar(int a): extern
+ 	char Print(char c): return putchar(c as int) as char
+ 	//void Newline(): Print('\n')
+ 
+ 	void PrintNum(int num) {
+        int a ≡ 1
+        while a ≤ num / 10: a *= 10
+        while a > 0 {
+            putchar(num % (a * 10) / a + 48)
+            a /= 10
+        }
+        Print('\n')
+    }
+
+    // int putchar(int a): extern "putchar"
+ 	// char Print(char c): extern "Print"
+ 	// //void Newline(): Print('\n')
+ 	// void PrintNum(int num): extern "PrintNum"
+}
