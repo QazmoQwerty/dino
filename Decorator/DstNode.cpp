@@ -283,7 +283,7 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 	}
 	for (auto i : inter->getImplements())
 	{
-		notImplements(inter);
+		i->notImplements(inter);
 	}
 }
 

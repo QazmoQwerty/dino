@@ -11,10 +11,10 @@ using std::pair;
 using std::unordered_map;
 
 #define SPECIAL 0
-#define BINARY	0b0001
-#define PREFIX	0b0010
-#define POSTFIX	0b0100
-#define NONE -1
+#define BINARY	1	// 0b0001
+#define PREFIX	2	// 0b0010
+#define POSTFIX	4	// 0b0100
+#define NONE   -1
 #define NON_ASSCOCIATIVE 0
 
 class OperatorsMap

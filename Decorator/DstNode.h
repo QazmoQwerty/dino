@@ -26,7 +26,7 @@ namespace DST
 		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		virtual const int getLine() const { return _line; }
+		virtual int getLine() const { return _line; }
 
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -41,7 +41,7 @@ namespace DST
 			Function defined for AST visual representation - see AstToFile.h
 		*/
 		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		const unsigned int getNodeId() const { return _nodeId; };
+		unsigned int getNodeId() const { return _nodeId; };
 
 		/*
 			Returns a string representation of the node (excluding children info)
@@ -153,7 +153,7 @@ namespace DST
 		virtual bool readable() { return _isReadable; }
 		virtual bool writeable() { return _isWritable; }
 		bool isConst() { return _isConst; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toShortString() = 0;
 		virtual string toString() { return "<Type>"; };
@@ -245,7 +245,7 @@ namespace DST
 		bool _hasSet;
 
 	public:
-		PropertyType(Type *ret, bool hasGet, bool hasSet) : _return(ret), _hasGet(hasGet), _hasSet(hasSet), Type(NULL) {}
+		PropertyType(Type *ret, bool hasGet, bool hasSet) : Type(NULL), _return(ret), _hasGet(hasGet), _hasSet(hasSet) {}
 		virtual ~PropertyType() { if (_return) delete _return; }
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
@@ -440,7 +440,7 @@ namespace DST
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; };
 		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -465,7 +465,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -486,7 +486,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 		virtual Type *getType() { return _type; }
 		void setType(Type *type) { _type = type; }
 		void setExpression(Expression* expression) { _expression = expression; }
@@ -509,7 +509,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\\nType: " + getType()->toShortString(); };
 		virtual vector<Node*> getChildren();
 		virtual Type *getType() { return _thenBranch->getType(); }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(Expression* thenBranch) { _thenBranch = thenBranch; }
@@ -541,7 +541,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_MEMBER_ACCESS; }
 		Expression *getLeft() { return _left; }
 		unicode_string &getRight() { return ((AST::Identifier*)_base->getRight())->getVarId(); }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toString() { return "<MemberAccess>\n." + getRight().to_string() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -559,7 +559,7 @@ namespace DST
 		Type *getType() { return _type; }
 		void *getValue();
 		LiteralType getLiteralType() { return _base->getLiteralType(); }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
 
@@ -578,7 +578,7 @@ namespace DST
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 		Expression *getExpression() { return _expression; }
 		virtual string toString() { return "<Conversion>\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -600,7 +600,7 @@ namespace DST
 		void setType(FunctionType *type) { _type = type; }
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -631,7 +631,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_LIST; };
 		virtual string toString() { return "<ExpressionList>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 		size_t size() { return _expressions.size(); }
 
 		void addExpression(Expression* expression) { _expressions.push_back(expression); _type->addType(expression->getType()); };
@@ -650,7 +650,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_ARRAY; };
 		virtual string toString() { return "<ArrayLiteral>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		//virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		//virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void addValue(Expression* value) { _array.push_back(value); };
 		vector<Expression*> getArray() { return _array; }
@@ -667,7 +667,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		StatementBlock() : _hasReturn(false) {}
 		virtual ~StatementBlock() { _statements.clear(); }
-		//virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		//virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		bool hasReturnType(Type *returnType);
 		bool hasReturn() { return _hasReturn; }
@@ -693,7 +693,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
 		virtual string toString() { return "<IfThenElse>"; };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(StatementBlock* thenBranch) { _thenBranch = thenBranch; }
@@ -722,7 +722,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_SWITCH; };
 		virtual string toString() { return "<Switch>"; };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void setExpression(Expression* expression) { _expression = expression; }
 		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
@@ -750,7 +750,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setStatement(StatementBlock* statement) { _statement = statement; }
@@ -774,7 +774,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_FOR_LOOP; };
 		virtual string toString() { return "<For>"; };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setStatement(StatementBlock* statement) { _statement = statement; }
@@ -807,7 +807,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
 		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void setExpression(Expression* expression) { _expression = expression; }
 
@@ -853,7 +853,7 @@ namespace DST
 		Statement* getDeclaration(unicode_string id);
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getDeclarations() { return _decls; }
 		Type* getMemberType(unicode_string id);
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual bool isDeclaration() { return true; }
@@ -879,7 +879,7 @@ namespace DST
 		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		vector<InterfaceDeclaration*> getInterfaces() { return _interfaces; }
 		void addInterface(InterfaceDeclaration *interface) { _interfaces.push_back(interface); }
@@ -912,7 +912,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>"; };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		AST::FunctionDeclaration *getBase() { return _base; }
 
@@ -937,14 +937,14 @@ namespace DST
 	public:
 		string _llvmGetFuncId, _llvmSetFuncId;
 
-		PropertyDeclaration(AST::PropertyDeclaration *base, StatementBlock *get, StatementBlock *set, Type *type) : _base(base), _get(get), _set(set), _type(type) {};
+		PropertyDeclaration(AST::PropertyDeclaration *base, StatementBlock *get, StatementBlock *set, Type *type) : _base(base), _type(type), _get(get), _set(set) {};
 		virtual ~PropertyDeclaration() { if (_base) delete _base; if (_type) delete _type; if (_get) delete _get; if (_set) delete _set; } 
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_PROPERTY_DECLARATION; };
 		virtual string toString() { return "<PropertyDeclaration>\\n" + _type->toShortString() + " " + _base->getVarDecl()->getVarId().to_string(); };
 		virtual vector<Node*> getChildren();
 		unicode_string getName() { return _base->getVarDecl()->getVarId(); }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 		unicode_string getPropId() { return _base->getVarDecl()->getVarId(); }
 		Type *getReturnType() { return _type; }
 		void setGet(StatementBlock* get) { _get = get; }
@@ -966,7 +966,7 @@ namespace DST
 		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
 		unicode_string getName() { return _base->getName(); }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 		virtual bool isDeclaration() { return true; }
 
 		AST::NamespaceDeclaration *getBase() { return _base; }
@@ -990,7 +990,7 @@ namespace DST
 
 		void setType(Type *type) { _type = type; }
 		virtual Type *getType() { return _type; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; }
@@ -1015,7 +1015,7 @@ namespace DST
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; }
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
@@ -1040,7 +1040,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		virtual const int getLine() const { return _base ? _base->getLine() : -1; }
+		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		void setFunctionId(Expression* funcId)
 		{

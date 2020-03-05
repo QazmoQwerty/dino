@@ -288,7 +288,6 @@ CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Express
 {
     if (node->getExpressionType() == ET_MEMBER_ACCESS)
     {
-        auto x = (DST::MemberAccess*)node;
         auto members = getNamespaceMembers(((DST::MemberAccess*)node)->getLeft());
         return members->namespaces[((DST::MemberAccess*)node)->getRight()];
     }
@@ -502,7 +501,6 @@ Value *CodeGenerator::codeGen(DST::ArrayLiteral *node)
 {
     vector<llvm::Constant*> IRvalues;
     llvm::Type *atype = evalType(node->getType());
-    llvm::Type *vtype = evalType(node->getArray()[0]->getType());
 
     for(auto val : node->getArray())
     {
@@ -534,7 +532,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
             if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             {
                 auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
-                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), { codeGen(node->getRight()) } );
+                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), codeGen(node->getRight()) );
             }
             else {
                 // TODO - array literal access
@@ -651,7 +649,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         for (auto i : ((DST::ExpressionList*)node->getRight())->getExpressions())
             rights.push_back(codeGen(i));
         Value *lastStore = NULL;
-        for (int i = 0; i < lefts.size(); i++)
+        for (unsigned int i = 0; i < lefts.size(); i++)
             lastStore = _builder.CreateStore(rights[i], lefts[i]);
         return lastStore;   // Temporary fix.
     }
@@ -794,7 +792,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
 
         
             int i = -1;
-            int i2 = 0;
+            unsigned int i2 = 0;
             for (auto &arg : func->args())
             {
                 if (i == -1) { i++; continue; }
@@ -831,7 +829,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     std::vector<Value *> args;
 
     int i = 0;
-    int i2 = 0;
+    unsigned int i2 = 0;
     for (auto &arg : func->args())
     {
         if (i2 < retPtrs.size())
@@ -859,7 +857,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             if (node->getExpression()->getExpressionType() == ET_LIST)
             {
                 auto expList = (DST::ExpressionList*)node->getExpression();
-                for (int i = 0; i < expList->size(); i++)
+                for (unsigned int i = 0; i < expList->size(); i++)
                     _builder.CreateStore(codeGen(expList->getExpressions()[i]), _funcReturns[i]);
                 return _builder.CreateRetVoid();
             }

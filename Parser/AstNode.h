@@ -26,7 +26,7 @@ namespace AST
 		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		const int getLine() const { return _line; }
+		int getLine() const { return _line; }
 		
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -41,7 +41,7 @@ namespace AST
 			Function defined for AST visual representation - see AstToFile.h 
 		*/
 		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		const unsigned int getNodeId() const { return _nodeId; };
+		unsigned int getNodeId() const { return _nodeId; };
 
 		/* 
 			Returns a string representation of the node (excluding children info)

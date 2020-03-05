@@ -187,6 +187,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			}
 			break;
 		}
+		default: break;
 		}
 	}
 	for (auto i : node->getBase()->getStatement()->getStatements())
@@ -277,6 +278,7 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 				}
 				break;
 			}
+			default: break;
 		}
 	}
 }
@@ -698,7 +700,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		auto list = (DST::ExpressionList*)assignment->getLeft();
 		auto leftTypes = (DST::TypeList*)assignment->getLeft()->getType();
 		auto rightTypes = (DST::TypeList*)assignment->getRight()->getType();
-		for (int i = 0; i < list->size(); i++)
+		for (unsigned int i = 0; i < list->size(); i++)
 		{
 			if (list->getExpressions()[i]->getType()->getExactType() == EXACT_UNKNOWN)
 			{

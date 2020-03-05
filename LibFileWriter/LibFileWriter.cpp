@@ -107,7 +107,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::PropertyDeclar
 void LibFileWriter::Write(ofstream &stream, DST::FunctionDeclaration *node) 
 {
     stream << node->getVarDecl()->getType()->toShortString() << " " << node->getVarDecl()->getVarId().to_string() << "(";
-    for (int i = 0; i < node->getParameters().size(); i++) 
+    for (unsigned int i = 0; i < node->getParameters().size(); i++) 
     {
         if (i) stream << ", ";
         Write(stream, node->getParameters()[i]);
