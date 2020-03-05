@@ -18,13 +18,12 @@ void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName)
 
     if (prog->getBcFileImports().size())
     {
-        string command = "llvm-link " + fileName;
+        string command = "#/bin/bash\nllvm-link " + fileName;
         for (string s : prog->getBcFileImports())
             command += " " + s;
         command += " -o " + fileName;
         std::cout << "Please enter this command: \n" << command << std::endl;
         // system(command.c_str());
-        // system(string("llvm-link" + str + " -o " + "testtt.bc").c_str());
     }
 }
 
@@ -1094,6 +1093,7 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         }     
         if (typeDef)
             typeDef->functions[setFuncName] = setFunc;
+        node->_llvmSetFuncId = setFunc->getName();
     }
 
     if (node->getGet())
@@ -1110,6 +1110,7 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
             arg.setName("this");
         if (typeDef)
             typeDef->functions[getFuncName] = getFunc;
+        node->_llvmGetFuncId = getFunc->getName();
     }
 }
 
@@ -1244,7 +1245,9 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
     if (funcId == "Main")
         funcId = "main";
+
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
+    node->_llvmFuncId = func->getName();
 
     // Set names for all arguments.
     unsigned idx = 0;

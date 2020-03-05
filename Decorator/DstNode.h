@@ -904,6 +904,8 @@ namespace DST
 		StatementBlock *_content;
 
 	public:
+		string _llvmFuncId;
+
 		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl){};
 		virtual ~FunctionDeclaration();
 		virtual bool isDeclaration() { return true; }
@@ -931,7 +933,10 @@ namespace DST
 		Type *_type;
 		StatementBlock* _get;
 		StatementBlock* _set;
+
 	public:
+		string _llvmGetFuncId, _llvmSetFuncId;
+
 		PropertyDeclaration(AST::PropertyDeclaration *base, StatementBlock *get, StatementBlock *set, Type *type) : _base(base), _get(get), _set(set), _type(type) {};
 		virtual ~PropertyDeclaration() { if (_base) delete _base; if (_type) delete _type; if (_get) delete _get; if (_set) delete _set; } 
 		virtual bool isDeclaration() { return true; }
