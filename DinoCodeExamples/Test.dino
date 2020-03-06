@@ -33,10 +33,31 @@
 // }
 
 // include "DinoCodeExamples/IncludeTest.dino"
-include "lib.dinoh"
+// include "lib.dinoh"
+
+// namespace Prog {
+// 	void Main() {
+// 		Foo.PrintNum(1234)
+// 	}
+// }
 
 namespace Prog {
-	void Main() {
-		Foo.PrintNum(1234)
+
+	interface Shape {
+		int Area()
+	}
+
+	type Square is Shape {
+		int h
+		int Len {
+			get: return h
+			set: h := value
+		}
+		int Area(): return h*h
+	}
+
+	int Main() {
+		Shape s := new Square
+		return 10
 	}
 }

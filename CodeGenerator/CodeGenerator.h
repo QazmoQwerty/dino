@@ -56,6 +56,10 @@ namespace CodeGenerator
     //static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;
     static llvm::BasicBlock *_currFuncExit;
+    static llvm::StructType *_interfaceVtableType;
+    static llvm::StructType *_objVtableType;
+    static llvm::StructType *_interfaceType;
+    static unordered_map<llvm::Type*, llvm::Value*> _vtables;
 
     typedef struct TypeDefinition {
         llvm::StructType *structType;

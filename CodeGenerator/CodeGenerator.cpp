@@ -6,6 +6,16 @@ void CodeGenerator::setup()
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
+
+    /* 
+        @.interface_vtable = type { i8** } (array of function pointers)
+        @.vtable_type = type { i32, @.interface_vtable* } (interface count, array of vtables for each interface)
+        @.interface_type = type { i8*, @.vtable_type* } (object ptr, vtable ptr)    
+    */
+
+    _interfaceVtableType = llvm::StructType::create(_context, _builder.getInt8Ty()->getPointerTo()->getPointerTo(), ".interface_vtable");
+    _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
+    _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 }
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
@@ -703,6 +713,15 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         case OT_ASSIGN_EQUAL:
         {
             left = codeGenLval(node->getLeft());
+            if (left->getType() == _interfaceType)
+            {
+                right = codeGen(node->getRight());
+                auto objPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
+                auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
+                _builder.CreateStore(right, objPtr);
+                _builder.CreateStore(_vtables[right->getType()], vtablePtr);
+                return right;
+            }
             /* this whole section is apparantly not needed since you can load structs/arrays
                 // if ((left->getType()->isPointerTy() && left->getType()->getPointerElementType()->isStructTy()))
                 // {
@@ -965,11 +984,12 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
 
 llvm::Type *CodeGenerator::evalType(DST::Type *node) 
 {
-
     switch (node->getExactType())
     {
         case EXACT_BASIC:
-            if (((DST::BasicType*)node)->getTypeId() == CONDITION_TYPE)
+            if (((DST::BasicType*)node)->getTypeSpecifier()->getInterfaceDecl())
+                return _interfaceType;
+            else if (((DST::BasicType*)node)->getTypeId() == CONDITION_TYPE)
                 return llvm::Type::getInt1Ty(_context);
             else if (((DST::BasicType*)node)->getTypeId() == unicode_string("char"))
                 return llvm::Type::getInt8Ty(_context);
@@ -986,7 +1006,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 auto bt = (DST::BasicType*)node;
                 if (bt->getTypeSpecifier() && bt->getTypeSpecifier()->getTypeDecl())
                     return _types[bt->getTypeSpecifier()->getTypeDecl()]->structType;
-                throw DinoException("Type " + node->toShortString() + "does not exist", EXT_GENERAL, node->getLine());
+                throw DinoException("Type " + node->toShortString() + " does not exist", EXT_GENERAL, node->getLine());
             }
         case EXACT_ARRAY:
             if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
@@ -998,9 +1018,16 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         case EXACT_PROPERTY:
             return evalType(((DST::PropertyType*)node)->getReturn());
         case EXACT_POINTER:
-            if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC  // void* is invalid in llvm IR
-                && ((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))
-                return llvm::Type::getInt8Ty(_context)->getPointerTo();
+            if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC)
+            {
+                if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeSpecifier()->getInterfaceDecl())
+                {
+                    std::cout << "got here1" << std::endl;
+                    return _interfaceType;
+                }
+                if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))   // void* is invalid in llvm IR
+                    return llvm::Type::getInt8Ty(_context)->getPointerTo();
+            }
             else return evalType(((DST::PointerType*)node)->getPtrType())->getPointerTo();
         case EXACT_FUNCTION:
         {
@@ -1011,7 +1038,8 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false);
         }
         case EXACT_INTERFACE: 
-            return llvm::StructType::get(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo() });
+            std::cout << "got here2" << std::endl;
+            return _interfaceType;
         case EXACT_TYPELIST:
         {
             auto tl = (DST::TypeList*)node;
