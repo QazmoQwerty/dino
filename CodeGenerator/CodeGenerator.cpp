@@ -979,6 +979,8 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
     auto t = codeGenLval(node);
     if (node->getType()->isConst())
         return t;
+    if (t->getType()->getPointerElementType()->isFunctionTy())
+        return t;
     auto str = node->getVarId().to_string().c_str();
     return _builder.CreateLoad(t, str);
     //return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
@@ -994,8 +996,8 @@ Value *CodeGenerator::codeGen(DST::ConstDeclaration *node)
 AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node) 
 {
     auto type = evalType(node->getType());
-    if (type->isFunctionTy())
-        type = type->getPointerTo();
+    // if (type->isFunctionTy())
+    //     type = type->getPointerTo();
     auto name = node->getVarId().to_string();
     if (!_builder.GetInsertBlock())
         throw "will this ever happen? idk...";
@@ -1065,7 +1067,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             vector<llvm::Type*> params;
             for(auto i : ft->getParameters()->getTypes())
                 params.push_back(evalType(i));
-            return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false);
+            return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false)->getPointerTo();
         }
         case EXACT_INTERFACE: 
             std::cout << "got here2" << std::endl;
