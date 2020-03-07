@@ -65,6 +65,8 @@ namespace CodeGenerator
         llvm::StructType *structType;
         std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
         std::unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
+        std::unordered_map<llvm::Function*, unsigned int> vtableFuncIndexes;
+        llvm::Value *vtable;
     } TypeDefinition;
 
     typedef struct NamespaceMembers {
@@ -97,8 +99,13 @@ namespace CodeGenerator
     llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
 
-    void declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+    std::pair<llvm::Function*, llvm::Function*> declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+
+    DST::InterfaceDeclaration *getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl);
+    DST::InterfaceDeclaration *getPropertyInterface(DST::InterfaceDeclaration *interfaceDecl, DST::PropertyDeclaration *propDecl);
+    DST::InterfaceDeclaration *getFunctionInterface(DST::TypeDeclaration *typeDecl, DST::FunctionDeclaration *funcDecl);
+    DST::InterfaceDeclaration *getFunctionInterface(DST::InterfaceDeclaration *interfaceDecl, DST::FunctionDeclaration *funcDecl);
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);

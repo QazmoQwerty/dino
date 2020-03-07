@@ -46,18 +46,35 @@ namespace Prog {
 	interface Shape {
 		int Area()
 	}
+	
 
 	type Square is Shape {
 		int h
-		int Len {
-			get: return h
-			set: h := value
-		}
+		// int Len {
+		// 	get: return h
+		// 	set: h := value
+		// }
 		int Area(): return h*h
 	}
 
+	// type iVtable {
+	// 	int Id
+	// }
+
+	// type vtable {
+	// 	int Count
+	// 	iVtable@[3] Tables
+	// }
+
+	// iVtable@ getInterfaceVtable(vtable@ table, int id) {
+	// 	for int i := 0 | i < table.Count | i+=1:
+	// 		if table.Tables[i].Id = id:
+	// 			return table.Tables[i]
+	// 	return null
+	// }
+
 	int Main() {
-		Shape s := new Square
+		Shape s := (new Square) as Shape
 		return 10
 	}
 }

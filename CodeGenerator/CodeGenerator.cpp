@@ -8,12 +8,12 @@ void CodeGenerator::setup()
     llvm::InitializeNativeTargetAsmParser();
 
     /* 
-        @.interface_vtable = type { i8** } (array of function pointers)
+        @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
         @.vtable_type = type { i32, @.interface_vtable* } (interface count, array of vtables for each interface)
         @.interface_type = type { i8*, @.vtable_type* } (object ptr, vtable ptr)    
     */
 
-    _interfaceVtableType = llvm::StructType::create(_context, _builder.getInt8Ty()->getPointerTo()->getPointerTo(), ".interface_vtable");
+    _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
     _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 }
@@ -589,8 +589,10 @@ Value *CodeGenerator::codeGen(DST::Conversion* node)
 {
     auto type = evalType(node->getType());
     auto exp = codeGen(node->getExpression());
+    if (type == _interfaceType && exp->getType() != _interfaceType)
+        return exp;
     unsigned int targetSz = type->getPrimitiveSizeInBits();
-    unsigned int currSz = exp->getType()->getPrimitiveSizeInBits();        
+    unsigned int currSz = exp->getType()->getPrimitiveSizeInBits();
     if (targetSz < currSz)
         return _builder.CreateTrunc(exp, type, "cnvrttmp");
     else if (targetSz > currSz)
@@ -713,13 +715,16 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         case OT_ASSIGN_EQUAL:
         {
             left = codeGenLval(node->getLeft());
-            if (left->getType() == _interfaceType)
+            if (left->getType() == _interfaceType->getPointerTo())
             {
                 right = codeGen(node->getRight());
                 auto objPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
                 auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
-                _builder.CreateStore(right, objPtr);
-                _builder.CreateStore(_vtables[right->getType()], vtablePtr);
+                _builder.CreateStore(_builder.CreateBitCast(right, _builder.getInt8PtrTy()), objPtr);
+                // auto ty = right->getType();
+                // ty->print(llvm::errs());
+                // ;
+                _builder.CreateStore(_vtables[right->getType()->getPointerElementType()], vtablePtr);
                 return right;
             }
             /* this whole section is apparantly not needed since you can load structs/arrays
@@ -1028,7 +1033,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))   // void* is invalid in llvm IR
                     return llvm::Type::getInt8Ty(_context)->getPointerTo();
             }
-            else return evalType(((DST::PointerType*)node)->getPtrType())->getPointerTo();
+            return evalType(((DST::PointerType*)node)->getPtrType())->getPointerTo();
         case EXACT_FUNCTION:
         {
             auto ft = (DST::FunctionType*)node;
@@ -1070,6 +1075,9 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
 
     std::vector<llvm::Type*> members;
     int count = 0;
+
+    unordered_map<DST::InterfaceDeclaration*, vector<llvm::Function*>> vtable; 
+
     for (auto i : node->getMembers())
     {
         if (i.second.first) switch (i.second.first->getStatementType())
@@ -1082,16 +1090,136 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
                 break;
             }
             case ST_FUNCTION_DECLARATION:
-                declareFunction((DST::FunctionDeclaration*)i.second.first, def);
+            {
+                auto decl = (DST::FunctionDeclaration*)i.second.first;
+                auto func = declareFunction(decl, def);
+                auto inter = getFunctionInterface(node, decl);
+                if (inter) 
+                {
+                    auto &vec = vtable[inter];
+                    vec.push_back(func);
+                    def->vtableFuncIndexes[func] = vec.size() - 1;
+                }
                 break;
+            }
             case ST_PROPERTY_DECLARATION:
-                declareProperty((DST::PropertyDeclaration*)i.second.first, def);
+            {
+                auto decl = (DST::PropertyDeclaration*)i.second.first;
+                auto funcs = declareProperty(decl, def);
+                auto inter = getPropertyInterface(node, decl);
+                if (inter) 
+                {
+                    auto &vec = vtable[inter];
+                    if (funcs.first)
+                    {
+                        vec.push_back(funcs.first);
+                        def->vtableFuncIndexes[funcs.first] = vec.size() - 1;
+                    }
+                    if (funcs.second)
+                    {
+                        vec.push_back(funcs.first);
+                        def->vtableFuncIndexes[funcs.second] = vec.size() - 1;
+                    }
+                }
                 break;
+            }
             default: break;
         }
     }
     def->structType->setBody(members);
+
+    vector<llvm::Constant*> interfaceVtables;
+
+    for (auto i : vtable)
+    {
+        vector<llvm::Constant*> vec;
+        auto interfaceId = _builder.getInt32((unsigned long int)i.first);  // interface ID
+        for (auto j : i.second)
+        {
+            vec.push_back(j);
+            // j->print(llvm::errs());
+            // llvm::errs() << "\n";
+        }
+            
+        // auto aa = llvm::ConstantVector::get(vec);
+        // aa->print(llvm::errs());
+        
+        auto arrTy = llvm::ArrayType::get(_builder.getInt8Ty()->getPointerTo(), vec.size());
+        auto arr = llvm::ConstantArray::get(arrTy, vec);
+
+        // string(node->getName().to_string() + "." + i.first->getName().to_string() + ".vtable")
+        
+        auto interfaceVtable = llvm::ConstantStruct::get(_interfaceVtableType, { interfaceId, arr });
+
+        // interfaceVtable->print(llvm::errs());
+        // llvm::errs() << "\n\n";
+
+        interfaceVtables.push_back(interfaceVtable);
+    }
+
+    llvm::Constant *llvmVtable = NULL;
+
+    if (interfaceVtables.size() == 0)
+        llvmVtable = llvm::ConstantStruct::get(_objVtableType, { _builder.getInt32(0), _builder.getInt32(0) });
+    else 
+    {
+        // auto vec = llvm::ConstantVector::get(interfaceVtables);
+        // vec->print(llvm::errs());
+        auto numInterfaces = _builder.getInt32(interfaceVtables.size());
+
+        auto arrTy = llvm::ArrayType::get(_interfaceVtableType, interfaceVtables.size());
+        auto arr = llvm::ConstantArray::get(arrTy, interfaceVtables);
+        llvmVtable = llvm::ConstantStruct::get(_objVtableType, { numInterfaces, arr });
+    }
+
+    // llvmVtable->print(llvm::errs());
+    def->vtable = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, llvmVtable, node->getName().to_string() + ".vtable");
+    // def->vtable->print(llvm::errs());
+    //new llvm::GlobalValue()
+    _vtables[def->structType] = def->vtable;
 }
+
+DST::InterfaceDeclaration *CodeGenerator::getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl) 
+{
+    for (auto i : typeDecl->getInterfaces())
+        if (auto decl = getPropertyInterface(i, propDecl))
+            return decl;
+    return NULL;
+}
+
+DST::InterfaceDeclaration *CodeGenerator::getPropertyInterface(DST::InterfaceDeclaration *interfaceDecl, DST::PropertyDeclaration *propDecl)
+{
+    if (interfaceDecl == NULL)
+        return NULL;
+    if (interfaceDecl->getMemberType(propDecl->getName()))
+        return interfaceDecl;
+    for (auto i : interfaceDecl->getImplements())
+    {
+        if (auto decl = getPropertyInterface(i, propDecl))
+            return decl;
+    }
+    return NULL;
+} 
+
+DST::InterfaceDeclaration *CodeGenerator::getFunctionInterface(DST::TypeDeclaration *typeDecl, DST::FunctionDeclaration *funcDecl) 
+{
+    for (auto i : typeDecl->getInterfaces())
+        if (auto decl = getFunctionInterface(i, funcDecl))
+            return decl;
+    return NULL;
+}
+
+DST::InterfaceDeclaration *CodeGenerator::getFunctionInterface(DST::InterfaceDeclaration *interfaceDecl, DST::FunctionDeclaration *funcDecl)
+{
+    if (interfaceDecl == NULL)
+        return NULL;
+    if (interfaceDecl->getMemberType(funcDecl->getVarDecl()->getVarId()))
+        return interfaceDecl;
+    for (auto i : interfaceDecl->getImplements())
+        if (auto decl = getFunctionInterface(i, funcDecl))
+            return decl;
+    return NULL;
+} 
 
 void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
 {
@@ -1111,9 +1239,11 @@ void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
     }
 }
 
-void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
+std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
     auto propType = evalType(node->getReturnType());
+
+    auto ret = std::make_pair<llvm::Function*, llvm::Function*>(NULL, NULL);
 
     if (node->getSet())
     {
@@ -1146,6 +1276,7 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         if (typeDef)
             typeDef->functions[setFuncName] = setFunc;
         node->_llvmSetFuncId = setFunc->getName();
+        ret.first = setFunc;
     }
 
     if (node->getGet())
@@ -1170,7 +1301,9 @@ void CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerato
         if (typeDef)
             typeDef->functions[getFuncName] = getFunc;
         node->_llvmGetFuncId = getFunc->getName();
+        ret.first = getFunc;
     }
+    return ret;
 }
 
 void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef)
@@ -1456,7 +1589,6 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
     return func;
 }
 
-// Get parent function
 llvm::Function *CodeGenerator::getParentFunction() 
 {
     return _builder.GetInsertBlock() ? _builder.GetInsertBlock()->getParent() : nullptr;
@@ -1504,7 +1636,6 @@ llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
     
     return br;
 }
-
 
 llvm::Value *CodeGenerator::codeGen(DST::ForLoop *node)
 {

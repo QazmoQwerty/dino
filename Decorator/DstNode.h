@@ -1014,7 +1014,7 @@ namespace DST
 
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; }
-		unicode_string getVarId() { return _base->getVarId(); }
+		unicode_string &getVarId() { return _base->getVarId(); }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
