@@ -112,6 +112,7 @@ namespace CodeGenerator
     void codegenTypeMembers(DST::TypeDeclaration *node);
 
     bool isFunc(llvm::Value *funcPtr);
+    bool isFuncPtr(llvm::Value *funcPtr);
 
     NamespaceMembers *getNamespaceMembers(DST::Expression *node);
 

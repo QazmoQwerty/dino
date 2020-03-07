@@ -43,19 +43,19 @@
 
 namespace Prog {
 
-	interface Shape {
-		int Area()
-	}
+	// interface Shape {
+	// 	int Area()
+	// }
 	
 
-	type Square is Shape {
-		int h
-		// int Len {
-		// 	get: return h
-		// 	set: h := value
-		// }
-		int Area(): return h*h
-	}
+	// type Square is Shape {
+	// 	int h
+	// 	// int Len {
+	// 	// 	get: return h
+	// 	// 	set: h := value
+	// 	// }
+	// 	int Area(): return h*h
+	// }
 
 	// type iVtable {
 	// 	int Id
@@ -73,8 +73,13 @@ namespace Prog {
 	// 	return null
 	// }
 
+	int Sum(int a, int b): return a + b
+
 	int Main() {
-		Shape s := (new Square) as Shape
-		return 10
+		// Shape s := (new Square) as Shape
+		int(int, int) sumptr := Sum
+		int a := sumptr(1, 3)
+		// int a := Sum(1,5)
+		return a//sumptr(1, 4)
 	}
 }
