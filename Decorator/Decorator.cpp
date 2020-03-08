@@ -27,16 +27,37 @@ void Decorator::setup(bool isLibrary)
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
+
+	createErrorInterfaceType();
+
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 }
 
+void Decorator::createErrorInterfaceType()
+{
+	auto interfaceDecl1 = new AST::InterfaceDeclaration();
+	interfaceDecl1->setName(unicode_string("Error"));
+	auto interfaceDecl2 = new DST::InterfaceDeclaration(interfaceDecl1);
+
+	auto varDecl = new AST::VariableDeclaration();
+	varDecl->setVarId(unicode_string("Msg"));
+	auto propDecl = new AST::PropertyDeclaration(varDecl);
+	auto stringTy = new DST::BasicType(getPrimitiveType("string"));
+	auto decPropDecl = new DST::PropertyDeclaration(propDecl, NULL, NULL, stringTy);
+
+	interfaceDecl2->addDeclaration(decPropDecl, new DST::PropertyType(stringTy, true, false));
+
+	_variables[0][unicode_string("Error")] = new DST::TypeSpecifierType(interfaceDecl2);
+}	
+
+
 DST::TypeSpecifierType *Decorator::getPrimitiveType(std::string name)
 {
 	auto ret = (DST::TypeSpecifierType*)_variables[0][(unicode_string(name))];
 	if (ret == nullptr)
-		throw "primitive type does not exist!";
+		throw "primitive type " + name + " does not exist!";
 	return ret;
 }
 
@@ -482,6 +503,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::DoWhileLoop*>(node));
 	case ST_INCREMENT:
 		return decorate(dynamic_cast<AST::Increment*>(node));
+	case ST_TRY_CATCH:
+		return decorate(dynamic_cast<AST::TryCatch*>(node));
 	default: 
 		throw DinoException("Unimplemented statement type in the decorator", EXT_GENERAL, node->getLine());
 	}
@@ -1032,6 +1055,17 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 			throw DinoException("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + "\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", EXT_GENERAL, node->getLine());
 	}
 	return sc;
+}
+
+DST::TryCatch * Decorator::decorate(AST::TryCatch *node)
+{
+	auto tryCatch = new DST::TryCatch(node);
+	tryCatch->setTryBlock(decorate(node->getTryBlock()));
+	enterBlock();
+	_variables[currentScope()][unicode_string("caught")] = new DST::BasicType(getPrimitiveType("Error"));
+	tryCatch->setCatchBlock(decorate(node->getCatchBlock()));
+	leaveBlock();
+	return tryCatch;
 }
 
 DST::ForLoop * Decorator::decorate(AST::ForLoop * node)

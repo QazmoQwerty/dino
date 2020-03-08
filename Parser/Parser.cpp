@@ -312,6 +312,16 @@ AST::Node * Parser::std(Token * token)
 				node->setLine(token->_line);
 				return node;
 			}
+			case(OT_TRY): {
+				auto node = new AST::TryCatch();
+				node->setTryBlock(parseInnerBlock());
+				expectOperator(OT_CATCH);
+				node->setCatchBlock(parseInnerBlock());
+				node->setLine(token->_line);
+				return node;
+			}
+			case(OT_CATCH): throw DinoException("Missing \"try\" statement before \"catch\"", EXT_GENERAL, token->_line);
+			case(OT_ELSE): throw DinoException("Missing \"if\" statement before \"else\"", EXT_GENERAL, token->_line);
 			case(OT_TYPE): {
 				auto node = new AST::TypeDeclaration();
 				node->setName(expectIdentifier());
@@ -419,7 +429,7 @@ AST::Node * Parser::std(Token * token)
 				op->setLine(token->_line);
 				return op;
 			}
-			case(OT_RETURN): case(OT_EXTERN): {
+			case(OT_RETURN): case(OT_EXTERN): case(OT_THROW): {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setExpression(parseOptionalExpression());
