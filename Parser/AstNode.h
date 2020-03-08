@@ -192,7 +192,7 @@ namespace AST
 
 		void setVarId(unicode_string varId) { _varId = varId; }
 		void setType(Expression* type) { _type = type; }
-		unicode_string getVarId() { return _varId; }
+		unicode_string &getVarId() { return _varId; }
 		Expression* getVarType() { return _type; }
 	};
 

@@ -435,7 +435,7 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 	case ET_INCREMENT:
 		return decorate(dynamic_cast<AST::Increment*>(node));
 	default: 
-		return NULL;
+		throw DinoException("Unimplemented expression type in the decorator", EXT_GENERAL, node->getLine());
 	}
 }
 
@@ -483,7 +483,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	case ST_INCREMENT:
 		return decorate(dynamic_cast<AST::Increment*>(node));
 	default: 
-		return NULL;
+		throw DinoException("Unimplemented statement type in the decorator", EXT_GENERAL, node->getLine());
 	}
 }
 
@@ -860,7 +860,21 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	if (node->getOperator()._type == OT_AS)
 		return new DST::Conversion(NULL, evalType(node->getRight()), decorate(node->getLeft()));
 
-	auto bo = new DST::BinaryOperation(node, decorate(node->getLeft()), decorate(node->getRight()));
+	auto left = decorate(node->getLeft());
+	auto right = decorate(node->getRight());
+
+	if (left->getExpressionType() == ET_TYPE)
+	{
+		if (right)
+		{
+			if (!(right->getExpressionType() == ET_LITERAL && ((DST::Literal*)right)->getLiteralType() == LT_INTEGER))
+				throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
+			return new DST::ArrayType((DST::Type*)left, *((int*)((DST::Literal*)(right))->getValue()));
+		}
+		else return new DST::ArrayType((DST::Type*)left, DST::UNKNOWN_ARRAY_LENGTH);
+	}
+
+	auto bo = new DST::BinaryOperation(node, left, right);
 
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))
 	{
@@ -869,36 +883,36 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			break;
 		case RT_ARRAY:
 			// array access
-			if (bo->getLeft()->getExpressionType() == ET_IDENTIFIER)
+			if (bo->getLeft()->getType()->getExactType() == EXACT_ARRAY)
 			{
 				DST::BasicType *intType = new DST::BasicType(getPrimitiveType("int"));
 				if(!bo->getRight()->getType()->equals(intType))
 					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
-				bo->setType(bo->getLeft()->getType()->getType());
+				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 				_toDelete.push_back(intType);
 			}
-			// array declaration
-			else
-			{
-				if (bo->getLeft()->getExpressionType() != ET_TYPE)
-					throw DinoException("expected a type", EXT_GENERAL, node->getLine());
-				if (bo->getRight())
-				{
-					if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
-						throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
-					//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
-					auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue()));
-					_toDelete.push_back(bo);
-					return ret;
-				}
-				else 
-				{
-					//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH));
-					auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH);
-					_toDelete.push_back(bo);
-					return ret;
-				}
-			}
+			// // array declaration
+			// else
+			// {
+			// 	if (bo->getLeft()->getExpressionType() != ET_TYPE)
+			// 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
+			// 	if (bo->getRight())
+			// 	{
+			// 		if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
+			// 			throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
+			// 		//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
+			// 		auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue()));
+			// 		_toDelete.push_back(bo);
+			// 		return ret;
+			// 	}
+			// 	else 
+			// 	{
+			// 		//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH));
+			// 		auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH);
+			// 		_toDelete.push_back(bo);
+			// 		return ret;
+			// 	}
+			// }
 			break;
 		case RT_VOID: 
 			throw DinoException("Could not decorate, unimplemented operator.", EXT_GENERAL, node->getLine());
