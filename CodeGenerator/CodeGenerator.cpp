@@ -16,6 +16,9 @@ void CodeGenerator::setup()
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
     _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
+
+    auto vtableInterfaceLookupFunc = createVtableInterfaceLookupFunction();
+    // vtableInterfaceLookupFunc->print(llvm::errs());
 }
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
@@ -271,6 +274,67 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
             throw DinoException("Error while generating ir for statementblock", EXT_GENERAL, node->getLine());
     }
     return bb;
+}
+
+llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
+{
+    // abcd
+
+    auto funcTy = llvm::FunctionType::get(_interfaceVtableType->getPointerTo(), {_objVtableType->getPointerTo(), _builder.getInt32Ty() }, false);
+
+    llvm::Function *func = llvm::Function::Create(funcTy, llvm::Function::ExternalLinkage, ".getInterfaceVtable", _module.get());
+
+    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
+    _builder.SetInsertPoint(bb);
+
+    llvm::Argument *objVtable = func->args().begin(), *interfaceId = func->args().begin() + 1;
+    auto objVtableSizePtr = _builder.CreateInBoundsGEP(objVtable, { _builder.getInt32(0), _builder.getInt32(0) });
+    auto objVtableSize = _builder.CreateLoad(objVtableSizePtr, "interfaceCount");
+    // auto objVtableInterfaces = _builder.CreateInBoundsGEP(objVtable, { _builder.getInt32(0), _builder.getInt32(1) });
+
+    auto idx = CreateEntryBlockAlloca(func, _builder.getInt32Ty(), "idx");
+    _builder.CreateStore(_builder.getInt32(0), idx);
+
+    llvm::BasicBlock *loopCondBB = llvm::BasicBlock::Create(_context, "loopCond");
+    llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(_context, "loop");
+    llvm::BasicBlock *foundBB = llvm::BasicBlock::Create(_context, "found");
+    llvm::BasicBlock *incBB = llvm::BasicBlock::Create(_context, "inc");
+    llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(_context, "exit");
+
+    func->getBasicBlockList().push_back(loopCondBB);
+    func->getBasicBlockList().push_back(loopBB);
+    func->getBasicBlockList().push_back(foundBB);
+    func->getBasicBlockList().push_back(incBB);
+    func->getBasicBlockList().push_back(exitBB);
+
+    _builder.CreateBr(loopCondBB);
+
+    _builder.SetInsertPoint(loopCondBB);
+    auto idxLoad = _builder.CreateLoad(idx, "idxLoad");
+    auto loopCond = _builder.CreateICmpULT(idxLoad, objVtableSize, "loopCond");
+    _builder.CreateCondBr(loopCond, loopBB, exitBB);
+
+    _builder.SetInsertPoint(loopBB);
+    auto interfaceVtableArrPtr = _builder.CreateGEP(objVtable, { _builder.getInt32(0), _builder.getInt32(1) });
+    auto currInterfaceVtable = _builder.CreateLoad(_builder.CreateGEP(interfaceVtableArrPtr, idxLoad));
+    auto currInterfaceIdPtr = _builder.CreateGEP(currInterfaceVtable, { _builder.getInt32(0), _builder.getInt32(0) });
+    auto currInterfaceId = _builder.CreateLoad(currInterfaceIdPtr);
+    auto cond = _builder.CreateICmpEQ(currInterfaceId, interfaceId);
+    _builder.CreateCondBr(cond, foundBB, incBB);
+    
+    _builder.SetInsertPoint(foundBB);
+    _builder.CreateRet(currInterfaceVtable);
+
+    _builder.SetInsertPoint(incBB);
+    auto addVal = _builder.CreateAdd(idxLoad, _builder.getInt32(1));
+    _builder.CreateStore(addVal, idx);
+    _builder.CreateBr(loopCondBB);
+
+    _builder.SetInsertPoint(exitBB);
+
+    _builder.CreateRet(llvm::Constant::getNullValue(_interfaceVtableType->getPointerTo()));
+
+    return func;
 }
 
 Value *CodeGenerator::codeGen(DST::Literal *node) 
