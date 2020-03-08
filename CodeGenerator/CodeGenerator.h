@@ -46,6 +46,7 @@ using std::fstream;
 
 namespace CodeGenerator 
 {
+    static bool _isLib;
     static llvm::LLVMContext _context;
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
@@ -102,7 +103,7 @@ namespace CodeGenerator
 
     static llvm::AllocaInst *_currThisPtr = NULL;
 
-    void setup();
+    void setup(bool isLib = false);
 
     void writeBitcodeToFile(DST::Program *prog, string fileName);
     void execute(llvm::Function *func);

@@ -1,7 +1,8 @@
 #include "CodeGenerator.h"
 
-void CodeGenerator::setup()
+void CodeGenerator::setup(bool isLib)
 {
+    _isLib = isLib;
     // Nothing yet
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
@@ -258,6 +259,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_CONVERSION: return codeGen((DST::Conversion*)node);
         case ET_INCREMENT: return codeGen((DST::Increment*)node);
         case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
+        // case ET_TYPE: return evalType((DST::Type*)node);
         default: throw DinoException("Unimplemented codegen for expression", EXT_GENERAL, node->getLine());
     }
 }
@@ -285,6 +287,9 @@ llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
     auto funcTy = llvm::FunctionType::get(_interfaceVtableType->getPointerTo(), {_objVtableType->getPointerTo(), _builder.getInt32Ty() }, false);
 
     llvm::Function *func = llvm::Function::Create(funcTy, llvm::Function::ExternalLinkage, ".getInterfaceVtable", _module.get());
+
+    if (_isLib)
+        return func;
 
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
     _builder.SetInsertPoint(bb);
@@ -499,6 +504,49 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
     Value *left, *right;
+    
+    if (node->getOperator()._type == OT_IS)
+    {
+        
+
+        auto right = evalType((DST::Type*)node->getRight());
+        auto left = codeGenLval(node->getLeft());
+        if (right == _interfaceType)
+        {
+            if (left->getType() != _interfaceType)
+            {
+                // should be known at compile-time
+                throw "TODO";
+            }
+
+            auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
+            auto vtableLoad = _builder.CreateLoad(vtablePtr);
+            auto interface = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getInterfaceDecl();
+            auto interfaceVtable = _builder.CreateCall(_vtableInterfaceLookupFunc, { vtableLoad, _builder.getInt32((unsigned long)interface) }); 
+            auto diff = _builder.CreatePtrDiff(interfaceVtable, llvm::ConstantPointerNull::get(_interfaceVtableType->getPointerTo()));
+            return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
+        }
+        else if (((DST::Type*)node->getRight())->getExactType() == EXACT_BASIC)
+        {
+            if (left->getType()->getPointerElementType() != _interfaceType)
+                return _builder.getInt1(false);
+            auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
+            auto vtableLoad = _builder.CreateLoad(vtablePtr);
+            auto decl = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getTypeDecl();
+            auto vtable = _types[decl]->vtable;
+            auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
+            return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
+        }
+        else throw DinoException("The \"is\" operator is currently only implemented for basic types!", EXT_GENERAL, node->getLine());
+
+        // auto interfaceVtable = _builder.CreateCall(_vtableInterfaceLookupFunc, { vtable, _builder.getInt32((unsigned long)interface) });
+
+        // funcPtr = getFuncFromVtable(vtable, interfaceDecl, funcId);
+        // funcTy = _interfaceVtableFuncInfo[interfaceDecl][funcId].type;
+        // thisPtr = _builder.CreateLoad(_builder.CreateInBoundsGEP(thisPtr, { _builder.getInt32(0), _builder.getInt32(0) }));
+        return NULL;
+    }
+
     if(node->getOperator()._type != OT_SQUARE_BRACKETS_OPEN)
     {
         left = codeGen(node->getLeft());
@@ -1021,9 +1069,22 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             args.push_back(retPtrs[i2++]);
         else
         {
-            auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
+            auto gen = codeGen(node->getArguments()->getExpressions()[i++]);       
+            
             if (gen->getType() != argTy)
-                args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
+            {
+                if (argTy == _interfaceType)
+                {
+                    // right = codeGen(node->getRight());
+                    auto alloca = _builder.CreateAlloca(_interfaceType);
+                    auto objPtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
+                    auto vtablePtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
+                    _builder.CreateStore(_builder.CreateBitCast(gen, _builder.getInt8PtrTy()), objPtr);
+                    _builder.CreateStore(_vtables[gen->getType()->getPointerElementType()], vtablePtr);
+                    args.push_back(_builder.CreateLoad(alloca));
+                } 
+                else args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
+            }
             else args.push_back(gen);   
         }
     }
