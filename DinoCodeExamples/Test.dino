@@ -3,14 +3,14 @@
 // 	char Print(char c): return putchar(c as int) as char
 // 	void Newline(): Print('\n')
  
-// 	// void PrintNum(int num) {
-//     //     int a ≡ 1
-//     //     while a ≤ num / 10: a *= 10
-//     //     while a > 0 {
-//     //         putchar(num % (a * 10) / a + 48)
-//     //         a /= 10
-//     //     }
-//     // }
+// void PrintNum(int num) {
+// 	int a ≡ 1
+// 	while a ≤ num / 10: a *= 10
+// 	while a > 0 {
+// 		putchar(num % (a * 10) / a + 48)
+// 		a /= 10
+// 	}
+// }
 
 // 	(int, char[]) Foo(int a, char b) {
 // 		char[] arr := new char[20]
@@ -46,29 +46,39 @@ namespace Prog {
 	interface Foo {
 		char Foo1(char a)
 		int Foo2()
-		void Foo3()
+		void Show()
+		void Set(char c)
 	}
 
-	type Bar1 is Foo {
-		int h
-		// int Len {
-		// 	get: return h
-		// 	set: h := value
-		// }
+	interface Foo2 {
+		void Show2()
+	}
+
+	type Bar1 is Foo, Foo2 {
+		char c
+		void Set(char c): this.c := c
 		char Foo1(char a): return a + '1'
 		int Foo2(): return 48
-		void Foo3(): h := 10
+		void Show() { Print('B') |  Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') |  Print('1')}
 	}
 
-	type Bar2 is Foo {
-		int h
-		// int Len {
-		// 	get: return h
-		// 	set: h := value
-		// }
+	type Bar2 is Foo, Foo2 {
+		char c
+		void Set(char c): this.c := c
 		char Foo1(char a): return a + '2'
 		int Foo2(): return 49
-		void Foo3(): h := 20
+		void Show() { Print('B') |  Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') |  Print('2')}
+	}
+
+	type Bar3 is Foo, Foo2 {
+		char c
+		void Set(char c): this.c := c
+		char Foo1(char a): return a + '3'
+		int Foo2(): return 50
+		void Show() { Print('B') |  Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') |  Print('3')}
 	}
 
 	// type iVtable {
@@ -89,9 +99,30 @@ namespace Prog {
 
 	char Print(char c): extern "putchar"
 
+	void PrintNum(int num) {
+		int a ≡ 1
+		while a ≤ num / 10: a *= 10
+		while a > 0 {
+			Print((num % (a * 10) / a + 48) as char)
+			a /= 10
+		}
+		Print('\n')
+	}
+
 	int Main() {
-		Foo a := (new Bar2) as Foo
-		Print(a.Foo2() as char)
+		PrintNum(1234)
+		Foo[3] arr
+		arr[0] := (new Bar1) as Foo
+		arr[1] := (new Bar2) as Foo
+		arr[2] := (new Bar3) as Foo
+
+		for int i := 0 | i < arr.Size | i+=1 {
+			arr[i].Set('0' + i as char)
+		}
+
+		for int i := 0 | i < arr.Size | i+=1 {
+			arr[i].Show()
+		}
 		return 0
 	}
 }

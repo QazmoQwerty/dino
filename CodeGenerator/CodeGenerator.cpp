@@ -18,6 +18,7 @@ void CodeGenerator::setup()
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 
     _vtableInterfaceLookupFunc = createVtableInterfaceLookupFunction();
+    // _vtableInterfaceLookupFunc->viewCFG();
     // vtableInterfaceLookupFunc->print(llvm::errs());
 }
 
@@ -317,7 +318,7 @@ llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
 
     _builder.SetInsertPoint(loopBB);
     auto interfaceVtableArrPtr = _builder.CreateGEP(objVtable, { _builder.getInt32(0), _builder.getInt32(1) });
-    auto currInterfaceVtable = _builder.CreateLoad(_builder.CreateGEP(interfaceVtableArrPtr, idxLoad));
+    auto currInterfaceVtable = _builder.CreateGEP(_builder.CreateLoad(interfaceVtableArrPtr), idxLoad);
     auto currInterfaceIdPtr = _builder.CreateGEP(currInterfaceVtable, { _builder.getInt32(0), _builder.getInt32(0) });
     auto currInterfaceId = _builder.CreateLoad(currInterfaceIdPtr);
     auto cond = _builder.CreateICmpEQ(currInterfaceId, interfaceId);
