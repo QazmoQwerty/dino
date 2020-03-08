@@ -60,7 +60,13 @@ namespace CodeGenerator
     static llvm::StructType *_objVtableType;
     static llvm::StructType *_interfaceType;
     static unordered_map<llvm::Type*, llvm::Value*> _vtables;
-    static std::unordered_map<DST::InterfaceDeclaration*, std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction>> _interfaceVtableFuncIndexes;
+
+    typedef struct InterfaceFuncInfo {
+        unsigned int index;
+        llvm::FunctionType *type;
+    } InterfaceFuncInfo;
+
+    static std::unordered_map<DST::InterfaceDeclaration*, std::unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
     static llvm::Function *_vtableInterfaceLookupFunc = NULL;
 
     typedef struct TypeDefinition {
@@ -78,7 +84,7 @@ namespace CodeGenerator
     llvm::Value *getFuncFromVtable(llvm::Value *vtable, DST::InterfaceDeclaration *interface, unicode_string &funcName);
 
     void declareInterface(DST::InterfaceDeclaration *node);
-
+    llvm::FunctionType *getInterfaceFuncType(DST::FunctionDeclaration *node);
 
     typedef struct NamespaceMembers {
         std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;

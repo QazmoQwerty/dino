@@ -56,7 +56,7 @@ namespace Prog {
 		// 	set: h := value
 		// }
 		char Foo1(char a): return a + '1'
-		int Foo2(): return 10
+		int Foo2(): return 48
 		void Foo3(): h := 10
 	}
 
@@ -67,7 +67,7 @@ namespace Prog {
 		// 	set: h := value
 		// }
 		char Foo1(char a): return a + '2'
-		int Foo2(): return 20
+		int Foo2(): return 49
 		void Foo3(): h := 20
 	}
 
@@ -87,9 +87,11 @@ namespace Prog {
 	// 	return null
 	// }
 
+	char Print(char c): extern "putchar"
+
 	int Main() {
-		// Shape s := (new Square) as Shape
-		
-		return 10
+		Foo a := (new Bar2) as Foo
+		Print(a.Foo2() as char)
+		return 0
 	}
 }
