@@ -42,61 +42,6 @@
 // }
 
 namespace Prog {
-
-	interface Foo {
-		char Foo1(char a)
-		int Foo2()
-		void Show()
-		void Set(char c)
-	}
-
-	interface Foo2 {
-		void Show2()
-	}
-
-	type Bar1 is Foo, Foo2 {
-		char c
-		void Set(char c): this.c := c
-		char Foo1(char a): return a + '1'
-		int Foo2(): return 48
-		void Show() { Print('B') |  Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('1')}
-	}
-
-	type Bar2 is Foo, Foo2 {
-		char c
-		void Set(char c): this.c := c
-		char Foo1(char a): return a + '2'
-		int Foo2(): return 49
-		void Show() { Print('B') |  Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('2')}
-	}
-
-	type Bar3 is Foo, Foo2 {
-		char c
-		void Set(char c): this.c := c
-		char Foo1(char a): return a + '3'
-		int Foo2(): return 50
-		void Show() { Print('B') |  Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('3')}
-	}
-
-	// type iVtable {
-	// 	int Id
-	// }
-
-	// type vtable {
-	// 	int Count
-	// 	iVtable@[3] Tables
-	// }
-
-	// iVtable@ getInterfaceVtable(vtable@ table, int id) {
-	// 	for int i := 0 | i < table.Count | i+=1:
-	// 		if table.Tables[i].Id = id:
-	// 			return table.Tables[i]
-	// 	return null
-	// }
-
 	char Print(char c): extern "putchar"
 
 	void PrintNum(int num) {
@@ -109,31 +54,43 @@ namespace Prog {
 		Print('\n')
 	}
 
-	void CallShow(Foo2 f): f.Show2()
+	interface Foo1 { void Show() | void Set(char c) }
 
-	int Main() {
-		PrintNum(1234)
-		// Foo2[] arr := new Foo2[3]
-		// arr[0] := (new Bar1) as Foo2
-		// arr[1] := (new Bar2) as Foo2
-		// arr[2] := (new Bar3) as Foo2
+	interface Foo2: void Show2()
 
-		// for int i := 0 | i < arr.Size | i+=1 {
-		// 	arr[i].Set('0' + i as char)
-		// }
-
-		Foo2 f := (new Bar2) as Foo2
-		CallShow(f)
-
-		// for int i := 0 | i < arr.Size | i+=1 {
-		// 	if arr[i] is Bar2:
-		// 		arr[i].Show2()
-		// }
-		return 0
+	type Bar1 is Foo1, Foo2 {
+		char c
+		void Set(char c): this.c := c
+		void Show() { Print('B') |  Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') |  Print('1')}
 	}
-}
-namespace Prog {
-	int putchar(int a): extern
-	char Print(char c): return putchar(c as int) as char
-	void Newline(): Print('\n')
+
+	type Bar2 is Foo1, Foo2 {
+		char c
+		void Set(char c): this.c := c
+		void Show() { Print('B') |  Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') |  Print('2')}
+	}
+
+	type Bar3 is Foo1, Foo2 {
+		char c
+		void Set(char c): this.c := c
+		void Show() { Print('B') |  Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') |  Print('3') }
+	}
+
+	void Main() {
+		Foo1[] arr := new Foo1[3]
+		arr[0] := (new Bar1) as Foo1
+		arr[1] := (new Bar2) as Foo1
+		arr[2] := (new Bar3) as Foo1
+
+		for int i := 0 | i < arr.Size | i+=1 {
+			arr[i].Set('0' + i as char)
+		}
+
+		for int i := 0 | i < arr.Size | i+=1 {
+			arr[i].Show()
+		}
+	}
 }

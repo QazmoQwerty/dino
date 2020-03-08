@@ -575,7 +575,8 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			decl->setLine(token->_line);
 			decl->addParameter(parse());
 			expectOperator(OT_PARENTHESIS_CLOSE);
-			if (peekToken()->_type == TT_LINE_BREAK) decl->setContent(NULL);
+			if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE)) 
+				decl->setContent(NULL);
 			else decl->setContent(parseInnerBlock());
 			return decl;
 		}
