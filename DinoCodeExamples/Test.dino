@@ -1,33 +1,14 @@
+include "DinoCodeExamples/Print.dino"
+
+namespace Prog {
+	int Main() {
+		char c := 'c'
+        Print(c) | Newline()
+		return 10
+	}
+}
 namespace Prog {
 	int putchar(int a): extern
 	char Print(char c): return putchar(c as int) as char
 	void Newline(): Print('\n')
- 
-	// void PrintNum(int num) {
-    //     int a ≡ 1
-    //     while a ≤ num / 10: a *= 10
-    //     while a > 0 {
-    //         putchar(num % (a * 10) / a + 48)
-    //         a /= 10
-    //     }
-    // }
-
-	(int, char[]) Foo(int a, char b) {
-		char[] arr := new char[20]
-		for int i := 0 | i < arr.Size | i+=1:
-			arr[i] := b + i as char
-		return a, arr
-	}
-	// (int, char) Foo(): return 1, '0'
-
-	int Main() {
-		int a, var c := Foo(1, 'b')
-		// int a, char[] c := Foo(1, 'a')
-		for int i := 0 | i < c.Size | i+=1 {
-			Print(c[i]) | Newline()
-		}
-		// int a, char c := Foo()
-		return 10
-		// int a := 10
-	}
 }

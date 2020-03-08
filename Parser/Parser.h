@@ -19,6 +19,7 @@
 #include "../Lexer/Preprocessor.h"
 
 using std::set;
+using std::unordered_map;
 
 class Parser
 {
@@ -63,5 +64,6 @@ private:
 	AST::Node* led(AST::Node * left, Token * token);
 
 	vector<Token*>& _tokens;
+	unordered_map<unicode_string, AST::NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
 	unsigned int _index;
 };

@@ -371,16 +371,31 @@ AST::Node * Parser::std(Token * token)
 				return node;
 			}
 			case(OT_NAMESPACE):	{
-				auto node = new AST::NamespaceDeclaration();
-				node->setName(expectIdentifier());
+				auto name = expectIdentifier();
+				AST::NamespaceDeclaration *node;
 				auto inner = parseInnerBlock();
-				if (inner->isDeclaration());
-				else if (inner->getStatementType() == ST_STATEMENT_BLOCK) 
+				
+				if(_namespaces.count(name) == 0)
+				{	
+					node = new AST::NamespaceDeclaration();
+					node->setName(name); 
 					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
 						if (!i->isDeclaration())
 							throw DinoException("Expected a declaration", EXT_GENERAL, i->getLine());
-				node->setStatement(inner);	
-				node->setLine(token->_line);
+					node->setStatement(inner);
+					node->setLine(token->_line);
+					_namespaces[name] = node;
+				}
+				else
+				{
+					node = _namespaces[name];
+					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
+					{
+						if (!i->isDeclaration())
+							throw DinoException("Expected a declaration", EXT_GENERAL, i->getLine());
+						node->getStatement()->addStatement(i);
+					}
+				}
 				return node;
 			}
 			case(OT_DELETE):{
