@@ -17,7 +17,7 @@ void CodeGenerator::setup()
     _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 
-    auto vtableInterfaceLookupFunc = createVtableInterfaceLookupFunction();
+    _vtableInterfaceLookupFunc = createVtableInterfaceLookupFunction();
     // vtableInterfaceLookupFunc->print(llvm::errs());
 }
 
@@ -91,6 +91,9 @@ void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
             }
             case ST_TYPE_DECLARATION:
                 declareType((DST::TypeDeclaration*)member);
+                break;
+            case ST_INTERFACE_DECLARATION:
+                declareInterface((DST::InterfaceDeclaration*)member);
                 break;
             default: break;
         }
@@ -337,6 +340,20 @@ llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
     return func;
 }
 
+llvm::Value *CodeGenerator::getFuncFromVtable(llvm::Value *vtable, DST::InterfaceDeclaration *interface, unicode_string &funcName) 
+{
+    auto interfaceVtable = _builder.CreateCall(_vtableInterfaceLookupFunc, { vtable, _builder.getInt32((unsigned long)interface) });
+
+    auto idx = _builder.getInt32(_interfaceVtableFuncIndexes[interface][funcName]);
+
+    auto arrPtr = _builder.CreateInBoundsGEP(interfaceVtable, { _builder.getInt32(0), _builder.getInt32(1) });
+    auto funcsArr = _builder.CreateLoad(arrPtr);
+
+    auto funcPtr = _builder.CreateInBoundsGEP(funcsArr, idx);
+
+    return funcPtr;
+}
+
 Value *CodeGenerator::codeGen(DST::Literal *node) 
 {
     switch (node->getLiteralType())
@@ -471,7 +488,8 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 }
                 throw DinoException("Unimplemented Error no.2", EXT_GENERAL, node->getLine());   // TODO
             default:
-                throw DinoException("Unimplemented Error no.3 | " + leftTy->toShortString() + std::to_string(leftTy->getExactType()), EXT_GENERAL, node->getLine());   // TODO
+                throw DinoException("Unimplemented Error no.3 | " + 
+                leftTy->toShortString() + std::to_string(leftTy->getExactType()), EXT_GENERAL, node->getLine());   // TODO
         }
     }
     if (node->getType()->isConst())
@@ -1153,6 +1171,40 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
     }
 }
 
+void CodeGenerator::declareInterface(DST::InterfaceDeclaration *node)
+{
+    auto &vtableIndexes = _interfaceVtableFuncIndexes[node];
+    int idx = 0;
+
+    for (auto i : node->getDeclarations())
+    {
+        auto &name = i.first;
+        auto stmnt = i.second.first;
+        if (stmnt->getStatementType() == ST_FUNCTION_DECLARATION)
+        {
+            auto decl = (DST::FunctionDeclaration*)stmnt;
+            vtableIndexes[name] = idx++;
+        }
+        else if (stmnt->getStatementType() == ST_PROPERTY_DECLARATION)
+        {
+            auto decl = (DST::PropertyDeclaration*)stmnt;
+            if (decl->getGet())
+            {
+                auto funcId = name;
+                funcId += ".get";
+                vtableIndexes[funcId] = idx++;
+            }
+            if (decl->getSet())
+            {
+                auto funcId = name;
+                funcId += ".set";
+                vtableIndexes[funcId] = idx++;
+            }
+        }
+        else throw "Getting here should not be possible!";
+    }
+}
+
 void CodeGenerator::declareType(DST::TypeDeclaration *node)
 {
     auto def = new TypeDefinition();
@@ -1167,7 +1219,10 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     std::vector<llvm::Type*> members;
     int count = 0;
 
-    unordered_map<DST::InterfaceDeclaration*, vector<llvm::Function*>> vtable; 
+    unordered_map<DST::InterfaceDeclaration*, vector<llvm::Function*>> vtable;
+
+    for (auto i : node->getInterfaces())
+        vtable[i].resize(_interfaceVtableFuncIndexes[i].size());
 
     for (auto i : node->getMembers())
     {
@@ -1188,8 +1243,8 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
                 if (inter) 
                 {
                     auto &vec = vtable[inter];
-                    vec.push_back(func);
-                    def->vtableFuncIndexes[func] = vec.size() - 1;
+                    auto idx = _interfaceVtableFuncIndexes[inter][i.first];
+                    vec[idx] = func;
                 }
                 break;
             }
@@ -1224,37 +1279,17 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     for (auto i : vtable)
     {
         vector<llvm::Constant*> vec;
-        auto interfaceId = _builder.getInt32((unsigned long int)i.first);  // interface ID
+        auto interfaceId = _builder.getInt32((unsigned long int)i.first);
+        
         for (auto j : i.second)
         {
             auto cast = _builder.CreateBitCast(j, _builder.getInt8PtrTy());
             vec.push_back((llvm::Constant*)cast);
-            // j->print(llvm::errs());
-            // llvm::errs() << "\n";
         }
-            
-        // auto aa = llvm::ConstantVector::get(vec);
-        // aa->print(llvm::errs());
         
         auto arrTy = llvm::ArrayType::get(_builder.getInt8Ty()->getPointerTo(), vec.size());
         auto arr = llvm::ConstantArray::get(arrTy, vec);
-
-        // string(node->getName().to_string() + "." + i.first->getName().to_string() + ".vtable")
-        //auto cast = _builder.CreateBitCast(arr, _builder.getInt8PtrTy()->getPointerTo());
-        // arr->print(llvm::errs());
-        // auto gep = _builder.CreateInBoundsGEP(arrTy, arr, { _builder.getInt32(0), _builder.getInt32(0) });
-        // gep->print(llvm::errs());
-        // auto interfaceVtable = llvm::ConstantStruct::get(_interfaceVtableType, { interfaceId, (llvm::Constant*)gep });
-
-        // arr->print(llvm::errs());
-        // auto cast = _builder.CreateBitCast(arr, _builder.getInt8PtrTy()->getPointerTo());
-        // cast->print(llvm::errs());
-        // auto interfaceVtable = llvm::ConstantStruct::get(_interfaceVtableType, { interfaceId, (llvm::Constant*)cast });
         auto interfaceVtable = llvm::ConstantStruct::get(_interfaceVtableType, { interfaceId, arr });
-
-        // interfaceVtable->print(llvm::errs());
-        // llvm::errs() << "\n\n";
-
         interfaceVtables.push_back(interfaceVtable);
     }
 
@@ -1263,20 +1298,15 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     if (interfaceVtables.size() == 0)
         llvmVtable = llvm::ConstantStruct::get(_objVtableType, { _builder.getInt32(0), _builder.getInt32(0) });
     else 
-    {
-        // auto vec = llvm::ConstantVector::get(interfaceVtables);
-        // vec->print(llvm::errs());
+    {        
         auto numInterfaces = _builder.getInt32(interfaceVtables.size());
-
         auto arrTy = llvm::ArrayType::get(_interfaceVtableType, interfaceVtables.size());
         auto arr = llvm::ConstantArray::get(arrTy, interfaceVtables);
         llvmVtable = llvm::ConstantStruct::get(_objVtableType, { numInterfaces, arr });
     }
 
-    // llvmVtable->print(llvm::errs());
-    def->vtable = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, llvmVtable, node->getName().to_string() + ".vtable");
-    // def->vtable->print(llvm::errs());
-    //new llvm::GlobalValue()
+    def->vtable = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, 
+                                            llvmVtable, node->getName().to_string() + ".vtable");
     _vtables[def->structType] = def->vtable;
 }
 
