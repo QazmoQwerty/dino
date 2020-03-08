@@ -1,0 +1,5 @@
+namespace Prog {
+	int putchar(int a): extern
+	char Print(char c): return putchar(c as int) as char
+	void Newline(): Print('\n')
+}
