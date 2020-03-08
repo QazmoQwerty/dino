@@ -2,8 +2,8 @@ namespace BrainF {
     
     char[30000] tape
 
-    char putchar(char c): extern
-    char getchar(): extern
+    char putchar(char c): extern "putchar"
+    char getchar(): extern "getchar"
 
     void Interpret(char[] input) {
         int ptr ≡ 0

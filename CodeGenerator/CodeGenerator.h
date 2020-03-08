@@ -46,6 +46,7 @@ using std::fstream;
 
 namespace CodeGenerator 
 {
+    static bool _isLib;
     static llvm::LLVMContext _context;
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
@@ -56,17 +57,42 @@ namespace CodeGenerator
     //static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;
     static llvm::BasicBlock *_currFuncExit;
+    static llvm::StructType *_interfaceVtableType;
+    static llvm::StructType *_objVtableType;
+    static llvm::StructType *_interfaceType;
+    static unordered_map<llvm::Type*, llvm::Value*> _vtables;
+
+    typedef struct InterfaceFuncInfo {
+        unsigned int index;
+        llvm::FunctionType *type;
+    } InterfaceFuncInfo;
+
+    static std::unordered_map<DST::InterfaceDeclaration*, std::unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
+    static llvm::Function *_vtableInterfaceLookupFunc = NULL;
 
     typedef struct TypeDefinition {
         llvm::StructType *structType;
         std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
         std::unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
+        std::unordered_map<llvm::Function*, unsigned int> vtableFuncIndexes;
+        llvm::Value *vtable;
     } TypeDefinition;
+
+    // typedef struct InterfaceDefinition {
+        
+    // } InterfaceDefinition;
+
+    llvm::Value *getFuncFromVtable(llvm::Value *vtable, DST::InterfaceDeclaration *interface, unicode_string &funcName);
+
+    void declareInterface(DST::InterfaceDeclaration *node);
+    llvm::FunctionType *getInterfaceFuncType(DST::FunctionDeclaration *node);
 
     typedef struct NamespaceMembers {
         std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
         std::unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
+        // std::unordered_map<unicode_string, InterfaceDefinition*, UnicodeHasherFunction> interfaces;
         std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
+        DST::NamespaceDeclaration *decl = NULL;
     } NamespaceMembers;
 
     static std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
@@ -77,9 +103,9 @@ namespace CodeGenerator
 
     static llvm::AllocaInst *_currThisPtr = NULL;
 
-    void setup();
+    void setup(bool isLib = false);
 
-    void writeBitcodeToFile(string fileName);
+    void writeBitcodeToFile(DST::Program *prog, string fileName);
     void execute(llvm::Function *func);
 
     // Returns a pointer to the Main function
@@ -92,14 +118,22 @@ namespace CodeGenerator
     llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
 
-    void declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+    std::pair<llvm::Function*, llvm::Function*> declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+
+    DST::InterfaceDeclaration *getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl);
+    DST::InterfaceDeclaration *getPropertyInterface(DST::InterfaceDeclaration *interfaceDecl, DST::PropertyDeclaration *propDecl);
+    DST::InterfaceDeclaration *getFunctionInterface(DST::TypeDeclaration *typeDecl, DST::FunctionDeclaration *funcDecl);
+    DST::InterfaceDeclaration *getFunctionInterface(DST::InterfaceDeclaration *interfaceDecl, DST::FunctionDeclaration *funcDecl);
+
+    llvm::Function *createVtableInterfaceLookupFunction();
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);
     void codegenTypeMembers(DST::TypeDeclaration *node);
 
     bool isFunc(llvm::Value *funcPtr);
+    bool isFuncPtr(llvm::Value *funcPtr);
 
     NamespaceMembers *getNamespaceMembers(DST::Expression *node);
 

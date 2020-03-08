@@ -4,16 +4,19 @@ namespace Std {
         int currSize
         int factor
 
-        void Init(char[] arr, maxSize, factor) {
+        void DefaultInit(): Init(new char[10], 2)
+
+        void Init(char[] arr, int factor) {
             buf := arr
-            this.maxSize := maxSize
+            currSize := 0
             this.factor := factor
         }
 
-        // int MaxSize: get: return maxSize
-        // int Factor: get: return factor
+        void Clear(): delete arr
 
         int Size: get: return currSize
+        int MaxSize: get: return buf.Size
+        int Factor: get: return factor
 
         char GetChar(int idx): return buf[idx]
 

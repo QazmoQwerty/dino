@@ -2,6 +2,7 @@
 
 DST::Type * DST::Type::getType()
 {
+	std::cout << "you probably didn't wanna call this func" << std::endl;
 	return typeidTypePtr;
 }
 
@@ -23,9 +24,9 @@ vector<DST::Node*> DST::Variable::getChildren()
 
 DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
 {
-	if (_left && !_left->getType()->readable())
+	if (_left && _left->getType() && !_left->getType()->readable())
 		throw DinoException("left value is write-only", EXT_GENERAL, _left->getLine());
-	if (_right && !_right->getType()->readable())
+	if (_right && _right->getType() && !_right->getType()->readable())
 		throw DinoException("right value is write-only", EXT_GENERAL, _left->getLine());
 };
 
@@ -283,7 +284,7 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 	}
 	for (auto i : inter->getImplements())
 	{
-		notImplements(inter);
+		i->notImplements(inter);
 	}
 }
 
