@@ -60,6 +60,8 @@ namespace CodeGenerator
     static llvm::StructType *_interfaceVtableType;
     static llvm::StructType *_objVtableType;
     static llvm::StructType *_interfaceType;
+    static llvm::GlobalVariable *_globJmpBuf;
+    static llvm::GlobalVariable *_globCaughtErr;
     static unordered_map<llvm::Type*, llvm::Value*> _vtables;
 
     typedef struct InterfaceFuncInfo {
@@ -170,6 +172,7 @@ namespace CodeGenerator
     Value *codeGen(DST::UnaryOperationStatement *node);
 
     llvm::Function *codeGen(DST::FunctionDeclaration *node);
+    llvm::Value *codeGen(DST::TryCatch *node);
     llvm::Value *codeGen(DST::IfThenElse *node);
     llvm::Value *codeGen(DST::WhileLoop *node);
     llvm::Value *codeGen(DST::DoWhileLoop *node);
