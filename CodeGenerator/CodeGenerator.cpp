@@ -3,7 +3,6 @@
 void CodeGenerator::setup(bool isLib)
 {
     _isLib = isLib;
-    // Nothing yet
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
@@ -27,15 +26,10 @@ void CodeGenerator::setup(bool isLib)
     _globJmpBuf = new llvm::GlobalVariable(*_module, jmpBufTy, false, llvm::GlobalVariable::PrivateLinkage, zeroInitVal, ".jmp_buf");
     _globCaughtErr = new llvm::GlobalVariable(*_module, _interfaceType, false, llvm::GlobalVariable::PrivateLinkage, 
                                                     llvm::Constant::getNullValue(_interfaceType), ".caughtErr");
-
-    // auto _setLongJumpFunc = 
-    // _vtableInterfaceLookupFunc->viewCFG();
-    // vtableInterfaceLookupFunc->print(llvm::errs());
 }
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
 {
-    //llvm::errs() << *_module.get();
     fstream file(fileName);
     std::error_code ec;
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
@@ -270,7 +264,6 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_CONVERSION: return codeGen((DST::Conversion*)node);
         case ET_INCREMENT: return codeGen((DST::Increment*)node);
         case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
-        // case ET_TYPE: return evalType((DST::Type*)node);
         default: throw DinoException("Unimplemented codegen for expression", EXT_GENERAL, node->getLine());
     }
 }
@@ -308,7 +301,6 @@ llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
     llvm::Argument *objVtable = func->args().begin(), *interfaceId = func->args().begin() + 1;
     auto objVtableSizePtr = _builder.CreateInBoundsGEP(objVtable, { _builder.getInt32(0), _builder.getInt32(0) });
     auto objVtableSize = _builder.CreateLoad(objVtableSizePtr, "interfaceCount");
-    // auto objVtableInterfaces = _builder.CreateInBoundsGEP(objVtable, { _builder.getInt32(0), _builder.getInt32(1) });
 
     auto idx = CreateEntryBlockAlloca(func, _builder.getInt32Ty(), "idx");
     _builder.CreateStore(_builder.getInt32(0), idx);
@@ -383,10 +375,8 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
         return llvm::ConstantFP::get(_context, llvm::APFloat(((AST::Fraction*)node->getBase())->getValue()));
     case LT_NULL:
         return llvm::Constant::getNullValue(_builder.getInt8Ty()->getPointerTo());  // 'void*' is invalid in llvm IR
-        //return _builder.getInt32(NULL);
-        case LT_STRING:
+    case LT_STRING:
         return _builder.CreateGlobalString(((AST::String*)node->getBase())->getValue(), ".stringLit");
-        //_builder.CreateGlobalString()
     default:
         throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
     }
@@ -610,11 +600,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateOr(left, right, "ortmp");
 
         case OT_SQUARE_BRACKETS_OPEN:
-        {
-            //llvm::Type *elementTy = llvm::PointerType::get(evalType(((DST::ArrayType*)node->getLeft()->getType())->getElementType()), 0);   
-            //return _builder.CreateLoad(_builder.CreatePointerCast(_builder.CreateInBoundsGEP(codeGenLval(node->getLeft()), right), elementTy));
             return _builder.CreateLoad(codeGenLval(node));
-        }
         default:
             throw DinoException("Unimplemented Binary operation!", EXT_GENERAL, node->getLine());
     }
@@ -757,7 +743,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
     Value *left = NULL;
     Value *right = NULL;
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_PROPERTY) // TODO
+    if (node->getLeft()->getType()->getExactType() == EXACT_PROPERTY)
     {
         if (node->getLeft()->getExpressionType() == ET_IDENTIFIER)
             ((DST::Variable*)node->getLeft())->getVarId() += ".set";
@@ -814,7 +800,6 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
                         throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
                     return _builder.CreateCall((llvm::Function*)func, { thisPtr, codeGen(node->getRight()) });
-                    //throw DinoException("Unimplemented Error no.1", EXT_GENERAL, node->getLine());   // TODO
                 }
                 case EXACT_ARRAY:       // Member property of array
                     throw DinoException("Unimplemented Error no.2", EXT_GENERAL, node->getLine());   // TODO
@@ -892,9 +877,6 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 auto objPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
                 auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
                 _builder.CreateStore(_builder.CreateBitCast(right, _builder.getInt8PtrTy()), objPtr);
-                // auto ty = right->getType();
-                // ty->print(llvm::errs());
-                // ;
                 _builder.CreateStore(_vtables[right->getType()->getPointerElementType()], vtablePtr);
                 return right;
             }
@@ -906,20 +888,6 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 _builder.CreateStore(right, left);
                 return right;    
             }
-            /* this whole section is apparantly not needed since you can load structs/arrays
-                // if ((left->getType()->isPointerTy() && left->getType()->getPointerElementType()->isStructTy()))
-                // {
-                //     right = codeGenLval(node->getRight());
-                //     _builder.CreateMemCpy(left, right, _dataLayout->getTypeAllocSize(left->getType()->getPointerElementType()), 0);
-                //     return right;
-                // }
-                // if (left->getType()->isArrayTy())
-                // {
-                //     right = codeGenLval(node->getRight());
-                //     _builder.CreateMemCpy(left, right, _dataLayout->getTypeAllocSize(left->getType()), 0);
-                //     return right;
-                // }
-            */
             right = codeGen(node->getRight());
             _builder.CreateStore(right, left);
             return right;
@@ -1035,22 +1003,8 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                 funcPtr = func;
             }
 
-
-            // auto aaa = evalType(node->getFunctionId()->getType())->getPointerElementType();
-            // aaa->print(llvm::errs());
-            // llvm::errs() << "\n";
-            // funcTy = llvm::dyn_cast<llvm::FunctionType>(aaa);
-
-            // funcPtr->getType()->print(llvm::errs());
-            // llvm::errs() << "\n";
-            // funcTy->print(llvm::errs());
-            // llvm::errs() << "\n";
-
             if (funcPtr->getType() != funcTy)
                 funcPtr = _builder.CreateBitCast(funcPtr, funcTy->getPointerTo());
-
-            // funcPtr->getType()->print(llvm::errs());
-            //     llvm::errs() << "\n";
 
             if (funcTy->getNumParams() != node->getArguments()->getExpressions().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
                 throw DinoException(string("Incorrect # arguments passed (needed ") + 
@@ -1116,7 +1070,6 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             {
                 if (argTy == _interfaceType)
                 {
-                    // right = codeGen(node->getRight());
                     auto alloca = _builder.CreateAlloca(_interfaceType);
                     auto objPtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
                     auto vtablePtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
@@ -1218,7 +1171,6 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
         return t;
     auto str = node->getVarId().to_string().c_str();
     return _builder.CreateLoad(t, str);
-    //return _builder.CreateLoad(codeGenLval(node), node->getVarId().to_string().c_str());
 }
 
 AllocaInst *CodeGenerator::codeGenLval(DST::VariableDeclaration *node) { return codeGen(node); }
@@ -1231,8 +1183,6 @@ Value *CodeGenerator::codeGen(DST::ConstDeclaration *node)
 AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node) 
 {
     auto type = evalType(node->getType());
-    // if (type->isFunctionTy())
-    //     type = type->getPointerTo();
     auto name = node->getVarId().to_string();
     if (!_builder.GetInsertBlock())
         throw "will this ever happen? idk...";
@@ -1328,8 +1278,6 @@ void CodeGenerator::declareInterface(DST::InterfaceDeclaration *node)
 {
     auto &vtableIndexes = _interfaceVtableFuncInfo[node];
     int idx = 0;
-
-    llvm::errs() << "declaring " << node->getName().to_string() << "\n";
 
     for (auto i : node->getDeclarations())
     {
@@ -1468,8 +1416,6 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
         
         for (auto j : i.second)
         {
-            // j->print(llvm::errs());
-            // llvm::errs() << "\n";
             auto cast = _builder.CreateBitCast(j, _builder.getInt8PtrTy());
             vec.push_back((llvm::Constant*)cast);
         }
@@ -1801,8 +1747,6 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
 void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
-    //std::cout << "codegenning " << "." << node->getVarDecl()->getVarId().to_string() << std::endl;
-
     bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
 
     llvm::Value *funcPtr = NULL;
@@ -2041,9 +1985,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
         setJmpFunc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "llvm.eh.sjlj.setjmp", _module.get());
     }
 
-    // auto storeBuf = _builder.CreateAlloca(_globJmpBuf->getType()->getPointerElementType());
     auto jmpBufVal = _builder.CreateLoad(_globJmpBuf);
-    // _builder.CreateStore(jmpBufVal, storeBuf);
 
     llvm::BasicBlock *tryBB = llvm::BasicBlock::Create(_context, "try");
     llvm::BasicBlock *catchBB = llvm::BasicBlock::Create(_context, "catch");
