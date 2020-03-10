@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
 		if (cmd->optLevel && strcmp(cmd->optLevel, "-Od"))
 		{
-			system((string("opt ") + cmd->bcFileName + " " + cmd->optLevel).c_str());
+			system((string("opt ") + cmd->bcFileName + " " + cmd->optLevel + " -o " + cmd->bcFileName).c_str());
 			if (cmd->verbose)
 				llvm::errs() << "Optimized bitcode...\n";
 		}
