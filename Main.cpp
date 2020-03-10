@@ -13,32 +13,32 @@
 #include "LibFileWriter/LibFileWriter.h"
 // #include <stdio.h>
 
-string runCmd(string cmd, bool printOutput) // if print output is false, nothing will be printed unil the entire command is done
-{
-    std::string result = "";
-    FILE* pipe = popen(cmd.c_str(), "r");
-    if (!pipe) throw std::runtime_error("popen() failed in getOutputFromCmd");
-    try {
-        while (!feof(pipe)) {
-			char c;
-            if ((c=getc(pipe)) != EOF)
-			{
-                result += c;
+// string runCmd(string cmd, bool printOutput) // if print output is false, nothing will be printed unil the entire command is done
+// {
+//     std::string result = "";
+//     FILE* pipe = popen(cmd.c_str(), "r");
+//     if (!pipe) throw std::runtime_error("popen() failed in getOutputFromCmd");
+//     try {
+//         while (!feof(pipe)) {
+// 			char c;
+//             if ((c=getc(pipe)) != EOF)
+// 			{
+//                 result += c;
                 
-                if (printOutput)
-				{
-					std::cout << c;
-					std::cout.flush();
-				}
-			}
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
-}
+//                 if (printOutput)
+// 				{
+// 					std::cout << c;
+// 					std::cout.flush();
+// 				}
+// 			}
+//         }
+//     } catch (...) {
+//         pclose(pipe);
+//         throw;
+//     }
+//     pclose(pipe);
+//     return result;
+// }
 
 typedef struct cmdOptions 
 {

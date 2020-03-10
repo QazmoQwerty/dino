@@ -3,6 +3,7 @@
 void CodeGenerator::setup(bool isLib)
 {
     _isLib = isLib;
+
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
@@ -28,23 +29,59 @@ void CodeGenerator::setup(bool isLib)
                                                     // llvm::Constant::getNullValue(_interfaceType), ".caughtErr");
 }
 
+string runCmd(string cmd, bool printOutput) // if print output is false, nothing will be printed unil the entire command is done
+{
+    std::string result = "";
+    FILE* pipe = popen(cmd.c_str(), "r");
+    if (!pipe) throw std::runtime_error("popen() failed in getOutputFromCmd");
+    try {
+        while (!feof(pipe)) {
+			char c;
+            if ((c=getc(pipe)) != EOF)
+			{
+                result += c;
+                
+                if (printOutput)
+				{
+					std::cout << c;
+					std::cout.flush();
+				}
+			}
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
+}
+
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
 {
+    llvm::Linker linker(*_module.get());
+    for (string s : prog->getBcFileImports())
+    {
+        llvm::SMDiagnostic err;
+        auto m = llvm::parseIRFile(s, err, _context);
+        linker.linkInModule(std::move(m));
+    }
+
     fstream file(fileName);
     std::error_code ec;
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
     llvm::WriteBitcodeToFile(_module.get(), out);
 
-    if (prog->getBcFileImports().size())
-    {
-        string command = "#/bin/bash\nllvm-link " + fileName;
-        for (string s : prog->getBcFileImports())
-            command += " " + s;
-        command += " -o " + fileName;
-        std::cout << "Please enter this command: \n" << command << std::endl;
-
-        // system(command.c_str());
-    }
+    // if (prog->getBcFileImports().size())
+    // {
+    //     string command = "#/bin/bash\nllvm-link " + fileName;
+    //     // string command = "llvm-link " + fileName;
+    //     for (string s : prog->getBcFileImports())
+    //         command += " " + s;
+    //     command += " -o " + fileName;
+    //     // std::cout << "Please enter this command: \n" << command << std::endl;
+    //     runCmd(command, true);
+    //     // system(command.c_str());
+    // }
 }
 
 void CodeGenerator::execute(llvm::Function *func)
