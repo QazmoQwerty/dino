@@ -41,84 +41,88 @@
 // 	}
 // }
 
+include "lib2.dinoh"
+
 namespace Prog {
-	char Print(char c): extern "putchar"
+	// char Print(char c): extern "putchar"
 
-	void PrintNum(int num) {
-		int a ≡ 1
-		while a ≤ num / 10: a *= 10
-		while a > 0 {
-			Print((num % (a * 10) / a + 48) as char)
-			a /= 10
-		}
-		Print('\n')
-	}
-
-	interface Foo1 { void Show() | void Set(char c) | char C { get | set } }
-
-	interface Foo2: void Show2()
-
-	type Bar1 is Foo1, Foo2 {
-		char c
-		char C {
-			get: return c
-			set: c := value
-		}
-		void Set(char c): this.c := c
-		void Show() { Print('B') |  Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('1')}
-	}
-
-	type Bar2 is Foo1, Foo2 {
-		char c
-		char C {
-			get: return c
-			set: c := value
-		}
-		void Set(char c): this.c := c
-		void Show() { Print('B') |  Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('2')}
-	}
-
-	type Bar3 is Foo1, Foo2 {
-		char c
-		char C {
-			get: return c
-			set: c := value
-		}
-		void Set(char c): this.c := c
-		void Show() { Print('B') |  Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('3') }
-	}
-
-
-	// interface MyInter {
-	// 	char Msg2: get
+	// void PrintNum(int num) {
+	// 	int a ≡ 1
+	// 	while a ≤ num / 10: a *= 10
+	// 	while a > 0 {
+	// 		Print((num % (a * 10) / a + 48) as char)
+	// 		a /= 10
+	// 	}
+	// 	Print('\n')
 	// }
 
+	// interface Foo1 { void Show() | void Set(char c) | char C { get | set } }
+
+	// interface Foo2: void Show2()
+
+	// type Bar1 is Foo1, Foo2 {
+	// 	char c
+	// 	char C {
+	// 		get: return c
+	// 		set: c := value
+	// 	}
+	// 	void Set(char c): this.c := c
+	// 	void Show() { Print('B') |  Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+	// 	void Show2() { Print('B') |  Print('1')}
+	// }
+
+	// type Bar2 is Foo1, Foo2 {
+	// 	char c
+	// 	char C {
+	// 		get: return c
+	// 		set: c := value
+	// 	}
+	// 	void Set(char c): this.c := c
+	// 	void Show() { Print('B') |  Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+	// 	void Show2() { Print('B') |  Print('2')}
+	// }
+
+	// type Bar3 is Foo1, Foo2 {
+	// 	char c
+	// 	char C {
+	// 		get: return c
+	// 		set: c := value
+	// 	}
+	// 	void Set(char c): this.c := c
+	// 	void Show() { Print('B') |  Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+	// 	void Show2() { Print('B') |  Print('3') }
+	// }
+
+
+	// // interface MyInter {
+	// // 	char Msg2: get
+	// // }
+
 	// type MyErr is error {
-	// 	char Msg(): return 'a'
+	// 	int a
+	// 	int Msg: get: return 100
 	// }
 
 	// void Foo() {
-	// 	// error e := 
+		// error e := (new MyErr) as error
 	// 	PrintNum(11)
+	// 	throw e
 	// 	// throw new MyErr
 	// 	PrintNum(22)
 	// }
 
-	// interface Foo {
-	// 	int A { get | set }
-	// }
-
-	// type Bar is Foo {
-	// 	int A {
-	// 		get: return 100
-	// 		set: PrintNum(value)
-	// 	}
+	// int Foo1234(int a) {
+	// 	if a * 10 = 20:
+	// 		return 10
+	// 	else if a = 40:
+	// 		return 20
+	// 	return 30
 	// }
 
 	void Main() {
+		Foo.PrintNum(1234)
+		// error e := (new MyErr) as error
+		// throw e
 		// PrintNum(0)
 		// try {	
 		// 	PrintNum(1)
@@ -131,19 +135,19 @@ namespace Prog {
 		// 	// Print(caught.Msg)
 		// }
 		// PrintNum(4)
-		Foo1[] arr := new Foo1[3]
-		arr[0] := (new Bar1) as Foo1
-		arr[1] := (new Bar2) as Foo1
-		arr[2] := (new Bar1) as Foo1
+		// Foo1[] arr := new Foo1[3]
+		// arr[0] := (new Bar1) as Foo1
+		// arr[1] := (new Bar2) as Foo1
+		// arr[2] := (new Bar1) as Foo1
 
-		for int i := 0 | i < arr.Size | i+=1 {
-			arr[i].C := '0' + i as char
-		}
+		// for int i := 0 | i < arr.Size | i+=1 {
+		// 	arr[i].C := '0' + i as char
+		// }
 
-		for int i := 0 | i < arr.Size | i+=1 {
-			arr[i].Show()
-			Print(arr[i].C)
-			Print('\n')
-		}
+		// for int i := 0 | i < arr.Size | i+=1 {
+		// 	arr[i].Show()
+		// 	Print(arr[i].C)
+		// 	Print('\n')
+		// }
 	}
 }

@@ -6,7 +6,8 @@ void LibFileWriter::Write(string fileName, string bcFileName, DST::Program *node
 	stream.open(fileName);
     stream << "import \"" << bcFileName << "\"\n\n";
     for (auto i : node->getNamespaces()) 
-        Write(stream, 0, i.second);
+        if (i.first != ".")
+            Write(stream, 0, i.second);
     stream.close();
 }
 

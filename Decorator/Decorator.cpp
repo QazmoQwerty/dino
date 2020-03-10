@@ -50,8 +50,9 @@ void Decorator::createErrorInterfaceType()
 	auto varDecl = new AST::VariableDeclaration();
 	varDecl->setVarId(unicode_string("Msg"));
 	auto propDecl = new AST::PropertyDeclaration(varDecl);
-	auto stringTy = new DST::BasicType(getPrimitiveType("string"));
-	auto decPropDecl = new DST::PropertyDeclaration(propDecl, NULL, NULL, stringTy);
+	auto stringTy = new DST::BasicType(getPrimitiveType("int"));
+	auto propTy = new DST::PropertyType(stringTy, true, false);
+	auto decPropDecl = new DST::PropertyDeclaration(propDecl, NULL, NULL, propTy);
 
 	interfaceDecl2->addDeclaration(decPropDecl, new DST::PropertyType(stringTy, true, false));
 
@@ -417,7 +418,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 {
 	_currentProgram = new DST::Program();
 
-	// createErrorInterfaceType();
+	createErrorInterfaceType();
 
 	for (auto i : node->getStatements())
 	{

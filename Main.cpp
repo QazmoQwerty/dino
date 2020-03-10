@@ -11,7 +11,34 @@
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
 #include "LibFileWriter/LibFileWriter.h"
-#include <stdio.h>
+// #include <stdio.h>
+
+string runCmd(string cmd, bool printOutput) // if print output is false, nothing will be printed unil the entire command is done
+{
+    std::string result = "";
+    FILE* pipe = popen(cmd.c_str(), "r");
+    if (!pipe) throw std::runtime_error("popen() failed in getOutputFromCmd");
+    try {
+        while (!feof(pipe)) {
+			char c;
+            if ((c=getc(pipe)) != EOF)
+			{
+                result += c;
+                
+                if (printOutput)
+				{
+					std::cout << c;
+					std::cout.flush();
+				}
+			}
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
+}
 
 typedef struct cmdOptions 
 {
@@ -108,7 +135,7 @@ int main(int argc, char *argv[])
 {
 	auto cmd = getCmdOptions(argc, argv);
 
-	CodeGenerator::setup();
+	CodeGenerator::setup(cmd->outputLib);
 	OperatorsMap::setup();
 	Lexer::setup();
 	Decorator::setup(cmd->outputLib);
@@ -167,6 +194,8 @@ int main(int argc, char *argv[])
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }
 
+
+	llvm::llvm_shutdown();
 	//if (argc <= 1)
 	//	system("pause");
 	return 0;

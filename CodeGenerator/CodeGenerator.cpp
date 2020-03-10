@@ -19,13 +19,13 @@ void CodeGenerator::setup(bool isLib)
 
     _vtableInterfaceLookupFunc = createVtableInterfaceLookupFunction();
 
-    auto voidPtrTy = _builder.getInt8PtrTy();
-    auto jmpBufTy = llvm::StructType::create(_context, { voidPtrTy, voidPtrTy, voidPtrTy, voidPtrTy, voidPtrTy }, ".jmp_buf_type");
-    auto nullVal = llvm::Constant::getNullValue(voidPtrTy);
-    auto zeroInitVal = llvm::ConstantStruct::get(jmpBufTy, { nullVal, nullVal, nullVal, nullVal, nullVal });
-    _globJmpBuf = new llvm::GlobalVariable(*_module, jmpBufTy, false, llvm::GlobalVariable::PrivateLinkage, zeroInitVal, ".jmp_buf");
-    _globCaughtErr = new llvm::GlobalVariable(*_module, _interfaceType, false, llvm::GlobalVariable::PrivateLinkage, 
-                                                    llvm::Constant::getNullValue(_interfaceType), ".caughtErr");
+    // auto i64Ty = _builder.getInt64Ty();
+    // auto jmpBufTy = llvm::StructType::create(_context, { i64Ty, i64Ty, i64Ty, i64Ty, i64Ty }, ".jmp_buf_type");
+    // auto nullVal = llvm::Constant::getNullValue(i64Ty);
+    // auto zeroInitVal = llvm::ConstantStruct::get(jmpBufTy, { nullVal, nullVal, nullVal, nullVal, nullVal });
+    // _globJmpBuf = new llvm::GlobalVariable(*_module, jmpBufTy, false, llvm::GlobalVariable::ExternalLinkage, zeroInitVal, ".jmp_buf");
+    // _globCaughtErr = new llvm::GlobalVariable(*_module, _interfaceType, false, llvm::GlobalVariable::PrivateLinkage, 
+                                                    // llvm::Constant::getNullValue(_interfaceType), ".caughtErr");
 }
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
@@ -42,6 +42,7 @@ void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName)
             command += " " + s;
         command += " -o " + fileName;
         std::cout << "Please enter this command: \n" << command << std::endl;
+
         // system(command.c_str());
     }
 }
@@ -1088,7 +1089,8 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
 {
     static llvm::Function *free = NULL;
-    static llvm::Function *longJump = NULL;
+    static llvm::Function *throwFunc = NULL;
+    static llvm::Function *allocExceptionFunc = NULL;
 
     switch (node->getOperator()._type)
     {
@@ -1106,14 +1108,32 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
 
         case OT_THROW:
         {
-            if (longJump == NULL)
+            if (throwFunc == NULL)
             {
-                auto type = llvm::FunctionType::get(_builder.getVoidTy(), _builder.getInt8PtrTy(), false);
-                longJump = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "llvm.eh.sjlj.longjmp", _module.get());
+                auto throwFuncTy = llvm::FunctionType::get(_builder.getVoidTy(), { _builder.getInt8PtrTy(), _builder.getInt8PtrTy(), _builder.getInt8PtrTy() }, false);
+                throwFunc = llvm::Function::Create(throwFuncTy, llvm::Function::ExternalLinkage, "__cxa_throw", _module.get());
+
+                auto allocExceptionFuncTy = llvm::FunctionType::get(_builder.getInt8PtrTy(), _builder.getInt64Ty(), false);
+                allocExceptionFunc = llvm::Function::Create(allocExceptionFuncTy, llvm::Function::ExternalLinkage, "__cxa_allocate_exception", _module.get());
             }
 
-            _builder.CreateStore(codeGen(node->getExpression()), _globCaughtErr);
-            return _builder.CreateCall(longJump, _globJmpBuf);
+            auto alloc = _builder.CreateCall(allocExceptionFunc, _builder.getInt64(_dataLayout->getTypeAllocSize(_builder.getInt8PtrTy())));
+            auto cast = _builder.CreateBitCast(alloc, _interfaceType->getPointerTo());
+            _builder.CreateStore(codeGen(node->getExpression()), cast);
+            auto nullPtr = llvm::ConstantPointerNull::get(_builder.getInt8PtrTy());
+            return _builder.CreateCall(throwFunc, { alloc, nullPtr, nullPtr });
+
+
+            // if (longJump == NULL)
+            // {
+            //     auto type = llvm::FunctionType::get(_builder.getVoidTy(), _builder.getInt8PtrTy(), false);
+            //     longJump = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "llvm.eh.sjlj.longjmp", _module.get());
+            // }
+
+            // _builder.CreateStore(codeGen(node->getExpression()), _globCaughtErr);
+            // auto cast = _builder.CreateBitCast(_globJmpBuf, _builder.getInt8PtrTy());
+            // return _builder.CreateCall(longJump, {cast, _builder.getInt32(1)});
+            
         }
 
         case OT_DELETE:
@@ -1977,6 +1997,9 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
 
 llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 {
+
+    
+
     static llvm::Function *setJmpFunc = NULL;
 
     if (setJmpFunc == NULL)

@@ -75,6 +75,11 @@ bool unicode_string::operator==(const string other) const
 	return unicode_string(other) == *this;
 }
 
+bool unicode_string::operator!=(const string other) const 
+{
+	return !operator==(other);
+}
+
 unicode_string & unicode_string::operator+=(unicode_string & other)
 {
 	for (auto i : other._str)
