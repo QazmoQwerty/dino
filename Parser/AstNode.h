@@ -239,6 +239,24 @@ namespace AST
 		StatementBlock* getElseBranch() { return _elseBranch; }
 	};
 
+	class TryCatch : public Statement
+	{
+		StatementBlock* _tryBlock;
+		StatementBlock* _catchBlock;
+
+	public:
+		virtual ~TryCatch() { if (_tryBlock) delete _tryBlock; if (_catchBlock) delete _catchBlock; }
+		virtual StatementType getStatementType() { return ST_TRY_CATCH; };
+		virtual string toString() { return "<TryCatch>"; };
+		virtual vector<Node*> getChildren() { return { _tryBlock, _catchBlock }; };
+
+		void setTryBlock(StatementBlock* tryBlock) { _tryBlock = tryBlock; }
+		void setCatchBlock(StatementBlock* catchBlock) { _catchBlock = catchBlock; }
+	
+		StatementBlock* getTryBlock() { return _tryBlock; }
+		StatementBlock* getCatchBlock() { return _catchBlock; }
+	};
+
 	class Import : public Statement 
 	{
 		string _toImport;

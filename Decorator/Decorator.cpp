@@ -9,12 +9,15 @@ DST::TypeDeclaration *Decorator::_currentTypeDecl;
 DST::Program *Decorator::_currentProgram;
 DST::NullType *Decorator::_nullType;
 DST::UnknownType *Decorator::_unknownType;
+DST::NamespaceDeclaration *_universalNs;
 bool Decorator::_isLibrary;
 
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
 #define createBasicType(name) _variables[0][unicode_string(name)] = new DST::TypeSpecifierType(new DST::TypeDeclaration(unicode_string(name)));
+
+#define ERROR_TYPE_NAME "error"
 
 void Decorator::setup(bool isLibrary)
 {
@@ -27,16 +30,44 @@ void Decorator::setup(bool isLibrary)
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
+
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 }
 
+void Decorator::createErrorInterfaceType()
+{
+
+	auto astNamespace = new AST::NamespaceDeclaration();
+	astNamespace->setName(unicode_string("."));
+	_universalNs = new DST::NamespaceDeclaration(astNamespace);
+
+	auto interfaceDecl1 = new AST::InterfaceDeclaration();
+	interfaceDecl1->setName(unicode_string(ERROR_TYPE_NAME));
+	auto interfaceDecl2 = new DST::InterfaceDeclaration(interfaceDecl1);
+
+	auto varDecl = new AST::VariableDeclaration();
+	varDecl->setVarId(unicode_string("Msg"));
+	auto propDecl = new AST::PropertyDeclaration(varDecl);
+	auto stringTy = new DST::BasicType(getPrimitiveType("int"));
+	auto propTy = new DST::PropertyType(stringTy, true, false);
+	auto decPropDecl = new DST::PropertyDeclaration(propDecl, NULL, NULL, propTy);
+
+	interfaceDecl2->addDeclaration(decPropDecl, new DST::PropertyType(stringTy, true, false));
+
+	auto ty = _variables[0][unicode_string(ERROR_TYPE_NAME)] = new DST::TypeSpecifierType(interfaceDecl2);
+
+	_universalNs->addMember(interfaceDecl2->getName(), interfaceDecl2, ty);
+	_currentProgram->addNamespace(_universalNs);
+}	
+
+
 DST::TypeSpecifierType *Decorator::getPrimitiveType(std::string name)
 {
 	auto ret = (DST::TypeSpecifierType*)_variables[0][(unicode_string(name))];
 	if (ret == nullptr)
-		throw "primitive type does not exist!";
+		throw "primitive type " + name + " does not exist!";
 	return ret;
 }
 
@@ -79,6 +110,8 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
 
 void Decorator::partB(DST::NamespaceDeclaration *node)
 {
+	if (node == _universalNs)
+		return;
 	_currentNamespace.push_back(node);
 	for (auto i : node->getMembers())
 	{
@@ -124,6 +157,8 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 
 void Decorator::partC(DST::NamespaceDeclaration *node)
 {
+	if (node == _universalNs)
+		return;
 	_currentNamespace.push_back(node);
 	for (auto i : node->getMembers())
 	{
@@ -192,7 +227,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 	}
 	for (auto i : node->getBase()->getStatement()->getStatements())
 	{
-		switch (i->getStatementType())
+		if (i) switch (i->getStatementType())
 		{
 		case ST_FUNCTION_DECLARATION:
 		{
@@ -252,6 +287,8 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 
 void Decorator::partD(DST::NamespaceDeclaration *node)
 {
+	if (node == _universalNs)
+		return;
 	for (auto i : node->getMembers())
 	{
 		switch (i.second.first->getStatementType())
@@ -285,6 +322,8 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 
 void Decorator::partE(DST::NamespaceDeclaration *node)
 {
+	if (node == _universalNs)
+		return;
 	_currentNamespace.push_back(node);
 	for (auto i : node->getMembers())
 	{
@@ -378,6 +417,9 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 {
 	_currentProgram = new DST::Program();
+
+	createErrorInterfaceType();
+
 	for (auto i : node->getStatements())
 	{
 		if (i->getStatementType() == ST_IMPORT)
@@ -482,6 +524,8 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::DoWhileLoop*>(node));
 	case ST_INCREMENT:
 		return decorate(dynamic_cast<AST::Increment*>(node));
+	case ST_TRY_CATCH:
+		return decorate(dynamic_cast<AST::TryCatch*>(node));
 	default: 
 		throw DinoException("Unimplemented statement type in the decorator", EXT_GENERAL, node->getLine());
 	}
@@ -1032,6 +1076,17 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 			throw DinoException("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + "\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", EXT_GENERAL, node->getLine());
 	}
 	return sc;
+}
+
+DST::TryCatch * Decorator::decorate(AST::TryCatch *node)
+{
+	auto tryCatch = new DST::TryCatch(node);
+	tryCatch->setTryBlock(decorate(node->getTryBlock()));
+	enterBlock();
+	_variables[currentScope()][unicode_string("caught")] = new DST::BasicType(getPrimitiveType(ERROR_TYPE_NAME));
+	tryCatch->setCatchBlock(decorate(node->getCatchBlock()));
+	leaveBlock();
+	return tryCatch;
 }
 
 DST::ForLoop * Decorator::decorate(AST::ForLoop * node)

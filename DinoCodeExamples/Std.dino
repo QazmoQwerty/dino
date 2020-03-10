@@ -1,6 +1,8 @@
 //include "DinoCodeExamples/LinkedList.dino"
 
-namespace Prog {
+import "Lexer"
+
+/*namespace Prog {
 	int putchar(int a): extern
 	char Print(char c): return putchar(c as int) as char
  
@@ -20,4 +22,4 @@ namespace Prog {
 		// Print('w')
 		// return Print('\n') as int
 	}
-}
+}*/

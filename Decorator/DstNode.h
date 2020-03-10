@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Parser/AstNode.h"
+#include <dirent.h>
 
 namespace DST
 {
@@ -118,7 +119,7 @@ namespace DST
 		virtual bool isStatement() { return false; }
 		virtual bool isExpression() { return false; }
 		virtual string toString() { return "<Program>"; };
-		void addImport(string bcFileName) { _bcFileImports.push_back(bcFileName); }
+		void addImport(string bcFileName);
 		vector<string> getBcFileImports() { return _bcFileImports; }
 		virtual vector<Node*> getChildren();
 
@@ -697,6 +698,26 @@ namespace DST
 
 		virtual string toString() { return "<StatementBlock>"; };
 		virtual vector<Node*> getChildren();
+	};
+
+	class TryCatch : public Statement
+	{
+		AST::TryCatch *_base;
+		StatementBlock* _tryBlock;
+		StatementBlock* _catchBlock;
+
+	public:
+		TryCatch(AST::TryCatch *base) : _base(base) {}
+		virtual ~TryCatch() { if (_base) delete _base; if (_tryBlock) delete _tryBlock; if (_catchBlock) delete _catchBlock; }
+		virtual StatementType getStatementType() { return ST_TRY_CATCH; };
+		virtual string toString() { return "<TryCatch>"; };
+		virtual vector<Node*> getChildren() { return { _tryBlock, _catchBlock }; };
+
+		void setTryBlock(StatementBlock* tryBlock) { _tryBlock = tryBlock; }
+		void setCatchBlock(StatementBlock* catchBlock) { _catchBlock = catchBlock; }
+	
+		StatementBlock* getTryBlock() { return _tryBlock; }
+		StatementBlock* getCatchBlock() { return _catchBlock; }
 	};
 
 	class IfThenElse : public Statement

@@ -12,13 +12,16 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
+// #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
@@ -33,6 +36,8 @@
 #include "llvm/Support/FileSystem.h"
 //#include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
+
+#include "llvm/Linker/Linker.h"
 
 #include "../Decorator/DstNode.h"
 #include <string>
@@ -60,6 +65,8 @@ namespace CodeGenerator
     static llvm::StructType *_interfaceVtableType;
     static llvm::StructType *_objVtableType;
     static llvm::StructType *_interfaceType;
+    static llvm::GlobalVariable *_globJmpBuf;
+    static llvm::GlobalVariable *_globCaughtErr;
     static unordered_map<llvm::Type*, llvm::Value*> _vtables;
 
     typedef struct InterfaceFuncInfo {
@@ -170,6 +177,7 @@ namespace CodeGenerator
     Value *codeGen(DST::UnaryOperationStatement *node);
 
     llvm::Function *codeGen(DST::FunctionDeclaration *node);
+    llvm::Value *codeGen(DST::TryCatch *node);
     llvm::Value *codeGen(DST::IfThenElse *node);
     llvm::Value *codeGen(DST::WhileLoop *node);
     llvm::Value *codeGen(DST::DoWhileLoop *node);

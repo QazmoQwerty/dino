@@ -12,6 +12,7 @@ class Decorator
 {
 public:
 	static void setup(bool isLibrary = false);
+	static void createErrorInterfaceType();
 	static DST::Node *decorate(AST::Node *node);
 	static void clear();
 	static DST::Program *decorateProgram(AST::StatementBlock* node);
@@ -42,6 +43,7 @@ private:
 	static DST::StatementBlock *decorate(AST::StatementBlock *node);
 	static DST::IfThenElse *decorate(AST::IfThenElse *node);
 	static DST::SwitchCase *decorate(AST::SwitchCase *node);
+	static DST::TryCatch *decorate(AST::TryCatch *node);
 	static DST::ForLoop *decorate(AST::ForLoop *node);
 	static DST::WhileLoop *decorate(AST::WhileLoop *node);
 	static DST::DoWhileLoop *decorate(AST::DoWhileLoop *node);

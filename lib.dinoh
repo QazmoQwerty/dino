@@ -1,7 +1,0 @@
-import "lib.bc"
-
-namespace Foo {
-	void PrintNum(int num): extern "Foo.PrintNum"
-	int putchar(int a): extern "putchar"
-	char Print(char c): extern "Foo.Print"
-}

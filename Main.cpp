@@ -12,6 +12,7 @@
 #include "Decorator/Decorator.h"
 #include "LibFileWriter/LibFileWriter.h"
 #include <stdio.h>
+#include <sys/stat.h>
 
 typedef struct cmdOptions 
 {
@@ -28,7 +29,7 @@ typedef struct cmdOptions
 	const char *exeFileName;
 	bool outputLib = false;
 	const char *libFileName;
-	const char *libBcFileName;
+	// const char *libBcFileName;
 } cmdOptions;
 
 void showHelp() 
@@ -86,9 +87,9 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 					if (++i >= argc)
 						throw "Error: missing file name after '-lib'";
 					else options->libFileName = argv[i];
-					if (++i >= argc)
-						throw "Error: missing second file name after '-lib'";
-					else options->libBcFileName = argv[i];
+					// if (++i >= argc)
+					// 	throw "Error: missing second file name after '-lib'";
+					// else options->libBcFileName = argv[i];
 				}
 			}
 		}
@@ -108,7 +109,7 @@ int main(int argc, char *argv[])
 {
 	auto cmd = getCmdOptions(argc, argv);
 
-	CodeGenerator::setup();
+	CodeGenerator::setup(cmd->outputLib);
 	OperatorsMap::setup();
 	Lexer::setup();
 	Decorator::setup(cmd->outputLib);
@@ -149,15 +150,21 @@ int main(int argc, char *argv[])
 				cmd->bcFileName = "temp.bc";
 				CodeGenerator::writeBitcodeToFile(dst, cmd->bcFileName);
 			}
-			system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
-			system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
+			// system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
+			// system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
+			system((string("clang++ -Wno-override-module ") + cmd->bcFileName + " -o " + cmd->exeFileName).c_str());
 			llvm::errs() << "outputted ELF file\n";
 		}
 
 		if (cmd->outputLib)
 		{
-			LibFileWriter::Write(cmd->libFileName, cmd->libBcFileName, dst);
-			CodeGenerator::writeBitcodeToFile(dst, cmd->libBcFileName);
+			// LibFileWriter::Write(cmd->libFileName, cmd->libBcFileName, dst);
+			// CodeGenerator::writeBitcodeToFile(dst, cmd->libBcFileName);
+			
+			mkdir(cmd->libFileName, 0777);
+			auto bcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
+			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinoh", bcFileName, dst);
+			CodeGenerator::writeBitcodeToFile(dst, bcFileName);
 			std::cout << "outputted lib files" << std::endl;
 		}
 
@@ -167,6 +174,8 @@ int main(int argc, char *argv[])
 	catch (exception e) { std::cout << e.what() << std::endl; }
 	catch (const char *err) { std::cout << err << std::endl; }
 
+
+	llvm::llvm_shutdown();
 	//if (argc <= 1)
 	//	system("pause");
 	return 0;

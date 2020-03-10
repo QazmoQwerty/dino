@@ -80,6 +80,7 @@ public:
 	unicode_string& operator=(string other);
 	unicode_string& operator+=(string other);
 	bool operator==(const string other) const;
+	bool operator!=(const string other) const;
 
 private:
 	vector<unicode_char> _str;
