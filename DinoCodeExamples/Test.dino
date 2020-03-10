@@ -121,21 +121,28 @@ namespace Prog {
 	// 	return 30
 	// }
 
-	void Main() {
-		// Foo.PrintNum(1234)
+	void Foo() {
 		error err123
 		try {
-			error err := err123 := (new MyErr) as error
-			PrintNum(err.Msg)
+			// error err := null //as error
+			error err := (new MyErr) as error
+			// PrintNum(err.Msg)
 			throw err
 			PrintNum(123)
 		} catch {
 			PrintNum(321)
-			PrintNum(err123.Msg)
-			PrintNum(caught.Msg)
+			// PrintNum(err123.Msg)
+			// PrintNum(caught.Msg)
 			PrintNum(54321)
 		}
 		PrintNum(12345)
+	}
+
+	void Main() {
+		Foo()
+		PrintNum(100100)
+		// Foo.PrintNum(1234)
+		
 		// error e := (new MyErr) as error
 		// throw e
 		// PrintNum(0)

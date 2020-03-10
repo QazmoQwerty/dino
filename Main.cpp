@@ -18,6 +18,7 @@ typedef struct cmdOptions
 {
 	const char *fileName;
 	bool showHelp = false;
+	bool verbose = false;
 	bool showLexerOutput = false; 
 	bool outputAstFiles = false; 
 	bool showLineAST = false;
@@ -25,23 +26,31 @@ typedef struct cmdOptions
 	bool showIR = false;
 	bool outputBc = false;
 	const char *bcFileName;
+	bool outputLl = false;
+	const char *llFileName;
 	bool outputExe = false;
 	const char *exeFileName;
 	bool outputLib = false;
 	const char *libFileName;
+	char *optLevel = NULL;
+	
 	// const char *libBcFileName;
 } cmdOptions;
 
 void showHelp() 
 {
-	std::cout << "Dino.exe [filepath] [args]" << std::endl
-		<< "-help (show this help message)" << std::endl
-		<< "-showlex (prints the output of the lexer)" << std::endl
-		<< "-outAst (output a .gv file of the AST and DST)" << std::endl
-		<< "-lineAst (show line numbers in the AST and DST files)" << std::endl
-		<< "-i (run the program in an LLVM interpreter for testing purposes)" << std::endl
-		<< "-bc [filepath] (output a .bc file to \"filepath\")" << std::endl
-		<< "-o [filepath] (output a .exe file to \"filepath\")" << std::endl << std::endl;
+	llvm::errs() << "Dino.exe [filepath] [args]\n" 
+		<< "-help (show this help message)\n"
+		<< "-v (verbose: show ongoing compilation status"
+		<< "-showlex (prints the output of the lexer)\n"
+		<< "-outAst (output a .gv file of the AST and DST)\n" 
+		<< "-lineAst (show line numbers in the AST and DST files)\n" 
+		<< "-i (run the program in an LLVM interpreter for testing purposes - for debug purposes only!)\n" 
+		<< "-bc [filepath] (output a .bc file to \"filepath\")\n" 
+		<< "-ll [filepath] (output a .ll file to \"filepath\")\n"
+		<< "-o [filepath] (output a .exe file to \"filepath\")\n"
+		<< "-lib [dirpath] (build as a library to the directory \"dirpath\")\n"
+		<< "-O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n\n";
 }
 
 cmdOptions *getCmdOptions(int argc, char *argv[]) 
@@ -62,11 +71,15 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 			for(int i = 2; i < argc; i++) 
 			{
 				if 		(strcmp(argv[i], "-help") == 0) 		options->showHelp = true;
+				else if (strcmp(argv[i], "-v") == 0)			options->verbose = true;
 				else if (strcmp(argv[i], "-showLex") == 0) 	options->showLexerOutput = true;
 				else if (strcmp(argv[i], "-outAst") == 0) 	options->outputAstFiles = true;
 				else if (strcmp(argv[i], "-lineAst") == 0) 	options->showLineAST = true;
 				else if (strcmp(argv[i], "-showIR") == 0) 	options->showIR = true;
 				else if (strcmp(argv[i], "-i") == 0)	options->executeInterpret = true;
+				else if (!strcmp(argv[i], "-O0") || !strcmp(argv[i], "-O1") || !strcmp(argv[i], "-O2") 
+					|| !strcmp(argv[i], "-O3") || !strcmp(argv[i], "-Os") || !strcmp(argv[i], "-Oz") || !strcmp(argv[i], "-Od"))	
+					options->optLevel = argv[i];
 				else if (strcmp(argv[i], "-bc") == 0)
 				{
 					options->outputBc = true;
@@ -87,9 +100,13 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 					if (++i >= argc)
 						throw "Error: missing file name after '-lib'";
 					else options->libFileName = argv[i];
-					// if (++i >= argc)
-					// 	throw "Error: missing second file name after '-lib'";
-					// else options->libBcFileName = argv[i];
+				}
+				else if (strcmp(argv[i], "-ll") == 0)
+				{
+					options->outputLl = true;
+					if (++i >= argc)
+						throw "Error: missing file name after '-ll'";
+					else options->llFileName = argv[i];
 				}
 			}
 		}
@@ -98,10 +115,12 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 	} 
 	catch (const char * c) 
 	{
-		std::cout << c << std::endl;
+		llvm::errs() << c << "\n";
 		delete options;
 		exit(0);
 	}
+	if (!options->outputBc)
+		options->bcFileName = "temp.bc";
 	return options;
 }
 
@@ -118,65 +137,79 @@ int main(int argc, char *argv[])
 	{
 		AST::Node *ast = Parser::parseFile(cmd->fileName, cmd->showLexerOutput);
 
+		if (cmd->verbose)
+			llvm::errs() << "Finished parsing...\n";
 		if (cmd->outputAstFiles) 
 		{
 			astToFile("AstDisplay.gv", ast, cmd->showLineAST);
-			std::cout << "Wrote \"AstDisplay.gv\"..." << std::endl;	
+			if (cmd->verbose)
+				llvm::errs() << "Wrote \"AstDisplay.gv\"...\n";	
 		}
-		std::cout << "Finished parsing..." << std::endl;
 
 		DST::Program* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
 
-		std::cout << "Finished decorating..." << std::endl;
+		if (cmd->verbose)
+			llvm::errs() << "Finished decorating...\n";
 		if (cmd->outputAstFiles)
+		{
 			dstToFile("DstDisplay.gv", dst, false);
+			if (cmd->verbose)
+				llvm::errs() << "Wrote \"DstDisplay.gv\"...\n";	
+		}
 		
 		auto mainFunc = CodeGenerator::startCodeGen(dst);
-		std::cout << "Finished generating IR..." << std::endl;
+
+		if (cmd->verbose)
+			llvm::errs() << "Finished generating IR...\n";
 
 		if (cmd->executeInterpret)
 			CodeGenerator::execute(mainFunc);
 
-		if (cmd->outputBc) 
+		if (cmd->outputBc || cmd->outputExe || cmd->outputLl)
 		{
 			CodeGenerator::writeBitcodeToFile(dst, cmd->bcFileName);
-			llvm::errs() << "outputted .bc file\n";
-		}
-
-		if (cmd->outputExe)
-		{
-			if (!cmd->outputBc)
-			{
-				cmd->bcFileName = "temp.bc";
-				CodeGenerator::writeBitcodeToFile(dst, cmd->bcFileName);
-			}
-			// system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
-			// system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
-			system((string("clang++ -Wno-override-module ") + cmd->bcFileName + " -o " + cmd->exeFileName).c_str());
-			llvm::errs() << "outputted ELF file\n";
+			if (cmd->verbose)
+				llvm::errs() << "outputted .bc file\n";
 		}
 
 		if (cmd->outputLib)
-		{
-			// LibFileWriter::Write(cmd->libFileName, cmd->libBcFileName, dst);
-			// CodeGenerator::writeBitcodeToFile(dst, cmd->libBcFileName);
-			
+		{			
 			mkdir(cmd->libFileName, 0777);
 			auto bcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
 			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinoh", bcFileName, dst);
 			CodeGenerator::writeBitcodeToFile(dst, bcFileName);
-			std::cout << "outputted lib files" << std::endl;
+			if (cmd->verbose)
+				llvm::errs() << "outputted lib files\n";
 		}
 
-		Decorator::clear();
-	} 
-	catch (DinoException e) { std::cout << e.errorMsg() << std::endl; }
-	catch (exception e) { std::cout << e.what() << std::endl; }
-	catch (const char *err) { std::cout << err << std::endl; }
+		if (cmd->optLevel && strcmp(cmd->optLevel, "-Od"))
+		{
+			system((string("opt ") + cmd->bcFileName + " " + cmd->optLevel).c_str());
+			if (cmd->verbose)
+				llvm::errs() << "Optimized bitcode...\n";
+		}
 
+		if (cmd->outputLl)
+		{
+			system((string("llvm-dis ") + cmd->bcFileName + " -o " + cmd->llFileName).c_str());
+			if (cmd->verbose)
+				llvm::errs() << "outputted .ll file\n";
+		}
+
+		if (cmd->outputExe)
+		{
+			system((string("clang++ -Wno-override-module ") + cmd->bcFileName + " -o " + cmd->exeFileName).c_str());
+			if (cmd->verbose)
+				llvm::errs() << "outputted ELF file\n";
+		}
+
+		// TODO - clear memory!
+		// Decorator::clear();	
+	} 
+	catch (DinoException e) { llvm::errs() << e.errorMsg() << "\n"; }
+	catch (exception e) { llvm::errs() << e.what() << "\n"; }
+	catch (const char *err) { llvm::errs() << err << "\n"; }
 
 	llvm::llvm_shutdown();
-	//if (argc <= 1)
-	//	system("pause");
 	return 0;
 }
