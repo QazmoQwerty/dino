@@ -456,6 +456,20 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     }
 }
 
+llvm::Value *CodeGenerator::createCallOrInvoke(llvm::Value *callee, llvm::ArrayRef<llvm::Value*> args)
+{
+    if (_currCatchBlock)
+    {
+        auto continueBB = llvm::BasicBlock::Create(_context, "invokeCont");
+        auto invoke = _builder.CreateInvoke(callee, continueBB, _currCatchBlock, args);
+
+        getParentFunction()->getBasicBlockList().push_back(continueBB);
+        _builder.SetInsertPoint(continueBB);
+        return invoke;
+    }
+    else return _builder.CreateCall(callee, args);
+}
+
 Value *CodeGenerator::codeGen(DST::MemberAccess *node)
 {
     if (node->getType()->getExactType() == EXACT_PROPERTY)
@@ -471,7 +485,8 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 auto func = codeGenLval(node);
                 if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 0)
                     throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
-                return _builder.CreateCall((llvm::Function*)func, {}, "calltmp");
+
+                return createCallOrInvoke((llvm::Function*)func, {});
             }
             case EXACT_BASIC:       // Member getter property of basic type
             {
@@ -485,14 +500,14 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                     auto funcTy = _interfaceVtableFuncInfo[interfaceDecl][node->getRight()].type;
                     auto thisPtr = _builder.CreateLoad(_builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(0) }));
                     auto func = _builder.CreateBitCast(funcPtr, funcTy->getPointerTo());
-                    return _builder.CreateCall(func, thisPtr);
+                    return createCallOrInvoke(func, thisPtr);
                 }
 
                 auto typeDef = _types[((DST::BasicType*)leftTy)->getTypeSpecifier()->getTypeDecl()];
                 auto func = typeDef->functions[node->getRight()];
                 if (func->arg_size() != 1)
                     throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
-                return _builder.CreateCall(func, lval, "calltmp");
+                return createCallOrInvoke(func, lval);
             }
             case EXACT_POINTER:     // Member getter property of pointer to basic type
             {
@@ -504,7 +519,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 auto func = typeDef->functions[node->getRight()];
                 if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 1)
                     throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
-                return _builder.CreateCall((llvm::Function*)func, { lval }, "calltmp");
+                return createCallOrInvoke((llvm::Function*)func, lval);
             }
             case EXACT_ARRAY:       // Member property of array
                 if (node->getRight() == unicode_string("Size.get")) {
@@ -644,7 +659,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
             }
             auto type = evalType((DST::Type*)node->getExpression());
             int size = _dataLayout->getTypeAllocSize(type);
-            return _builder.CreateBitCast( _builder.CreateCall(malloc, { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
+            return _builder.CreateBitCast( createCallOrInvoke(malloc, { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
         }
         case OT_ADD:
             return codeGen(node->getExpression());
@@ -774,7 +789,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     if (!isFunc(left))
                         throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
                     auto right = codeGen(node->getRight());
-                    _builder.CreateCall((llvm::Function*)left, { right });
+                    createCallOrInvoke((llvm::Function*)left, right);
                     return right;
                 }
                 case EXACT_BASIC:       // Member setter property of basic type
@@ -790,7 +805,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                         auto funcTy = _interfaceVtableFuncInfo[interfaceDecl][ac->getRight()].type;
                         auto thisPtr = _builder.CreateLoad(_builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }));
                         auto func = _builder.CreateBitCast(funcPtr, funcTy->getPointerTo());
-                        _builder.CreateCall(func, { thisPtr, right });
+                        createCallOrInvoke(func, { thisPtr, right });
                     }
                     else 
                     {
@@ -798,7 +813,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                         auto func = typeDef->functions[ac->getRight()];
                         if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
                             throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
-                        _builder.CreateCall((llvm::Function*)func, { left, right });
+                        createCallOrInvoke((llvm::Function*)func, { left, right });
                     }
                     return right;
                 }
@@ -812,7 +827,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     auto func = typeDef->functions[ac->getRight()];
                     if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
                         throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
-                    return _builder.CreateCall((llvm::Function*)func, { thisPtr, codeGen(node->getRight()) });
+                    return createCallOrInvoke((llvm::Function*)func, { thisPtr, codeGen(node->getRight()) });
                 }
                 case EXACT_ARRAY:       // Member property of array
                     throw DinoException("Unimplemented Error no.2", EXT_GENERAL, node->getLine());   // TODO
@@ -825,7 +840,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         if (!isFunc(left))
             throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
 
-        _builder.CreateCall((llvm::Function*)left, { codeGen(node->getRight()) });
+        createCallOrInvoke((llvm::Function*)left, codeGen(node->getRight()));
         return right;
     }
 
@@ -1044,7 +1059,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                 }
             }
 
-            return _builder.CreateCall(funcPtr, args);
+            return createCallOrInvoke(funcPtr, args);
 
         }
     }
@@ -1095,7 +1110,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             else args.push_back(gen);   
         }
     }
-    return _builder.CreateCall(funcPtr, args);
+    return createCallOrInvoke(funcPtr, args);
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
@@ -1108,6 +1123,8 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
     {
         case OT_RETURN:
         {
+            if (node->getExpression() == NULL)
+                return _builder.CreateRetVoid();
             if (node->getExpression()->getExpressionType() == ET_LIST)
             {
                 auto expList = (DST::ExpressionList*)node->getExpression();
@@ -1134,16 +1151,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             _builder.CreateStore(codeGen(node->getExpression()), cast);
             auto nullPtr = llvm::ConstantPointerNull::get(_builder.getInt8PtrTy());
 
-            if (_currCatchBlock)
-            {
-                auto continueBB = llvm::BasicBlock::Create(_context, "invokeCont");
-                auto invoke = _builder.CreateInvoke(throwFunc, continueBB, _currCatchBlock, { alloc, nullPtr, nullPtr });
-
-                getParentFunction()->getBasicBlockList().push_back(continueBB);
-                _builder.SetInsertPoint(continueBB);
-                return invoke;
-            }
-            else return _builder.CreateCall(throwFunc, { alloc, nullPtr, nullPtr });
+            return createCallOrInvoke(throwFunc, { alloc, nullPtr, nullPtr });
 
 
             // if (longJump == NULL)
@@ -1176,7 +1184,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             
             auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
 
-            _builder.CreateCall(free, { cast });
+            createCallOrInvoke(free, cast);
             return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
         }
         default: throw DinoException("Unimplemented unary operation statement!", EXT_GENERAL, node->getLine());
@@ -1204,7 +1212,7 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
         auto func = (llvm::Function*)lval;
         if (func->arg_size() != 0)
             throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
-        return _builder.CreateCall(func, {}, "calltmp");
+        return createCallOrInvoke(func, {});
     }
     auto t = codeGenLval(node);
     if (node->getType()->isConst())

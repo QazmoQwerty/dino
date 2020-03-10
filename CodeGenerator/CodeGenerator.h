@@ -95,6 +95,8 @@ namespace CodeGenerator
     void declareInterface(DST::InterfaceDeclaration *node);
     llvm::FunctionType *getInterfaceFuncType(DST::FunctionDeclaration *node);
 
+    llvm::Value *createCallOrInvoke(llvm::Value *callee, llvm::ArrayRef<llvm::Value*> args);
+
     typedef struct NamespaceMembers {
         std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
         std::unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
