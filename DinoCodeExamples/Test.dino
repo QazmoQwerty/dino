@@ -41,7 +41,7 @@
 // 	}
 // }
 
-include "lib2.dinoh"
+// include "lib2.dinoh"
 
 namespace Prog {
 	// char Print(char c): extern "putchar"
@@ -98,10 +98,10 @@ namespace Prog {
 	// // 	char Msg2: get
 	// // }
 
-	// type MyErr is error {
-	// 	int a
-	// 	int Msg: get: return 100
-	// }
+	type MyErr is error {
+		int a
+		int Msg: get: return 100
+	}
 
 	// void Foo() {
 		// error e := (new MyErr) as error
@@ -120,9 +120,9 @@ namespace Prog {
 	// }
 
 	void Main() {
-		Foo.PrintNum(1234)
-		// error e := (new MyErr) as error
-		// throw e
+	// /	Foo.PrintNum(1234)
+		error e := (new MyErr) as error
+		throw e
 		// PrintNum(0)
 		// try {	
 		// 	PrintNum(1)

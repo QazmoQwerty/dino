@@ -56,6 +56,8 @@ string runCmd(string cmd, bool printOutput) // if print output is false, nothing
     return result;
 }
 
+#include "llvm/MC/MCObjectWriter.h"
+
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
 {
     llvm::Linker linker(*_module.get());

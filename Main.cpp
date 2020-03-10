@@ -176,8 +176,9 @@ int main(int argc, char *argv[])
 				cmd->bcFileName = "temp.bc";
 				CodeGenerator::writeBitcodeToFile(dst, cmd->bcFileName);
 			}
-			system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
-			system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
+			// system((string("llc ") + cmd->bcFileName + " -o temp.s").c_str());
+			// system((string("gcc temp.s -no-pie -o ") + cmd->exeFileName).c_str());
+			system((string("clang++ -Wno-override-module ") + cmd->bcFileName + " -o " + cmd->exeFileName).c_str());
 			llvm::errs() << "outputted ELF file\n";
 		}
 
