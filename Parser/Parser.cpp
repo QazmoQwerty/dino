@@ -149,7 +149,7 @@ AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
 	auto lexed = Lexer::lex(str);
-	std::cout << "File: " << fileName << std::endl;
+	// std::cout << "File: " << fileName << std::endl;
 	auto vec = Preprocessor::preprocess(lexed);
 	if (showLexerOutput)
 		for (auto i : vec) 
