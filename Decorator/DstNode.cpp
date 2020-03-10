@@ -624,6 +624,20 @@ vector<DST::Node*> DST::PointerType::getChildren()
 	return v;
 }
 
+void DST::Program::addImport(string bcFileName) {
+
+	auto dir = opendir(bcFileName.c_str());
+	if (!dir)
+		throw DinoException("Could not open directory \"" + bcFileName + '\"', EXT_GENERAL, -1);
+	while (auto ent = readdir(dir))
+	{
+		string fileName(ent->d_name);
+		if (fileName.substr(fileName.find_last_of(".")) == ".bc")
+			_bcFileImports.push_back(bcFileName + '/' + fileName); 
+	}
+	closedir(dir);
+}
+
 vector<DST::Node*> DST::Program::getChildren()
 {
 	vector <Node*> v;

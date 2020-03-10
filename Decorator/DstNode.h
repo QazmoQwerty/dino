@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Parser/AstNode.h"
+#include <dirent.h>
 
 namespace DST
 {
@@ -118,7 +119,7 @@ namespace DST
 		virtual bool isStatement() { return false; }
 		virtual bool isExpression() { return false; }
 		virtual string toString() { return "<Program>"; };
-		void addImport(string bcFileName) { _bcFileImports.push_back(bcFileName); }
+		void addImport(string bcFileName);
 		vector<string> getBcFileImports() { return _bcFileImports; }
 		virtual vector<Node*> getChildren();
 

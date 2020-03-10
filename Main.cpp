@@ -11,34 +11,8 @@
 #include "Other/Utf8Handler.h"
 #include "Decorator/Decorator.h"
 #include "LibFileWriter/LibFileWriter.h"
-// #include <stdio.h>
-
-// string runCmd(string cmd, bool printOutput) // if print output is false, nothing will be printed unil the entire command is done
-// {
-//     std::string result = "";
-//     FILE* pipe = popen(cmd.c_str(), "r");
-//     if (!pipe) throw std::runtime_error("popen() failed in getOutputFromCmd");
-//     try {
-//         while (!feof(pipe)) {
-// 			char c;
-//             if ((c=getc(pipe)) != EOF)
-// 			{
-//                 result += c;
-                
-//                 if (printOutput)
-// 				{
-// 					std::cout << c;
-// 					std::cout.flush();
-// 				}
-// 			}
-//         }
-//     } catch (...) {
-//         pclose(pipe);
-//         throw;
-//     }
-//     pclose(pipe);
-//     return result;
-// }
+#include <stdio.h>
+#include <sys/stat.h>
 
 typedef struct cmdOptions 
 {
@@ -55,7 +29,7 @@ typedef struct cmdOptions
 	const char *exeFileName;
 	bool outputLib = false;
 	const char *libFileName;
-	const char *libBcFileName;
+	// const char *libBcFileName;
 } cmdOptions;
 
 void showHelp() 
@@ -113,9 +87,9 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 					if (++i >= argc)
 						throw "Error: missing file name after '-lib'";
 					else options->libFileName = argv[i];
-					if (++i >= argc)
-						throw "Error: missing second file name after '-lib'";
-					else options->libBcFileName = argv[i];
+					// if (++i >= argc)
+					// 	throw "Error: missing second file name after '-lib'";
+					// else options->libBcFileName = argv[i];
 				}
 			}
 		}
@@ -184,8 +158,13 @@ int main(int argc, char *argv[])
 
 		if (cmd->outputLib)
 		{
-			LibFileWriter::Write(cmd->libFileName, cmd->libBcFileName, dst);
-			CodeGenerator::writeBitcodeToFile(dst, cmd->libBcFileName);
+			// LibFileWriter::Write(cmd->libFileName, cmd->libBcFileName, dst);
+			// CodeGenerator::writeBitcodeToFile(dst, cmd->libBcFileName);
+			
+			mkdir(cmd->libFileName, 0777);
+			auto bcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
+			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinoh", bcFileName, dst);
+			CodeGenerator::writeBitcodeToFile(dst, bcFileName);
 			std::cout << "outputted lib files" << std::endl;
 		}
 

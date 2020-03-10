@@ -10,6 +10,8 @@
 #include "../Other/TypeEnums.h"
 #include "AstNode.h"
 
+#include <string>
+#include <dirent.h>
 #include <fstream>
 #include <iostream>
 #include <sstream> 
@@ -26,7 +28,7 @@ class Parser
 public:
 	static AST::StatementBlock * parseFile(string fileName, bool showLexerOutput = false);
 	AST::StatementBlock * includeFile();
-	AST::Import * importFile();
+	AST::StatementBlock * importFile(int currLine);
 
 	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = 0; }
 	Token* getToken(unsigned int index);

@@ -158,15 +158,36 @@ AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
 	return p.parseBlock();
 }
 
-AST::Import * Parser::importFile()
+
+
+AST::StatementBlock * Parser::importFile(int currLine)
 {
 	auto t = nextToken();
-	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType == LT_STRING)
+	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType != LT_STRING)
+		throw DinoException("Expected a file path", EXT_GENERAL, currLine);
+
+	string importPath = ((LiteralToken<string>*)t)->_value;
+	auto dir = opendir(importPath.c_str());
+	if (!dir)
+		throw DinoException("Could not open directory \"" + importPath + '\"', EXT_GENERAL, currLine);
+	AST::StatementBlock *block;
+	while (auto ent = readdir(dir))
 	{
-		string fileName = ((LiteralToken<string>*)t)->_value;
-		return new AST::Import(fileName);
+		string fileName(ent->d_name);
+		if (fileName.substr(fileName.find_last_of(".")) == ".dinoh")
+		{
+			if (block)
+				block->addStatement(parseFile(importPath + '/' + fileName));
+			else block = parseFile(importPath + '/' + fileName);
+		}
 	}
-	else throw DinoException("Expected a file path", EXT_GENERAL, peekToken()->_line);
+	closedir(dir);
+	if (!block)
+		throw DinoException("No .dinoh files in directory \"" + importPath + '\"', EXT_GENERAL, currLine);
+	auto import = new AST::Import(importPath);
+	import->setLine(currLine);
+	block->addStatement(import);
+	return block;
 }
 
 AST::StatementBlock * Parser::includeFile()
@@ -208,7 +229,18 @@ AST::Node * Parser::std(Token * token)
 		switch (((OperatorToken*)token)->_operator._type)	
 		{
 			case(OT_IMPORT): {
-				return importFile();
+				if (eatOperator(OT_PARENTHESIS_OPEN))
+				{
+					auto block = includeFile();
+					eatLineBreak();
+					while (!eatOperator(OT_PARENTHESIS_CLOSE))
+					{
+						block->addStatement(importFile(token->_line));
+						eatLineBreak();
+					}
+					return block;
+				}
+				else return importFile(token->_line);
 			}
 			case(OT_INCLUDE): {
 				if (eatOperator(OT_PARENTHESIS_OPEN))
@@ -398,7 +430,7 @@ AST::Node * Parser::std(Token * token)
 				auto name = expectIdentifier();
 				AST::NamespaceDeclaration *node;
 				auto inner = parseInnerBlock();
-				
+
 				if(_namespaces.count(name) == 0)
 				{	
 					node = new AST::NamespaceDeclaration();
