@@ -1160,7 +1160,17 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             auto cast = _builder.CreateBitCast(alloc, _interfaceType->getPointerTo());
             _builder.CreateStore(codeGen(node->getExpression()), cast);
             auto nullPtr = llvm::ConstantPointerNull::get(_builder.getInt8PtrTy());
-            return _builder.CreateCall(throwFunc, { alloc, nullPtr, nullPtr });
+
+            if (_currCatchBlock)
+            {
+                auto continueBB = llvm::BasicBlock::Create(_context, "invokeCont");
+                auto invoke = _builder.CreateInvoke(throwFunc, continueBB, _currCatchBlock, { alloc, nullPtr, nullPtr });
+
+                getParentFunction()->getBasicBlockList().push_back(continueBB);
+                _builder.SetInsertPoint(continueBB);
+                return invoke;
+            }
+            else return _builder.CreateCall(throwFunc, { alloc, nullPtr, nullPtr });
 
 
             // if (longJump == NULL)
@@ -2037,52 +2047,56 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
 llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 {
 
-    
+    auto parent = getParentFunction();
+    // static llvm::Function *personality = _module.get()->getFunction("__gxx_personality_v0");
+    static llvm::Function *personality = NULL;
+    static llvm::Function *beginCatchFunc = NULL;
+    static llvm::Function *endCatchFunc = NULL;
 
-    static llvm::Function *setJmpFunc = NULL;
-
-    if (setJmpFunc == NULL)
+    if (personality == NULL)
     {
-        auto type = llvm::FunctionType::get(_builder.getInt32Ty(), _builder.getInt8PtrTy(), false);
-        setJmpFunc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "llvm.eh.sjlj.setjmp", _module.get());
+        auto presonalityFuncTy = llvm::FunctionType::get(_builder.getInt32Ty(), {}, true);
+        personality = llvm::Function::Create(presonalityFuncTy, llvm::Function::ExternalLinkage, "__gxx_personality_v0", _module.get());
+
+        auto beginCatchTy = llvm::FunctionType::get(_builder.getInt8PtrTy(), _builder.getInt8PtrTy(), true);
+        beginCatchFunc = llvm::Function::Create(beginCatchTy, llvm::Function::ExternalLinkage, "__cxa_begin_catch", _module.get());
+
+        auto endCatchTy = llvm::FunctionType::get(_builder.getVoidTy(), {}, true);
+        endCatchFunc = llvm::Function::Create(endCatchTy, llvm::Function::ExternalLinkage, "__cxa_end_catch", _module.get());
     }
 
-    auto jmpBufVal = _builder.CreateLoad(_globJmpBuf);
+    parent->setPersonalityFn(personality);
 
-    llvm::BasicBlock *tryBB = llvm::BasicBlock::Create(_context, "try");
     llvm::BasicBlock *catchBB = llvm::BasicBlock::Create(_context, "catch");
     llvm::BasicBlock *mergeBB = NULL;
     if (!(node->getTryBlock()->hasReturn() && node->getCatchBlock()->hasReturn()))
         mergeBB = llvm::BasicBlock::Create(_context, "tryCont");    // No need to create a continue branch if it's unreachable
 
-    auto val = _builder.CreateCall(setJmpFunc,  _builder.CreateBitCast(_globJmpBuf, _builder.getInt8PtrTy()));
-    auto cond = _builder.CreateICmpEQ(val, _builder.getInt32(0));
-    _builder.CreateCondBr(cond, tryBB, catchBB);
-
-    auto parent = getParentFunction();
-
-    parent->getBasicBlockList().push_back(tryBB);
-    _builder.SetInsertPoint(tryBB);
-    for (auto i : node->getTryBlock()->getStatements()) 
-        if (codeGen(i) == nullptr) 
+    auto lastPad = _currCatchBlock;
+    _currCatchBlock = catchBB;
+    for (auto i : node->getTryBlock()->getStatements())
+        if (!codeGen(i))
             throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
-    // tryBB->getInstList().insertBefore(NULL);
-    if (auto tryTerminator = _builder.GetInsertBlock()->getTerminator())
-        llvm::StoreInst(jmpBufVal, _globJmpBuf, tryTerminator);
-    else 
-    {
-        _builder.CreateStore(jmpBufVal, _globJmpBuf);
+    if (!_builder.GetInsertBlock()->getTerminator())
         _builder.CreateBr(mergeBB);
-    }
+    _currCatchBlock = lastPad;
+
 
     parent->getBasicBlockList().push_back(catchBB);
     _builder.SetInsertPoint(catchBB);
-    _builder.CreateStore(jmpBufVal, _globJmpBuf);
-    for (auto i : node->getCatchBlock()->getStatements()) 
-        if (codeGen(i) == nullptr) 
+    // auto pad = _builder.CreateLandingPad(_interfaceType->getPointerTo(), 1);
+    auto pad = _builder.CreateLandingPad(_builder.getInt8PtrTy(), 1);
+    // pad->addClause(llvm::ConstantPointerNull::get(_interfaceType->getPointerTo()) );
+    pad->addClause(llvm::ConstantPointerNull::get(_builder.getInt8PtrTy()));
+
+    auto caught = _builder.CreateCall(beginCatchFunc, pad);
+    _namedValues["caught"] = _builder.CreateBitCast(caught, _interfaceType->getPointerTo());
+
+    for (auto i : node->getCatchBlock()->getStatements())
+        if (!codeGen(i))
             throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
-    
-    
+
+    _builder.CreateCall(endCatchFunc, {});
 
     if (mergeBB)
     {
@@ -2091,7 +2105,62 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
         parent->getBasicBlockList().push_back(mergeBB);
         _builder.SetInsertPoint(mergeBB);
     }
-    return val;
+
+    return catchBB;
+
+    // static llvm::Function *setJmpFunc = NULL;
+
+    // if (setJmpFunc == NULL)
+    // {
+    //     auto type = llvm::FunctionType::get(_builder.getInt32Ty(), _builder.getInt8PtrTy(), false);
+    //     setJmpFunc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "llvm.eh.sjlj.setjmp", _module.get());
+    // }
+
+    // auto jmpBufVal = _builder.CreateLoad(_globJmpBuf);
+
+    // llvm::BasicBlock *tryBB = llvm::BasicBlock::Create(_context, "try");
+    // llvm::BasicBlock *catchBB = llvm::BasicBlock::Create(_context, "catch");
+    // llvm::BasicBlock *mergeBB = NULL;
+    // if (!(node->getTryBlock()->hasReturn() && node->getCatchBlock()->hasReturn()))
+    //     mergeBB = llvm::BasicBlock::Create(_context, "tryCont");    // No need to create a continue branch if it's unreachable
+
+    // auto val = _builder.CreateCall(setJmpFunc,  _builder.CreateBitCast(_globJmpBuf, _builder.getInt8PtrTy()));
+    // auto cond = _builder.CreateICmpEQ(val, _builder.getInt32(0));
+    // _builder.CreateCondBr(cond, tryBB, catchBB);
+
+    // auto parent = getParentFunction();
+
+    // parent->getBasicBlockList().push_back(tryBB);
+    // _builder.SetInsertPoint(tryBB);
+    // for (auto i : node->getTryBlock()->getStatements()) 
+    //     if (codeGen(i) == nullptr) 
+    //         throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+    // // tryBB->getInstList().insertBefore(NULL);
+    // if (auto tryTerminator = _builder.GetInsertBlock()->getTerminator())
+    //     llvm::StoreInst(jmpBufVal, _globJmpBuf, tryTerminator);
+    // else 
+    // {
+    //     _builder.CreateStore(jmpBufVal, _globJmpBuf);
+    //     _builder.CreateBr(mergeBB);
+    // }
+
+    // parent->getBasicBlockList().push_back(catchBB);
+    // _builder.SetInsertPoint(catchBB);
+    // _builder.CreateStore(jmpBufVal, _globJmpBuf);
+    // for (auto i : node->getCatchBlock()->getStatements()) 
+    //     if (codeGen(i) == nullptr) 
+    //         throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+    
+    
+
+    // if (mergeBB)
+    // {
+    //     if (!_builder.GetInsertBlock()->getTerminator())
+    //         _builder.CreateBr(mergeBB);
+    //     parent->getBasicBlockList().push_back(mergeBB);
+    //     _builder.SetInsertPoint(mergeBB);
+    // }
+    // return val;
 }
 
 llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)

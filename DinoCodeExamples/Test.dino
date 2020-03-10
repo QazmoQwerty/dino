@@ -43,20 +43,20 @@
 
 // include "lib2.dinoh"
 
-import "tLib"
+// import "tLib"
 
 namespace Prog {
-	// char Print(char c): extern "putchar"
+	char Print(char c): extern "putchar"
 
-	// void PrintNum(int num) {
-	// 	int a ≡ 1
-	// 	while a ≤ num / 10: a *= 10
-	// 	while a > 0 {
-	// 		Print((num % (a * 10) / a + 48) as char)
-	// 		a /= 10
-	// 	}
-	// 	Print('\n')
-	// }
+	void PrintNum(int num) {
+		int a ≡ 1
+		while a ≤ num / 10: a *= 10
+		while a > 0 {
+			Print((num % (a * 10) / a + 48) as char)
+			a /= 10
+		}
+		Print('\n')
+	}
 
 	// interface Foo1 { void Show() | void Set(char c) | char C { get | set } }
 
@@ -100,10 +100,10 @@ namespace Prog {
 	// // 	char Msg2: get
 	// // }
 
-	// type MyErr is error {
-	// 	int a
-	// 	int Msg: get: return 100
-	// }
+	type MyErr is error {
+		int a
+		int Msg: get: return 100
+	}
 
 	// void Foo() {
 		// error e := (new MyErr) as error
@@ -122,7 +122,20 @@ namespace Prog {
 	// }
 
 	void Main() {
-		Foo.PrintNum(1234)
+		// Foo.PrintNum(1234)
+		error err123
+		try {
+			error err := err123 := (new MyErr) as error
+			PrintNum(err.Msg)
+			throw err
+			PrintNum(123)
+		} catch {
+			PrintNum(321)
+			PrintNum(err123.Msg)
+			PrintNum(caught.Msg)
+			PrintNum(54321)
+		}
+		PrintNum(12345)
 		// error e := (new MyErr) as error
 		// throw e
 		// PrintNum(0)
