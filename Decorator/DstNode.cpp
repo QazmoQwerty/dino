@@ -2,6 +2,7 @@
 
 DST::Type * DST::Type::getType()
 {
+	std::cout << "you probably didn't wanna call this func" << std::endl;
 	return typeidTypePtr;
 }
 
@@ -23,9 +24,9 @@ vector<DST::Node*> DST::Variable::getChildren()
 
 DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
 {
-	if (!_left->getType()->readable())
+	if (_left && _left->getType() && !_left->getType()->readable())
 		throw DinoException("left value is write-only", EXT_GENERAL, _left->getLine());
-	if (!_right->getType()->readable())
+	if (_right && _right->getType() && !_right->getType()->readable())
 		throw DinoException("right value is write-only", EXT_GENERAL, _left->getLine());
 };
 
@@ -63,9 +64,18 @@ void DST::UnaryOperation::setType()
 		_type = ((DST::PointerType*)_expression->getType())->getPtrType();
 		break;
 	case OT_NEW:	// dynamic memory allocation
-		if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
-			throw DinoException("Expected a type specifier", EXT_GENERAL, getLine());
-		_type = new DST::PointerType(new BasicType((TypeSpecifierType*)_expression->getType()));
+		if (_expression->getExpressionType() != ET_TYPE)
+			throw DinoException("Expected a type", EXT_GENERAL, getLine());
+		if (((DST::Type*)_expression)->getExactType() == EXACT_ARRAY)	// new int[10] == int[] != (int[10])@
+		{
+			if (((DST::ArrayType*)_expression)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+				throw DinoException("Expected an array size specifier", EXT_GENERAL, getLine());
+			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH);
+		}
+		else _type = new DST::PointerType((DST::Type*)_expression);
+		// if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
+		// 	throw DinoException("Expected a type specifier", EXT_GENERAL, getLine());
+		// _type = new DST::PointerType(new BasicType((TypeSpecifierType*)_expression->getType()));
 		break;
 	case OT_BITWISE_AND:	// address-of
 		_type = new DST::PointerType(_expression->getType());
@@ -274,7 +284,7 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 	}
 	for (auto i : inter->getImplements())
 	{
-		notImplements(inter);
+		i->notImplements(inter);
 	}
 }
 
@@ -424,6 +434,8 @@ vector<DST::Node*> DST::FunctionCall::getChildren()
 
 bool DST::FunctionType::equals(Type * other)
 {
+	if (other->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)other)->size() == 1)
+		return equals(((DST::TypeList*)other)->getTypes()[0]);
 	if (other->getExactType() != EXACT_FUNCTION)
 		return false;
 	auto othr = (FunctionType*)other;
@@ -571,30 +583,33 @@ bool DST::PointerType::equals(Type * other)
 	if (other == nullptr) 
 		return false;
 
-	if (other->getExactType() == EXACT_NULL)
-		return true;
-
-	if (other->getExactType() == EXACT_TYPELIST)
-		return equals(((TypeList*)other)->getTypes()[0]);
-
-	if (other->getExactType() == EXACT_PROPERTY)
-		return equals(((PropertyType*)other)->getReturn());
-
-	if (other->getExactType() != EXACT_POINTER)
-		return false;
-	
-	auto inter = ((TypeSpecifierType*)(_type->getType()))->getInterfaceDecl();
-	if (inter)
+	switch (other->getExactType())
 	{
-		auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getTypeDecl();
-		auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type->getType())->getInterfaceDecl();
-		if (otype)
-			return otype->implements(inter);
-		else if (ointer)
-			return inter->implements(ointer) || ointer->implements(inter);
-		else return false;
+		case EXACT_NULL:
+			return true;
+
+		case EXACT_TYPELIST:
+			return equals(((TypeList*)other)->getTypes()[0]);
+		
+		case EXACT_PROPERTY:
+			return equals(((PropertyType*)other)->getReturn());
+		
+		case EXACT_POINTER:
+			if (_type->getExactType() != EXACT_SPECIFIER)
+				return ((PointerType*)other)->_type->equals(_type);
+			else if (auto inter = ((TypeSpecifierType*)(_type))->getInterfaceDecl())
+			{
+				auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type)->getTypeDecl();
+				auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type)->getInterfaceDecl();
+				if (otype)
+					return otype->implements(inter);
+				else if (ointer)
+					return inter->implements(ointer) || ointer->implements(inter);
+				else return false;
+			}
+		default:
+			return false;
 	}
-	else return ((PointerType*)other)->_type->equals(_type);
 }
 
 string DST::PointerType::toShortString()
@@ -607,6 +622,20 @@ vector<DST::Node*> DST::PointerType::getChildren()
 	vector<Node*> v;
 	v.push_back(_type);
 	return v;
+}
+
+void DST::Program::addImport(string bcFileName) {
+
+	auto dir = opendir(bcFileName.c_str());
+	if (!dir)
+		throw DinoException("Could not open directory \"" + bcFileName + '\"', EXT_GENERAL, -1);
+	while (auto ent = readdir(dir))
+	{
+		string fileName(ent->d_name);
+		if (fileName.substr(fileName.find_last_of(".")) == ".bc")
+			_bcFileImports.push_back(bcFileName + '/' + fileName); 
+	}
+	closedir(dir);
 }
 
 vector<DST::Node*> DST::Program::getChildren()

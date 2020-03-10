@@ -30,8 +30,8 @@ bool OperatorsMap::isWord(OperatorType type)
 	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);*/
 
 	switch(type) {
-		case OT_WHILE: case OT_DO: case OT_FOR: case OT_IF: case OT_ELSE: case OT_LOGICAL_AND: case OT_LOGICAL_OR: case OT_LOGICAL_NOT: case OT_CONST:
-		case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_DELETE: case OT_GET: case OT_SET: case OT_IMPLEMENTS: case OT_INCLUDE:
+		case OT_WHILE: case OT_DO: case OT_FOR: case OT_IF: case OT_ELSE: case OT_LOGICAL_AND: case OT_LOGICAL_OR: case OT_LOGICAL_NOT: case OT_CONST: case OT_TRY: case OT_CATCH:
+		case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_DELETE: case OT_GET: case OT_SET: case OT_IMPLEMENTS: case OT_INCLUDE: case OT_IMPORT:
 			return true;
 		default: 
 			return false;
@@ -42,9 +42,9 @@ bool OperatorsMap::isUnary(OperatorType type)
 {
 	switch (type) 
 	{
-		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT: case OT_INCREMENT: case OT_DECREMENT: case OT_PARENTHESIS_OPEN:
-		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_IS: case OT_AS: case OT_FOR: case OT_RETURN:
-		case OT_DELETE: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE: case OT_EXTERN:
+		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT: case OT_INCREMENT: case OT_DECREMENT: case OT_PARENTHESIS_OPEN: case OT_TRY: case OT_CATCH:
+		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_IS: case OT_AS: case OT_FOR: case OT_RETURN: case OT_THROW:
+		case OT_DELETE: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_EXTERN:
 			return true;
 		default: 
 			return false;
@@ -66,8 +66,8 @@ bool OperatorsMap::isKeyword(Operator op)
 {
 	switch (op._type) 
 	{
-		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_EXTERN:
-		case OT_RETURN: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_DELETE: case OT_GET: case OT_SET: case OT_CONST: case OT_INCLUDE:
+		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_EXTERN: case OT_TRY: case OT_CATCH:
+		case OT_RETURN: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_DELETE: case OT_GET: case OT_SET: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_THROW:
 			return true;
 		default: 
 			return false;
@@ -311,12 +311,16 @@ void OperatorsMap::setup()
 	_wordsMap[UTF8("case")]			= { OT_CASE,		UTF8("case"),		KEYWORD };
 	_wordsMap[UTF8("default")]		= { OT_DEFAULT,		UTF8("default"),	KEYWORD };
 	_wordsMap[UTF8("else")]			= { OT_ELSE,		UTF8("else"),		KEYWORD };
+	_wordsMap[UTF8("try")]			= { OT_TRY,			UTF8("try"),		KEYWORD };
+	_wordsMap[UTF8("catch")]		= { OT_CATCH,		UTF8("catch"),		KEYWORD };
 	_wordsMap[UTF8("unless")]		= { OT_UNLESS,		UTF8("unless"),		KEYWORD };
 	_wordsMap[UTF8("return")]		= { OT_RETURN,		UTF8("return"),		KEYWORD };
+	_wordsMap[UTF8("throw")]		= { OT_THROW,		UTF8("throw"),		KEYWORD };
 	_wordsMap[UTF8("get")]			= { OT_GET,			UTF8("get"),		KEYWORD };
 	_wordsMap[UTF8("set")]			= { OT_SET,			UTF8("set"),		KEYWORD };
 	_wordsMap[UTF8("type")]			= { OT_TYPE,		UTF8("type"),		KEYWORD };
 	_wordsMap[UTF8("include")]		= { OT_INCLUDE,		UTF8("include"),	KEYWORD };
+	_wordsMap[UTF8("import")]		= { OT_IMPORT,		UTF8("import"),		KEYWORD };
 	_wordsMap[UTF8("delete")]		= { OT_DELETE,		UTF8("delete"),		KEYWORD };
 	_wordsMap[UTF8("interface")]	= { OT_INTERFACE,	UTF8("interface"),	KEYWORD };
 	_wordsMap[UTF8("namespace")]	= { OT_NAMESPACE,	UTF8("namespace"),	KEYWORD };

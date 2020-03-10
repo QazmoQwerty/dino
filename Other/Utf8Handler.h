@@ -36,8 +36,8 @@ public:
 	inline bool operator==(const string& other) const { return to_string() == other; }
 	inline bool operator!=(const string& other) const { return to_string() != other; }
 
-	inline bool operator==(const char& other) const { return _val == other; }
-	inline bool operator!=(const char& other) const { return _val != other; }
+	inline bool operator==(const utf8::uint32_t& other) const { return _val == other; }
+	inline bool operator!=(const utf8::uint32_t& other) const { return _val != other; }
 
 	inline bool operator==(const unicode_char& other) const { return _val == other._val; }
 	inline bool operator!=(const unicode_char& other) const { return _val != other._val; }
@@ -80,6 +80,7 @@ public:
 	unicode_string& operator=(string other);
 	unicode_string& operator+=(string other);
 	bool operator==(const string other) const;
+	bool operator!=(const string other) const;
 
 private:
 	vector<unicode_char> _str;

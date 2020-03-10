@@ -1,0 +1,47 @@
+namespace Prog {
+	int putchar(int a): extern
+	char Print(char c): return putchar(c as int) as char
+	void Newline(): Print('\n')
+ 
+	void PrintNum(int num) {
+        int a ≡ 1
+        while a ≤ num / 10: a *= 10
+        while a > 0 {
+            putchar(num % (a * 10) / a + 48)
+            a /= 10
+        }
+    }
+
+	type Foo { char A | int B }
+
+	Foo[] Get() { 
+		Foo[] arr1 ≡ new Foo[20]
+		Foo[] arr ≡ arr1
+
+		for int i ≡ 0 | i < arr.Size | i+=1 {
+			arr[i].A ≡ i as char + 'a'
+			arr[i].B ≡ i * 10
+		}
+		return arr
+	}
+
+	void PrintArr(Foo[] arr) {
+		for int i ≡ 0 | i < arr.Size | i+=1 {
+			ShowFoo(arr[i])
+		}
+	}
+
+	void ShowFoo(Foo f) {
+		Print(f.A)
+		Print(',')
+		Print(' ')
+		PrintNum(f.B)
+		Newline()
+	}
+
+	void Main() {
+		Foo[] arr ≡ Get()
+		PrintArr(arr)
+		delete arr
+	}
+}

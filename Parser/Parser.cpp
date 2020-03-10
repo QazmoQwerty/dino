@@ -149,13 +149,45 @@ AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
 	auto lexed = Lexer::lex(str);
-	std::cout << "File: " << fileName << std::endl;
+	// std::cout << "File: " << fileName << std::endl;
 	auto vec = Preprocessor::preprocess(lexed);
 	if (showLexerOutput)
 		for (auto i : vec) 
 			printToken(i);
 	Parser p = Parser(vec);
 	return p.parseBlock();
+}
+
+
+
+AST::StatementBlock * Parser::importFile(int currLine)
+{
+	auto t = nextToken();
+	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType != LT_STRING)
+		throw DinoException("Expected a file path", EXT_GENERAL, currLine);
+
+	string importPath = ((LiteralToken<string>*)t)->_value;
+	auto dir = opendir(importPath.c_str());
+	if (!dir)
+		throw DinoException("Could not open directory \"" + importPath + '\"', EXT_GENERAL, currLine);
+	AST::StatementBlock *block;
+	while (auto ent = readdir(dir))
+	{
+		string fileName(ent->d_name);
+		if (fileName.substr(fileName.find_last_of(".")) == ".dinoh")
+		{
+			if (block)
+				block->addStatement(parseFile(importPath + '/' + fileName));
+			else block = parseFile(importPath + '/' + fileName);
+		}
+	}
+	closedir(dir);
+	if (!block)
+		throw DinoException("No .dinoh files in directory \"" + importPath + '\"', EXT_GENERAL, currLine);
+	auto import = new AST::Import(importPath);
+	import->setLine(currLine);
+	block->addStatement(import);
+	return block;
 }
 
 AST::StatementBlock * Parser::includeFile()
@@ -196,6 +228,20 @@ AST::Node * Parser::std(Token * token)
 	{
 		switch (((OperatorToken*)token)->_operator._type)	
 		{
+			case(OT_IMPORT): {
+				if (eatOperator(OT_PARENTHESIS_OPEN))
+				{
+					auto block = includeFile();
+					eatLineBreak();
+					while (!eatOperator(OT_PARENTHESIS_CLOSE))
+					{
+						block->addStatement(importFile(token->_line));
+						eatLineBreak();
+					}
+					return block;
+				}
+				else return importFile(token->_line);
+			}
 			case(OT_INCLUDE): {
 				if (eatOperator(OT_PARENTHESIS_OPEN))
 				{
@@ -298,6 +344,16 @@ AST::Node * Parser::std(Token * token)
 				node->setLine(token->_line);
 				return node;
 			}
+			case(OT_TRY): {
+				auto node = new AST::TryCatch();
+				node->setTryBlock(parseInnerBlock());
+				expectOperator(OT_CATCH);
+				node->setCatchBlock(parseInnerBlock());
+				node->setLine(token->_line);
+				return node;
+			}
+			case(OT_CATCH): throw DinoException("Missing \"try\" statement before \"catch\"", EXT_GENERAL, token->_line);
+			case(OT_ELSE): throw DinoException("Missing \"if\" statement before \"else\"", EXT_GENERAL, token->_line);
 			case(OT_TYPE): {
 				auto node = new AST::TypeDeclaration();
 				node->setName(expectIdentifier());
@@ -371,26 +427,41 @@ AST::Node * Parser::std(Token * token)
 				return node;
 			}
 			case(OT_NAMESPACE):	{
-				auto node = new AST::NamespaceDeclaration();
-				node->setName(expectIdentifier());
+				auto name = expectIdentifier();
+				AST::NamespaceDeclaration *node;
 				auto inner = parseInnerBlock();
-				if (inner->isDeclaration());
-				else if (inner->getStatementType() == ST_STATEMENT_BLOCK) 
+
+				if(_namespaces.count(name) == 0)
+				{	
+					node = new AST::NamespaceDeclaration();
+					node->setName(name); 
 					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
 						if (!i->isDeclaration())
 							throw DinoException("Expected a declaration", EXT_GENERAL, i->getLine());
-				node->setStatement(inner);	
-				node->setLine(token->_line);
+					node->setStatement(inner);
+					node->setLine(token->_line);
+					_namespaces[name] = node;
+				}
+				else
+				{
+					node = _namespaces[name];
+					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
+					{
+						if (!i->isDeclaration())
+							throw DinoException("Expected a declaration", EXT_GENERAL, i->getLine());
+						node->getStatement()->addStatement(i);
+					}
+				}
 				return node;
 			}
-			case(OT_DELETE):{
+			case(OT_DELETE): {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setExpression(parseExpression());
 				op->setLine(token->_line);
 				return op;
 			}
-			case(OT_RETURN): case(OT_EXTERN):{
+			case(OT_RETURN): case(OT_EXTERN): case(OT_THROW): {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setExpression(parseOptionalExpression());
@@ -464,7 +535,7 @@ AST::Node * Parser::nud(Token * token)
 		auto ot = ((OperatorToken*)token);
 		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT))
 		{
-			auto op = new AST::UnaryAssignment();
+			auto op = new AST::Increment(isOperator(token, OT_INCREMENT));
 			op->setLine(token->_line);
 			op->setOperator(ot->_operator);
 			op->setExpression(parseExpression(leftPrecedence(ot, PREFIX)));
@@ -546,7 +617,8 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			decl->setLine(token->_line);
 			decl->addParameter(parse());
 			expectOperator(OT_PARENTHESIS_CLOSE);
-			if (peekToken()->_type == TT_LINE_BREAK) decl->setContent(NULL);
+			if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE)) 
+				decl->setContent(NULL);
 			else decl->setContent(parseInnerBlock());
 			return decl;
 		}
@@ -609,9 +681,8 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 	{
 		if (isOperator(token, OT_INCREMENT) || isOperator(token, OT_DECREMENT)) 
 		{
-			auto op = new AST::UnaryAssignment();
+			auto op = new AST::Increment(isOperator(token, OT_INCREMENT));
 			op->setLine(token->_line);
-			op->setIsPostfix(true);
 			op->setOperator(((OperatorToken*)token)->_operator);
 			op->setExpression(convertToExpression(left));
 			return op;

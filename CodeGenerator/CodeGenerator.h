@@ -12,13 +12,16 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
+// #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
@@ -34,6 +37,8 @@
 //#include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 
+#include "llvm/Linker/Linker.h"
+
 #include "../Decorator/DstNode.h"
 #include <string>
 #include <fstream>
@@ -46,26 +51,56 @@ using std::fstream;
 
 namespace CodeGenerator 
 {
+    static bool _isLib;
     static llvm::LLVMContext _context;
     static llvm::IRBuilder<> _builder(_context);
     static std::unique_ptr<llvm::Module> _module(new llvm::Module("test", _context));
     static llvm::DataLayout *_dataLayout(new llvm::DataLayout(_module.get()));
 
-    static std::unordered_map<std::string, AllocaInst*> _namedValues;
+    static std::unordered_map<std::string, Value*> _namedValues;
+    static vector<Value*> _funcReturns; // by-reference arguments for multi-return functions
     //static std::unordered_map<std::string, llvm::GlobalVariable*> _globalValues;
     static llvm::AllocaInst *_currRetPtr;
     static llvm::BasicBlock *_currFuncExit;
+    static llvm::StructType *_interfaceVtableType;
+    static llvm::StructType *_objVtableType;
+    static llvm::StructType *_interfaceType;
+    static llvm::GlobalVariable *_globJmpBuf;
+    static llvm::GlobalVariable *_globCaughtErr;
+    static llvm::BasicBlock *_currCatchBlock = NULL;
+    static unordered_map<llvm::Type*, llvm::Value*> _vtables;
+
+    typedef struct InterfaceFuncInfo {
+        unsigned int index;
+        llvm::FunctionType *type;
+    } InterfaceFuncInfo;
+
+    static std::unordered_map<DST::InterfaceDeclaration*, std::unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
+    static llvm::Function *_vtableInterfaceLookupFunc = NULL;
 
     typedef struct TypeDefinition {
         llvm::StructType *structType;
         std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
         std::unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
+        std::unordered_map<llvm::Function*, unsigned int> vtableFuncIndexes;
+        llvm::Value *vtable;
     } TypeDefinition;
+
+    // typedef struct InterfaceDefinition {
+        
+    // } InterfaceDefinition;
+
+    llvm::Value *getFuncFromVtable(llvm::Value *vtable, DST::InterfaceDeclaration *interface, unicode_string &funcName);
+
+    void declareInterface(DST::InterfaceDeclaration *node);
+    llvm::FunctionType *getInterfaceFuncType(DST::FunctionDeclaration *node);
 
     typedef struct NamespaceMembers {
         std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
         std::unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
+        // std::unordered_map<unicode_string, InterfaceDefinition*, UnicodeHasherFunction> interfaces;
         std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
+        DST::NamespaceDeclaration *decl = NULL;
     } NamespaceMembers;
 
     static std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
@@ -76,9 +111,9 @@ namespace CodeGenerator
 
     static llvm::AllocaInst *_currThisPtr = NULL;
 
-    void setup();
+    void setup(bool isLib = false);
 
-    void writeBitcodeToFile(string fileName);
+    void writeBitcodeToFile(DST::Program *prog, string fileName);
     void execute(llvm::Function *func);
 
     // Returns a pointer to the Main function
@@ -91,15 +126,22 @@ namespace CodeGenerator
     llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
 
-    void declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+    std::pair<llvm::Function*, llvm::Function*> declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
+
+    DST::InterfaceDeclaration *getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl);
+    DST::InterfaceDeclaration *getPropertyInterface(DST::InterfaceDeclaration *interfaceDecl, DST::PropertyDeclaration *propDecl);
+    DST::InterfaceDeclaration *getFunctionInterface(DST::TypeDeclaration *typeDecl, DST::FunctionDeclaration *funcDecl);
+    DST::InterfaceDeclaration *getFunctionInterface(DST::InterfaceDeclaration *interfaceDecl, DST::FunctionDeclaration *funcDecl);
+
+    llvm::Function *createVtableInterfaceLookupFunction();
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);
     void codegenTypeMembers(DST::TypeDeclaration *node);
 
-
     bool isFunc(llvm::Value *funcPtr);
+    bool isFuncPtr(llvm::Value *funcPtr);
 
     NamespaceMembers *getNamespaceMembers(DST::Expression *node);
 
@@ -123,17 +165,20 @@ namespace CodeGenerator
     Value *codeGen(DST::UnaryOperation *node);
     Value *codeGen(DST::Assignment *node);
     Value *codeGen(DST::Conversion *node);
-    Value *codeGen(DST::FunctionCall *node);
+    Value *codeGen(DST::FunctionCall *node, vector<Value*> retPtrs = {});
     Value *codeGen(DST::MemberAccess *node);
     Value *codeGen(DST::ArrayLiteral *node);
-
+    Value *codeGen(DST::Increment *node);
+    Value *codeGen(DST::ConditionalExpression *node);
 
     llvm::BasicBlock *codeGen(DST::StatementBlock *node, const llvm::Twine &blockName = "entry");
     Value *codeGen(DST::Variable *node);
+    Value *codeGen(DST::ConstDeclaration *node);
     AllocaInst *codeGen(DST::VariableDeclaration *node);
     Value *codeGen(DST::UnaryOperationStatement *node);
 
     llvm::Function *codeGen(DST::FunctionDeclaration *node);
+    llvm::Value *codeGen(DST::TryCatch *node);
     llvm::Value *codeGen(DST::IfThenElse *node);
     llvm::Value *codeGen(DST::WhileLoop *node);
     llvm::Value *codeGen(DST::DoWhileLoop *node);

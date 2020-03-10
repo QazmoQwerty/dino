@@ -193,6 +193,14 @@ LiteralToken<char> * createCharacterLiteralToken(unicode_string value, int line)
 				value = unicode_string("\r");
 			else if (value[1].getValue() == 'n')
 				value = unicode_string("\n");
+			else if (value[1].getValue() == '0')
+				value = unicode_string("\0");
+			else if (value[1].getValue() == '\\')
+				value = unicode_string("\\");
+			else if (value[1].getValue() == '\'')
+				value = unicode_string("'");
+			else if (value[1].getValue() == '"')
+				value = unicode_string("\"");
 			else throw DinoException("Too many characters in character constant", EXT_LEXER, line);
 		}
 		else throw DinoException("Too many characters in character constant", EXT_LEXER, line);

@@ -26,7 +26,7 @@ namespace AST
 		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		const int getLine() const { return _line; }
+		int getLine() const { return _line; }
 		
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -41,7 +41,7 @@ namespace AST
 			Function defined for AST visual representation - see AstToFile.h 
 		*/
 		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		const unsigned int getNodeId() const { return _nodeId; };
+		unsigned int getNodeId() const { return _nodeId; };
 
 		/* 
 			Returns a string representation of the node (excluding children info)
@@ -137,15 +137,17 @@ namespace AST
 	{
 		Operator _operator;
 		Expression* _expression;
+		bool _isInc;
 
 	public:
-		Increment() : ExpressionStatement() {};
+		Increment(bool isIncrement) : ExpressionStatement(), _isInc(isIncrement) {};
 		virtual ~Increment() { if (_expression) delete _expression; }
 		virtual StatementType getStatementType() { return ST_INCREMENT; };
 		virtual ExpressionType getExpressionType() { return ET_INCREMENT; };
 		virtual string toString() { return "<Increment>\\n" + _operator._str.to_string(); };
 		virtual vector<Node*> getChildren();
 
+		bool isIncrement() { return _isInc; }
 		void setOperator(Operator op) { _operator = op; }
 		void setExpression(Expression* expression) { _expression = expression; }
 		Operator getOperator() { return _operator; }
@@ -190,31 +192,8 @@ namespace AST
 
 		void setVarId(unicode_string varId) { _varId = varId; }
 		void setType(Expression* type) { _type = type; }
-		unicode_string getVarId() { return _varId; }
+		unicode_string &getVarId() { return _varId; }
 		Expression* getVarType() { return _type; }
-	};
-
-	class UnaryAssignment : public ExpressionStatement	// could clean up code by making this a subclass of UnaryOperation
-	{
-		Operator _operator;
-		Expression* _expression;
-		bool _isPostfix;
-
-	public:
-		UnaryAssignment() : ExpressionStatement() { _isPostfix = false; };
-		virtual ~UnaryAssignment() { if (_expression) delete _expression; }
-		virtual ExpressionType getExpressionType() { return ET_UNARY_ASSIGNMENT; };
-		virtual StatementType getStatementType() { return ST_UNARY_ASSIGNMENT; };
-		virtual string toString() { return string() + "<" + (_isPostfix ? "Postfix" : "") + "UnaryAssignment>\\n" + _operator._str.to_string(); };
-		virtual vector<Node*> getChildren();
-
-		void setOperator(Operator op) { _operator = op; }
-		void setExpression(Expression* expression) { _expression = expression; }
-		void setIsPostfix(bool isPostfix) { _isPostfix = isPostfix; }
-
-		Operator getOperator() { return _operator; }
-		Expression* getExpression() { return _expression; }
-		bool isPostfix() { return _isPostfix; }
 	};
 
 	/********************** Statements **********************/
@@ -258,6 +237,35 @@ namespace AST
 		Expression* getCondition() { return _condition; }
 		StatementBlock* getThenBranch() { return _thenBranch; }
 		StatementBlock* getElseBranch() { return _elseBranch; }
+	};
+
+	class TryCatch : public Statement
+	{
+		StatementBlock* _tryBlock;
+		StatementBlock* _catchBlock;
+
+	public:
+		virtual ~TryCatch() { if (_tryBlock) delete _tryBlock; if (_catchBlock) delete _catchBlock; }
+		virtual StatementType getStatementType() { return ST_TRY_CATCH; };
+		virtual string toString() { return "<TryCatch>"; };
+		virtual vector<Node*> getChildren() { return { _tryBlock, _catchBlock }; };
+
+		void setTryBlock(StatementBlock* tryBlock) { _tryBlock = tryBlock; }
+		void setCatchBlock(StatementBlock* catchBlock) { _catchBlock = catchBlock; }
+	
+		StatementBlock* getTryBlock() { return _tryBlock; }
+		StatementBlock* getCatchBlock() { return _catchBlock; }
+	};
+
+	class Import : public Statement 
+	{
+		string _toImport;
+	public:
+		Import(string toImport) : _toImport(toImport) {}
+		string getImportPath() { return _toImport; }
+		virtual StatementType getStatementType() { return ST_IMPORT; };
+		virtual string toString() { return "<Import>\\n\"" + _toImport + "\""; };
+		virtual vector<Node*> getChildren() { return {}; };
 	};
 
 	typedef struct CaseClause {
