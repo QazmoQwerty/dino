@@ -33,8 +33,6 @@ typedef struct cmdOptions
 	bool outputLib = false;
 	const char *libFileName;
 	char *optLevel = NULL;
-	
-	// const char *libBcFileName;
 } cmdOptions;
 
 void showHelp() 
@@ -51,6 +49,33 @@ void showHelp()
 		<< "-o [filepath] (output a .exe file to \"filepath\")\n"
 		<< "-lib [dirpath] (build as a library to the directory \"dirpath\")\n"
 		<< "-O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n\n";
+}
+
+string runCmd(string cmd, bool printOutput = true) // if print output is false, nothing will be printed untill the entire command is done
+{
+    std::string result = "";
+    FILE* pipe = popen(cmd.c_str(), "r");
+    if (!pipe) throw std::runtime_error("popen() failed in getOutputFromCmd");
+    try {
+        while (!feof(pipe)) {
+			char c;
+            if ((c=getc(pipe)) != EOF)
+			{
+                result += c;
+                
+                if (printOutput)
+				{
+					std::cout << c;
+					std::cout.flush();
+				}
+			}
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
 }
 
 cmdOptions *getCmdOptions(int argc, char *argv[]) 
@@ -165,43 +190,57 @@ int main(int argc, char *argv[])
 		if (cmd->executeInterpret)
 			CodeGenerator::execute(mainFunc);
 
+		string bcFileName = "";
+		if (cmd->outputBc) 
+			bcFileName = string(cmd->bcFileName);
+		else if(cmd->outputExe || cmd->outputLl)
+		{
+			bcFileName = runCmd("mktemp dinoBcTmp-XXXXX.bc", false);
+			if (bcFileName[bcFileName.size() - 1] == '\n')
+				bcFileName.pop_back();
+		}
+
 		if (cmd->outputBc || cmd->outputExe || cmd->outputLl)
 		{
-			CodeGenerator::writeBitcodeToFile(dst, cmd->bcFileName);
+			CodeGenerator::writeBitcodeToFile(dst, bcFileName);
 			if (cmd->verbose)
 				llvm::errs() << "outputted .bc file\n";
 		}
 
 		if (cmd->outputLib)
-		{			
+		{
+			// llvm::errs() << "outputting lib files\n";
 			mkdir(cmd->libFileName, 0777);
-			auto bcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
-			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinoh", bcFileName, dst);
-			CodeGenerator::writeBitcodeToFile(dst, bcFileName);
+			auto libBcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
+			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinoh", libBcFileName, dst);
+			CodeGenerator::writeBitcodeToFile(dst, libBcFileName);
 			if (cmd->verbose)
 				llvm::errs() << "outputted lib files\n";
 		}
 
 		if (cmd->optLevel && strcmp(cmd->optLevel, "-Od"))
 		{
-			system((string("opt ") + cmd->bcFileName + " " + cmd->optLevel + " -o " + cmd->bcFileName).c_str());
+			runCmd(string("opt ") + bcFileName + " " + cmd->optLevel + " -o " + bcFileName);
 			if (cmd->verbose)
 				llvm::errs() << "Optimized bitcode...\n";
 		}
 
 		if (cmd->outputLl)
 		{
-			system((string("llvm-dis ") + cmd->bcFileName + " -o " + cmd->llFileName).c_str());
+			runCmd(string("llvm-dis ") + bcFileName + " -o " + cmd->llFileName);
 			if (cmd->verbose)
 				llvm::errs() << "outputted .ll file\n";
 		}
 
 		if (cmd->outputExe)
 		{
-			system((string("clang++ -Wno-override-module ") + cmd->bcFileName + " -o " + cmd->exeFileName).c_str());
+			runCmd(string("clang++ -Wno-override-module ") + bcFileName + " -o " + cmd->exeFileName);
 			if (cmd->verbose)
 				llvm::errs() << "outputted ELF file\n";
 		}
+
+		if (bcFileName != "" && !cmd->outputBc)
+			runCmd("rm " + bcFileName);
 
 		// TODO - clear memory!
 		// Decorator::clear();	

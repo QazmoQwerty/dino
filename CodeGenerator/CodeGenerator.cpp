@@ -29,33 +29,6 @@ void CodeGenerator::setup(bool isLib)
                                                     // llvm::Constant::getNullValue(_interfaceType), ".caughtErr");
 }
 
-string runCmd(string cmd, bool printOutput) // if print output is false, nothing will be printed unil the entire command is done
-{
-    std::string result = "";
-    FILE* pipe = popen(cmd.c_str(), "r");
-    if (!pipe) throw std::runtime_error("popen() failed in getOutputFromCmd");
-    try {
-        while (!feof(pipe)) {
-			char c;
-            if ((c=getc(pipe)) != EOF)
-			{
-                result += c;
-                
-                if (printOutput)
-				{
-					std::cout << c;
-					std::cout.flush();
-				}
-			}
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
-}
-
 #include "llvm/MC/MCObjectWriter.h"
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
