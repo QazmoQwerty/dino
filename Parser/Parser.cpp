@@ -172,7 +172,7 @@ AST::StatementBlock * Parser::importFile(PositionInfo currPos)
 	auto dir = opendir(importPath.c_str());
 	if (!dir)
 		throw ErrorReporter::report("Could not open directory \"" + importPath + '\"', ERR_PARSER, currPos);
-	AST::StatementBlock *block;
+	AST::StatementBlock *block = NULL;
 	while (auto ent = readdir(dir))
 	{
 		string fileName(ent->d_name);
