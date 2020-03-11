@@ -26,7 +26,7 @@ void Decorator::setup(bool isLibrary)
 	createBasicType("type");
 	createBasicType("int");
 	createBasicType("bool");
-	createBasicType("string");
+	// createBasicType("string");
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
@@ -80,7 +80,7 @@ DST::Node *Decorator::decorate(AST::Node * node)
 	else return decorate(dynamic_cast<AST::Statement*>(node));
 }
 
-DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
+DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, bool isStd)
 {
 	auto shallowDecl = new DST::NamespaceDeclaration(node);
 	for (auto i : node->getStatement()->getStatements())
@@ -96,13 +96,25 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
 			auto decl = (AST::InterfaceDeclaration*)i;
 			auto tempDecl = new DST::InterfaceDeclaration(decl);
 			//shallowDecl->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
+			auto specifier = new DST::TypeSpecifierType(tempDecl);
+			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
+			if (isStd)
+			{
+				if (decl->getName() == "Error")
+					_variables[0][unicode_string("error")] = specifier;
+			}
 		}
 		else if (i->getStatementType() == ST_TYPE_DECLARATION)
 		{
 			auto decl = (AST::TypeDeclaration*)i;
 			auto tempDecl = new DST::TypeDeclaration(decl);
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
+			auto specifier = new DST::TypeSpecifierType(tempDecl);
+			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
+			if (isStd)
+			{
+				if (decl->getName() == "String")
+					_variables[0][unicode_string("string")]	= specifier;
+			}
 		}
 	}
 	return shallowDecl;
@@ -418,7 +430,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 {
 	_currentProgram = new DST::Program();
 
-	createErrorInterfaceType();
+	// createErrorInterfaceType();
 
 	for (auto i : node->getStatements())
 	{
@@ -428,7 +440,8 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		{ 
 			if (i->getStatementType() != ST_NAMESPACE_DECLARATION)
 				throw "everything must be in a namespace!";
-			_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i));
+			
+			_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i, ((AST::NamespaceDeclaration*)i)->getName() == "Std"));
 		}
 	}
 

@@ -68,6 +68,7 @@ namespace CodeGenerator
     static llvm::GlobalVariable *_globJmpBuf;
     static llvm::GlobalVariable *_globCaughtErr;
     static llvm::BasicBlock *_currCatchBlock = NULL;
+    static llvm::StructType *_stringTy = NULL;
     static unordered_map<llvm::Type*, llvm::Value*> _vtables;
 
     typedef struct InterfaceFuncInfo {

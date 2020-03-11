@@ -389,7 +389,12 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     case LT_NULL:
         return llvm::Constant::getNullValue(_builder.getInt8Ty()->getPointerTo());  // 'void*' is invalid in llvm IR
     case LT_STRING:
-        return _builder.CreateGlobalString(((AST::String*)node->getBase())->getValue(), ".stringLit");
+    {
+        return llvm::ConstantStruct::get(_stringTy, llvm::ConstantStruct::get(llvm::cast<llvm::StructType>(_stringTy->getElementType(0)), {
+            _builder.getInt32(((AST::String*)node->getBase())->getValue().size()),
+            (llvm::Constant*)_builder.CreateBitCast(_builder.CreateGlobalString(((AST::String*)node->getBase())->getValue(), ".stringLit"), _builder.getInt8PtrTy())
+        }));
+    }
     default:
         throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
     }
@@ -426,6 +431,22 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     }
     else if (leftType->getExactType() == EXACT_BASIC)
     {
+        if (auto interfaceDecl = ((DST::BasicType*)leftType)->getTypeSpecifier()->getInterfaceDecl())
+        {
+            auto lval = codeGenLval(node->getLeft());
+            auto vtablePtr = _builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(1) });
+            auto vtable = _builder.CreateLoad(vtablePtr);
+            auto funcPtr = getFuncFromVtable(vtable, interfaceDecl, node->getRight());
+            node->getRight() += ".get";
+            auto funcTy = _interfaceVtableFuncInfo[interfaceDecl][node->getRight()].type;
+            auto thisPtr = _builder.CreateLoad(_builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(0) }));
+            auto func = _builder.CreateBitCast(funcPtr, funcTy->getPointerTo());
+            auto val = createCallOrInvoke(func, thisPtr);
+            auto alloca = _builder.CreateAlloca(funcTy->getReturnType());
+            _builder.CreateStore(val, alloca);
+            return alloca;
+        }
+
         auto bt = (DST::BasicType*)leftType;
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
         return _builder.CreateInBoundsGEP(
@@ -478,6 +499,9 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
         auto leftTy = node->getLeft()->getType();
         if (leftTy->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)leftTy)->getTypes().size() == 1)
             leftTy = ((DST::TypeList*)leftTy)->getTypes()[0];
+        
+        if (leftTy->getExactType() == EXACT_PROPERTY)
+            leftTy = ((DST::PropertyType*)leftTy)->getReturn();
         switch (leftTy->getExactType())
         {
             case EXACT_NAMESPACE:   // Static getter property
@@ -492,7 +516,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
             {
                 auto lval = codeGenLval(node->getLeft());
 
-                if (auto interfaceDecl = ((DST::BasicType*)node->getLeft()->getType())->getTypeSpecifier()->getInterfaceDecl())
+                if (auto interfaceDecl = ((DST::BasicType*)leftTy)->getTypeSpecifier()->getInterfaceDecl())
                 {
                     auto vtablePtr = _builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(1) });
                     auto vtable = _builder.CreateLoad(vtablePtr);
@@ -1266,7 +1290,8 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             //     return _builder.getFloatTy();
             else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
                 return llvm::Type::getVoidTy(_context);
-            // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("string"))
+            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("string"))
+                return _stringTy;
             //     return llvm::Type::getVoidTy(_context);
             else 
             {
@@ -1387,7 +1412,17 @@ llvm::FunctionType *CodeGenerator::getInterfaceFuncType(DST::FunctionDeclaration
 void CodeGenerator::declareType(DST::TypeDeclaration *node)
 {
     auto def = new TypeDefinition();
-    def->structType = llvm::StructType::create(_context, node->getName().to_string());
+
+    // Todo - add file name as well
+    string typeName = "type.";
+    for (auto i : _currentNamespace)
+        typeName += i->decl->getName().to_string() + ".";
+    typeName += node->getName().to_string();
+
+    def->structType = llvm::StructType::create(_context, typeName);
+
+    if (!_stringTy && typeName == "type.Std.String")
+        _stringTy = def->structType;
     _types[node] = _currentNamespace.back()->types[node->getName()] = def;
 }
 
