@@ -159,6 +159,14 @@ enum OperatorType
 	OT_EOF,
 };
 
+enum ErrorType
+{
+	ERR_LEXER,
+	ERR_PARSER,
+	ERR_DECORATOR,
+	ERR_CODEGEN,
+};
+
 /*
 	Types of exceptions (in all of the project)
 */

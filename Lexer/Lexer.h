@@ -11,6 +11,7 @@
 #include <iostream>
 #include "Token.h"
 #include "../Other/OperatorsMap.h"
+#include "../Other/ErrorReporter.h"
 
 using std::vector;
 using std::string;

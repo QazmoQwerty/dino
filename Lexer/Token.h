@@ -22,6 +22,14 @@ struct Token
 	int _line;
 };
 
+typedef struct PositionInfo 
+{
+	int line;
+	int startPos;
+	int endPos;
+	const char *file;
+} PositionInfo;
+
 typedef struct Operator
 {
 	OperatorType _type;
