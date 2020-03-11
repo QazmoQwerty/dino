@@ -361,11 +361,6 @@ AST::Node * Parser::std(Token * token)
 				node->setName(expectIdentifier());
 				if (eatOperator(OT_IS))
 					node->setInterfaces(expectIdentifierList());
-				/*{
-					node->addInterface(expectIdentifier());
-					while (eatOperator(OT_COMMA))
-						node->addInterface(expectIdentifier());
-				}*/
 				expectOperator(OT_CURLY_BRACES_OPEN);
 				while (!eatOperator(OT_CURLY_BRACES_CLOSE))
 				{
@@ -373,8 +368,14 @@ AST::Node * Parser::std(Token * token)
 					switch (decl->getStatementType())
 					{
 					case(ST_VARIABLE_DECLARATION): node->addVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
-					case(ST_FUNCTION_DECLARATION): node->addFunctionDeclaration(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
-					case(ST_PROPERTY_DECLARATION): node->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
+					case(ST_FUNCTION_DECLARATION): 
+						if (!dynamic_cast<AST::FunctionDeclaration*>(decl)->getContent())
+							throw ErrorReporter::report("missing function body", ERR_PARSER, decl->getPosition());
+						node->addFunctionDeclaration(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
+					case(ST_PROPERTY_DECLARATION): 
+						if (!dynamic_cast<AST::PropertyDeclaration*>(decl)->getGet() && !dynamic_cast<AST::PropertyDeclaration*>(decl)->getSet())
+							throw ErrorReporter::report("missing propery body", ERR_PARSER, decl->getPosition());
+						node->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
 					default: throw ErrorReporter::report("expected a variable, property or function declaration", ERR_PARSER, decl->getPosition());
 					}
 					skipLineBreaks();
@@ -387,19 +388,6 @@ AST::Node * Parser::std(Token * token)
 				node->setName(expectIdentifier());
 				if (eatOperator(OT_IS))
 					node->setImplements(expectIdentifierList());
-				/*{
-					auto implements = parseExpression();
-					if (implements == nullptr)
-						throw ErrorReporter::report("Expected an Expression", ERR_PARSER, token->_pos);
-					if (implements->getExpressionType() == ET_LIST)
-						node->setImplements((AST::ExpressionList*)implements);
-					else
-					{
-						auto list = new AST::ExpressionList();
-						list->addExpression(implements);
-						node->setImplements(list);
-					}
-				}*/
 				if (eatOperator(OT_COLON))
 				{
 					auto decl = parseStatement();
@@ -407,7 +395,7 @@ AST::Node * Parser::std(Token * token)
 					{
 					case(ST_PROPERTY_DECLARATION): node->addProperty(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
 					case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
-					default: throw ErrorReporter::report("expected property or function declaration", ERR_PARSER, decl->getPosition());
+					default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
 					}
 				}
 				else {
@@ -419,7 +407,7 @@ AST::Node * Parser::std(Token * token)
 						{
 						case(ST_PROPERTY_DECLARATION): node->addProperty(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
 						case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
-						default: throw ErrorReporter::report("expected property or function declaration", ERR_PARSER, decl->getPosition());
+						default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
 						}
 						if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
 							expectLineBreak();

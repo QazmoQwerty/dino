@@ -1,16 +1,23 @@
 namespace Prog {
-	// void Foo() {
-	// 	return
-	// }
+
+	interface Foo {
+		int a { get: return 20 }
+	}
+
+	type Bar {
+		void A()
+	}
 
 	int Main() {
-		// int a := 20
+		// try {
 
-		// int c := 30
-
-        // int a := 12
-		12 a
-		int a := 123
-		return 19
+		// }
+		// catch {
+		if true
+		{
+			a := 20
+		}
+		// }
+		return 20
 	}
 }
