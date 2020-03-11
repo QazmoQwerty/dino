@@ -6,6 +6,7 @@
 #include <string>
 #include <iostream>
 #include "Token.h"
+#include "../Other/ErrorReporter.h"
 #include "../Other/OperatorsMap.h"
 
 using std::vector;

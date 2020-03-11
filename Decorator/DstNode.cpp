@@ -25,9 +25,9 @@ vector<DST::Node*> DST::Variable::getChildren()
 DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
 {
 	if (_left && _left->getType() && !_left->getType()->readable())
-		throw DinoException("left value is write-only", EXT_GENERAL, _left->getLine());
+		throw ErrorReporter::report("left value is write-only", ERR_DECORATOR, _left->getPosition());
 	if (_right && _right->getType() && !_right->getType()->readable())
-		throw DinoException("right value is write-only", EXT_GENERAL, _left->getLine());
+		throw ErrorReporter::report("right value is write-only", ERR_DECORATOR, _left->getPosition());
 };
 
 vector<DST::Node*> DST::BinaryOperation::getChildren()
@@ -60,21 +60,21 @@ void DST::UnaryOperation::setType()
 	{
 	case OT_AT:	// dereference
 		if (_expression->getType()->getExactType() != EXACT_POINTER)
-			throw DinoException("Cannot dereference a non-pointer type", EXT_GENERAL, getLine());
+			throw ErrorReporter::report("Cannot dereference a non-pointer type", ERR_DECORATOR, getPosition());
 		_type = ((DST::PointerType*)_expression->getType())->getPtrType();
 		break;
 	case OT_NEW:	// dynamic memory allocation
 		if (_expression->getExpressionType() != ET_TYPE)
-			throw DinoException("Expected a type", EXT_GENERAL, getLine());
+			throw ErrorReporter::report("Expected a type", ERR_DECORATOR, getPosition());
 		if (((DST::Type*)_expression)->getExactType() == EXACT_ARRAY)	// new int[10] == int[] != (int[10])@
 		{
 			if (((DST::ArrayType*)_expression)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
-				throw DinoException("Expected an array size specifier", EXT_GENERAL, getLine());
+				throw ErrorReporter::report("Expected an array size specifier", ERR_DECORATOR, getPosition());
 			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH);
 		}
 		else _type = new DST::PointerType((DST::Type*)_expression);
 		// if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
-		// 	throw DinoException("Expected a type specifier", EXT_GENERAL, getLine());
+		// 	throw ErrorReporter::report("Expected a type specifier", ERR_DECORATOR, getPosition());
 		// _type = new DST::PointerType(new BasicType((TypeSpecifierType*)_expression->getType()));
 		break;
 	case OT_BITWISE_AND:	// address-of
@@ -83,7 +83,7 @@ void DST::UnaryOperation::setType()
 	case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
 		_type = _expression->getType();
 		break;
-	default: throw DinoException("Unimplemented unary operator", EXT_GENERAL, getLine());
+	default: throw ErrorReporter::report("Unimplemented unary operator", ERR_DECORATOR, getPosition());
 	}
 }
 
@@ -152,7 +152,7 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 					std::cout << isVoid << std::endl;
 					std::cout << returnType->toShortString() << std::endl;
 					std::cout << ((DST::UnaryOperationStatement*)i)->getExpression()->getType()->toShortString() << std::endl;
-					throw DinoException("Return value type does not match function type.", EXT_GENERAL, i->getLine());
+					throw ErrorReporter::report("Return value type does not match function type.", ERR_DECORATOR, i->getPosition());
 				}
 				break;
 			case ST_IF_THEN_ELSE:
@@ -204,10 +204,10 @@ void DST::TypeDeclaration::addDeclaration(Statement * decl, Type * type)
 	case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
 	case ST_VARIABLE_DECLARATION: varId = ((VariableDeclaration*)decl)->getVarId(); break;
 	case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getPropId(); break;
-	default: throw DinoException("Type declarations may only specify variable, property, and function declarations.", EXT_GENERAL, decl->getLine());
+	default: throw ErrorReporter::report("Type declarations may only specify variable, property, and function declarations.", ERR_DECORATOR, decl->getPosition());
 	}
 	if (_decls.count(varId))
-		throw DinoException("Multiple members of same name are not allowed", EXT_GENERAL, decl->getLine());
+		throw ErrorReporter::report("Multiple members of same name are not allowed", ERR_DECORATOR, decl->getPosition());
 	_decls[varId] = std::make_pair(decl, type);
 }
 
@@ -216,7 +216,7 @@ bool DST::TypeDeclaration::validateImplements(InterfaceDeclaration * inter)
 	for (auto decl : inter->getDeclarations())
 	{
 		if (!(_decls.count(decl.first) != 0 && _decls[decl.first].second->equals(_decls[decl.first].second)))
-			throw DinoException("Type " + _name.to_string() + " does not implement " + decl.first.to_string() + " of " + inter->getName().to_string(), EXT_GENERAL, _base->getLine());
+			throw ErrorReporter::report("Type " + _name.to_string() + " does not implement " + decl.first.to_string() + " of " + inter->getName().to_string(), ERR_DECORATOR, _base->getPosition());
 	}
 	for (auto i : inter->getImplements())
 	{
@@ -268,10 +268,10 @@ void DST::InterfaceDeclaration::addDeclaration(Statement * decl, Type * type)
 	{
 	case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
 	case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getName(); break;
-	default: throw DinoException("Interface declarations may only specify property, and function declarations.", EXT_GENERAL, decl->getLine());
+	default: throw ErrorReporter::report("Interface declarations may only specify property, and function declarations.", ERR_DECORATOR, decl->getPosition());
 	}
 	if (_decls.count(varId))
-		throw DinoException("Multiple members of same name are not allowed", EXT_GENERAL, decl->getLine());
+		throw ErrorReporter::report("Multiple members of same name are not allowed", ERR_DECORATOR, decl->getPosition());
 	_decls[varId] = std::make_pair(decl, type);
 }
 
@@ -280,7 +280,7 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 	for (auto decl : inter->getDeclarations())
 	{
 		if (_decls.count(decl.first) != 0)
-			throw DinoException("Interface '" + getName().to_string() + "' already has '" + decl.first.to_string() + "' of '" + inter->getName().to_string() + "'", EXT_GENERAL, _base->getLine());
+			throw ErrorReporter::report("Interface '" + getName().to_string() + "' already has '" + decl.first.to_string() + "' of '" + inter->getName().to_string() + "'", ERR_DECORATOR, _base->getPosition());
 	}
 	for (auto i : inter->getImplements())
 	{
@@ -628,7 +628,7 @@ void DST::Program::addImport(string bcFileName) {
 
 	auto dir = opendir(bcFileName.c_str());
 	if (!dir)
-		throw DinoException("Could not open directory \"" + bcFileName + '\"', EXT_GENERAL, -1);
+		throw ErrorReporter::report("Could not open directory \"" + bcFileName + '\"', ERR_DECORATOR, PositionInfo{0, 0, 0, ""});
 	while (auto ent = readdir(dir))
 	{
 		string fileName(ent->d_name);

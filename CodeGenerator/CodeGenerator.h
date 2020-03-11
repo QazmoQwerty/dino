@@ -68,6 +68,7 @@ namespace CodeGenerator
     static llvm::GlobalVariable *_globJmpBuf;
     static llvm::GlobalVariable *_globCaughtErr;
     static llvm::BasicBlock *_currCatchBlock = NULL;
+    static llvm::StructType *_stringTy = NULL;
     static unordered_map<llvm::Type*, llvm::Value*> _vtables;
 
     typedef struct InterfaceFuncInfo {
@@ -92,8 +93,10 @@ namespace CodeGenerator
 
     llvm::Value *getFuncFromVtable(llvm::Value *vtable, DST::InterfaceDeclaration *interface, unicode_string &funcName);
 
-    void declareInterface(DST::InterfaceDeclaration *node);
+    void declareInterfaceMembers(DST::InterfaceDeclaration *node);
     llvm::FunctionType *getInterfaceFuncType(DST::FunctionDeclaration *node);
+
+    llvm::Value *createCallOrInvoke(llvm::Value *callee, llvm::ArrayRef<llvm::Value*> args);
 
     typedef struct NamespaceMembers {
         std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;

@@ -18,8 +18,8 @@ public:
 	static DST::Program *decorateProgram(AST::StatementBlock* node);
 
 private:
-	static DST::NamespaceDeclaration *partA(AST::NamespaceDeclaration *node);
-	static void partB(DST::NamespaceDeclaration *node);
+	static DST::NamespaceDeclaration *partA(AST::NamespaceDeclaration *node, bool isStd = false);
+	static void partB(DST::NamespaceDeclaration *node);	
 	static void partC(DST::NamespaceDeclaration *node);
 	static void partD(DST::NamespaceDeclaration *node);
 	static void partE(DST::NamespaceDeclaration *node);

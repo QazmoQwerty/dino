@@ -26,7 +26,7 @@ void Decorator::setup(bool isLibrary)
 	createBasicType("type");
 	createBasicType("int");
 	createBasicType("bool");
-	createBasicType("string");
+	// createBasicType("string");
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
@@ -80,7 +80,7 @@ DST::Node *Decorator::decorate(AST::Node * node)
 	else return decorate(dynamic_cast<AST::Statement*>(node));
 }
 
-DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
+DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, bool isStd)
 {
 	auto shallowDecl = new DST::NamespaceDeclaration(node);
 	for (auto i : node->getStatement()->getStatements())
@@ -96,13 +96,30 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node)
 			auto decl = (AST::InterfaceDeclaration*)i;
 			auto tempDecl = new DST::InterfaceDeclaration(decl);
 			//shallowDecl->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
+			auto specifier = new DST::TypeSpecifierType(tempDecl);
+			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
+			if (isStd)
+			{
+				if (decl->getName() == "Error")
+				{
+					// specifier->getInterfaceDecl()->getBase()->setName(unicode_string("error"));
+					_variables[0][unicode_string("error")] = specifier;
+				}
+			}
 		}
 		else if (i->getStatementType() == ST_TYPE_DECLARATION)
 		{
 			auto decl = (AST::TypeDeclaration*)i;
 			auto tempDecl = new DST::TypeDeclaration(decl);
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::TypeSpecifierType(tempDecl));
+			auto specifier = new DST::TypeSpecifierType(tempDecl);
+			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
+			if (isStd)
+			{
+				if (decl->getName() == "String") {
+					// specifier->getTypeDecl()->setName(unicode_string("string"));
+					_variables[0][unicode_string("string")]	= specifier;
+				}
+			}
 		}
 	}
 	return shallowDecl;
@@ -128,7 +145,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				{
 					auto dec = decorate(i);
 					if (dec->getType()->getExactType() != EXACT_SPECIFIER && ((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
-						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
+						throw ErrorReporter::report("Expected an interface specifier", ERR_DECORATOR, dec->getPosition());
 					//decl->addImplements(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
 					decl->addImplements(((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
@@ -142,7 +159,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				{
 					auto dec = decorate(i);
 					if (dec->getType()->getExactType() != EXACT_SPECIFIER && ((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
-						throw DinoException("Expected an interface specifier", EXT_GENERAL, dec->getLine());
+						throw ErrorReporter::report("Expected an interface specifier", ERR_DECORATOR, dec->getPosition());
 					//decl->addInterface(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
 					decl->addInterface(((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
@@ -246,7 +263,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			if (func->getVarDecl()->getVarId() == MAIN_FUNC)
 			{
 				if (_main)
-					throw DinoException("Main function can't be declared more than once", EXT_GENERAL, node->getLine());
+					throw ErrorReporter::report("Main function can't be declared more than once", ERR_DECORATOR, func->getPosition());
 				_main = funcDecl;
 			}
 			break;
@@ -348,9 +365,9 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 						_variables[currentScope()][param->getVarId()] = param->getType();
 					decl->setContent(decorate(decl->getBase()->getContent()));
 					if (!decl->getContent())
-						throw DinoException("Method must have a body.", EXT_GENERAL, node->getLine());
+						throw ErrorReporter::report("Method must have a body.", ERR_DECORATOR, decl->getPosition());
 					if (!decl->getContent()->hasReturnType(decl->getReturnType()))
-						throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+						throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 					leaveBlock();
 				}
 				else if (member.second.first->getStatementType() == ST_PROPERTY_DECLARATION)
@@ -363,7 +380,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
 						if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
-							throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+							throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 					}
 					if (decl->getBase()->getSet())
 					{
@@ -384,7 +401,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				_variables[currentScope()][i->getVarId()] = i->getType();
 			decl->setContent(decorate(decl->getBase()->getContent()));
 			if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
-				throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+				throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 			leaveBlock();
 			break;
 		}
@@ -396,7 +413,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 			{
 				decl->setGet(decorate(decl->getBase()->getGet()));
 				if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
-					throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+					throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 			}
 			if (decl->getBase()->getSet())
 			{
@@ -418,7 +435,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 {
 	_currentProgram = new DST::Program();
 
-	createErrorInterfaceType();
+	// createErrorInterfaceType();
 
 	for (auto i : node->getStatements())
 	{
@@ -427,8 +444,9 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		else
 		{ 
 			if (i->getStatementType() != ST_NAMESPACE_DECLARATION)
-				throw "everything must be in a namespace!";
-			_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i));
+				throw ErrorReporter::report("everything must be in a namespace!", ERR_DECORATOR, i->getPosition());
+			
+			_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i, ((AST::NamespaceDeclaration*)i)->getName() == "Std"));
 		}
 	}
 
@@ -439,7 +457,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		partC(i.second);
 	
 	if (!_main && !_isLibrary)
-		throw DinoException("No entry point (Main function)", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("No entry point (Main function)", ERR_DECORATOR, node->getPosition());
 	
 	for (auto i : _currentProgram->getNamespaces())
 		partD(i.second);
@@ -477,7 +495,7 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 	case ET_INCREMENT:
 		return decorate(dynamic_cast<AST::Increment*>(node));
 	default: 
-		throw DinoException("Unimplemented expression type in the decorator", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Unimplemented expression type in the decorator", ERR_DECORATOR, node->getPosition());
 	}
 }
 
@@ -491,7 +509,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	{
 		auto n = decorate(dynamic_cast<AST::FunctionCall*>(node));
 		if (!n->isStatement())
-			throw DinoException("expected a statement", EXT_GENERAL, node->getLine());
+			throw ErrorReporter::report("expected a statement", ERR_DECORATOR, node->getPosition());
 		return dynamic_cast<DST::ExpressionStatement*>(n);
 	}
 	case ST_NAMESPACE_DECLARATION:
@@ -527,7 +545,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	case ST_TRY_CATCH:
 		return decorate(dynamic_cast<AST::TryCatch*>(node));
 	default: 
-		throw DinoException("Unimplemented statement type in the decorator", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Unimplemented statement type in the decorator", ERR_DECORATOR, node->getPosition());
 	}
 }
 
@@ -575,7 +593,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 		if (auto var = _currentProgram->getNamespace(name))
 			return new DST::Variable(node, new DST::NamespaceType(var));
 
-	throw DinoException("Identifier '" + name.to_string() + "' is undefined", EXT_GENERAL, node->getLine());
+	throw ErrorReporter::report("Identifier '" + name.to_string() + "' is undefined", ERR_DECORATOR, node->getPosition());
 }
 
 DST::Increment *Decorator::decorate(AST::Increment *node)
@@ -598,7 +616,7 @@ DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
 
 	decl->setContent(decorate(node->getContent()));
 	if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
-		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
 	leaveBlock();
 	return decl;
 }
@@ -609,12 +627,12 @@ DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
 	DST::Type* type = evalType(node->getVarDecl()->getVarType());
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (_variables[scope].count(name))
-			throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
+			throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
 
 	DST::StatementBlock *get = decorate(node->getGet());
 
 	if (get && !get->hasReturnType(type))
-		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
 
 	enterBlock();
 	_variables[currentScope()][unicode_string("value")] = type;
@@ -663,18 +681,18 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 	if (node->getOperator()._type == OT_SQUARE_BRACKETS_OPEN)	// Array Literal
 	{
 		if (!val)
-			throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine());
+			throw ErrorReporter::report("array literal can't be empty", ERR_DECORATOR, node->getPosition());
 		else if (val->getExpressionType() == ET_LIST)
 		{
 			DST::Type *prevType = NULL;
 				for (auto val : ((DST::ExpressionList*)val)->getExpressions())
 				{
 					if (prevType && !val->getType()->equals(prevType))
-						throw DinoException("Array Literal must have only one type", EXT_GENERAL, node->getLine());
+						throw ErrorReporter::report("Array Literal must have only one type", ERR_DECORATOR, node->getPosition());
 						prevType = val->getType();
 				}
 			if (!prevType)
-				throw DinoException("array literal can't be empty", EXT_GENERAL, node->getLine());
+				throw ErrorReporter::report("array literal can't be empty", ERR_DECORATOR, node->getPosition());
 			return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)val)->getExpressions());
 		}
 		else
@@ -701,16 +719,16 @@ DST::Expression * Decorator::decorate(AST::ConditionalExpression * node)
 	expr->setElseBranch(decorate(node->getElseBranch()));
 
 	if (!expr->getCondition())
-		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, node->getPosition());
 	if (!isCondition(expr->getCondition()))
-		throw DinoException("Condition must be of bool type", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Condition must be of bool type", ERR_DECORATOR, node->getPosition());
 	if (!expr->getThenBranch())
-		throw DinoException("Expected then branch of conditional expression", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Expected then branch of conditional expression", ERR_DECORATOR, node->getPosition());
 	if (!expr->getElseBranch())
-		throw DinoException("Expected else branch of conditional expression", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Expected else branch of conditional expression", ERR_DECORATOR, node->getPosition());
 	if (!expr->getThenBranch()->getType()->equals(expr->getElseBranch()->getType()))
-		throw DinoException("Operand types are incompatible (\"" + expr->getThenBranch()->getType()->toShortString() + 
-							"\" and \"" + expr->getElseBranch()->getType()->toShortString() + "\")", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Operand types are incompatible (\"" + expr->getThenBranch()->getType()->toShortString() + 
+							"\" and \"" + expr->getElseBranch()->getType()->toShortString() + "\")", ERR_DECORATOR, node->getPosition());
 	return expr;
 }
 
@@ -720,7 +738,7 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 	decl->setExpression(decorate(node->getExpression()));
 	unicode_string name = node->getName();
 	if (_variables[currentScope()].count(name))
-		throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
 	decl->getExpression()->getType()->setNotWritable();
 	decl->getExpression()->getType()->setConst();
 	_variables[currentScope()][name] = decl->getExpression()->getType();
@@ -734,7 +752,7 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	decl->setType(evalType(node->getVarType()));
 
 	if (_variables[currentScope()].count(name))
-		throw DinoException("Identifier '" + name.to_string() + "' is already in use", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
 	_variables[currentScope()][name] = decl->getType();
 	return decl;
 }
@@ -744,9 +762,9 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	auto assignment = new DST::Assignment(node, decorate(node->getLeft()), decorate(node->getRight()));
 
 	if (!assignment->getLeft()->getType()->writeable())
-		throw DinoException("lvalue is read-only", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("lvalue is read-only", ERR_DECORATOR, node->getPosition());
 	if (!assignment->getRight()->getType()->readable())
-		throw DinoException("rvalue is write-only", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("rvalue is write-only", ERR_DECORATOR, node->getPosition());
 
 	if (assignment->getLeft()->getExpressionType() == ET_LIST)
 	{
@@ -763,7 +781,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 					leftTypes->getTypes()[i] = rightTypes->getTypes()[i];
 					_variables[currentScope()][((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId()] = rightTypes->getTypes()[i];
 				}
-				else throw DinoException("Unknown type?.", EXT_GENERAL, node->getLine());
+				else throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
 			}
 		}
 	}
@@ -775,15 +793,15 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 			((DST::VariableDeclaration*)assignment->getLeft())->setType(assignment->getRight()->getType());
 			_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType();
 		}
-		else throw DinoException("Unknown type?.", EXT_GENERAL, node->getLine());
+		else throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
 	}
 
 	if (assignment->getRight()->getType()->getExactType() == EXACT_NULL)
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));
 	
 	else if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))
-		throw DinoException("Assignment of different types invalid.\n\tleft type is: " + assignment->getLeft()->getType()->toShortString() + 
-							"\n\tright type is: " + assignment->getRight()->getType()->toShortString(), EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Assignment of different types invalid.\n\tleft type is: " + assignment->getLeft()->getType()->toShortString() + 
+							"\n\tright type is: " + assignment->getRight()->getType()->toShortString(), ERR_DECORATOR, node->getPosition());
 
 	assignment->setType(assignment->getLeft()->getType());
 	return assignment;
@@ -800,7 +818,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		{
 			auto dec = decorate(node->getArguments());
 			if (!dec->getType()->readable())
-				throw DinoException("argument is write-only", EXT_GENERAL, node->getLine());
+				throw ErrorReporter::report("argument is write-only", ERR_DECORATOR, dec->getPosition());
 			list->addExpression(dec);
 		}
 		arguments = list;
@@ -825,7 +843,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		}
 		if (arguments->getExpressions().size() == 1) // conversion
 			return new DST::Conversion(node, (DST::Type*)funcId, arguments->getExpressions()[0]);
-		throw DinoException("invalid function arguments", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("invalid function arguments", ERR_DECORATOR, node->getPosition());
 	}
 
 	auto call = new DST::FunctionCall(node, funcId, arguments);
@@ -849,7 +867,7 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 	lit->setContent(decorate(node->getContent()));
 	lit->setType(type);
 	if (lit->getContent() && !lit->getContent()->hasReturnType(type->getReturns()))
-		throw DinoException("Not all control paths lead to a return value.", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
 	leaveBlock();
 	return lit;
 }
@@ -863,7 +881,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		auto type = left->getType();
 
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
-			throw DinoException("Expected an identifier", EXT_GENERAL, node->getLine());
+			throw ErrorReporter::report("Expected an identifier", ERR_DECORATOR, node->getPosition());
 
 		if (type->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)type)->getTypes().size() == 1)
 			type = ((DST::TypeList*)type)->getTypes()[0];
@@ -880,17 +898,17 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (type->getExactType() == EXACT_BASIC)
 		{
 			if (_currentTypeDecl != ((DST::BasicType*)type)->getTypeSpecifier()->getTypeDecl() && !varId[0].isUpper())
-				throw DinoException("Cannot access private member \"" + varId.to_string() + "\"", EXT_GENERAL, node->getLine());
+				throw ErrorReporter::report("Cannot access private member \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getPosition());
 			memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getMemberType(varId);
 		}
 		else if (type->getExactType() == EXACT_NAMESPACE)
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
 		else if (type->getExactType() == EXACT_ARRAY && varId == unicode_string("Size"))
 			memberType = new DST::PropertyType(new DST::BasicType(getPrimitiveType("int")), true, false);
-		else throw DinoException("Expression must have class or namespace type", EXT_GENERAL, node->getLine());
+		else throw ErrorReporter::report("Expression must have class or namespace type", ERR_DECORATOR, left->getPosition());
 
 		if (memberType == nullptr)
-			throw DinoException("Unkown identifier \"" + varId.to_string() + "\"", EXT_GENERAL, node->getLine());
+			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getRight()->getPosition());
 		
 		// TODO - are we leaking memory here?
 		if (memberType->getExactType() == EXACT_SPECIFIER)
@@ -912,7 +930,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (right)
 		{
 			if (!(right->getExpressionType() == ET_LITERAL && ((DST::Literal*)right)->getLiteralType() == LT_INTEGER))
-				throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
+				throw ErrorReporter::report("array size must be a literal integer", ERR_DECORATOR, right->getPosition());
 			return new DST::ArrayType((DST::Type*)left, *((int*)((DST::Literal*)(right))->getValue()));
 		}
 		else return new DST::ArrayType((DST::Type*)left, DST::UNKNOWN_ARRAY_LENGTH);
@@ -931,7 +949,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			{
 				DST::BasicType *intType = new DST::BasicType(getPrimitiveType("int"));
 				if(!bo->getRight()->getType()->equals(intType))
-					throw DinoException("array index must be an integer value", EXT_GENERAL, node->getLine());
+					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 				_toDelete.push_back(intType);
 			}
@@ -939,11 +957,11 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			// else
 			// {
 			// 	if (bo->getLeft()->getExpressionType() != ET_TYPE)
-			// 		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
+			// 		throw ErrorReporter::report("expected a type", ERR_DECORATOR, node->getPosition());
 			// 	if (bo->getRight())
 			// 	{
 			// 		if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
-			// 			throw DinoException("array size must be a literal integer", EXT_GENERAL, node->getLine());
+			// 			throw ErrorReporter::report("array size must be a literal integer", ERR_DECORATOR, node->getPosition());
 			// 		//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
 			// 		auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue()));
 			// 		_toDelete.push_back(bo);
@@ -959,11 +977,11 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			// }
 			break;
 		case RT_VOID: 
-			throw DinoException("Could not decorate, unimplemented operator.", EXT_GENERAL, node->getLine());
+			throw ErrorReporter::report("Could not decorate, unimplemented operator.", ERR_DECORATOR, node->getPosition());
 
 		default: 
 			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
-				throw DinoException("left-type != right-type", EXT_GENERAL, node->getLine());
+				throw ErrorReporter::report("left-type != right-type", ERR_DECORATOR, node->getPosition());
 			bo->setType(bo->getLeft()->getType());
 			break;
 	}
@@ -1030,7 +1048,7 @@ DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node
 		case ST_FUNCTION_DECLARATION:  	name = ((DST::FunctionDeclaration*)d)->getVarDecl()->getVarId(); break;
 		case ST_VARIABLE_DECLARATION:  	name = ((DST::VariableDeclaration*)d)->getVarId(); break;
 		case ST_TYPE_DECLARATION: 		name = ((DST::TypeDeclaration*)d)->getName(); break;
-		default: throw DinoException("Expected a declaration", EXT_GENERAL, d->getLine());
+		default: throw ErrorReporter::report("Expected a declaration", ERR_DECORATOR, d->getPosition());
 		}
 
 		decl->addMember(name, d, _variables[currentScope()][name]);
@@ -1058,7 +1076,7 @@ DST::IfThenElse * Decorator::decorate(AST::IfThenElse * node)
 	auto ite = new DST::IfThenElse(node);
 	ite->setCondition(decorate(node->getCondition()));
 	if (!isCondition(ite->getCondition()))
-		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, node->getCondition()->getPosition());
 	ite->setThenBranch(decorate(node->getThenBranch()));
 	ite->setElseBranch(decorate(node->getElseBranch()));
 	return ite;
@@ -1073,7 +1091,8 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 		sc->addCase(decorate(c._expression), decorate(c._statement));
 		// if case type == swich type.
 		if (!sc->getCases().back()._expression->getType()->equals(sc->getExpression()->getType()))
-			throw DinoException("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + "\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", EXT_GENERAL, node->getLine());
+			throw ErrorReporter::report("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + 
+			"\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", ERR_DECORATOR, sc->getCases().back()._expression->getPosition());
 	}
 	return sc;
 }
@@ -1096,7 +1115,7 @@ DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 	loop->setBegin(decorate(node->getBegin()));
 	loop->setCondition(decorate(node->getCondition()));
 	if (!isCondition(loop->getCondition()))
-		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, loop->getCondition()->getPosition());
 	loop->setIncrement(decorate(node->getIncrement()));
 	loop->setStatement(decorate(node->getStatement()));
 	leaveBlock();
@@ -1108,7 +1127,7 @@ DST::WhileLoop * Decorator::decorate(AST::WhileLoop * node)
 	auto loop = new DST::WhileLoop(node);
 	loop->setCondition(decorate(node->getCondition()));
 	if (!isCondition(loop->getCondition()))
-		throw DinoException("Expected a condition", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, loop->getCondition()->getPosition());
 	loop->setStatement(decorate(node->getStatement()));
 	return loop;
 }
@@ -1124,7 +1143,7 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 {
 	auto ret = decorate(node);
 	if (ret->getExpressionType() != ET_TYPE)
-		throw DinoException("expected a type", EXT_GENERAL, node->getLine());
+		throw ErrorReporter::report("expected a type", ERR_DECORATOR, ret->getPosition());
 	return (DST::Type*)ret;
 }
 
