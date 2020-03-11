@@ -1,3 +1,5 @@
+import "Std"
+
 namespace BrainF {
     
     char[30000] tape
@@ -5,10 +7,10 @@ namespace BrainF {
     char putchar(char c): extern "putchar"
     char getchar(): extern "getchar"
 
-    void Interpret(char[] input) {
+    void Interpret(string input) {
         int ptr ≡ 0
         for int i ≡ 0 | i < input.Size | i+=1 {
-            char curr ≡ input[i]
+            char curr ≡ input.Get(i)
             if      curr = '>': ptr += 1
             else if curr = '<': ptr -= 1
             else if curr = '+': tape[ptr] += 1 as char
@@ -18,7 +20,7 @@ namespace BrainF {
             else if curr = ']' and tape[ptr] ≠ 0 as char {
                 int loop ≡ 1
                 while loop > 0 {
-                    curr ≡ input[i-=1]
+                    curr ≡ input.Get(i-=1)
                     if curr =  '[':
                         loop -= 1
                     else if curr = ']':
@@ -31,18 +33,14 @@ namespace BrainF {
     void Main() {
         for int i ≡ 0 | i < tape.Size | i+=1:
             tape[i] ≡ null
-        
-        // outputs input
-        var input ≡ [',', '[', '.', '[', '-', ']', ',', ']']    
-        
-        // outputs the ASCII charset
-        //var input ≡ ['.', '+', '[', '.', '+', ']']
 
-        var arr ≡ new char[8]
+        // outputs input    
+        // Interpret(",[.[-],]")
 
-        for int i ≡ 0 | i < arr.Size | i+=1:
-            arr[i] ≡ input[i]
-        
-        Interpret(arr)
+        // outputs the ascii charset
+        // Interpret(".+[.+]")
+
+        // Hello World!
+        Interpret("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.")
     }
 }

@@ -93,7 +93,7 @@ namespace CodeGenerator
 
     llvm::Value *getFuncFromVtable(llvm::Value *vtable, DST::InterfaceDeclaration *interface, unicode_string &funcName);
 
-    void declareInterface(DST::InterfaceDeclaration *node);
+    void declareInterfaceMembers(DST::InterfaceDeclaration *node);
     llvm::FunctionType *getInterfaceFuncType(DST::FunctionDeclaration *node);
 
     llvm::Value *createCallOrInvoke(llvm::Value *callee, llvm::ArrayRef<llvm::Value*> args);

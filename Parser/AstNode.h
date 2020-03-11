@@ -486,7 +486,7 @@ namespace AST
 		virtual string toString();
 		virtual vector<Node*> getChildren();
 
-		unicode_string getName() { return _name; }
+		unicode_string &getName() { return _name; }
 		ExpressionList* getInterfaces() { return _interfaces; }
 		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
 		vector<FunctionDeclaration*> getFunctionDeclarations() { return _functionDeclarations; }

@@ -34,6 +34,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::NamespaceDecla
             default: throw "this shouldn't be possible...";
         }
     }
+    WriteIndentCount(stream, indentCount);
     stream << "}\n";
 }
 
@@ -58,6 +59,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::TypeDeclaratio
             default: throw "this shouldn't be possible...";
         }
     }
+    WriteIndentCount(stream, indentCount);
     stream << "}\n";
 }
 
@@ -75,6 +77,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::InterfaceDecla
             default: throw "this shouldn't be possible...";
         }
     }
+    WriteIndentCount(stream, indentCount);
     stream << "}\n";
 }
 
@@ -85,23 +88,39 @@ void LibFileWriter::Write(ofstream &stream, DST::VariableDeclaration *node)
 
 void LibFileWriter::Write(ofstream &stream, int indentCount, DST::PropertyDeclaration *node) 
 {
-    stream << node->getReturnType()->toShortString() << " " << node->getName().to_string();
+    if (node->getReturnType()->getExactType() == EXACT_PROPERTY)
+        stream << ((DST::PropertyType*)node->getReturnType())->getReturn()->toShortString() << " " << node->getName().to_string();
     
+    if (!node->getGet() && !node->getSet())
+    {
+        auto propTy = ((DST::PropertyType*)node->getReturnType());
+        stream << ((propTy->hasGet() && propTy->hasSet()) ? " { get | set }\n" 
+                : propTy->hasGet() ? ": get\n" : ": set\n");
+        return;
+    }
+
     if (node->getGet() && node->getSet())
+    {
         stream << " {\n";
+        WriteIndentCount(stream, indentCount + 1);
+    }
+    else stream << ": ";
 
-    
-
-    // string llvmGetFuncId = node->getName().to_string() + ".get";
     if (node->getGet())
+    {
         stream << "get: extern \"" << node->_llvmGetFuncId << "\"\n";
+        if (node->getSet())
+            WriteIndentCount(stream, indentCount + 1);
+    }
     
-    // string llvmSetFuncId = node->getName().to_string() + ".set";
     if (node->getSet())
         stream << "set: extern \"" << node->_llvmSetFuncId << "\"\n";
 
     if (node->getGet() && node->getSet())
+    {
+        WriteIndentCount(stream, indentCount);
         stream << "}\n";
+    }
 }
 
 void LibFileWriter::Write(ofstream &stream, DST::FunctionDeclaration *node) 
@@ -113,5 +132,7 @@ void LibFileWriter::Write(ofstream &stream, DST::FunctionDeclaration *node)
         Write(stream, node->getParameters()[i]);
     }
     // string llvmFuncId = node->getVarDecl()->getVarId().to_string();
-    stream << "): extern \"" << node->_llvmFuncId << "\"\n";
+    if (node->getContent() == NULL)
+        stream << ")\n";
+    else stream << "): extern \"" << node->_llvmFuncId << "\"\n";
 }

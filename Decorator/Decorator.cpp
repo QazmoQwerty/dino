@@ -101,7 +101,10 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 			if (isStd)
 			{
 				if (decl->getName() == "Error")
+				{
+					// specifier->getInterfaceDecl()->getBase()->setName(unicode_string("error"));
 					_variables[0][unicode_string("error")] = specifier;
+				}
 			}
 		}
 		else if (i->getStatementType() == ST_TYPE_DECLARATION)
@@ -112,8 +115,10 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
 			if (isStd)
 			{
-				if (decl->getName() == "String")
+				if (decl->getName() == "String") {
+					// specifier->getTypeDecl()->setName(unicode_string("string"));
 					_variables[0][unicode_string("string")]	= specifier;
+				}
 			}
 		}
 	}

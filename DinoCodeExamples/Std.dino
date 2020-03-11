@@ -1,25 +1,31 @@
-//include "DinoCodeExamples/LinkedList.dino"
+namespace Std {
+	type String {
+		char[] buf
 
-import "Lexer"
+		int Size: get: return buf.Size
+		char@ CStr: get: return &buf[0]
 
-/*namespace Prog {
-	int putchar(int a): extern
-	char Print(char c): return putchar(c as int) as char
- 
-	//void Foo((char(char))@ f): (@f)('a')
-	const c1 ≡ 'a'
-	const c2 ≡ '\n'
-
-	namespace NS: const c1 ≡ '\n'
-
-	int Main() {
-		char a ≡ '0'
-		char b ≡ '1'
-		a, b ≡ b, a
-		return a as int
-		// Foo(&Print)
-		// Print('h')
-		// Print('w')
-		// return Print('\n') as int
+		char Get(int idx): return buf[idx]
 	}
-}*/
+
+	interface Error {
+		string Msg: get
+	}
+
+	int puts(char@ s): extern "puts"
+	char putchar(char c): extern "putchar"
+
+	void PrintLn(): putchar('\n')
+	void PrintS(string s): puts(s.CStr)
+	void PrintC(char c): putchar(c)
+	void PrintD(int n) {
+        int a ≡ 1
+        while a ≤ n / 10: a *= 10
+        while a > 0 {
+            putchar((n % (a * 10) / a + 48) as char)
+            a /= 10
+        }
+        PrintC('\n')
+    }
+
+}

@@ -916,6 +916,7 @@ namespace DST
 		virtual ~TypeDeclaration() { if (_base) delete _base; _decls.clear(); } 
 
 		AST::TypeDeclaration *getBase() { return _base; }
+		void setName(unicode_string name) { _name = name; }
 		void addDeclaration(Statement *decl, Type *type);
 		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }

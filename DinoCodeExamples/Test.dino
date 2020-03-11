@@ -1,37 +1,3 @@
-// namespace Prog {
-// 	void Main() {
-// 		string s := "wowow"
-// 	}
-// }
-
-namespace Std {
-	type String {
-		char[] buf
-
-		int Size: get: return buf.Size
-		char@ CStr: get: return &buf[0]
-	}
-
-	interface Error {
-		string Msg: get
-	}
-
-	type MyErr is Error {
-		string Msg: get: return "MyErr!"
-	}
-
-	int puts(char@ s): extern "puts"
-	void Print(string s): puts(s.CStr)
-
-	void Main() {
-		try {
-			error err := (new MyErr) as error
-			throw err
-		} catch {
-			puts(caught.Msg.CStr)
-		}
-		Std.String s := "abcd"
-		Print(s)
-		// puts(s.CStr)
-	}
+namespace Prog {
+	
 }

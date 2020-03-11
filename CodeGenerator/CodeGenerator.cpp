@@ -111,9 +111,9 @@ void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
             case ST_TYPE_DECLARATION:
                 declareType((DST::TypeDeclaration*)member);
                 break;
-            case ST_INTERFACE_DECLARATION:
-                declareInterface((DST::InterfaceDeclaration*)member);
-                break;
+            // case ST_INTERFACE_DECLARATION:
+            //     declareInterface((DST::InterfaceDeclaration*)member);
+            //     break;
             default: break;
         }
     }
@@ -138,6 +138,9 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
             }
             case ST_TYPE_DECLARATION:
                 declareTypeContent((DST::TypeDeclaration*)member);
+                break;
+            case ST_INTERFACE_DECLARATION:
+                declareInterfaceMembers((DST::InterfaceDeclaration*)member);
                 break;
             case ST_FUNCTION_DECLARATION:
                 if (((DST::FunctionDeclaration*)member)->getVarDecl()->getVarId().to_string() == "Main")
@@ -182,6 +185,7 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
                 break;
             case ST_TYPE_DECLARATION:
                 codegenTypeMembers((DST::TypeDeclaration*)member);
+                break;
             default: break;
         }
     }
@@ -1349,7 +1353,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
     }
 }
 
-void CodeGenerator::declareInterface(DST::InterfaceDeclaration *node)
+void CodeGenerator::declareInterfaceMembers(DST::InterfaceDeclaration *node)
 {
     auto &vtableIndexes = _interfaceVtableFuncInfo[node];
     int idx = 0;
@@ -1423,6 +1427,7 @@ void CodeGenerator::declareType(DST::TypeDeclaration *node)
 
     if (!_stringTy && typeName == "type.Std.String")
         _stringTy = def->structType;
+
     _types[node] = _currentNamespace.back()->types[node->getName()] = def;
 }
 
@@ -1617,10 +1622,28 @@ std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::
         setFuncName += ".set";
 
         string llvmFuncId = "";
-        for (auto i : _currentNamespace)
-            llvmFuncId += i->decl->getName().to_string() + ".";
-        if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
-        llvmFuncId += setFuncName.to_string();
+
+        if (node->getSet()->getStatements().size() == 1 && node->getSet()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+            && ((DST::UnaryOperationStatement*)node->getSet()->getStatements()[0])->getOperator()._type == OT_EXTERN
+            && ((DST::UnaryOperationStatement*)node->getSet()->getStatements()[0])->getExpression() != NULL)
+        {
+            // externally defined function with a func name argument
+            auto opStmnt = ((DST::UnaryOperationStatement*)node->getSet()->getStatements()[0]);
+            if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
+                throw "umm";
+            if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
+                throw "umm2";
+            auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
+            llvmFuncId = strlit->getValue();
+        }
+        else 
+        {
+            for (auto i : _currentNamespace)
+                llvmFuncId += i->decl->getName().to_string() + ".";
+            if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
+            llvmFuncId += setFuncName.to_string();
+        }
+
 
         llvm::Function *setFunc = llvm::Function::Create(setFuncType, llvm::Function::ExternalLinkage, llvmFuncId, _module.get());
         _currentNamespace.back()->values[setFuncName] = setFunc;
@@ -1650,10 +1673,27 @@ std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::
         getFuncName += ".get";
 
         string llvmFuncId = ""; // Todo - add file name as well
-        for (auto i : _currentNamespace)
-            llvmFuncId += i->decl->getName().to_string() + ".";
-        if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
-        llvmFuncId += getFuncName.to_string();
+
+        if (node->getGet()->getStatements().size() == 1 && node->getGet()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+            && ((DST::UnaryOperationStatement*)node->getGet()->getStatements()[0])->getOperator()._type == OT_EXTERN
+            && ((DST::UnaryOperationStatement*)node->getGet()->getStatements()[0])->getExpression() != NULL)
+        {
+            // externally defined function with a func name argument
+            auto opStmnt = ((DST::UnaryOperationStatement*)node->getGet()->getStatements()[0]);
+            if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
+                throw "umm";
+            if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
+                throw "umm2";
+            auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
+            llvmFuncId = strlit->getValue();
+        }
+        else 
+        {
+            for (auto i : _currentNamespace)
+                llvmFuncId += i->decl->getName().to_string() + ".";
+            if (typeDef) llvmFuncId += typeDef->structType->getName().str() + ".";
+            llvmFuncId += getFuncName.to_string();
+        }
 
         llvm::Function *getFunc = llvm::Function::Create(getFuncType, llvm::Function::ExternalLinkage, llvmFuncId, _module.get());
         _currentNamespace.back()->values[getFuncName] = getFunc;
@@ -1671,6 +1711,13 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
 {
     if (node->getGet())
     {
+        if (node->getGet()->getStatements().size() == 1 && node->getGet()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+        && ((DST::UnaryOperationStatement*)node->getGet()->getStatements()[0])->getOperator()._type == OT_EXTERN)
+        {
+            // externally defined function
+            return;
+        }
+
         unicode_string getFuncName = node->getName();
         getFuncName += ".get";
         llvm::Value *getFuncPtr = NULL;
@@ -1713,6 +1760,13 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
 
     if (node->getSet())
     {
+        if (node->getSet()->getStatements().size() == 1 && node->getSet()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+        && ((DST::UnaryOperationStatement*)node->getSet()->getStatements()[0])->getOperator()._type == OT_EXTERN)
+        {
+            // externally defined function
+            return;
+        }
+
         unicode_string setFuncName = node->getName();
         setFuncName += ".set";
         llvm::Value *setFuncPtr = NULL;
