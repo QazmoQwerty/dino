@@ -1,3 +1,6 @@
 namespace Prog {
-	
+	void Main() {
+		int v
+		void() a := () { v := 10}
+	}
 }

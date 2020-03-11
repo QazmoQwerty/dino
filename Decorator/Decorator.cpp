@@ -5,6 +5,8 @@
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;
 DST::FunctionDeclaration* Decorator::_main;
 vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
+unsigned int Decorator::_currFuncLitScope;
+DST::FunctionLiteral *Decorator::_currFuncLit;
 DST::TypeDeclaration *Decorator::_currentTypeDecl;
 DST::Program *Decorator::_currentProgram;
 DST::NullType *Decorator::_nullType;
@@ -34,6 +36,7 @@ void Decorator::setup(bool isLibrary)
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
+	_currFuncLit = NULL;
 }
 
 void Decorator::createErrorInterfaceType()
@@ -557,11 +560,15 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 		return _unknownType;
 
 
-	for (int scope = currentScope(); scope >= 0; scope--)
+	for (unsigned int scope = currentScope(); scope >= 0; scope--)
 		if (auto var = _variables[scope][name]) {
 			if (var->getExactType() == EXACT_SPECIFIER)
 				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
-			return new DST::Variable(node, var);
+
+			auto ret = new DST::Variable(node, var);
+			if (_currFuncLit && scope < _currFuncLitScope)
+				_currFuncLit->addCapture(ret);
+			return ret;
 		}
 
 	if (_currentTypeDecl) if (auto var = _currentTypeDecl->getMemberType(name))
@@ -853,7 +860,8 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 {
 	enterBlock();
-	auto lit = new DST::FunctionLiteral(node);
+	_currFuncLitScope = currentScope();
+	auto lit = _currFuncLit = new DST::FunctionLiteral(node);
 	auto type = new DST::FunctionType();
 	if (node->getReturnType() == NULL)
 		type->addReturn(new DST::BasicType(getPrimitiveType("void")));
@@ -864,6 +872,7 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 		type->addParameter(param->getType());
 		lit->addParameter(param);
 	}
+
 	lit->setContent(decorate(node->getContent()));
 	lit->setType(type);
 	if (lit->getContent() && !lit->getContent()->hasReturnType(type->getReturns()))
@@ -1062,10 +1071,9 @@ DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)
 {
 	if (!node)
 		return NULL;
-
 	enterBlock();
 	auto bl = new DST::StatementBlock();
-	for (auto i : dynamic_cast<AST::StatementBlock*>(node)->getStatements())
+	for (auto i : node->getStatements())
 		bl->addStatement(decorate(i));
 	leaveBlock();
 	return bl;

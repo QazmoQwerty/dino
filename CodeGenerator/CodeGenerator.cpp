@@ -1954,6 +1954,113 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     llvm::verifyFunction(*func, &llvm::errs());
 }
 
+llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node) 
+{
+    vector<llvm::Type*> types;
+    auto params = node->getParameters();
+
+    llvm::Type *returnType = NULL; 
+
+    // functions that return multiple values return them based on pointers they get as arguments
+    bool isMultiReturnFunc = node->getType()->getReturns()->size() > 1;
+    if (isMultiReturnFunc)
+    {
+        for (auto i : node->getType()->getReturns()->getTypes())
+            types.push_back(evalType(i)->getPointerTo());
+        returnType = _builder.getVoidTy();
+    }
+    else returnType = evalType(node->getType()->getReturns());
+    
+    for (auto i : node->getCaptures())
+        types.push_back(evalType(i->getType()));
+    for (auto i : params) 
+        types.push_back(evalType(i->getType()));
+    auto funcType = llvm::FunctionType::get(returnType, types, false);
+
+    string funcId = "";
+
+    if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getExpression() != NULL)
+    {
+        // externally defined function with a func name argument
+        auto opStmnt = ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0]);
+        if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
+            throw "umm";
+        if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
+            throw "umm2";
+        auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
+        funcId = strlit->getValue();
+    }
+    else funcId = ".anonFunc";
+
+    llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
+
+    // Set names for all arguments.
+    unsigned idx = 0, idx2 = 0, idx3 = 0;
+    for (auto &arg : func->args())
+    {
+        if (isMultiReturnFunc && idx2 < node->getType()->getReturns()->size())
+            arg.setName(".ret" + std::to_string(idx2++));
+        else if (idx3 < node->getCaptures().size())
+            arg.setName(node->getCaptures()[idx3++]->getVarId().to_string());
+        else arg.setName(params[idx++]->getVarId().to_string());
+    }
+
+    /* codegen function literal content */
+
+    if (node->getContent() == NULL)
+        throw DinoException("Undefined function literal", EXT_GENERAL, node->getLine());
+
+    if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
+        && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN)
+    {
+        // externally defined function
+        llvm::verifyFunction(*func, &llvm::errs());
+        return func;
+    }
+
+    auto params = node->getParameters();
+
+    // Create a new basic block to start insertion into.
+    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
+    _builder.SetInsertPoint(bb);
+
+    // Record the function arguments in the NamedValues map.
+    _namedValues.clear();
+    bool isFirst = true;
+    unsigned idx = 0;
+    if (isMultiReturnFunc)
+        _funcReturns.clear();
+    for (llvm::Argument &arg : func->args())
+    {
+        if (isMultiReturnFunc && idx < (node->getType()->getReturns())->size())
+            { _funcReturns.push_back(&arg); idx++; }
+        else 
+        {
+            AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
+            _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+            _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
+        }
+        
+        isFirst = false;
+    }
+
+    for (auto i : node->getContent()->getStatements()) 
+    {
+        auto val = codeGen(i);
+        if (val == nullptr)
+            throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+    }
+
+    if (!_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateRetVoid();
+    
+    llvm::verifyFunction(*func, &llvm::errs());
+
+    return func;
+}
+
 llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
 {
     vector<llvm::Type*> types;

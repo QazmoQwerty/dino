@@ -3,6 +3,10 @@
 #include "../Parser/AstNode.h"
 #include <dirent.h>
 
+#include <set>
+
+using std::set;
+
 namespace DST
 {
 	static const int UNKNOWN_ARRAY_LENGTH = 0;
@@ -612,6 +616,7 @@ namespace DST
 	{
 		AST::Function *_base;
 		FunctionType *_type;
+		vector<Variable*> _captures;
 		vector<VariableDeclaration*> _parameters;
 		StatementBlock *_content;
 
@@ -619,12 +624,20 @@ namespace DST
 		FunctionLiteral(AST::Function* base) : _base(base) {}
 		virtual ~FunctionLiteral();
 		void setType(FunctionType *type) { _type = type; }
-		Type *getType() { return _type; }
+		virtual FunctionType *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
 		virtual int getLine() const { return _base ? _base->getLine() : -1; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+
+		void addCapture(Variable *capture) { 
+			for (auto i : _captures)
+				if (i->getVarId() == capture->getVarId())
+					return;
+			_captures.push_back(capture); 
+		}
+		vector<Variable*> getCaptures() { return _captures; }
 
 		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }

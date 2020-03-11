@@ -524,6 +524,8 @@ DST::FunctionLiteral::~FunctionLiteral() { if (_base) delete _base; if (_type) d
 vector<DST::Node*> DST::FunctionLiteral::getChildren()
 {
 	vector<Node*> v;
+	for (auto i : _captures)
+		v.push_back(i);
 	for (auto i : _parameters)
 		v.push_back(i);
 	v.push_back(_content);

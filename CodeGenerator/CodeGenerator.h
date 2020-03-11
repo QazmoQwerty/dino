@@ -129,6 +129,8 @@ namespace CodeGenerator
     llvm::Function * declareFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenFunction(DST::FunctionDeclaration *node, TypeDefinition *typeDef = NULL);
 
+    llvm::Function *codeGen(DST::FunctionLiteral *node);
+
     std::pair<llvm::Function*, llvm::Function*> declareProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
     void codegenProperty(DST::PropertyDeclaration *node, TypeDefinition *typeDef = NULL);
 

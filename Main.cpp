@@ -133,6 +133,7 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 						throw "Error: missing file name after '-ll'";
 					else options->llFileName = argv[i];
 				}
+				else throw string("Error: unknown option ") + argv[i];
 			}
 		}
 		if (options->showHelp)
@@ -151,7 +152,10 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	auto cmd = getCmdOptions(argc, argv);
+	cmdOptions *cmd = NULL;
+	try { cmd = getCmdOptions(argc, argv); } 
+	catch (const char *err) { llvm::errs() << err << "\n"; return 0;  }
+	catch (string err) { llvm::errs() << err << "\n"; return 0; }
 
 	CodeGenerator::setup(cmd->outputLib);
 	OperatorsMap::setup();

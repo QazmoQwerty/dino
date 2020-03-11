@@ -65,9 +65,11 @@ private:
 	//static bool isBool(DST::Type *type);
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
+	static DST::Program *_currentProgram;
 	static vector<DST::NamespaceDeclaration*> _currentNamespace;
 	static DST::TypeDeclaration *_currentTypeDecl;
-	static DST::Program *_currentProgram;
+	static DST::FunctionLiteral *_currFuncLit;
+	static unsigned int _currFuncLitScope;
 	static DST::FunctionDeclaration* _main;
 	static DST::NullType *_nullType;
 	static DST::UnknownType *_unknownType;
