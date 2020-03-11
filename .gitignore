@@ -1,5 +1,6 @@
 .vs/
 Debug/
+Std/
 *.gv
 *.exe
 .vscode/

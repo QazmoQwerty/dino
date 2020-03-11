@@ -4,9 +4,6 @@ namespace BrainF {
     
     char[30000] tape
 
-    char putchar(char c): extern "putchar"
-    char getchar(): extern "getchar"
-
     void Interpret(string input) {
         int ptr ≡ 0
         for int i ≡ 0 | i < input.Size | i+=1 {
@@ -15,8 +12,8 @@ namespace BrainF {
             else if curr = '<': ptr -= 1
             else if curr = '+': tape[ptr] += 1 as char
             else if curr = '-': tape[ptr] -= 1 as char
-            else if curr = '.': putchar(tape[ptr])
-            else if curr = ',': tape[ptr] ≡ getchar()
+            else if curr = '.': Std.PrintC(tape[ptr])
+            else if curr = ',': tape[ptr] ≡ Std.GetChar()
             else if curr = ']' and tape[ptr] ≠ 0 as char {
                 int loop ≡ 1
                 while loop > 0 {

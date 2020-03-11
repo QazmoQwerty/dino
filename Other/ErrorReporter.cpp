@@ -21,18 +21,21 @@ void ErrorReporter::showAll()
 
 void ErrorReporter::show(Error &err) 
 {
-    llvm::errs() << BOLD("In file \"" << err.pos.file << "\", line " << err.pos.line) << "\n";
-    string line = getLine(err.pos.file, err.pos.line);
-    llvm::errs() << line << "\n";
-    for (int i = 0; i < err.pos.startPos; i++)
-    {
-        if (line[i] == '\t')
-            llvm::errs() << "\t";    
-        else llvm::errs() << " ";
+    if (err.pos.file != "")
+    {   
+        llvm::errs() << BOLD("In file \"" << err.pos.file << "\", line " << err.pos.line) << "\n";
+        string line = getLine(err.pos.file, err.pos.line);
+        llvm::errs() << line << "\n";
+        for (int i = 0; i < err.pos.startPos; i++)
+        {
+            if (line[i] == '\t')
+                llvm::errs() << "\t";    
+            else llvm::errs() << " ";
+        }
+        for (int i = 0; i < err.pos.endPos - err.pos.startPos; i++)
+            llvm::errs() << BOLD(FRED("^"));
+        llvm::errs() << "\n";
     }
-    for (int i = 0; i < err.pos.endPos - err.pos.startPos; i++)
-        llvm::errs() << BOLD(FRED("^"));
-    llvm::errs() << "\n";
     llvm::errs() << BOLD(FRED(toString(err.errTy) << ": ") << err.msg) << "\n";
 }
 

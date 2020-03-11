@@ -14,6 +14,7 @@ namespace Std {
 
 	int puts(char@ s): extern "puts"
 	char putchar(char c): extern "putchar"
+	char GetChar(): extern "getchar"
 
 	void PrintLn(): putchar('\n')
 	void PrintS(string s): puts(s.CStr)
