@@ -41,7 +41,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::NamespaceDecla
 void LibFileWriter::Write(ofstream &stream, DST::ConstDeclaration *node) 
 {
     // TODO
-    throw DinoException("LibFileWriter implementation for const declarations is missing", EXT_GENERAL, node->getLine());
+    throw ErrorReporter::report("LibFileWriter implementation for const declarations is missing", ERR_INTERNAL, node->getPosition());
 }
 
 void LibFileWriter::Write(ofstream &stream, int indentCount, DST::TypeDeclaration *node) 

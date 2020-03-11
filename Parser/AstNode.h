@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include "../Other/TypeEnums.h"
+#include "../Other/ErrorReporter.h"
 #include "../Other/OperatorsMap.h"
 using std::string;
 using std::vector;
@@ -15,7 +16,8 @@ namespace AST
 	class Node
 	{
 		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
-		int _line;
+		// int _line;
+		PositionInfo _pos;
 	public:
 		/* Default constructor, does NOT set line.*/
 		Node() { _nodeId = _idCount++; };
@@ -23,10 +25,13 @@ namespace AST
 		virtual ~Node() {}
 
 		/* Set the line the node is on */
-		void setLine(int line) { _line = line; }
+		// void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		int getLine() const { return _line; }
+		// int getLine() const { return _line; }
+
+		PositionInfo getPosition() { return _pos; }
+		void setPosition(PositionInfo pos) { _pos = pos; }
 		
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -201,13 +206,18 @@ namespace AST
 	class StatementBlock : public Statement
 	{
 		vector<Statement*> _statements;
+		// string _fileName; // file the block is in (only used if the block is top-level)
+
 	public:
-		StatementBlock() : Statement() {};
+		// StatementBlock() : Statement() { _fileName = ""; };
+		StatementBlock() : Statement() { };
 		virtual ~StatementBlock() { _statements.clear(); }
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		virtual string toString() { return "<StatementBlock>"; };
 		virtual vector<Node*> getChildren();
 
+		// void setFile(string fileName) { _fileName = fileName; }
+		// string getFile() { return _fileName; }
 		vector<Statement*> getStatements() { return _statements; }
 		void addStatement(Statement* statement) { 
 			if (statement && statement->getStatementType() == ST_STATEMENT_BLOCK)
@@ -290,7 +300,7 @@ namespace AST
 		void setExpression(Expression* expression) { _expression = expression; }
 		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
 		void setDefault(StatementBlock* statement) {
-			if (_default) throw DinoException("'default' clause may only be set once", EXT_GENERAL, statement->getLine());
+			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ERR_PARSER, statement->getPosition());;
 			_default = statement; 
 		}
 		Expression* getExpression() { return _expression; }
@@ -512,6 +522,7 @@ namespace AST
 		virtual StatementType getStatementType() { return ST_NAMESPACE_DECLARATION; };
 		virtual string toString() { return "<NamespaceDeclaration>\\n" + _name.to_string(); };
 		virtual vector<Node*> getChildren();
+
 
 		unicode_string getName() { return _name; }
 		StatementBlock* getStatement() { return _statement; }

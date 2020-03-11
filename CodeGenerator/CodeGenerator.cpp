@@ -259,7 +259,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         case ST_INCREMENT: return codeGen((DST::Increment*)node);
         case ST_TRY_CATCH: return codeGen((DST::TryCatch*)node);
-        default: throw DinoException("Unimplemented codegen for statement", EXT_GENERAL, node->getLine());;
+        default: throw ErrorReporter::report("Unimplemented codegen for statement", ERR_CODEGEN, node->getPosition());;
     }
 }
 
@@ -281,7 +281,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_CONVERSION: return codeGen((DST::Conversion*)node);
         case ET_INCREMENT: return codeGen((DST::Increment*)node);
         case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
-        default: throw DinoException("Unimplemented codegen for expression", EXT_GENERAL, node->getLine());
+        default: throw ErrorReporter::report("Unimplemented codegen for expression", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -298,7 +298,7 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
     {
         auto val = codeGen(i);
         if (val == nullptr)
-            throw DinoException("Error while generating ir for statementblock", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("Error while generating ir for statementblock", ERR_CODEGEN, node->getPosition());
     }
     return bb;
 }
@@ -400,7 +400,7 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
         }));
     }
     default:
-        throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
+        throw ErrorReporter::report("Unimplemented literal type", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -477,7 +477,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
         std::cout << leftType->toShortString() << '\n';
         std::cout << (leftType->getExactType()) << '\n';
         std::cout << (((DST::PointerType*)leftType)->getPtrType()->getExactType() == EXACT_BASIC) << '\n';
-        throw DinoException("Expression must be of class or namespace type", EXT_GENERAL, node->getLine());
+        throw ErrorReporter::report("Expression must be of class or namespace type", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -512,7 +512,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
             {
                 auto func = codeGenLval(node);
                 if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 0)
-                    throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+                    throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());
 
                 return createCallOrInvoke((llvm::Function*)func, {});
             }
@@ -534,7 +534,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 auto typeDef = _types[((DST::BasicType*)leftTy)->getTypeSpecifier()->getTypeDecl()];
                 auto func = typeDef->functions[node->getRight()];
                 if (func->arg_size() != 1)
-                    throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+                    throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());
                 return createCallOrInvoke(func, lval);
             }
             case EXACT_POINTER:     // Member getter property of pointer to basic type
@@ -546,7 +546,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 auto typeDef = _types[((DST::BasicType*)ptrTy)->getTypeSpecifier()->getTypeDecl()];
                 auto func = typeDef->functions[node->getRight()];
                 if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 1)
-                    throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+                    throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());
                 return createCallOrInvoke((llvm::Function*)func, lval);
             }
             case EXACT_ARRAY:       // Member property of array
@@ -559,10 +559,10 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                         );
                     return _builder.getInt32(codeGen(node->getLeft())->getType()->getArrayNumElements());
                 }
-                throw DinoException("Unimplemented Error no.2", EXT_GENERAL, node->getLine());   // TODO
+                throw ErrorReporter::report("Unimplemented Error no.2", ERR_CODEGEN, node->getPosition());   // TODO
             default:
-                throw DinoException("Unimplemented Error no.3 | " + 
-                leftTy->toShortString() + std::to_string(leftTy->getExactType()), EXT_GENERAL, node->getLine());   // TODO
+                throw ErrorReporter::report("Unimplemented Error no.3 | " + 
+                leftTy->toShortString() + std::to_string(leftTy->getExactType()), ERR_CODEGEN, node->getPosition());   // TODO
         }
     }
     if (node->getType()->isConst())
@@ -606,7 +606,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
             return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
         }
-        else throw DinoException("The \"is\" operator is currently only implemented for basic types!", EXT_GENERAL, node->getLine());
+        else throw ErrorReporter::report("The \"is\" operator is currently only implemented for basic types!", ERR_CODEGEN, node->getPosition());
 
         // auto interfaceVtable = _builder.CreateCall(_vtableInterfaceLookupFunc, { vtable, _builder.getInt32((unsigned long)interface) });
 
@@ -658,7 +658,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_SQUARE_BRACKETS_OPEN:
             return _builder.CreateLoad(codeGenLval(node));
         default:
-            throw DinoException("Unimplemented Binary operation!", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("Unimplemented Binary operation!", ERR_CODEGEN, node->getPosition());
     }
     
 }
@@ -692,13 +692,13 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         case OT_ADD:
             return codeGen(node->getExpression());
         case OT_SUBTRACT:
-            throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("Unimplemented literal type", ERR_CODEGEN, node->getPosition());
         case OT_AT:
             return _builder.CreateLoad(codeGen(node->getExpression()));
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
         default:
-            throw DinoException("Unimplemented literal type", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("Unimplemented literal type", ERR_CODEGEN, node->getPosition());
     }
     
 }
@@ -740,7 +740,7 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
         default:
-            throw DinoException("Unimplemented lval unary operation", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("Unimplemented lval unary operation", ERR_CODEGEN, node->getPosition());
     }    
 }
 
@@ -760,7 +760,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
                 return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } );
             }
         default:
-            throw DinoException("Unimplemented lval Binary operation", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("Unimplemented lval Binary operation", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -775,7 +775,7 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_MEMBER_ACCESS: return codeGenLval((DST::MemberAccess*)node);
         case ET_UNARY_OPERATION: return codeGenLval((DST::UnaryOperation*)node);
         case ET_BINARY_OPERATION: return codeGenLval((DST::BinaryOperation*)node);
-        default: throw DinoException("unimplemented lval expression type.", EXT_GENERAL, node->getLine());
+        default: throw ErrorReporter::report("unimplemented lval expression type.", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -815,7 +815,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 {
                     left = codeGenLval(node->getLeft());
                     if (!isFunc(left))
-                        throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
+                        throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());
                     auto right = codeGen(node->getRight());
                     createCallOrInvoke((llvm::Function*)left, right);
                     return right;
@@ -840,7 +840,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                         auto typeDef = _types[((DST::BasicType*)ac->getLeft()->getType())->getTypeSpecifier()->getTypeDecl()];
                         auto func = typeDef->functions[ac->getRight()];
                         if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
-                            throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
+                            throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());
                         createCallOrInvoke((llvm::Function*)func, { left, right });
                     }
                     return right;
@@ -854,19 +854,19 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     auto typeDef = _types[((DST::BasicType*)ptrTy)->getTypeSpecifier()->getTypeDecl()];
                     auto func = typeDef->functions[ac->getRight()];
                     if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
-                        throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
+                        throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());
                     return createCallOrInvoke((llvm::Function*)func, { thisPtr, codeGen(node->getRight()) });
                 }
                 case EXACT_ARRAY:       // Member property of array
-                    throw DinoException("Unimplemented Error no.2", EXT_GENERAL, node->getLine());   // TODO
+                    throw ErrorReporter::report("Unimplemented Error no.2", ERR_CODEGEN, node->getPosition());   // TODO
                 default:
-                    throw DinoException("Unimplemented Error no.3 | " + ac->getLeft()->getType()->toShortString(), EXT_GENERAL, node->getLine());   // TODO
+                    throw ErrorReporter::report("Unimplemented Error no.3 | " + ac->getLeft()->getType()->toShortString(), ERR_CODEGEN, node->getPosition());   // TODO
             }
         }
 
         left = codeGenLval(node->getLeft());
         if (!isFunc(left))
-            throw DinoException("expression is not a setter property", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());
 
         createCallOrInvoke((llvm::Function*)left, codeGen(node->getRight()));
         return right;
@@ -883,7 +883,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         }
 
         if (node->getRight()->getExpressionType() != ET_LIST)
-            throw DinoException("Multi-return functions are not implemented yet", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("Multi-return functions are not implemented yet", ERR_CODEGEN, node->getPosition());
         vector<Value*> lefts, rights;
         for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
             lefts.push_back(codeGenLval(i));
@@ -913,7 +913,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             _builder.CreateStore(right, left);
             return right;
         }
-        else throw DinoException("You shouldn't have gotten here...", EXT_GENERAL, node->getLine());
+        else throw ErrorReporter::report("You shouldn't have gotten here...", ERR_CODEGEN, node->getPosition());
     }
 
     if (node->getOperator()._type != OT_ASSIGN_EQUAL)
@@ -978,7 +978,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             _builder.CreateStore(res, left);
             return res;
         }
-        default: throw DinoException("Unimplemented assignment operator", EXT_GENERAL, node->getLine());
+        default: throw ErrorReporter::report("Unimplemented assignment operator", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -1048,7 +1048,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             else 
             {
                 if (((DST::PointerType*)ty)->getPtrType()->getExactType() != EXACT_BASIC)
-                    throw DinoException("Internal decorator error?", EXT_GENERAL, node->getLine());
+                    throw ErrorReporter::report("Internal decorator error?", ERR_CODEGEN, node->getPosition());
                 typeDef = _types[((DST::BasicType*)((DST::PointerType*)ty)->getPtrType())->getTypeSpecifier()->getTypeDecl()];
             }
 
@@ -1063,9 +1063,9 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                 funcPtr = _builder.CreateBitCast(funcPtr, funcTy->getPointerTo());
 
             if (funcTy->getNumParams() != node->getArguments()->getExpressions().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
-                throw DinoException(string("Incorrect # arguments passed (needed ") + 
+                throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
                     std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
-                    , EXT_GENERAL, node->getLine());
+                    , ERR_CODEGEN, node->getPosition());
 
             std::vector<Value*> args;
             args.push_back(thisPtr);
@@ -1098,17 +1098,17 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     {
         if (isFuncPtr(funcPtr))
             funcPtr = _builder.CreateLoad(funcPtr);
-        else throw DinoException("expression is not a function!", EXT_GENERAL, node->getLine());
+        else throw ErrorReporter::report("expression is not a function!", ERR_CODEGEN, node->getPosition());
     }
 
     auto funcTy = llvm::dyn_cast<llvm::FunctionType>(funcPtr->getType()->getPointerElementType());
     if (!funcTy)
-        throw DinoException("Internal error while generating IR for function call", EXT_GENERAL, node->getLine());
+        throw ErrorReporter::report("Internal error while generating IR for function call", ERR_CODEGEN, node->getPosition());
     
     if (funcTy->getNumParams() != node->getArguments()->getExpressions().size() + retPtrs.size())
-        throw DinoException(string("Incorrect # arguments passed (needed ") + 
+        throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
             std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
-            , EXT_GENERAL, node->getLine());
+            , ERR_CODEGEN, node->getPosition());
         
     std::vector<Value *> args;
 
@@ -1215,7 +1215,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             createCallOrInvoke(free, cast);
             return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
         }
-        default: throw DinoException("Unimplemented unary operation statement!", EXT_GENERAL, node->getLine());
+        default: throw ErrorReporter::report("Unimplemented unary operation statement!", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -1236,10 +1236,10 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
         node->getVarId() += ".get";
         auto lval = codeGenLval(node);
         if (!isFunc(lval))
-            throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());
         auto func = (llvm::Function*)lval;
         if (func->arg_size() != 0)
-            throw DinoException("expression is not a getter property", EXT_GENERAL, node->getLine());
+            throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());
         return createCallOrInvoke(func, {});
     }
     auto t = codeGenLval(node);
@@ -1302,7 +1302,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 auto bt = (DST::BasicType*)node;
                 if (bt->getTypeSpecifier() && bt->getTypeSpecifier()->getTypeDecl())
                     return _types[bt->getTypeSpecifier()->getTypeDecl()]->structType;
-                throw DinoException("Type " + node->toShortString() + " does not exist", EXT_GENERAL, node->getLine());
+                throw ErrorReporter::report("Type " + node->toShortString() + " does not exist", ERR_CODEGEN, node->getPosition());
             }
         case EXACT_ARRAY:
             if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
@@ -1349,7 +1349,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 return llvm::StructType::get(_context, types);    
             }
         }    
-        default: throw DinoException("Specified type is not currently supported in code generation.", EXT_GENERAL, node->getLine());
+        default: throw ErrorReporter::report("Specified type is not currently supported in code generation.", ERR_CODEGEN, node->getPosition());
     }
 }
 
@@ -1727,7 +1727,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         llvm::Function *getFunc = NULL;
         if (isFunc(getFuncPtr))
             getFunc = (llvm::Function*)getFuncPtr;
-        else throw DinoException("\"" + getFuncName.to_string() + "\" is not a function", EXT_GENERAL, node->getLine());
+        else throw ErrorReporter::report("\"" + getFuncName.to_string() + "\" is not a function", ERR_CODEGEN, node->getPosition());
 
         // Create a new basic block to start insertion into.
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", getFunc);
@@ -1748,7 +1748,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
         }
         if (!_builder.GetInsertBlock()->getTerminator())
             _builder.CreateRetVoid();
@@ -1776,7 +1776,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         llvm::Function *setFunc = NULL;
         if (isFunc(setFuncPtr))
             setFunc = (llvm::Function*)setFuncPtr;
-        else throw DinoException("\"" + setFuncName.to_string() + "\" is not a function", EXT_GENERAL, node->getLine());
+        else throw ErrorReporter::report("\"" + setFuncName.to_string() + "\" is not a function", ERR_CODEGEN, node->getPosition());
 
         // Create a new basic block to start insertion into.
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", setFunc);
@@ -1801,7 +1801,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
         }
         if (!_builder.GetInsertBlock()->getTerminator())
             _builder.CreateRetVoid();
@@ -1895,10 +1895,10 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     llvm::Function *func = NULL;
     if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
-    else throw DinoException("\"" + node->getVarDecl()->getVarId().to_string() + "\" is not a function", EXT_GENERAL, node->getLine());
+    else throw ErrorReporter::report("\"" + node->getVarDecl()->getVarId().to_string() + "\" is not a function", ERR_CODEGEN, node->getPosition());
 
     if (node->getContent() == NULL)
-        throw DinoException("Undefined function", EXT_GENERAL, node->getLine());
+        throw ErrorReporter::report("Undefined function", ERR_CODEGEN, node->getPosition());
 
     if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
         && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN)
@@ -1945,7 +1945,7 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     {
         auto val = codeGen(i);
         if (val == nullptr)
-            throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
     }
 
     if (!_builder.GetInsertBlock()->getTerminator())
@@ -1990,7 +1990,7 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
     {
         auto val = codeGen(i);
         if (val == nullptr)
-            throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
     }
 
     if (!_builder.GetInsertBlock()->getTerminator())
@@ -2028,7 +2028,7 @@ llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
         }
     }
     // at the end of the statements: add a jump statement to the condition.
@@ -2073,7 +2073,7 @@ llvm::Value *CodeGenerator::codeGen(DST::ForLoop *node)
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
         }
     }
     codeGen(node->getIncrement());
@@ -2105,7 +2105,7 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
         }
     }
     _builder.CreateBr(condBB);
@@ -2146,7 +2146,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     _currCatchBlock = catchBB;
     for (auto i : node->getTryBlock()->getStatements())
         if (!codeGen(i))
-            throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
     if (!_builder.GetInsertBlock()->getTerminator())
         _builder.CreateBr(mergeBB);
     _currCatchBlock = lastPad;
@@ -2164,7 +2164,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 
     for (auto i : node->getCatchBlock()->getStatements())
         if (!codeGen(i))
-            throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
 
     _builder.CreateCall(endCatchFunc, {});
 
@@ -2204,7 +2204,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     // _builder.SetInsertPoint(tryBB);
     // for (auto i : node->getTryBlock()->getStatements()) 
     //     if (codeGen(i) == nullptr) 
-    //         throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+    //         throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
     // // tryBB->getInstList().insertBefore(NULL);
     // if (auto tryTerminator = _builder.GetInsertBlock()->getTerminator())
     //     llvm::StoreInst(jmpBufVal, _globJmpBuf, tryTerminator);
@@ -2219,7 +2219,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     // _builder.CreateStore(jmpBufVal, _globJmpBuf);
     // for (auto i : node->getCatchBlock()->getStatements()) 
     //     if (codeGen(i) == nullptr) 
-    //         throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+    //         throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
     
     
 
@@ -2254,7 +2254,7 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
         }
     }
 
@@ -2269,7 +2269,7 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw DinoException("Error while generating IR for statement", EXT_GENERAL, i->getLine());
+                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
         }
     } 
     if (mergeBB)
