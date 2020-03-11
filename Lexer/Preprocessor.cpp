@@ -1,6 +1,7 @@
 
 #include "Preprocessor.h"
 
+
 vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 {
 	auto preparsedTokens = new vector<Token*>();
@@ -53,7 +54,7 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 		{
 			auto ot = new OperatorToken;
 			ot->_data = token->_data;
-			ot->_line = token->_line;
+			ot->_pos = token->_pos;
 			ot->_type = TT_OPERATOR;
 			ot->_operator = OperatorsMap::getWordOperators().find(ot->_data)->second;
 			delete token;
@@ -65,8 +66,8 @@ vector<Token*>& Preprocessor::preprocess(vector<Token*> tokens)
 	eof->_data = "EOF";
 	eof->_type = TT_OPERATOR;
 	if (preparsedTokens->size() == 0)
-		throw DinoException("empty program", EXT_GENERAL, 0);
-	eof->_line = preparsedTokens->back()->_line;
+		throw "empty program";
+	eof->_pos = preparsedTokens->back()->_pos;
 	eof->_operator = { OT_EOF, unicode_string("EOF"), NON_ASSCOCIATIVE, 0 };
 	preparsedTokens->push_back(eof);
 	return *preparsedTokens;

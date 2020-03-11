@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <string>
-#include "../Other/Exceptions.h"
 #include "../Other/TypeEnums.h"
 #include "../Other/Utf8Handler.h"
 
@@ -12,6 +11,14 @@
 
 using std::string;
 
+typedef struct PositionInfo 
+{
+	int line;
+	int startPos;
+	int endPos;
+	string file;
+} PositionInfo;
+
 /*
 	Basic token struct.
 */
@@ -19,16 +26,9 @@ struct Token
 {
 	TokenType _type;
 	unicode_string _data;
-	int _line;
+	PositionInfo _pos;
+	// int _line;
 };
-
-typedef struct PositionInfo 
-{
-	int line;
-	int startPos;
-	int endPos;
-	const char *file;
-} PositionInfo;
 
 typedef struct Operator
 {
@@ -110,38 +110,38 @@ string getSpecialCharConstant(string value);
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_STRING based on the input.
 */
-LiteralToken<string> * createStringLiteralToken(unicode_string data, int line);
+LiteralToken<string> * createStringLiteralToken(unicode_string data, PositionInfo pos);
 
 /*
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_CHARACTER based on the input.
 	NOTE: if input is not a valid character an exception will be thrown.
 */
-LiteralToken<char> * createCharacterLiteralToken(unicode_string data, int line);
+LiteralToken<char> * createCharacterLiteralToken(unicode_string data, PositionInfo pos);
 
 /*
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_FRACTION based on the input.
 	NOTE: if input is not a valid fraction an exception will be thrown.
 */
-LiteralToken<float> * createFractionLiteralToken(unicode_string data, int line);
+LiteralToken<float> * createFractionLiteralToken(unicode_string data, PositionInfo pos);
 
 /*
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_INTEGER based on the input.
 	NOTE: if input is not a valid integer an exception will be thrown.
 */
-LiteralToken<int> * createIntegerLiteralToken(unicode_string data, int line);
+LiteralToken<int> * createIntegerLiteralToken(unicode_string data, PositionInfo pos);
 
 /*
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_BOOLEAN based on the input.
 	NOTE: if input is not "false" or "true" an exception will be thrown.
 */
-LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, int line);
+LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, PositionInfo pos);
 
 /*
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_NULL based on the input.
 */
-LiteralToken<bool> * createNullLiteralToken(int line);
+LiteralToken<bool> * createNullLiteralToken(PositionInfo pos);

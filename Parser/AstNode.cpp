@@ -91,7 +91,7 @@ void AST::Function::addParameters(Expression * parameters)
 	if (parameters == nullptr)
 		return;
 	if (!parameters->isExpression())
-		throw DinoException("expected a variable declaration", EXT_GENERAL, parameters->getLine());
+		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, parameters->getPosition());
 	auto exp = dynamic_cast<Expression*>(parameters);
 	switch (exp->getExpressionType())
 	{
@@ -103,11 +103,12 @@ void AST::Function::addParameters(Expression * parameters)
 		{
 			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
 				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
-			else throw DinoException("expected a variable declaration", EXT_GENERAL, i->getLine());
+			else throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, i->getPosition());
 		}
 		break;
 	default:
-		throw DinoException("expected a variable declaration", EXT_GENERAL, exp->getLine());
+		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, exp->getPosition());
+		break;
 	}
 }
 
@@ -143,7 +144,7 @@ vector<AST::Node*> AST::InterfaceDeclaration::getChildren()
 void AST::InterfaceDeclaration::addFunction(FunctionDeclaration * function)
 {
 	if (function && function->getContent())
-		throw DinoException("functions inside interfaces may not have a body", EXT_GENERAL, function->getLine());
+		throw ErrorReporter::report("functions inside interfaces may not have a body", ERR_PARSER, function->getPosition());
 	_functions.push_back(function);
 }
 
@@ -226,7 +227,7 @@ void AST::FunctionDeclaration::addParameter(Node * parameter)
 	if (parameter == nullptr)
 		return;
 	if (!parameter->isExpression())
-		throw DinoException("expected a variable declaration", EXT_GENERAL, parameter->getLine());
+		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, parameter->getPosition());
 	auto exp = dynamic_cast<Expression*>(parameter);
 	switch (exp->getExpressionType())
 	{
@@ -238,11 +239,11 @@ void AST::FunctionDeclaration::addParameter(Node * parameter)
 		{
 			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
 				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
-			else throw DinoException("expected a variable declaration", EXT_GENERAL, i->getLine());
+			else throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, parameter->getPosition());
 		}
 		break;
 	default:
-		throw DinoException("expected a variable declaration", EXT_GENERAL, exp->getLine());
+		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, exp->getPosition());
 	}
 }
 

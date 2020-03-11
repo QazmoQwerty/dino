@@ -6,6 +6,7 @@
 #include <exception>
 #include <limits>
 
+#include "TerminalColors.h"
 #include "TypeEnums.h"
 #include "../Lexer/Token.h"
 #include "llvm/Support/raw_ostream.h"
@@ -27,5 +28,5 @@ private:
 public:
     static void showAll();
     static void show(Error &err);
-    static void report(string msg, ErrorType errTy, PositionInfo pos, bool isFatal = false);
+    static Error report(string msg, ErrorType errTy, PositionInfo pos, bool isFatal = false);
 };

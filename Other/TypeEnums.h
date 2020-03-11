@@ -165,6 +165,7 @@ enum ErrorType
 	ERR_PARSER,
 	ERR_DECORATOR,
 	ERR_CODEGEN,
+	ERR_INTERNAL,
 };
 
 /*

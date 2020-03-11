@@ -1,3 +1,16 @@
 namespace Prog {
-	
+	void Foo() {
+		return
+	}
+
+	int Bar: get: return 10
+
+	void Main() {
+		int a := 20
+
+		int c := 30
+
+        a := c
+        a := d
+	}
 }

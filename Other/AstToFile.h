@@ -16,10 +16,10 @@ string astToString(AST::Node* node, bool showLine)
 		return "";
 	stringstream ss;
 	int id = node->getNodeId();
-	int line = node->getLine();
-	if (showLine)
-		ss << id << " [label=\"line " << line << "\n" << node->toString() << "\"];";
-	else ss << id << " [label=\"" << node->toString() << "\"];";
+	/*int line = node->getLine();
+	// if (showLine)
+	// 	ss << id << " [label=\"line " << line << "\n" << node->toString() << "\"];";
+	else */ss << id << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren()) 
 	{
 		if (child == NULL) 
@@ -57,10 +57,10 @@ string dstToString(DST::Node* node, bool showLine)
 		return "";
 	stringstream ss;
 	int id = node->getNodeId();
-	int line = node->getLine();
-	if (showLine)
-		ss << id << " [label=\"line " << line << "\n" << node->toString() << "\"];";
-	else ss << id << " [label=\"" << node->toString() << "\"];";
+	/* int line = node->getLine();
+	// if (showLine)
+	// 	ss << id << " [label=\"line " << line << "\n" << node->toString() << "\"];";
+	else*/ ss << id << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren())
 	{
 		if (child == NULL)

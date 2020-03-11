@@ -50,13 +50,12 @@ CharType Lexer::getCharType(unicode_char c)
 	NOTE: Token could be of type "OperatorToken" or "LiteralToken<T>" as well as regular "Token",
 			so make sure to check the _type variable of each token.
 */
-vector<Token*>& Lexer::lex(unicode_string str)
+vector<Token*>& Lexer::lex(unicode_string str, string fileName)
 {
 	vector<Token*> *tokens = new vector<Token*>();
-	int line = 1;
-	unsigned int index = 0;
+	unsigned int index = 0, line = 1, pos = 0;
 	while (index < str.length()) 
-		tokens->push_back(getToken(str, index, line));
+		tokens->push_back(getToken(str, index, line, pos, fileName));
 	return *tokens;
 }
 
@@ -66,33 +65,36 @@ vector<Token*>& Lexer::lex(unicode_string str)
 	NOTE: "index" and "line" parameters are passed by reference, and are 
 		  changed internally, no need to increment them outside of this function.
 */
-Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
+Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int & line, unsigned int & pos, const string fileName)
 {
 	Token* token = new struct Token;
-	unicode_char curr = str[index];
+	unicode_char curr = str[index++];
 	token->_data = curr;
-	index++;
+	token->_pos.file = fileName;
+	token->_pos.startPos = pos++;
+	token->_pos.endPos = pos;
 	switch (getCharType(curr))
 	{
 		case CT_WHITESPACE:
 		{
 			token->_type = TT_WHITESPACE;
-			token->_line = line;
+			token->_pos.line = line;
 			break;
 		}
 
 		case CT_LINE_BREAK:
 		{
 			token->_type = TT_LINE_BREAK;
-			token->_line = line;
+			token->_pos.line = line;
 			break;
 		}
 
 		case CT_NEWLINE:
 		{
 			token->_type = TT_NEWLINE;
-			token->_line = line;
+			token->_pos.line = line;
 			line++;
+			pos = 0;
 			break;
 		}
 
@@ -110,16 +112,17 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 				}
 				else break;
 				index++;
+				pos++;
 			}
 			if (isFraction)
 			{
-				auto fractionToken = createFractionLiteralToken(token->_data, line);
+				auto fractionToken = createFractionLiteralToken(token->_data, token->_pos);
 				delete token;
 				token = fractionToken;
 			}
 			else
 			{
-				auto intToken = createIntegerLiteralToken(token->_data, line);
+				auto intToken = createIntegerLiteralToken(token->_data, token->_pos);
 				delete token;
 				token = intToken;
 			}
@@ -134,24 +137,25 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 					token->_data += str[index];
 				else break;
 				index++;
+				pos++;
 			}
 			
 			if (token->_data == "false" || token->_data == "true")
 			{
-				Token * booleanToken = createBooleanLiteralToken(token->_data, line);
+				Token * booleanToken = createBooleanLiteralToken(token->_data, token->_pos);
 				delete token;
 				token = booleanToken;
 			}
 			else if (token->_data == "null")
 			{
-				Token * nullToken = createNullLiteralToken(line);
+				Token * nullToken = createNullLiteralToken(token->_pos);
 				delete token;
 				token = nullToken;
 			}
 			else
 			{
 				token->_type = TT_IDENTIFIER;
-				token->_line = line;
+				token->_pos.line = line;
 			}
 			
 			break;
@@ -167,6 +171,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 				{
 					token->_data = newOp;
 					index++;	
+					pos++;
 				}
 				else break;
 			}
@@ -174,7 +179,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 			temp->_data = token->_data;
 			temp->_type = TT_OPERATOR;
 			temp->_operator = OperatorsMap::getOperators().find(temp->_data)->second;
-			temp->_line = line;
+			temp->_pos.line = line;
 
 			if (temp->_operator._type == OT_SINGLE_QUOTE || temp->_operator._type == OT_DOUBLE_QUOTE)	// Character
 			{
@@ -195,13 +200,15 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 						line++;
 					temp->_data += str[index];
 					index++;
+					pos++;
 				}
 				index++;
+				pos++;
 
 				delete token;
 				if (temp->_operator._type == OT_SINGLE_QUOTE)
-					token = createCharacterLiteralToken(temp->_data, line);
-				else token = createStringLiteralToken(temp->_data, line);
+					token = createCharacterLiteralToken(temp->_data, token->_pos);
+				else token = createStringLiteralToken(temp->_data, token->_pos);
 				delete temp;
 			}
 			else
@@ -210,10 +217,12 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 				{
 					temp->_data = "";
 					while (index < str.length() && str[index] != SINGLE_LINE_COMMENT_END)
-						index++;
+						{ index++; pos++; }
 					index++;	// Can probably find a more elegant solution
+					pos++;
 					temp->_type = TT_SINGLE_LINE_COMMENT;
 					line++;
+					pos = 0;
 				}
 				if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)
 				{
@@ -221,10 +230,15 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 					while (index + 1 < str.length() && !(str[index] == MULTI_LINE_COMMENT_END_1 && str[index + 1] == MULTI_LINE_COMMENT_END_2))
 					{
 						if (str[index] == '\n')
+						{
 							line++;
+							pos = 0;
+						}
+						else pos++;
 						index++;
 					}
 					index += 2;
+					pos += 2;
 					temp->_type = TT_MULTI_LINE_COMMENT;
 				}
 				delete token;
@@ -234,7 +248,8 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, int & line)
 		}
 
 		case CT_UNKNOWN:
-			throw DinoException("internal lexer error", EXT_LEXER, line);
+			throw ErrorReporter::report("internal lexer error", ERR_LEXER, token->_pos);
 	}
+	token->_pos.endPos = pos;
 	return token;
 }

@@ -1,4 +1,5 @@
 #include "Token.h"
+#include "../Other/ErrorReporter.h"
 
 /*
 	Function gets a Token and prints it based on its type.
@@ -9,31 +10,31 @@ void printToken(Token * token)
 	switch (token->_type)
 	{
 		case (TT_WHITESPACE):
-			std::cout << "line " << token->_line << " - [WHITESPACE]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [WHITESPACE]" << std::endl;
 			break;
 		case (TT_NEWLINE):
-			std::cout << "line " << token->_line << " - [NEWLINE]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NEWLINE]" << std::endl;
 			break;
 		case (TT_OPERATOR):
-			std::cout << "line " << token->_line << " - [OPERATOR: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [OPERATOR: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_LINE_BREAK):
-			std::cout << "line " << token->_line << " - [LINE_BREAK: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [LINE_BREAK: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_IDENTIFIER):
-			std::cout << "line " << token->_line << " - [IDENTIFIER: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [IDENTIFIER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_LITERAL):
 			printLiteralToken(token);
 			break;
 		case (TT_SINGLE_LINE_COMMENT):
-			std::cout << "line " << token->_line << " - [SINGLE_LINE_COMMENT]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [SINGLE_LINE_COMMENT]" << std::endl;
 			break;
 		case (TT_MULTI_LINE_COMMENT):
-			std::cout << "line " << token->_line << " - [MULTI_LINE_COMMENT]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [MULTI_LINE_COMMENT]" << std::endl;
 			break;
 		case (TT_UNKNOWN):
-			std::cout << "line " << token->_line << " - [UNKNOWN]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [UNKNOWN]" << std::endl;
 			break;
 	}
 }
@@ -47,22 +48,22 @@ void printLiteralToken(Token * token)
 	switch (((LiteralToken<int>*)token)->_literalType)
 	{
 		case (LT_BOOLEAN):
-			std::cout << "line " << token->_line << " - [BOOLEAN: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [BOOLEAN: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_INTEGER):
-			std::cout << "line " << token->_line << " - [INTEGER: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [INTEGER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_STRING):
-			std::cout << "line " << token->_line << " - [STRING: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [STRING: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_CHARACTER):
-			std::cout << "line " << token->_line << " - [CHARACTER: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [CHARACTER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_FRACTION):
-			std::cout << "line " << token->_line << " - [FRACTION: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [FRACTION: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_NULL):
-			std::cout << "line " << token->_line << " - [NULL]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NULL]" << std::endl;
 			break;
 		default: break;
 	}
@@ -78,22 +79,22 @@ void printLiteralTokenByValue(Token * token)
 	switch (((LiteralToken<int>*)token)->_literalType)
 	{
 		case (LT_BOOLEAN):
-			std::cout << "line " << token->_line << " - [BOOLEAN: " << ((LiteralToken<bool>*)token)->_value << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [BOOLEAN: " << ((LiteralToken<bool>*)token)->_value << "]" << std::endl;
 			break;
 		case (LT_INTEGER):
-			std::cout << "line " << token->_line << " - [INTEGER: " << ((LiteralToken<int>*)token)->_value << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [INTEGER: " << ((LiteralToken<int>*)token)->_value << "]" << std::endl;
 			break;
 		case (LT_STRING):
-			std::cout << "line " << token->_line << " - [STRING: \"" << ((LiteralToken<string>*)token)->_value << "\"]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [STRING: \"" << ((LiteralToken<string>*)token)->_value << "\"]" << std::endl;
 			break;
 		case (LT_CHARACTER):
-			std::cout << "line " << token->_line << " - [CHARACTER: '" << ((LiteralToken<char>*)token)->_value << "']" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [CHARACTER: '" << ((LiteralToken<char>*)token)->_value << "']" << std::endl;
 			break;
 		case (LT_FRACTION):
-			std::cout << "line " << token->_line << " - [FRACTION: " << ((LiteralToken<float>*)token)->_value << "]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [FRACTION: " << ((LiteralToken<float>*)token)->_value << "]" << std::endl;
 			break;
 		case (LT_NULL):
-			std::cout << "line " << token->_line << " - [NULL]" << std::endl;
+			std::cout << "line " << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NULL]" << std::endl;
 			break;
 		default: break;
 	}
@@ -158,13 +159,13 @@ string getSpecialCharConstant(string value)
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_STRING based on the input.
 */
-LiteralToken<string> * createStringLiteralToken(unicode_string value, int line)
+LiteralToken<string> * createStringLiteralToken(unicode_string value, PositionInfo pos)
 {
 	LiteralToken<string> * token = new struct LiteralToken<string>;
 	token->_data = unicode_string("\"");
 	token->_data += value;
 	token->_data += *new unicode_string("\"");
-	token->_line = line;
+	token->_pos = pos;
 	token->_literalType = LT_STRING;
 	token->_type = TT_LITERAL;
 	/*for (unsigned int i = 1; i < value.length(); i++) // TODO - special characters
@@ -179,10 +180,10 @@ LiteralToken<string> * createStringLiteralToken(unicode_string value, int line)
 	Function creates and returns a LiteralToken with type LT_CHARACTER based on the input.
 	NOTE: if input is not a valid character an exception will be thrown.
 */
-LiteralToken<char> * createCharacterLiteralToken(unicode_string value, int line)	
+LiteralToken<char> * createCharacterLiteralToken(unicode_string value, PositionInfo pos)	
 {
 	if (value.length() == 0)
-		throw DinoException("Empty char constant", EXT_LEXER, line);
+		throw ErrorReporter::report("Empty char constant", ERR_LEXER, pos);
 	if (value.length() > 1) 
 	{
 		if (value.length() == 2 && value[0].getValue() == ESCAPE_CHAR) 
@@ -201,9 +202,9 @@ LiteralToken<char> * createCharacterLiteralToken(unicode_string value, int line)
 				value = unicode_string("'");
 			else if (value[1].getValue() == '"')
 				value = unicode_string("\"");
-			else throw DinoException("Too many characters in character constant", EXT_LEXER, line);
+			else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
 		}
-		else throw DinoException("Too many characters in character constant", EXT_LEXER, line);
+		else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
 	}
 	unicode_string tempData = value;
 	/*if (value[0] == '\\' && value.length() >= 2)
@@ -212,7 +213,7 @@ LiteralToken<char> * createCharacterLiteralToken(unicode_string value, int line)
 	token->_data = unicode_string("'");
 	token->_data += tempData;
 	token->_data += "'";
-	token->_line = line;
+	token->_pos = pos;
 	token->_literalType = LT_CHARACTER;
 	token->_type = TT_LITERAL;
 	token->_value = value[0].to_string()[0];	// todo - unicode character literals
@@ -224,15 +225,15 @@ LiteralToken<char> * createCharacterLiteralToken(unicode_string value, int line)
 	Function creates and returns a LiteralToken with type LT_FRACTION based on the input.
 	NOTE: if input is not a valid fraction an exception will be thrown.
 */
-LiteralToken<float> * createFractionLiteralToken(unicode_string data, int line)
+LiteralToken<float> * createFractionLiteralToken(unicode_string data, PositionInfo pos)
 {
 	LiteralToken<float> * token = new struct LiteralToken<float>;
 	token->_data = data;
-	token->_line = line;
+	token->_pos = pos;
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_FRACTION;
 	try { token->_value = stof(data.to_string()); }
-	catch (exception) { throw DinoException("Invalid fraction literal", EXT_LEXER, line); }
+	catch (exception) { throw ErrorReporter::report("Invalid fraction literal", ERR_LEXER, pos); }
 	return token;
 }
 
@@ -241,15 +242,15 @@ LiteralToken<float> * createFractionLiteralToken(unicode_string data, int line)
 	Function creates and returns a LiteralToken with type LT_INTEGER based on the input.
 	NOTE: if input is not a valid integer an exception will be thrown.
 */
-LiteralToken<int> * createIntegerLiteralToken(unicode_string data, int line)
+LiteralToken<int> * createIntegerLiteralToken(unicode_string data, PositionInfo pos)
 {
 	LiteralToken<int> * token = new struct LiteralToken<int>;
 	token->_data = data;
-	token->_line = line;
+	token->_pos = pos;
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_INTEGER;
 	try { token->_value = stoi(data.to_string()); }
-	catch (exception) { throw DinoException("Invalid integer literal", EXT_LEXER, line); }
+	catch (exception) { throw ErrorReporter::report("Invalid integer literal", ERR_LEXER, pos); }
 	return token;
 }
 
@@ -258,26 +259,26 @@ LiteralToken<int> * createIntegerLiteralToken(unicode_string data, int line)
 	Function creates and returns a LiteralToken with type LT_BOOLEAN based on the input.
 	NOTE: if input is not "false" or "true" an exception will be thrown.
 */
-LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, int line)
+LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, PositionInfo pos)
 {
 	LiteralToken<bool> * temp = new struct LiteralToken<bool>;
 	temp->_data = data;
-	temp->_line = line;
+	temp->_pos = pos;
 	temp->_type = TT_LITERAL;
 	temp->_literalType = LT_BOOLEAN;
 	if (data == "true")
 		temp->_value = true;
 	else if (data == "false")
 		temp->_value = false;
-	else throw DinoException("Invalid boolean literal", EXT_LEXER, line);
+	else throw ErrorReporter::report("Invalid boolean literal", ERR_LEXER, pos);
 	return temp;
 }
 
-LiteralToken<bool>* createNullLiteralToken(int line)
+LiteralToken<bool>* createNullLiteralToken(PositionInfo pos)
 {
 	LiteralToken<bool> * temp = new struct LiteralToken<bool>;
 	temp->_data = "null";
-	temp->_line = line;
+	temp->_pos = pos;
 	temp->_type = TT_LITERAL;
 	temp->_literalType = LT_NULL;
 	return temp;
