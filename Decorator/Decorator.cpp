@@ -263,7 +263,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			if (func->getVarDecl()->getVarId() == MAIN_FUNC)
 			{
 				if (_main)
-					throw ErrorReporter::report("Main function can't be declared more than once", ERR_DECORATOR, node->getPosition());
+					throw ErrorReporter::report("Main function can't be declared more than once", ERR_DECORATOR, func->getPosition());
 				_main = funcDecl;
 			}
 			break;
@@ -365,9 +365,9 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 						_variables[currentScope()][param->getVarId()] = param->getType();
 					decl->setContent(decorate(decl->getBase()->getContent()));
 					if (!decl->getContent())
-						throw ErrorReporter::report("Method must have a body.", ERR_DECORATOR, node->getPosition());
+						throw ErrorReporter::report("Method must have a body.", ERR_DECORATOR, decl->getPosition());
 					if (!decl->getContent()->hasReturnType(decl->getReturnType()))
-						throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
+						throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 					leaveBlock();
 				}
 				else if (member.second.first->getStatementType() == ST_PROPERTY_DECLARATION)
@@ -380,7 +380,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
 						if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
-							throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
+							throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 					}
 					if (decl->getBase()->getSet())
 					{
@@ -401,7 +401,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				_variables[currentScope()][i->getVarId()] = i->getType();
 			decl->setContent(decorate(decl->getBase()->getContent()));
 			if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
-				throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
+				throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 			leaveBlock();
 			break;
 		}
@@ -413,7 +413,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 			{
 				decl->setGet(decorate(decl->getBase()->getGet()));
 				if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
-					throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
+					throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, decl->getPosition());
 			}
 			if (decl->getBase()->getSet())
 			{
@@ -444,7 +444,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		else
 		{ 
 			if (i->getStatementType() != ST_NAMESPACE_DECLARATION)
-				throw "everything must be in a namespace!";
+				throw ErrorReporter::report("everything must be in a namespace!", ERR_DECORATOR, i->getPosition());
 			
 			_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i, ((AST::NamespaceDeclaration*)i)->getName() == "Std"));
 		}
@@ -818,7 +818,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		{
 			auto dec = decorate(node->getArguments());
 			if (!dec->getType()->readable())
-				throw ErrorReporter::report("argument is write-only", ERR_DECORATOR, node->getPosition());
+				throw ErrorReporter::report("argument is write-only", ERR_DECORATOR, dec->getPosition());
 			list->addExpression(dec);
 		}
 		arguments = list;
@@ -905,10 +905,10 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
 		else if (type->getExactType() == EXACT_ARRAY && varId == unicode_string("Size"))
 			memberType = new DST::PropertyType(new DST::BasicType(getPrimitiveType("int")), true, false);
-		else throw ErrorReporter::report("Expression must have class or namespace type", ERR_DECORATOR, node->getPosition());
+		else throw ErrorReporter::report("Expression must have class or namespace type", ERR_DECORATOR, left->getPosition());
 
 		if (memberType == nullptr)
-			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getPosition());
+			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getRight()->getPosition());
 		
 		// TODO - are we leaking memory here?
 		if (memberType->getExactType() == EXACT_SPECIFIER)
@@ -930,7 +930,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (right)
 		{
 			if (!(right->getExpressionType() == ET_LITERAL && ((DST::Literal*)right)->getLiteralType() == LT_INTEGER))
-				throw ErrorReporter::report("array size must be a literal integer", ERR_DECORATOR, node->getPosition());
+				throw ErrorReporter::report("array size must be a literal integer", ERR_DECORATOR, right->getPosition());
 			return new DST::ArrayType((DST::Type*)left, *((int*)((DST::Literal*)(right))->getValue()));
 		}
 		else return new DST::ArrayType((DST::Type*)left, DST::UNKNOWN_ARRAY_LENGTH);
@@ -949,7 +949,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			{
 				DST::BasicType *intType = new DST::BasicType(getPrimitiveType("int"));
 				if(!bo->getRight()->getType()->equals(intType))
-					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, node->getPosition());
+					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 				_toDelete.push_back(intType);
 			}
@@ -1076,7 +1076,7 @@ DST::IfThenElse * Decorator::decorate(AST::IfThenElse * node)
 	auto ite = new DST::IfThenElse(node);
 	ite->setCondition(decorate(node->getCondition()));
 	if (!isCondition(ite->getCondition()))
-		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, node->getPosition());
+		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, node->getCondition()->getPosition());
 	ite->setThenBranch(decorate(node->getThenBranch()));
 	ite->setElseBranch(decorate(node->getElseBranch()));
 	return ite;
@@ -1091,7 +1091,8 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 		sc->addCase(decorate(c._expression), decorate(c._statement));
 		// if case type == swich type.
 		if (!sc->getCases().back()._expression->getType()->equals(sc->getExpression()->getType()))
-			throw ErrorReporter::report("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + "\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", ERR_DECORATOR, node->getPosition());
+			throw ErrorReporter::report("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + 
+			"\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", ERR_DECORATOR, sc->getCases().back()._expression->getPosition());
 	}
 	return sc;
 }
@@ -1114,7 +1115,7 @@ DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 	loop->setBegin(decorate(node->getBegin()));
 	loop->setCondition(decorate(node->getCondition()));
 	if (!isCondition(loop->getCondition()))
-		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, node->getPosition());
+		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, loop->getCondition()->getPosition());
 	loop->setIncrement(decorate(node->getIncrement()));
 	loop->setStatement(decorate(node->getStatement()));
 	leaveBlock();
@@ -1126,7 +1127,7 @@ DST::WhileLoop * Decorator::decorate(AST::WhileLoop * node)
 	auto loop = new DST::WhileLoop(node);
 	loop->setCondition(decorate(node->getCondition()));
 	if (!isCondition(loop->getCondition()))
-		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, node->getPosition());
+		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, loop->getCondition()->getPosition());
 	loop->setStatement(decorate(node->getStatement()));
 	return loop;
 }
@@ -1142,7 +1143,7 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 {
 	auto ret = decorate(node);
 	if (ret->getExpressionType() != ET_TYPE)
-		throw ErrorReporter::report("expected a type", ERR_DECORATOR, node->getPosition());
+		throw ErrorReporter::report("expected a type", ERR_DECORATOR, ret->getPosition());
 	return (DST::Type*)ret;
 }
 

@@ -70,6 +70,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 	Token* token = new struct Token;
 	unicode_char curr = str[index++];
 	token->_data = curr;
+	token->_pos.line = line;
 	token->_pos.file = fileName;
 	token->_pos.startPos = pos++;
 	token->_pos.endPos = pos;
@@ -78,21 +79,21 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 		case CT_WHITESPACE:
 		{
 			token->_type = TT_WHITESPACE;
-			token->_pos.line = line;
+			// token->_pos.line = line;
 			break;
 		}
 
 		case CT_LINE_BREAK:
 		{
 			token->_type = TT_LINE_BREAK;
-			token->_pos.line = line;
+			// token->_pos.line = line;
 			break;
 		}
 
 		case CT_NEWLINE:
 		{
 			token->_type = TT_NEWLINE;
-			token->_pos.line = line;
+			// token->_pos.line = line;
 			line++;
 			pos = 0;
 			break;
@@ -155,7 +156,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 			else
 			{
 				token->_type = TT_IDENTIFIER;
-				token->_pos.line = line;
+				token->_pos = token->_pos;
 			}
 			
 			break;
@@ -179,7 +180,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 			temp->_data = token->_data;
 			temp->_type = TT_OPERATOR;
 			temp->_operator = OperatorsMap::getOperators().find(temp->_data)->second;
-			temp->_pos.line = line;
+			temp->_pos = token->_pos;
 
 			if (temp->_operator._type == OT_SINGLE_QUOTE || temp->_operator._type == OT_DOUBLE_QUOTE)	// Character
 			{
@@ -250,6 +251,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 		case CT_UNKNOWN:
 			throw ErrorReporter::report("internal lexer error", ERR_LEXER, token->_pos);
 	}
-	token->_pos.endPos = pos;
+	if (pos != 0)
+		token->_pos.endPos = pos;
 	return token;
 }
