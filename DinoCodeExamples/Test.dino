@@ -1,6 +1,8 @@
-import "../DinoStd/std"
+// import "../DinoStd/std"
 
 namespace Prog {
+
+	a.b.c myvar
 
 	int Main() {
 		var s := "hello world"
