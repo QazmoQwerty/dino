@@ -40,13 +40,29 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::NamespaceDecla
 
 void LibFileWriter::Write(ofstream &stream, DST::ConstDeclaration *node) 
 {
-    // TODO
-    throw ErrorReporter::report("LibFileWriter implementation for const declarations is missing", ERR_INTERNAL, node->getPosition());
+    if (node->getExpression()->getExpressionType() != ET_LITERAL || ((DST::Literal*)node->getExpression())->getLiteralType() == LT_FUNCTION)
+        throw ErrorReporter::report("Only literal values are currently supported in library const declarations", ERR_CODEGEN, node->getPosition());
+    stream << "const " << node->getName().to_string() << " ≡ " << ((DST::Literal*)node->getExpression())->toShortString() << "\n";
 }
 
 void LibFileWriter::Write(ofstream &stream, int indentCount, DST::TypeDeclaration *node) 
 {
-    stream << "type " << node->getName().to_string() << " {\n";
+    stream << "type " << node->getName().to_string();
+    if (node->getInterfaces().size()) 
+    {
+        stream << " is ";
+        bool first = true;
+        for (auto i : node->getInterfaces())  // TODO - what if the interface which we are implementing is not in the current scope?
+        {
+            if (first)
+            {
+                stream << i->getName().to_string();
+                first = false;
+            } 
+            else stream << ", " << i->getName().to_string();
+        }         
+    }
+    stream << " {\n";
     for (auto i : node->getMembers())
     {
         WriteIndentCount(stream, indentCount + 1);
@@ -65,7 +81,22 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::TypeDeclaratio
 
 void LibFileWriter::Write(ofstream &stream, int indentCount, DST::InterfaceDeclaration *node) 
 {
-    stream << "interface " << node->getName().to_string() << " {\n";
+    stream << "interface " << node->getName().to_string();
+    if (node->getImplements().size()) 
+    {
+        stream << " is ";
+        bool first = 0;
+        for (auto i : node->getImplements())  // TODO - what if the interface which we are implementing is not in the current scope?
+        {
+            if (first)
+            {
+                stream << i->getName().to_string();
+                first = false;
+            } 
+            else stream << ", " << i->getName().to_string();
+        }         
+    }
+    stream << " {\n";
     for (auto i : node->getDeclarations())
     {
         WriteIndentCount(stream, indentCount + 1);

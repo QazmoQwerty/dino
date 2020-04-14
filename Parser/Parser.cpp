@@ -176,7 +176,7 @@ AST::StatementBlock * Parser::importFile(PositionInfo currPos)
 	while (auto ent = readdir(dir))
 	{
 		string fileName(ent->d_name);
-		if (fileName.substr(fileName.find_last_of(".")) == ".dinoh")
+		if (fileName.substr(fileName.find_last_of(".")) == ".dinh")
 		{
 			if (block)
 				block->addStatement(parseFile(importPath + '/' + fileName));
@@ -185,7 +185,7 @@ AST::StatementBlock * Parser::importFile(PositionInfo currPos)
 	}
 	closedir(dir);
 	if (!block)
-		throw ErrorReporter::report("No .dinoh files in directory \"" + importPath + '\"', ERR_PARSER, currPos);
+		throw ErrorReporter::report("No .dinh files in directory \"" + importPath + '\"', ERR_PARSER, currPos);
 	auto import = new AST::Import(importPath);
 	import->setPosition(currPos);
 	block->addStatement(import);

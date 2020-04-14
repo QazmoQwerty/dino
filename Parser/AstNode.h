@@ -640,6 +640,7 @@ namespace AST
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 		LiteralType getLiteralType() { return _type; }
+		virtual string toShortString() = 0;
 	};
 
 	class Boolean : public Literal
@@ -649,6 +650,7 @@ namespace AST
 		Boolean(bool value) : Literal(LT_BOOLEAN) { _value = value; }
 		virtual string toString() { return string() + "<BoolLiteral>\\n" + std::to_string(_value); };
 		bool getValue() { return _value; }
+		virtual string toShortString() { return _value ? "true" : "false"; }
 	};
 
 	class Integer : public Literal
@@ -658,6 +660,7 @@ namespace AST
 		Integer(int value) : Literal(LT_INTEGER) { _value = value; }
 		virtual string toString() { return string() + "<IntegerLiteral>\\n" + std::to_string(_value); };
 		int getValue() { return _value; }
+		virtual string toShortString() { return std::to_string(_value); }
 	};
 
 	class Fraction : public Literal
@@ -667,6 +670,7 @@ namespace AST
 		Fraction(float value) : Literal(LT_FRACTION) { _value = value; }
 		virtual string toString() { return string() + "<FracLiteral>\\n" + std::to_string(_value); };
 		float getValue() { return _value; }
+		virtual string toShortString() { return std::to_string(_value); }
 	};
 	
 	class Character : public Literal
@@ -676,6 +680,7 @@ namespace AST
 		Character(char value) : Literal(LT_CHARACTER) { _value = value; }
 		virtual string toString() { return string() + "<CharLiteral>\\n'" + _value + '\''; };
 		char getValue() { return _value; }
+		virtual string toShortString() { return string(1, _value); }
 	};
 
 	class String : public Literal
@@ -685,6 +690,7 @@ namespace AST
 		String(string value) : Literal(LT_STRING) { _value = value; }
 		virtual string toString() { return string() + "<StringLiteral>\\n" + _value; };
 		string getValue() { return _value; }
+		virtual string toShortString() { return _value; }
 	};
 
 	class Function : public Literal
@@ -707,6 +713,7 @@ namespace AST
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
 		StatementBlock* getContent() { return _content; }
 		Expression* getReturnType() { return _returnType; }
+		virtual string toShortString() { return "TODO"; }
 	};
 
 	class Null : public Literal
@@ -714,6 +721,7 @@ namespace AST
 	public:
 		Null() : Literal(LT_NULL) {}
 		virtual string toString() { return string() + "<NullLiteral>"; };
+		virtual string toShortString() { return "null"; }
 	};
 
 }

@@ -533,7 +533,7 @@ namespace DST
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
 
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
-
+		string toShortString() { return _base->toShortString(); }
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};

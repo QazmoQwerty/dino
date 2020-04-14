@@ -8,16 +8,16 @@ namespace Std {
 	}
 	type String {
 		int Size: get: extern "Std.type.Std.String.Size.get"
-		@char CStr: get: extern "Std.type.Std.String.CStr.get"
+		char@ CStr: get: extern "Std.type.Std.String.CStr.get"
 		char[] buf
 		char Get(int idx): extern "Std.type.Std.String.Get"
 	}
-	type NullPointerError {
+	type NullPointerError is Error {
 		String Msg: get: extern "Std.type.Std.NullPointerError.Msg.get"
 	}
 	void PrintS(String s): extern "Std.PrintS"
-	int puts(@char s): extern "puts"
-	type ArrayIndexOutOfBoundsError {
+	int puts(char@ s): extern "puts"
+	type ArrayIndexOutOfBoundsError is Error {
 		String Msg: get: extern "Std.type.Std.ArrayIndexOutOfBoundsError.Msg.get"
 	}
 	char putchar(char c): extern "putchar"
