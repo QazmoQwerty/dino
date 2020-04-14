@@ -576,8 +576,6 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
     
     if (node->getOperator()._type == OT_IS)
     {
-        
-
         auto right = evalType((DST::Type*)node->getRight());
         auto left = codeGenLval(node->getLeft());
         if (right == _interfaceType)

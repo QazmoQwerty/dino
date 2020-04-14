@@ -290,12 +290,11 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 
 bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
 {
-	if(getName() == inter->getName())
+	if (inter == this)
 		return true;
-	
 	for (auto i : _implements)
-		return i->implements(inter);
-
+		if (i->implements(inter))
+			return true;
 	return false;
 }
 

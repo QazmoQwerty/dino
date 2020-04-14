@@ -157,8 +157,8 @@ namespace DST
 		virtual bool readable() { return _isReadable; }
 		virtual bool writeable() { return _isWritable; }
 		bool isConst() { return _isConst; }
+		virtual bool assignableTo(Type *type) = 0;
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
-
 		virtual string toShortString() = 0;
 		virtual string toString() { return "<Type>"; };
 		virtual vector<Node*> getChildren();
@@ -170,6 +170,7 @@ namespace DST
 		UnknownType(AST::Expression *base) : Type(base) {}
 		UnknownType() : Type(NULL) {}
 		virtual string toShortString() { return "var"; };
+		virtual bool assignableTo(Type *type) { return false; /* 'var' type is not assignable to anything */ }
 		virtual ExactType getExactType() { return EXACT_UNKNOWN; };
 		virtual bool equals(Type *other) { return other->getExactType() == getExactType(); }
 		virtual vector<Node*> getChildren() { return {}; }
@@ -192,6 +193,7 @@ namespace DST
 			virtual bool writeable() { return false; }
 			TypeDeclaration *getTypeDecl() { return _typeDecl; }
 			InterfaceDeclaration *getInterfaceDecl() { return _interfaceDecl; }
+			virtual bool assignableTo(Type *type) { return false; /* type specifiers are not assignable */ }
 
 			unicode_string getTypeName();
 			Type *getMemberType(unicode_string name);
@@ -212,6 +214,7 @@ namespace DST
 			virtual bool writeable() { return false; }
 			NamespaceDeclaration *getNamespaceDecl() { return _decl; }
 			virtual string toShortString() { return "namespaceType"; };
+			virtual bool assignableTo(Type *type) {  return false; /* namespaces are not assignable */ }
 	};
 	
 	class PropertyType : public Type
@@ -237,6 +240,8 @@ namespace DST
 		virtual string toShortString();
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
+
+		virtual bool assignableTo(DST::Type *type) { return readable() && _return->assignableTo(type); }
 	};
 
 	class PointerType : public Type
@@ -252,6 +257,15 @@ namespace DST
 		virtual string toShortString();
 		virtual vector<Node*> getChildren();
 		virtual string toString() { return "<PointerType>" + toShortString(); };
+
+		virtual bool assignableTo(DST::Type *type)
+		{
+			if (!type)
+				return false;
+			if (type->getExactType() == EXACT_PROPERTY)
+				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+			return type->getExactType() == EXACT_POINTER && _type->assignableTo(((DST::PointerType*)type)->_type);
+		}
 	};
 
 	class NullType : public Type 
@@ -263,6 +277,20 @@ namespace DST
 		virtual string toShortString() { return "<NullType>"; };
 		virtual vector<Node*> getChildren() { return {}; };
 		virtual string toString() { return toShortString(); };
+
+		virtual bool assignableTo(DST::Type *type)
+		{
+			if (!type)
+				return false;
+			switch (type->getExactType()) 
+			{
+				case EXACT_PROPERTY:
+					return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+				case EXACT_INTERFACE: case EXACT_POINTER: case EXACT_FUNCTION: case EXACT_ARRAY:
+					return true;
+				default: return false;
+			}
+		}
 	};
 
 	class TypeList : public Type
@@ -281,6 +309,23 @@ namespace DST
 		virtual string toShortString();
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren();
+
+		virtual bool assignableTo(DST::Type *type)
+		{
+			if (!type) 
+				return false;
+			if (type->getExactType() == EXACT_PROPERTY)
+				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+			if (type->getExactType() != EXACT_TYPELIST)
+				return false;
+			auto other = ((DST::TypeList*)type);
+			if (other->_types.size() != _types.size())
+				return false;
+			for (int i = 0; i < _types.size(); i++)
+				if (!_types[i]->assignableTo(other->_types[i]))
+					return false;
+			return false;
+		}
 	};
 
 	class BasicType : public Type
@@ -301,31 +346,27 @@ namespace DST
 				(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeSpec == _typeSpec) ||
 				(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
 		}
-		//void addMember(unicode_string id, Type* type)  { _members[id] = type; }
 		Type *getMember(unicode_string id);
 		virtual Type *getType() { return _typeSpec; }
 		virtual string toShortString();
 		virtual string toString() { return "<BasicType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
+		virtual bool assignableTo(Type *type) {
+			if (!type)
+				return false;
+			if (type->getExactType() == EXACT_PROPERTY)
+				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+			if (type->getExactType() != EXACT_BASIC) 
+				return false;
+			auto other = (DST::BasicType*)type;
+			if (!other->_typeSpec) return false;
+			if (_typeSpec->getTypeDecl())
+				return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
+			if (_typeSpec->getInterfaceDecl()) 
+				return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
+			return false;
+		}
 	};
-
-	/*class ConstType : public Type
-	{
-		Type *_type;
-
-	public:
-		ConstType(Type *type) : Type(NULL), _type(type) { }
-		virtual ~ConstType() { if (_type) delete _type; }
-		ExactType getExactType() { return EXACT_CONST; }
-		virtual bool writable() { return false; }
-
-		virtual bool equals(Type *other) { return _type->equals(other); }
-		Type *getNonConstType() { return _type; }
-
-		virtual string toShortString() { return "const" + _type->toShortString(); };
-		virtual string toString() { return "<ConstType>\\n" + toShortString(); };
-		virtual vector<Node*> getChildren();
-	};*/
 
 	#define UNKNOWN_ARR_SIZE 0
 
@@ -356,6 +397,17 @@ namespace DST
 		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length != DST::UNKNOWN_ARRAY_LENGTH) ? std::to_string(_length) : "") + "]"; };
 		virtual string toString() { return "<ArrayType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
+
+		virtual bool assignableTo(DST::Type *type) 
+		{
+			if (!type)
+				return false;
+			if (type->getExactType() == EXACT_PROPERTY)
+				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+			return type->getExactType() == EXACT_ARRAY && 
+				((DST::ArrayType*)type)->_length == _length && 
+				_valueType->assignableTo(((DST::ArrayType*)type)->_valueType);
+		}
 	};
 
 	class FunctionType : public Type
@@ -374,6 +426,17 @@ namespace DST
 
 		ExactType getExactType() { return EXACT_FUNCTION; }
 		virtual bool equals(Type *other);
+
+		virtual bool assignableTo(DST::Type *type)
+		{
+			if (!type)
+				return false;
+			if (type->getExactType() == EXACT_PROPERTY)
+				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+			return type->getExactType() == EXACT_FUNCTION && 
+				_returns->assignableTo(((DST::FunctionType*)type)->_returns) && 
+				_parameters->assignableTo(((DST::FunctionType*)type)->_parameters);
+		}
 
 		virtual string toShortString();
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
