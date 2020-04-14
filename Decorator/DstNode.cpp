@@ -227,16 +227,11 @@ bool DST::TypeDeclaration::validateImplements(InterfaceDeclaration * inter)
 
 bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
 {
+	if (inter == _anyInterface)
+		return true;
 	for (auto i : _interfaces)
-	{
-		if (i->getName() == inter->getName())
+		if (i->implements(inter))
 			return true;
-		for (auto subi : i->getImplements())
-		{
-			if (subi->getName() == inter->getName())
-				return true;
-		}
-	}
 	return false;
 }
 
@@ -290,7 +285,7 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 
 bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
 {
-	if (inter == this)
+	if (inter == this || inter == _anyInterface)
 		return true;
 	for (auto i : _implements)
 		if (i->implements(inter))
@@ -509,6 +504,7 @@ string DST::PropertyType::toShortString()
 void DST::setup()
 {
 	typeidTypePtr = NULL;	// TODO
+	_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
 	//typeidTypePtr = new BasicType(unicode_string("typeid"));
 }
 

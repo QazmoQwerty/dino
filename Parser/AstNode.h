@@ -438,6 +438,7 @@ namespace AST
 
 	public:
 		InterfaceDeclaration() : _implements(NULL) {};
+		InterfaceDeclaration(unicode_string name) : _name(name), _implements(NULL) {};
 		virtual ~InterfaceDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };

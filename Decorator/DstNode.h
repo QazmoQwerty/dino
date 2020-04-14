@@ -13,6 +13,8 @@ namespace DST
 
 	class BasicType;
 	static BasicType *typeidTypePtr;
+	class InterfaceDeclaration;
+	static DST::InterfaceDeclaration *_anyInterface;
 
 	void setup();
 

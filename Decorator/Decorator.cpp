@@ -34,6 +34,7 @@ void Decorator::setup(bool isLibrary)
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
+	_variables[0][DST::_anyInterface->getName()] = new DST::TypeSpecifierType(DST::_anyInterface);
 }
 
 void Decorator::createErrorInterfaceType()
