@@ -156,8 +156,8 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 			else
 			{
 				token->_type = TT_IDENTIFIER;
-				token->_pos = token->_pos;
 			}
+			token->_pos.endPos = pos;
 			
 			break;
 		}
@@ -198,7 +198,10 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 							break;
 					}
 					else if (str[index] == '\n')
+					{
 						line++;
+						pos = 0;
+					}
 					temp->_data += str[index];
 					index++;
 					pos++;
@@ -220,7 +223,6 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 					while (index < str.length() && str[index] != SINGLE_LINE_COMMENT_END)
 						{ index++; pos++; }
 					index++;	// Can probably find a more elegant solution
-					pos++;
 					temp->_type = TT_SINGLE_LINE_COMMENT;
 					line++;
 					pos = 0;

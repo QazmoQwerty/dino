@@ -1,12 +1,11 @@
+import "../DinoStd/std"
+
 namespace Prog {
 
 	int Main() {
-		int a := 10
-
-		if a := 10 {
-
-			// Say("Hello")
-		}
+		var s := "hello world"
+		Std.PrintD(s.Size)
+		Std.PrintS(s)
 		return 20
 	}
 }

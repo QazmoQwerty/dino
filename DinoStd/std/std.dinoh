@@ -1,0 +1,24 @@
+namespace Std {
+	void PrintD(int n): extern "Std.PrintD"
+	void PrintC(char c): extern "Std.PrintC"
+	void PrintLn(): extern "Std.PrintLn"
+	char GetChar(): extern "getchar"
+	interface Error {
+		String Msg: get
+	}
+	type String {
+		int Size: get: extern "Std.type.Std.String.Size.get"
+		@char CStr: get: extern "Std.type.Std.String.CStr.get"
+		char[] buf
+		char Get(int idx): extern "Std.type.Std.String.Get"
+	}
+	type NullPointerError {
+		String Msg: get: extern "Std.type.Std.NullPointerError.Msg.get"
+	}
+	void PrintS(String s): extern "Std.PrintS"
+	int puts(@char s): extern "puts"
+	type ArrayIndexOutOfBoundsError {
+		String Msg: get: extern "Std.type.Std.ArrayIndexOutOfBoundsError.Msg.get"
+	}
+	char putchar(char c): extern "putchar"
+}
