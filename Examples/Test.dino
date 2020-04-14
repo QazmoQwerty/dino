@@ -1,0 +1,13 @@
+// import "../DinoStd/std"
+
+namespace Prog {
+
+	a.b.c myvar
+
+	int Main() {
+		var s := "hello world"
+		Std.PrintD(s.Size)
+		Std.PrintS(s)
+		return 20
+	}
+}

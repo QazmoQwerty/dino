@@ -2,6 +2,9 @@
 
 #include "../Parser/AstNode.h"
 #include <dirent.h>
+#include <stack>
+
+using std::stack;
 
 namespace DST
 {
@@ -173,20 +176,6 @@ namespace DST
 	};
 
 	class TypeDeclaration;
-
-	/*class TypeSpecifierType : public Type
-	{
-		private:
-			TypeDeclaration *_typeDecl;
-		public:
-			TypeSpecifierType(DST::TypeDeclaration *typeDecl) : Type(NULL), _typeDecl(typeDecl) {}
-			virtual ~TypeSpecifierType();
-			virtual ExactType getExactType() { return EXACT_SPECIFIER; };
-			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
-			virtual bool writeable() { return false; }
-			TypeDeclaration *getTypeDecl() { return _typeDecl; }
-			virtual string toShortString() { return "typeid"; };
-	};*/
 	class InterfaceDeclaration;
 
 	class TypeSpecifierType : public Type
@@ -209,20 +198,6 @@ namespace DST
 			virtual string toShortString() { return "typeid"; };
 	};
 
-	/*class InterfaceSpecifierType : public Type
-	{
-	private:
-		InterfaceDeclaration *_interfaceDecl;
-	public:
-		InterfaceSpecifierType(DST::InterfaceDeclaration *interfaceDecl) : Type(NULL), _interfaceDecl(interfaceDecl) {}
-		virtual ~InterfaceSpecifierType();
-		virtual ExactType getExactType() { return EXACT_INTERFACE; };
-		virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
-		virtual bool writeable() { return false; }
-		InterfaceDeclaration *getInterfaceDecl() { return _interfaceDecl; }
-		virtual string toShortString() { return "interfaceId"; };
-	};*/
-
 	class NamespaceDeclaration;
 
 	class NamespaceType : public Type
@@ -241,6 +216,7 @@ namespace DST
 	
 	class PropertyType : public Type
 	{
+	protected:
 		Type *_return;
 		bool _hasGet;
 		bool _hasSet;
@@ -306,32 +282,6 @@ namespace DST
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
-	
-	// class BasicType : public Type
-	// {
-	// 	unicode_string _typeId;
-	// 	unordered_map<unicode_string, Type*, UnicodeHasherFunction> _members;
-	// public:
-	// 	//BasicType(TypeSpecifierType /typeSpec, AST::Expression *base) : Type(base), 
-
-	// 	BasicType(AST::Expression *base) : Type(base) { _typeId = dynamic_cast<AST::Identifier*>(_base)->getVarId(); }
-	// 	BasicType(unicode_string typeId) : Type(NULL), _typeId(typeId) { }
-	// 	unicode_string getTypeId() { return _typeId; }
-	// 	ExactType getExactType() { return EXACT_BASIC; }
-	// 	virtual bool equals(Type *other)
-	// 	{
-	// 		return 
-	// 			(other->getExactType() == EXACT_PROPERTY && equals(((PropertyType*)other)->getReturn())) ||
-	// 			(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeId == _typeId) ||
-	// 			(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
-	// 	}
-	// 	void addMember(unicode_string id, Type* type)  { _members[id] = type; }
-	// 	Type *getMember(unicode_string id) { return _members[id]; }
-
-	// 	virtual string toShortString() { return _typeId.to_string(); };
-	// 	virtual string toString() { return "<BasicType>\\n" + _typeId.to_string(); };
-	// 	virtual vector<Node*> getChildren();
-	// };
 
 	class BasicType : public Type
 	{
@@ -354,7 +304,7 @@ namespace DST
 		//void addMember(unicode_string id, Type* type)  { _members[id] = type; }
 		Type *getMember(unicode_string id);
 		virtual Type *getType() { return _typeSpec; }
-		virtual string toShortString() { return getTypeId().to_string(); };
+		virtual string toShortString();
 		virtual string toString() { return "<BasicType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
@@ -583,7 +533,7 @@ namespace DST
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
 
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
-
+		string toShortString() { return _base->toShortString(); }
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 	};

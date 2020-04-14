@@ -262,6 +262,8 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			
 			if (func->getVarDecl()->getVarId() == MAIN_FUNC)
 			{
+				if (_isLibrary)
+					throw ErrorReporter::report("Main function can't be declared in a library", ERR_DECORATOR, func->getPosition());
 				if (_main)
 					throw ErrorReporter::report("Main function can't be declared more than once", ERR_DECORATOR, func->getPosition());
 				_main = funcDecl;
@@ -457,7 +459,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		partC(i.second);
 	
 	if (!_main && !_isLibrary)
-		throw ErrorReporter::report("No entry point (Main function)", ERR_DECORATOR, node->getPosition());
+		throw ErrorReporter::report("No entry point (Main function)", ERR_DECORATOR, POSITION_INFO_NONE);
 	
 	for (auto i : _currentProgram->getNamespaces())
 		partD(i.second);

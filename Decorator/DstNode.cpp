@@ -444,9 +444,7 @@ bool DST::FunctionType::equals(Type * other)
 
 string DST::FunctionType::toShortString()
 {
-	if (_returns->size() == 1)
-		return _returns->toShortString() + "(" + _parameters->toShortString() + ")";
-	return "(" + _returns->toShortString() + ")(" + _parameters->toShortString() + ")";
+	return _returns->toShortString() + "(" + _parameters->toShortString() + ")";
 }
 
 vector<DST::Node*> DST::FunctionType::getChildren()
@@ -483,13 +481,14 @@ DST::FunctionDeclaration::~FunctionDeclaration() { if (_base) delete _base; if (
 
 string DST::TypeList::toShortString()
 {
-	string str = "";
+	string str = "(";
 	for (unsigned int i = 0; i < _types.size(); i++)
 	{
 		if (i > 0)
 			str += ", ";
 		str += _types[i]->toShortString();
 	}
+	str += ")";
 	return str;
 }
 
@@ -572,12 +571,6 @@ DST::Type * DST::TypeSpecifierType::getMemberType(unicode_string name)
 
 DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }
 
-//DST::InterfaceSpecifierType::~InterfaceSpecifierType()
-//{
-//	if (_interfaceDecl)
-//		delete _interfaceDecl;
-//}
-
 bool DST::PointerType::equals(Type * other)
 {
 	if (other == nullptr) 
@@ -612,9 +605,38 @@ bool DST::PointerType::equals(Type * other)
 	}
 }
 
+string DST::BasicType::toShortString() 
+{ 
+	if (!_base || _base->getExpressionType() == ET_IDENTIFIER)
+		return getTypeId().to_string(); 
+	else if (_base->getExpressionType() != ET_BINARY_OPERATION || ((AST::BinaryOperation*)_base)->getOperator()._type != OT_PERIOD)
+		throw "internal error in DST::BasicType::toShortString()";
+	stack<AST::Identifier*> ids;
+	auto bo = ((AST::BinaryOperation*)_base);
+	while (bo)
+	{
+		if (auto id = dynamic_cast<AST::Identifier*>(bo->getRight()))
+			ids.push(id);
+		else throw "internal error in DST::BasicType::toShortString()";
+		if (bo->getLeft()->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)_base)->getOperator()._type == OT_PERIOD)
+			bo = (AST::BinaryOperation*)bo->getLeft();
+		else if (auto id = dynamic_cast<AST::Identifier*>(bo->getLeft()))
+			ids.push(id);
+		else throw "internal error in DST::BasicType::toShortString()";
+	}
+	string ret = ids.top()->getVarId().to_string();
+	ids.pop();
+	while (!ids.empty()) 
+	{
+		ret += "." + ids.top()->getVarId().to_string();
+		ids.pop();
+	}
+	return ret;
+}
+
 string DST::PointerType::toShortString()
 {
-	return "@" + _type->toShortString();
+	return _type->toShortString() + "@";
 }
 
 vector<DST::Node*> DST::PointerType::getChildren()

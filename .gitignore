@@ -1,9 +1,10 @@
 .vs/
 Debug/
+Std/
 *.gv
 *.exe
 .vscode/
-*.bc
+# *.bc
 *.ll
 *.s
 dino

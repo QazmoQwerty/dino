@@ -12,8 +12,17 @@ namespace Std {
 		string Msg: get
 	}
 
+	type NullPointerError is error {
+		string Msg: get: return "Error: attempted to dereference null"
+	}
+
+	type ArrayIndexOutOfBoundsError is error {
+		string Msg: get: return "Error: array index out of bounds"
+	}
+
 	int puts(char@ s): extern "puts"
 	char putchar(char c): extern "putchar"
+	char GetChar(): extern "getchar"
 
 	void PrintLn(): putchar('\n')
 	void PrintS(string s): puts(s.CStr)
@@ -27,5 +36,4 @@ namespace Std {
         }
         PrintC('\n')
     }
-
 }

@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 			// llvm::errs() << "outputting lib files\n";
 			mkdir(cmd->libFileName, 0777);
 			auto libBcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
-			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinoh", libBcFileName, dst);
+			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinh", libBcFileName, dst);
 			CodeGenerator::writeBitcodeToFile(dst, libBcFileName);
 			if (cmd->verbose)
 				llvm::errs() << "outputted lib files\n";
