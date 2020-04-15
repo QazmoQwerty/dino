@@ -250,6 +250,7 @@ int main(int argc, char *argv[])
 	} 
 	// catch (DinoException e) { llvm::errs() << e.errorMsg() << "\n"; }
 	catch (exception e) { llvm::errs() << e.what() << "\n"; }
+	// catch (const char *err) { llvm::errs() << err << "\n"; }
 	catch (const char *err) { llvm::errs() << err << "\n"; }
 	catch (string err) { llvm::errs() << err << "\n"; }
 	catch (Error err) {
