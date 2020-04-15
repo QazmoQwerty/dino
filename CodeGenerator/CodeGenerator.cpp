@@ -642,12 +642,16 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateICmpUGE(left, right, "cmptmp");
         case OT_EQUAL:
         {
-            if (left->getType() == right->getType())
-                return _builder.CreateICmpEQ(left, right, "cmptmp");
-            return _builder.CreateICmpEQ(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
+            if (left->getType() != right->getType())
+                return _builder.CreateICmpEQ(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
+            return _builder.CreateICmpEQ(left, right, "cmptmp");
         }
         case OT_NOT_EQUAL:
+        {
+            if (left->getType() != right->getType())
+                return _builder.CreateICmpNE(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
             return _builder.CreateICmpNE(left, right, "cmptmp");
+        }
         case OT_LOGICAL_AND:
             return _builder.CreateAnd(left, right, "andtmp");
         case OT_LOGICAL_OR:
