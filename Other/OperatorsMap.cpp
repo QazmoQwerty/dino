@@ -297,6 +297,7 @@ void OperatorsMap::setup()
 
 	// Non-parser related operators:
 	_map[UTF8("//")]		= { OT_SINGLE_LINE_COMMENT,			UTF8("//"),	NON_PARSER };
+	_map[UTF8("#")]			= { OT_SINGLE_LINE_COMMENT,			UTF8("#"),	NON_PARSER };
 	_map[UTF8("/*")]		= { OT_MULTI_LINE_COMMENT_OPEN,		UTF8("/*"),	NON_PARSER };
 	_map[UTF8("*/")]		= { OT_MULTI_LINE_COMMENT_CLOSE,	UTF8("*/"),	NON_PARSER };
 	_map[UTF8("\"")]		= { OT_DOUBLE_QUOTE,				UTF8("\""),	NON_PARSER };

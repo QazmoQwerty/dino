@@ -22,7 +22,7 @@ namespace Prog {
 	// 	list.Show()
 	// }
 
-	// interface Foo: int Str { get }
+	# interface Foo: int Str { get }
 	interface Foo {
 		char C()
 	} 
