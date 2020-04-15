@@ -38,17 +38,17 @@ typedef struct cmdOptions
 void showHelp() 
 {
 	llvm::errs() << "Dino.exe [filepath] [args]\n" 
-		<< "-help (show this help message)\n"
-		<< "-v (verbose: show ongoing compilation status"
-		<< "-showlex (prints the output of the lexer)\n"
-		<< "-outAst (output a .gv file of the AST and DST)\n" 
-		<< "-lineAst (show line numbers in the AST and DST files)\n" 
-		<< "-i (run the program in an LLVM interpreter for testing purposes - for debug purposes only!)\n" 
-		<< "-bc [filepath] (output a .bc file to \"filepath\")\n" 
-		<< "-ll [filepath] (output a .ll file to \"filepath\")\n"
-		<< "-o [filepath] (output a .exe file to \"filepath\")\n"
-		<< "-lib [dirpath] (build as a library to the directory \"dirpath\")\n"
-		<< "-O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n\n";
+		<< "    -help (show this help message)\n"
+		<< "    -v (verbose: show ongoing compilation status\n"
+		<< "    -showlex (prints the output of the lexer)\n"
+		<< "    -outAst (output a .gv file of the AST and DST)\n" 
+		<< "    -lineAst (show line numbers in the AST and DST files)\n" 
+		<< "    -i (run the program in an LLVM interpreter for testing purposes - for debug purposes only!)\n" 
+		<< "    -bc [filepath] (output a .bc file to \"filepath\")\n" 
+		<< "    -ll [filepath] (output a .ll file to \"filepath\")\n"
+		<< "    -o [filepath] (output a .exe file to \"filepath\")\n"
+		<< "    -lib [dirpath] (build as a library to the directory \"dirpath\")\n"
+		<< "    -O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n\n";
 }
 
 string runCmd(string cmd, bool printOutput = true) // if print output is false, nothing will be printed untill the entire command is done
@@ -156,8 +156,11 @@ int main(int argc, char *argv[])
 	CodeGenerator::setup(cmd->outputLib);
 	OperatorsMap::setup();
 	Lexer::setup();
-	Decorator::setup(cmd->outputLib);
 	DST::setup();
+	// std::cout << DST::_anyInterface << "\n";
+	Decorator::setup(cmd->outputLib);
+	// std::cout << "ummm?\n";
+	// std::cout << DST::_anyInterface << "\n";
 	try
 	{
 		AST::Node *ast = Parser::parseFile(cmd->fileName, cmd->showLexerOutput);
@@ -248,6 +251,7 @@ int main(int argc, char *argv[])
 	// catch (DinoException e) { llvm::errs() << e.errorMsg() << "\n"; }
 	catch (exception e) { llvm::errs() << e.what() << "\n"; }
 	catch (const char *err) { llvm::errs() << err << "\n"; }
+	catch (string err) { llvm::errs() << err << "\n"; }
 	catch (Error err) {
 		ErrorReporter::showAll();
 		// llvm::errs() << "Build failed.\n";

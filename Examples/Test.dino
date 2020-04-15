@@ -1,13 +1,12 @@
-// import "../DinoStd/std"
+import "Examples/DinoStd/std"
 
 namespace Prog {
 
-	a.b.c myvar
+	int Sum(int a, int b): return a + b
+
+	int Put(int c): extern "putchar"
 
 	int Main() {
-		var s := "hello world"
-		Std.PrintD(s.Size)
-		Std.PrintS(s)
-		return 20
+		return Put(Sum(48, 6))
 	}
 }

@@ -318,15 +318,15 @@ namespace DST
 				return false;
 			if (type->getExactType() == EXACT_PROPERTY)
 				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-			if (type->getExactType() != EXACT_TYPELIST)
-				return false;
+			if (type->getExactType() != EXACT_TYPELIST) 
+				return size() == 1 && _types[0]->assignableTo(type);
 			auto other = ((DST::TypeList*)type);
 			if (other->_types.size() != _types.size())
 				return false;
-			for (int i = 0; i < _types.size(); i++)
+			for (unsigned int i = 0; i < _types.size(); i++)
 				if (!_types[i]->assignableTo(other->_types[i]))
 					return false;
-			return false;
+			return true;
 		}
 	};
 
@@ -353,21 +353,7 @@ namespace DST
 		virtual string toShortString();
 		virtual string toString() { return "<BasicType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
-		virtual bool assignableTo(Type *type) {
-			if (!type)
-				return false;
-			if (type->getExactType() == EXACT_PROPERTY)
-				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-			if (type->getExactType() != EXACT_BASIC) 
-				return false;
-			auto other = (DST::BasicType*)type;
-			if (!other->_typeSpec) return false;
-			if (_typeSpec->getTypeDecl())
-				return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
-			if (_typeSpec->getInterfaceDecl()) 
-				return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
-			return false;
-		}
+		virtual bool assignableTo(Type *type);
 	};
 
 	#define UNKNOWN_ARR_SIZE 0
@@ -1109,7 +1095,8 @@ namespace DST
 		
 		void setArguments(ExpressionList* arguments) 
 		{
-			if (!((FunctionType*)_funcPtr->getType())->getParameters()->equals(arguments->getType()))
+			// if (!((FunctionType*)_funcPtr->getType())->getParameters()->equals(arguments->getType()))	SWITCHEROO
+			if (!arguments->getType()->assignableTo(((FunctionType*)_funcPtr->getType())->getParameters()))
 				throw ErrorReporter::report(string("Argument types do not match function parameters.\nArguments are: ") + arguments->getType()->toShortString()
 				 + "\nShould be: " + ((FunctionType*)_funcPtr->getType())->getParameters()->toShortString(), ERR_DECORATOR, getPosition());
 			_arguments = arguments; 

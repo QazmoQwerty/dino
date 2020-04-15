@@ -26,7 +26,7 @@ void Decorator::setup(bool isLibrary)
 	createBasicType("type");
 	createBasicType("int");
 	createBasicType("bool");
-	// createBasicType("string");
+	createBasicType("string");
 	createBasicType("char");
 	createBasicType("float");
 	createBasicType("void");
@@ -34,7 +34,10 @@ void Decorator::setup(bool isLibrary)
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
-	_variables[0][DST::_anyInterface->getName()] = new DST::TypeSpecifierType(DST::_anyInterface);
+	// DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
+	// std::cout << "here1\n" << DST::_anyInterface << "\n";
+	// _variables[0][DST::_anyInterface->getName()] = new DST::TypeSpecifierType(DST::_anyInterface);
+	// std::cout << "here2\n";
 }
 
 void Decorator::createErrorInterfaceType()
@@ -118,6 +121,7 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 			{
 				if (decl->getName() == "String") {
 					// specifier->getTypeDecl()->setName(unicode_string("string"));
+					delete _variables[0][unicode_string("string")];
 					_variables[0][unicode_string("string")]	= specifier;
 				}
 			}
@@ -778,33 +782,33 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		{
 			if (list->getExpressions()[i]->getType()->getExactType() == EXACT_UNKNOWN)
 			{
-				if (list->getExpressions()[i]->getExpressionType() == ET_VARIABLE_DECLARATION)
-				{
-					((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
-					leftTypes->getTypes()[i] = rightTypes->getTypes()[i];
-					_variables[currentScope()][((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId()] = rightTypes->getTypes()[i];
-				}
-				else throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
+				if (list->getExpressions()[i]->getExpressionType() != ET_VARIABLE_DECLARATION)
+					throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
+				((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
+				leftTypes->getTypes()[i] = rightTypes->getTypes()[i];
+				_variables[currentScope()][((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId()] = rightTypes->getTypes()[i];
 			}
 		}
 	}
 	
 	if (assignment->getLeft()->getType()->getExactType() == EXACT_UNKNOWN)
 	{
-		if (assignment->getLeft()->getExpressionType() == ET_VARIABLE_DECLARATION)
-		{
-			((DST::VariableDeclaration*)assignment->getLeft())->setType(assignment->getRight()->getType());
-			_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType();
-		}
-		else throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
+		if (assignment->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
+			throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
+		((DST::VariableDeclaration*)assignment->getLeft())->setType(assignment->getRight()->getType());
+		_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType();
 	}
+
+	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))
+		throw ErrorReporter::report("Type \"" + assignment->getRight()->getType()->toShortString() + "\" is not assignable to type \""
+			  						+ assignment->getLeft()->getType()->toShortString(), ERR_DECORATOR, node->getPosition());
 
 	if (assignment->getRight()->getType()->getExactType() == EXACT_NULL)
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));
 	
-	else if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))
-		throw ErrorReporter::report("Assignment of different types invalid.\n\tleft type is: " + assignment->getLeft()->getType()->toShortString() + 
-							"\n\tright type is: " + assignment->getRight()->getType()->toShortString(), ERR_DECORATOR, node->getPosition());
+	// else if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))	SWITCHEROO
+	// 	throw ErrorReporter::report("Assignment of different types invalid.\n\tleft type is: " + assignment->getLeft()->getType()->toShortString() + 
+	// 						"\n\tright type is: " + assignment->getRight()->getType()->toShortString(), ERR_DECORATOR, node->getPosition());
 
 	assignment->setType(assignment->getLeft()->getType());
 	return assignment;

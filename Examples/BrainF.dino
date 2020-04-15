@@ -1,4 +1,4 @@
-import "../DinoStd/std"
+import "Examples/DinoStd/std"
 
 namespace BrainF {
     
@@ -29,7 +29,7 @@ namespace BrainF {
 
     void Main() {
         for int i ≡ 0 | i < tape.Size | i+=1:
-            tape[i] ≡ null
+            tape[i] ≡ 0 as char
 
         // outputs input
         // Interpret(",[.[-],]")
