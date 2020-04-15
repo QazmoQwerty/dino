@@ -43,7 +43,7 @@
 
 // include "lib2.dinoh"
 
-// import "tLib"
+import "DinoStd/std"
 
 namespace Prog {
 	char Print(char c): extern "putchar"
