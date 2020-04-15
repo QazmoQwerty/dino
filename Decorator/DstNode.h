@@ -943,7 +943,7 @@ namespace DST
 	public:
 		string _llvmFuncId;
 
-		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl){};
+		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl), _content(NULL) {};
 		virtual ~FunctionDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };

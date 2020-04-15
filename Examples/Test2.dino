@@ -1,0 +1,12 @@
+import "DinoStd/std"
+
+// include "LinkedList.dino"
+
+namespace Prog {
+
+	void Main() {
+		Std.PrintD('\0' as int)
+        Std.PrintD('\n' as int)
+        Std.PrintD('0' as int)
+	}
+}

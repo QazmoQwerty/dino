@@ -123,6 +123,7 @@ namespace CodeGenerator
     llvm::Function *startCodeGen(DST::Program *node);
 
     void declareNamespaceTypes(DST::NamespaceDeclaration *node);
+    void declareNamespaceTypesContent(DST::NamespaceDeclaration *node);
     llvm::Function * declareNamespaceMembers(DST::NamespaceDeclaration *node);
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 

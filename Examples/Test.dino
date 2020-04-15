@@ -1,4 +1,4 @@
-import "DinoStd/std"
+// import "DinoStd/std"
 
 // include "LinkedList.dino"
 
@@ -24,27 +24,31 @@ namespace Prog {
 
 	// interface Foo: int Str { get }
 	interface Foo {
-		int Bar()
+		char C()
 	} 
 		
+	char putchar(char c): extern "putchar"
+	void Print(char c) { 
+		putchar(c)
+		putchar('\n') 
+	}
 
 	type A is Foo {
-		int Bar(): return 1
-		// int Str: get: return 1
+		char C(): return 'a'
 	}
 
 	type B is Foo {
-		int Bar(): return 2
-		// int Str: get: return 2
+		char C(): return 'b'
 	}
 
 	void Main() {
-		Std.PrintD('\0' as int)
 		A a
-		Foo f := new A
+		Foo fa := new A
+		Foo fb := new B
 		B b
-		Std.PrintD(a.Bar())
-		Std.PrintD(f.Bar())
-		Std.PrintD(b.Bar())
+		Print(a.C())
+		Print(b.C())
+		Print(fa.C())
+		Print(fb.C())
 	}
 }

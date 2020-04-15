@@ -182,64 +182,45 @@ LiteralToken<string> * createStringLiteralToken(unicode_string value, PositionIn
 */
 LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string value, PositionInfo pos)	
 {
-	bool b = true;
+	char val = 'f';
 	if (value.length() == 0)
 		throw ErrorReporter::report("Empty char constant", ERR_LEXER, pos);
 	if (value.length() > 1) 
 	{
-		b = false;
 		if (value.length() == 2 && value[0].getValue() == ESCAPE_CHAR) 
 		{
-			// if (value[1].getValue() == 't')
-			// 	value = unicode_string("\t");
-			// else if (value[1].getValue() == 'r')
-			// 	value = unicode_string("\r");
-			// else if (value[1].getValue() == 'n')
-			// 	value = unicode_string("\n");
-			// else if (value[1].getValue() == '0') {
-			// 	// Special case:
-			// 	value = unicode_string("\0");
-			// }
-			// else if (value[1].getValue() == '\\')
-			// 	value = unicode_string("\\");
-			// else if (value[1].getValue() == '\'')
-			// 	value = unicode_string("'");
-			// else if (value[1].getValue() == '"')
-			// 	value = unicode_string("\"");
-			// else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
-
 			if (value[1].getValue() == 't')
-				value = unicode_string("\t");
+				val = '\t';
+				// value = unicode_string("\t");
 			else if (value[1].getValue() == 'r')
-				value = unicode_string("\r");
+				val = '\r';
+				// value = unicode_string("\r");
 			else if (value[1].getValue() == 'n')
-				value = unicode_string("\n");
-			else if (value[1].getValue() == '0') {
-				// Special case:
-				value = unicode_string("\0");
-			}
+				val = '\n';
+				// value = unicode_string("\n");
+			else if (value[1].getValue() == '0')
+				val = '\0';
+				// value = unicode_string("\0");
 			else if (value[1].getValue() == '\\')
-				value = unicode_string("\\");
+				val = '\\';
+				// value = unicode_string("\\");
 			else if (value[1].getValue() == '\'')
-				value = unicode_string("'");
-			else if (value[1].getValue() == '"')
-				value = unicode_string("\"");
+				val = '\'';
+				// value = unicode_string("'");
 			else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
 		}
 		else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
 	}
-	unicode_string tempData = value;
-	/*if (value[0] == '\\' && value.length() >= 2)
-		value = getSpecialCharConstant(value[1]);*/
 	struct LiteralToken<unicode_char> * token = new struct LiteralToken<unicode_char>;
 	token->_data = unicode_string("'");
-	token->_data += tempData;
+	token->_data += value;
 	token->_data += "'";
 	token->_pos = pos;
 	token->_literalType = LT_CHARACTER;
 	token->_type = TT_LITERAL;
-	if (b)
-		token->_value = value[0];	// todo - unicode character literals
+	if (val == 'f')
+		token->_value = value[0];
+	else token->_value = val;
 	return token;
 }
 
