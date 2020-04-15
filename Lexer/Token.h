@@ -61,7 +61,7 @@ struct OperatorToken : public Token
 		LT_BOOLEAN	  :	  bool
 		LT_INTEGER	  :	  int
 		LT_FRACTION	  :	  float
-		LT_CHARACTER  :	  char
+		LT_CHARACTER  :	  unicode_char
 		LT_STRING	  :	  std::string
 */
 template <class T>
@@ -117,7 +117,7 @@ LiteralToken<string> * createStringLiteralToken(unicode_string data, PositionInf
 	Function creates and returns a LiteralToken with type LT_CHARACTER based on the input.
 	NOTE: if input is not a valid character an exception will be thrown.
 */
-LiteralToken<char> * createCharacterLiteralToken(unicode_string data, PositionInfo pos);
+LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string data, PositionInfo pos);
 
 /*
 	Gets an input string and the current line number.

@@ -13,8 +13,9 @@ namespace DST
 
 	class BasicType;
 	static BasicType *typeidTypePtr;
+
 	class InterfaceDeclaration;
-	static DST::InterfaceDeclaration *_anyInterface;
+	static InterfaceDeclaration *_anyInterface;
 
 	void setup();
 
@@ -260,14 +261,7 @@ namespace DST
 		virtual vector<Node*> getChildren();
 		virtual string toString() { return "<PointerType>" + toShortString(); };
 
-		virtual bool assignableTo(DST::Type *type)
-		{
-			if (!type)
-				return false;
-			if (type->getExactType() == EXACT_PROPERTY)
-				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-			return type->getExactType() == EXACT_POINTER && _type->assignableTo(((DST::PointerType*)type)->_type);
-		}
+		virtual bool assignableTo(DST::Type *type);
 	};
 
 	class NullType : public Type 

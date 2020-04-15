@@ -1,24 +1,50 @@
 import "DinoStd/std"
 
-include "LinkedList.dino"
+// include "LinkedList.dino"
 
 namespace Prog {
 
-	int Sum(int a, int b): return a + b
+	// int Sum(int a, int b): return a + b
 
-	(int, char) Foo(char c): return c as int, c
+	// (int, char) Foo(char c): return c as int, c
+
+	// void Main() {
+	// 	Std.PrintD(Sum(48, 6))
+	// 	int a, char c := Foo('0')
+	// 	Std.PrintD(a)
+	// 	Std.PrintS("and...")
+	// 	Std.PrintC(c)
+	// 	Std.PrintLn()
+	// LL.LinkedList list
+	// 	list.Init()
+	// 	for int i := 0 | i < 10 | i++:
+	// 		list.InsertAtBack(i)
+	// 	list.Show()
+	// }
+
+	// interface Foo: int Str { get }
+	interface Foo {
+		int Bar()
+	} 
+		
+
+	type A is Foo {
+		int Bar(): return 1
+		// int Str: get: return 1
+	}
+
+	type B is Foo {
+		int Bar(): return 2
+		// int Str: get: return 2
+	}
 
 	void Main() {
-		Std.PrintD(Sum(48, 6))
-		int a, char c := Foo('0')
-		Std.PrintD(a)
-		Std.PrintS("and...")
-		Std.PrintC(c)
-		Std.PrintLn()
-		LL.LinkedList list
-		list.Init()
-		for int i := 0 | i < 10 | i++:
-			list.InsertAtBack(i)
-		list.Show()
+		Std.PrintD('\0' as int)
+		A a
+		Foo f := new A
+		B b
+		Std.PrintD(a.Bar())
+		Std.PrintD(f.Bar())
+		Std.PrintD(b.Bar())
 	}
 }

@@ -430,9 +430,21 @@ bool DST::BasicType::assignableTo(DST::Type *type)
 	if (!other->_typeSpec) return false;
 	if (_typeSpec->getTypeDecl())
 		return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
-	if (_typeSpec->getInterfaceDecl()) 
-		return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
+	// if (_typeSpec->getInterfaceDecl()) 
+	// 	return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
 	return false;
+}
+
+bool DST::PointerType::assignableTo(DST::Type *type)
+{
+	if (!type)
+		return false;
+	if (type->getExactType() == EXACT_PROPERTY)
+		return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+	if (type->getExactType() == EXACT_BASIC && _type->getExactType() == EXACT_BASIC && ((DST::BasicType*)_type)->getTypeSpecifier()->getTypeDecl())
+		return ((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl() &&
+				((DST::BasicType*)_type)->getTypeSpecifier()->getTypeDecl()->implements(((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl());
+	return type->getExactType() == EXACT_POINTER && _type->assignableTo(((DST::PointerType*)type)->_type);
 }
 
 vector<DST::Node*> DST::FunctionCall::getChildren()

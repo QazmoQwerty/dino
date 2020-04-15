@@ -676,12 +676,12 @@ namespace AST
 	
 	class Character : public Literal
 	{
-		char _value;
+		unicode_char _value;
 	public:
-		Character(char value) : Literal(LT_CHARACTER) { _value = value; }
-		virtual string toString() { return string() + "<CharLiteral>\\n'" + _value + '\''; };
-		char getValue() { return _value; }
-		virtual string toShortString() { return string(1, _value); }
+		Character(unicode_char value) : Literal(LT_CHARACTER) { _value = value; }
+		virtual string toString() { return string() + "<CharLiteral>\\n'" + _value.to_string() + '\''; };
+		unicode_char getValue() { return _value; }
+		virtual string toShortString() { return _value.to_string(); }
 	};
 
 	class String : public Literal

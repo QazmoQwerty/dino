@@ -17,6 +17,9 @@ public:
 	/* Returns unicode code point value. */
 	utf8::uint32_t getValue() const { return _val; }
 
+	/* Default constructor */
+	unicode_char() : _val(0) { }
+
 	/* Simple constructor which gets a unicode code point. */
 	unicode_char(utf8::uint32_t val) { _val = val; }
 

@@ -481,7 +481,7 @@ AST::Node * Parser::nud(Token * token)
 		case (LT_BOOLEAN): node = new AST::Boolean(((LiteralToken<bool>*)token)->_value); break;
 			case (LT_INTEGER): node = new AST::Integer(((LiteralToken<int>*)token)->_value); break;
 			case (LT_STRING):  node = new AST::String(((LiteralToken<string>*)token)->_value); break;
-			case (LT_CHARACTER): node = new AST::Character(((LiteralToken<char>*)token)->_value); break;
+			case (LT_CHARACTER): node = new AST::Character(((LiteralToken<unicode_char>*)token)->_value); break;
 			case (LT_FRACTION): node = new AST::Fraction(((LiteralToken<float>*)token)->_value); break;
 			case (LT_NULL): node = new AST::Null(); break;
 			default: throw ErrorReporter::report("Internal Lexer error", ERR_PARSER, token->_pos);
