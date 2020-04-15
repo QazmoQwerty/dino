@@ -23,56 +23,50 @@ string unicode_char::to_string() const
 
 /* --------- unicode_string --------- */
 
-string unicode_string::to_string() const
+const string &unicode_string::to_string() const
 {
-	string str;
-	for (unicode_char c : _str)
-		str += c.to_string();
-	return str;
+	return _str;
 }
 
-void unicode_string::addString(string str)
+void unicode_string::recalculate()
 {
-	string::iterator iter = str.begin();
-	while (iter != str.end()) {
-		utf8::uint32_t tok = utf8::next(iter, str.end());
-		_str.push_back(unicode_char(tok));
+	_chars.clear();
+	string::iterator iter = _str.begin();
+	while (iter != _str.end()) {
+		utf8::uint32_t tok = utf8::next(iter, _str.end());
+		_chars.push_back(unicode_char(tok));
 	}
 }
 
 unicode_string & unicode_string::operator=(unicode_char other)
 {
-	_str.clear();
-	_str.push_back(other);
+	_str = other.to_string();
+	_chars.clear();
 	return *this;
 }
 
 unicode_string & unicode_string::operator+=(unicode_char other)
 {
-	_str.push_back(other);
+	_str += other.to_string();
+	_chars.clear();
 	return *this;
 }
 
 unicode_string & unicode_string::operator=(string other)
 {
-	_str.clear();
-	addString(other);
+	_str = other;
+	_chars.clear();
 	return *this;
 }
 
 bool unicode_string::operator==(const unicode_string & other) const
 {
-	if (other.length() != length())
-		return false;
-	for (unsigned int i = 0; i < length(); i++)
-		if (other[i] != _str[i])
-			return false;
-	return true;
+	return other._str == _str;
 }
 
 bool unicode_string::operator==(const string other) const 
 {
-	return unicode_string(other) == *this;
+	return _str == other;
 }
 
 bool unicode_string::operator!=(const string other) const 
@@ -82,12 +76,41 @@ bool unicode_string::operator!=(const string other) const
 
 unicode_string & unicode_string::operator+=(unicode_string & other)
 {
-	for (auto i : other._str)
-		_str.push_back(i);
+	_str += other.to_string();
+	_chars.clear();
 	return *this;
 }
 
 unicode_string & unicode_string::operator+=(string other) { 
-	addString(other);
+	_str += other;
+	_chars.clear();
 	return *this;
+}
+
+unicode_char& unicode_string::operator[](std::size_t idx) {
+	recalculate();
+	return _chars[idx];
+}
+
+const unicode_char unicode_string::operator[](std::size_t idx) const {
+	string::const_iterator iter = _str.begin();
+	for (unsigned int i = 0; iter != _str.end(); i++) {
+		utf8::uint32_t tok = utf8::next(iter, _str.end());
+		if (i == idx) 
+			return unicode_char(tok);
+	}
+	throw NULL;
+}
+
+size_t unicode_string::length() {
+	recalculate();
+	return _chars.size();
+}
+
+size_t unicode_string::length() const {
+	string::const_iterator iter = _str.begin();
+	size_t n = 0;
+	for (n = 0; iter != _str.end(); n++)
+		utf8::next(iter, _str.end());
+	return n;
 }
