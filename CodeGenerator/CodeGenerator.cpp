@@ -45,18 +45,6 @@ void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName)
     std::error_code ec;
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
     llvm::WriteBitcodeToFile(_module.get(), out);
-
-    // if (prog->getBcFileImports().size())
-    // {
-    //     string command = "#/bin/bash\nllvm-link " + fileName;
-    //     // string command = "llvm-link " + fileName;
-    //     for (string s : prog->getBcFileImports())
-    //         command += " " + s;
-    //     command += " -o " + fileName;
-    //     // std::cout << "Please enter this command: \n" << command << std::endl;
-    //     runCmd(command, true);
-    //     // system(command.c_str());
-    // }
 }
 
 void CodeGenerator::execute(llvm::Function *func)
@@ -104,16 +92,37 @@ void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
                 auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
                 currentNs->decl = node;
                 _currentNamespace.push_back(currentNs);
-                declareNamespaceTypes((DST::NamespaceDeclaration*)member);
+                declareNamespaceTypesContent((DST::NamespaceDeclaration*)member);
                 _currentNamespace.pop_back();
                 break;
             }
             case ST_TYPE_DECLARATION:
                 declareType((DST::TypeDeclaration*)member);
                 break;
-            // case ST_INTERFACE_DECLARATION:
-            //     declareInterface((DST::InterfaceDeclaration*)member);
-            //     break;
+            default: break;
+        }
+    }
+}
+
+void CodeGenerator::declareNamespaceTypesContent(DST::NamespaceDeclaration *node)
+{
+    for (auto p : node->getMembers())
+    {
+        auto member = p.second.first;
+        switch (member->getStatementType())
+        {
+            case ST_NAMESPACE_DECLARATION:
+            {
+                auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
+                currentNs->decl = node;
+                _currentNamespace.push_back(currentNs);
+                declareNamespaceTypesContent((DST::NamespaceDeclaration*)member);
+                _currentNamespace.pop_back();
+                break;
+            }
+            case ST_TYPE_DECLARATION:
+                declareTypeContent((DST::TypeDeclaration*)member);
+                break;
             default: break;
         }
     }
@@ -136,9 +145,9 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
                 _currentNamespace.pop_back();
                 break;
             }
-            case ST_TYPE_DECLARATION:
-                declareTypeContent((DST::TypeDeclaration*)member);
-                break;
+            // case ST_TYPE_DECLARATION:
+            //     declareTypeContent((DST::TypeDeclaration*)member);
+            //     break;
             case ST_INTERFACE_DECLARATION:
                 declareInterfaceMembers((DST::InterfaceDeclaration*)member);
                 break;
@@ -213,6 +222,13 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
         _currentNamespace.pop_back();
     }
     
+    for (auto i : node->getNamespaces())    // Needs to be after declaring interfaces because vtable indexing happends then
+    {
+        _currentNamespace.push_back(_namespaces[i.first]);
+        declareNamespaceTypesContent(i.second);
+        _currentNamespace.pop_back();
+    }
+
     for (auto i : node->getNamespaces())
     {
         _currentNamespace.push_back(_namespaces[i.first]);
@@ -253,6 +269,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
         case ST_CONST_DECLARATION: return codeGen((DST::ConstDeclaration*)node);
         case ST_IF_THEN_ELSE: return codeGen((DST::IfThenElse*)node);
+        case ST_SWITCH: return codeGen((DST::SwitchCase*)node);
         case ST_WHILE_LOOP: return codeGen((DST::WhileLoop*)node);
         case ST_DO_WHILE_LOOP: return codeGen((DST::DoWhileLoop*)node);
         case ST_FOR_LOOP: return codeGen((DST::ForLoop*)node);
@@ -294,7 +311,7 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, blockName, parent);
 
     _builder.SetInsertPoint(bb);
-    for (auto i : node->getStatements()) 
+    if (node) for (auto i : node->getStatements()) 
     {
         auto val = codeGen(i);
         if (val == nullptr)
@@ -385,7 +402,7 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     case LT_BOOLEAN:
         return llvm::ConstantInt::get(_context, llvm::APInt( /* 1 bit width */ 1, ((AST::Boolean*)node->getBase())->getValue()));
     case LT_CHARACTER:
-        return llvm::ConstantInt::get(_context, llvm::APInt( /* 8 bit width */ 8, ((AST::Character*)node->getBase())->getValue()));
+        return llvm::ConstantInt::get(_context, llvm::APInt( /* 8 bit width */ 8, (char)((AST::Character*)node->getBase())->getValue().getValue()));   // TODO - unicode characters
     case LT_INTEGER:
         return llvm::ConstantInt::get(_context, llvm::APInt( /* 32 bit width */ 32, ((AST::Integer*)node->getBase())->getValue(), /* signed */ true));
     case LT_FRACTION:
@@ -576,8 +593,6 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
     
     if (node->getOperator()._type == OT_IS)
     {
-        
-
         auto right = evalType((DST::Type*)node->getRight());
         auto left = codeGenLval(node->getLeft());
         if (right == _interfaceType)
@@ -644,12 +659,16 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateICmpUGE(left, right, "cmptmp");
         case OT_EQUAL:
         {
-            if (left->getType() == right->getType())
-                return _builder.CreateICmpEQ(left, right, "cmptmp");
-            return _builder.CreateICmpEQ(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
+            if (left->getType() != right->getType())
+                return _builder.CreateICmpEQ(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
+            return _builder.CreateICmpEQ(left, right, "cmptmp");
         }
         case OT_NOT_EQUAL:
+        {
+            if (left->getType() != right->getType())
+                return _builder.CreateICmpNE(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
             return _builder.CreateICmpNE(left, right, "cmptmp");
+        }
         case OT_LOGICAL_AND:
             return _builder.CreateAnd(left, right, "andtmp");
         case OT_LOGICAL_OR:
@@ -1317,10 +1336,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC)
             {
                 if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeSpecifier()->getInterfaceDecl())
-                {
-                    std::cout << "got here1" << std::endl;
                     return _interfaceType;
-                }
                 if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))   // void* is invalid in llvm IR
                     return llvm::Type::getInt8Ty(_context)->getPointerTo();
             }
@@ -1334,7 +1350,6 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false)->getPointerTo();
         }
         case EXACT_INTERFACE: 
-            std::cout << "got here2" << std::endl;
             return _interfaceType;
         case EXACT_TYPELIST:
         {
@@ -1461,9 +1476,8 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
                 auto inter = getFunctionInterface(node, decl);
                 if (inter) 
                 {
-                    auto &vec = vtable[inter];
                     auto idx = _interfaceVtableFuncInfo[inter][i.first].index;
-                    vec[idx] = func;
+                    vtable[inter][idx] = func;
                 }
                 break;
             }
@@ -2231,6 +2245,51 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     //     _builder.SetInsertPoint(mergeBB);
     // }
     // return val;
+}
+
+llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node) 
+{
+    auto startBlock = _builder.GetInsertBlock();
+    auto val = codeGen(node->getExpression());
+    bool alwaysReturns = node->getDefault() && node->getDefault()->hasReturn();
+    if (alwaysReturns)
+        for (auto i : node->getCases())
+            if (!i._statement->hasReturn()) 
+                { alwaysReturns = false; break; }
+    
+    llvm::BasicBlock *mergeBB = NULL;
+    if (!alwaysReturns)
+        mergeBB = llvm::BasicBlock::Create(_context, "switchcont");
+
+    auto defBB = codeGen(node->getDefault(), "default");
+    if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateBr(mergeBB);
+    unsigned int count = 0;
+    for (auto i : node->getCases())
+        count += i._expressions.size();
+    _builder.SetInsertPoint(startBlock);
+    auto ret = _builder.CreateSwitch(val, defBB, count);
+
+    for (auto i : node->getCases()) 
+    {
+        auto block = codeGen(i._statement);
+        if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
+            _builder.CreateBr(mergeBB);
+        for (auto exp : i._expressions) 
+        {
+            auto v = codeGen(exp);
+            if (llvm::isa<llvm::ConstantInt>(v))
+                ret->addCase((llvm::ConstantInt*)v, block);
+            else throw ErrorReporter::report("case clause must be a constant enumerable value", ERR_CODEGEN, exp->getPosition());
+        }
+    }
+    if (mergeBB) 
+    {
+        getParentFunction()->getBasicBlockList().push_back(mergeBB);
+        _builder.SetInsertPoint(mergeBB);
+    }
+    // ret->print(llvm::errs());
+    return ret;
 }
 
 llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)

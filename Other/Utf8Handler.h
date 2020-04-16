@@ -17,6 +17,9 @@ public:
 	/* Returns unicode code point value. */
 	utf8::uint32_t getValue() const { return _val; }
 
+	/* Default constructor */
+	unicode_char() : _val(0) { }
+
 	/* Simple constructor which gets a unicode code point. */
 	unicode_char(utf8::uint32_t val) { _val = val; }
 
@@ -55,21 +58,22 @@ public:
 	unicode_string() { }
 
 	/* Gets a UTF8 encoded string and creates a unicode string from it */
-	unicode_string(std::string str) { addString(str); }
+	unicode_string(std::string str) : _str(str) { }
 
 	/* Returns unicode string as std::string */
-	string to_string() const;
+	const string& to_string() const;
 
 	/* 
 		Number of unicode characters in string.
 		NOTE: does not include null-terminator.
 	*/
-	size_t length() const { return _str.size(); }
+	size_t length();
+	size_t length() const;
 
 	/* ----------  Operators ---------- */
 
-		  unicode_char& operator[](std::size_t idx)		  { return _str[idx]; }
-	const unicode_char& operator[](std::size_t idx) const { return _str[idx]; }
+		  unicode_char& operator[](std::size_t idx);
+	const unicode_char operator[](std::size_t idx) const;
 
 	unicode_string& operator=(unicode_char other);
 	unicode_string& operator+=(unicode_char other);
@@ -83,8 +87,9 @@ public:
 	bool operator!=(const string other) const;
 
 private:
-	vector<unicode_char> _str;
-	void addString(string str);
+	string _str;
+	vector<unicode_char> _chars;
+	void recalculate();
 };
 
 /*

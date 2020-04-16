@@ -123,6 +123,7 @@ namespace CodeGenerator
     llvm::Function *startCodeGen(DST::Program *node);
 
     void declareNamespaceTypes(DST::NamespaceDeclaration *node);
+    void declareNamespaceTypesContent(DST::NamespaceDeclaration *node);
     llvm::Function * declareNamespaceMembers(DST::NamespaceDeclaration *node);
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
 
@@ -182,6 +183,7 @@ namespace CodeGenerator
 
     llvm::Function *codeGen(DST::FunctionDeclaration *node);
     llvm::Value *codeGen(DST::TryCatch *node);
+    llvm::Value *codeGen(DST::SwitchCase *node);
     llvm::Value *codeGen(DST::IfThenElse *node);
     llvm::Value *codeGen(DST::WhileLoop *node);
     llvm::Value *codeGen(DST::DoWhileLoop *node);

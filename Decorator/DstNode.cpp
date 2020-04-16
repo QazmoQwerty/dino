@@ -227,16 +227,11 @@ bool DST::TypeDeclaration::validateImplements(InterfaceDeclaration * inter)
 
 bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
 {
+	if (inter == _anyInterface)
+		return true;
 	for (auto i : _interfaces)
-	{
-		if (i->getName() == inter->getName())
+		if (i->implements(inter))
 			return true;
-		for (auto subi : i->getImplements())
-		{
-			if (subi->getName() == inter->getName())
-				return true;
-		}
-	}
 	return false;
 }
 
@@ -290,12 +285,11 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 
 bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
 {
-	if(getName() == inter->getName())
+	if (inter == this || inter == _anyInterface)
 		return true;
-	
 	for (auto i : _implements)
-		return i->implements(inter);
-
+		if (i->implements(inter))
+			return true;
 	return false;
 }
 
@@ -345,7 +339,8 @@ vector<DST::Node*> DST::SwitchCase::getChildren()
 	v.push_back(_default);
 	for (CaseClause i : _cases)
 	{
-		v.push_back(i._expression);
+		for (auto e : i._expressions)
+		v.push_back(e);
 		v.push_back(i._statement);
 	}
 	return v;
@@ -422,6 +417,35 @@ DST::FunctionCall::FunctionCall(AST::FunctionCall * base, Expression * funcPtr, 
 {
 	setFunctionId(funcPtr);
 	setArguments(arguments);
+}
+
+bool DST::BasicType::assignableTo(DST::Type *type)
+{
+	if (!type)
+		return false;
+	if (type->getExactType() == EXACT_PROPERTY)
+		return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+	if (type->getExactType() != EXACT_BASIC) 
+		return false;
+	auto other = (DST::BasicType*)type;
+	if (!other->_typeSpec) return false;
+	if (_typeSpec->getTypeDecl())
+		return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
+	// if (_typeSpec->getInterfaceDecl()) 
+	// 	return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
+	return false;
+}
+
+bool DST::PointerType::assignableTo(DST::Type *type)
+{
+	if (!type)
+		return false;
+	if (type->getExactType() == EXACT_PROPERTY)
+		return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+	if (type->getExactType() == EXACT_BASIC && _type->getExactType() == EXACT_BASIC && ((DST::BasicType*)_type)->getTypeSpecifier()->getTypeDecl())
+		return ((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl() &&
+				((DST::BasicType*)_type)->getTypeSpecifier()->getTypeDecl()->implements(((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl());
+	return type->getExactType() == EXACT_POINTER && _type->assignableTo(((DST::PointerType*)type)->_type);
 }
 
 vector<DST::Node*> DST::FunctionCall::getChildren()
@@ -510,6 +534,9 @@ string DST::PropertyType::toShortString()
 void DST::setup()
 {
 	typeidTypePtr = NULL;	// TODO
+	// DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
+	// std::cout << "setup dst\n" << _anyInterface << std::endl;
+	// std::cout << DST::_anyInterface << "\n";
 	//typeidTypePtr = new BasicType(unicode_string("typeid"));
 }
 

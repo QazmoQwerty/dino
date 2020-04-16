@@ -22,8 +22,6 @@ namespace LL {
 			set: next ≡ value
 		}
 
-		//int GetData(): return data
-
 		void Init(int data, ListNode@ next) { this.data ≡ data | this.next ≡ next }
 
 		ListNode@ GetNext(int index) {
@@ -54,13 +52,12 @@ namespace LL {
 			else: next.InsertAtEnd(data)
 		}
 
-		/*void Show() {
-			PrintL(data)
+		void Show() {
+			Std.PrintD(data)
 			if next ≠ null {
-				PrintL(", ")
 				next.Show()
 			}
-		}*/
+		}
 
 		void Remove(int index) {
 			if next = null or index < 1:
@@ -118,12 +115,10 @@ namespace LL {
 			else: first.Remove(index)
 		}
 
-		/*void Show() {
-			PrintL("[")
+		void Show() {
 			unless first = null:
 				first.Show()
-			Print("]")
-		}*/
+		}
 
 		void Clear() {
 			first.DeleteChildren()

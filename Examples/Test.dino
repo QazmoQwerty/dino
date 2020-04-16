@@ -1,13 +1,54 @@
-// import "../DinoStd/std"
+// import "DinoStd/std"
+
+// include "LinkedList.dino"
 
 namespace Prog {
 
-	a.b.c myvar
+	// int Sum(int a, int b): return a + b
 
-	int Main() {
-		var s := "hello world"
-		Std.PrintD(s.Size)
-		Std.PrintS(s)
-		return 20
+	// (int, char) Foo(char c): return c as int, c
+
+	// void Main() {
+	// 	Std.PrintD(Sum(48, 6))
+	// 	int a, char c := Foo('0')
+	// 	Std.PrintD(a)
+	// 	Std.PrintS("and...")
+	// 	Std.PrintC(c)
+	// 	Std.PrintLn()
+	// LL.LinkedList list
+	// 	list.Init()
+	// 	for int i := 0 | i < 10 | i++:
+	// 		list.InsertAtBack(i)
+	// 	list.Show()
+	// }
+
+	# interface Foo: int Str { get }
+	interface Foo {
+		char C()
+	} 
+		
+	char putchar(char c): extern "putchar"
+	void Print(char c) { 
+		putchar(c)
+		putchar('\n') 
+	}
+
+	type A is Foo {
+		char C(): return 'a'
+	}
+
+	type B is Foo {
+		char C(): return 'b'
+	}
+
+	void Main() {
+		A a
+		Foo fa := new A
+		Foo fb := new B
+		B b
+		Print(a.C())
+		Print(b.C())
+		Print(fa.C())
+		Print(fb.C())
 	}
 }

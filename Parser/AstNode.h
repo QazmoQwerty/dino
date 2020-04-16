@@ -290,7 +290,7 @@ namespace AST
 		StatementBlock* _default;
 
 	public:
-		SwitchCase() : Statement() {};
+		SwitchCase() : Statement(), _expression(NULL), _default(NULL) {};
 		virtual ~SwitchCase() { if (_expression) delete _expression; if (_default) delete _default; _cases.clear(); }
 
 		virtual StatementType getStatementType() { return ST_SWITCH; };
@@ -438,6 +438,7 @@ namespace AST
 
 	public:
 		InterfaceDeclaration() : _implements(NULL) {};
+		InterfaceDeclaration(unicode_string name) : _name(name), _implements(NULL) {};
 		virtual ~InterfaceDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
@@ -675,12 +676,12 @@ namespace AST
 	
 	class Character : public Literal
 	{
-		char _value;
+		unicode_char _value;
 	public:
-		Character(char value) : Literal(LT_CHARACTER) { _value = value; }
-		virtual string toString() { return string() + "<CharLiteral>\\n'" + _value + '\''; };
-		char getValue() { return _value; }
-		virtual string toShortString() { return string(1, _value); }
+		Character(unicode_char value) : Literal(LT_CHARACTER) { _value = value; }
+		virtual string toString() { return string() + "<CharLiteral>\\n'" + _value.to_string() + '\''; };
+		unicode_char getValue() { return _value; }
+		virtual string toShortString() { return _value.to_string(); }
 	};
 
 	class String : public Literal
