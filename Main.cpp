@@ -248,15 +248,10 @@ int main(int argc, char *argv[])
 		// TODO - clear memory!
 		// Decorator::clear();	
 	} 
-	// catch (DinoException e) { llvm::errs() << e.errorMsg() << "\n"; }
 	catch (exception e) { llvm::errs() << e.what() << "\n"; }
-	// catch (const char *err) { llvm::errs() << err << "\n"; }
 	catch (const char *err) { llvm::errs() << err << "\n"; }
 	catch (string err) { llvm::errs() << err << "\n"; }
-	catch (Error err) {
-		ErrorReporter::showAll();
-		// llvm::errs() << "Build failed.\n";
-	}
+	catch (Error err) { ErrorReporter::showAll(); }
 
 	llvm::llvm_shutdown();
 	return 0;

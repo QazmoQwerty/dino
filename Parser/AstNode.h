@@ -290,7 +290,7 @@ namespace AST
 		StatementBlock* _default;
 
 	public:
-		SwitchCase() : Statement() {};
+		SwitchCase() : Statement(), _expression(NULL), _default(NULL) {};
 		virtual ~SwitchCase() { if (_expression) delete _expression; if (_default) delete _default; _cases.clear(); }
 
 		virtual StatementType getStatementType() { return ST_SWITCH; };

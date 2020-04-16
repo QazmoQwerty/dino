@@ -23,9 +23,9 @@ void ErrorReporter::show(Error &err)
 {
     if (err.pos.file != "")
     {   
-        llvm::errs() << BOLD("In file \"" << err.pos.file << "\", line " << err.pos.line) << "\n";
+        llvm::errs() << BOLD(FRED(" --> ")) << BOLD("\"" << err.pos.file << "\": line " << err.pos.line) << BOLD(FRED("\n  | \n"));
         string line = getLine(err.pos.file, err.pos.line);
-        llvm::errs() << line << "\n";
+        llvm::errs() << BOLD(FRED("  | ")) << line << BOLD(FRED("\n  | "));
         for (int i = 0; i < err.pos.startPos; i++)
         {
             if (line[i] == '\t')

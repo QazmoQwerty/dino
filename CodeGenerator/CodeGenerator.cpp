@@ -269,6 +269,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
         case ST_CONST_DECLARATION: return codeGen((DST::ConstDeclaration*)node);
         case ST_IF_THEN_ELSE: return codeGen((DST::IfThenElse*)node);
+        case ST_SWITCH: return codeGen((DST::SwitchCase*)node);
         case ST_WHILE_LOOP: return codeGen((DST::WhileLoop*)node);
         case ST_DO_WHILE_LOOP: return codeGen((DST::DoWhileLoop*)node);
         case ST_FOR_LOOP: return codeGen((DST::ForLoop*)node);
@@ -310,7 +311,7 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, blockName, parent);
 
     _builder.SetInsertPoint(bb);
-    for (auto i : node->getStatements()) 
+    if (node) for (auto i : node->getStatements()) 
     {
         auto val = codeGen(i);
         if (val == nullptr)
@@ -2244,6 +2245,51 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     //     _builder.SetInsertPoint(mergeBB);
     // }
     // return val;
+}
+
+llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node) 
+{
+    auto startBlock = _builder.GetInsertBlock();
+    auto val = codeGen(node->getExpression());
+    bool alwaysReturns = node->getDefault() && node->getDefault()->hasReturn();
+    if (alwaysReturns)
+        for (auto i : node->getCases())
+            if (!i._statement->hasReturn()) 
+                { alwaysReturns = false; break; }
+    
+    llvm::BasicBlock *mergeBB = NULL;
+    if (!alwaysReturns)
+        mergeBB = llvm::BasicBlock::Create(_context, "switchcont");
+
+    auto defBB = codeGen(node->getDefault(), "default");
+    if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateBr(mergeBB);
+    unsigned int count = 0;
+    for (auto i : node->getCases())
+        count += i._expressions.size();
+    _builder.SetInsertPoint(startBlock);
+    auto ret = _builder.CreateSwitch(val, defBB, count);
+
+    for (auto i : node->getCases()) 
+    {
+        auto block = codeGen(i._statement);
+        if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
+            _builder.CreateBr(mergeBB);
+        for (auto exp : i._expressions) 
+        {
+            auto v = codeGen(exp);
+            if (llvm::isa<llvm::ConstantInt>(v))
+                ret->addCase((llvm::ConstantInt*)v, block);
+            else throw ErrorReporter::report("case clause must be a constant enumerable value", ERR_CODEGEN, exp->getPosition());
+        }
+    }
+    if (mergeBB) 
+    {
+        getParentFunction()->getBasicBlockList().push_back(mergeBB);
+        _builder.SetInsertPoint(mergeBB);
+    }
+    // ret->print(llvm::errs());
+    return ret;
 }
 
 llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
