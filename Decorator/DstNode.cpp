@@ -339,7 +339,8 @@ vector<DST::Node*> DST::SwitchCase::getChildren()
 	v.push_back(_default);
 	for (CaseClause i : _cases)
 	{
-		v.push_back(i._expression);
+		for (auto e : i._expressions)
+		v.push_back(e);
 		v.push_back(i._statement);
 	}
 	return v;

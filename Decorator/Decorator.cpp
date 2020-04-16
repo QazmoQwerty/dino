@@ -1095,11 +1095,16 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 	sc->setExpression(decorate(node->getExpression()));
 	sc->setDefault(decorate(node->getDefault()));
 	for (auto c : node->getCases()) {
-		sc->addCase(decorate(c._expression), decorate(c._statement));
-		// if case type == swich type.
-		if (!sc->getCases().back()._expression->getType()->equals(sc->getExpression()->getType()))
-			throw ErrorReporter::report("this constant expression has type \"" + sc->getCases().back()._expression->getType()->toShortString() + 
-			"\" instead of the required \"" + sc->getExpression()->getType()->toShortString() + "\" type", ERR_DECORATOR, sc->getCases().back()._expression->getPosition());
+		DST::CaseClause clause;
+		auto expr = decorate(c._expression);
+		if (expr->getExpressionType() == ET_LIST)
+			clause = { ((DST::ExpressionList*)expr)->getExpressions(), decorate(c._statement) };
+		else clause = { { expr }, decorate(c._statement) };
+		for (auto i : clause._expressions) 
+			if (!i->getType()->equals(sc->getExpression()->getType()))
+				throw ErrorReporter::report("case clause has type \"" + i->getType()->toShortString() + "\" instead of the required \"" 
+					+ sc->getExpression()->getType()->toShortString() + "\" type", ERR_DECORATOR, i->getPosition());
+		sc->addCase(clause);
 	}
 	return sc;
 }

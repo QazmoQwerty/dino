@@ -741,7 +741,7 @@ namespace DST
 	};
 
 	typedef struct CaseClause {
-		Expression* _expression;
+		vector<Expression*> _expressions;
 		StatementBlock* _statement;
 	} CaseClause;
 
@@ -761,7 +761,8 @@ namespace DST
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
 
 		void setExpression(Expression* expression) { _expression = expression; }
-		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
+		void addCase(vector<Expression*> expressions, StatementBlock* statement) { CaseClause c = { expressions, statement }; _cases.push_back(c); }
+		void addCase(CaseClause clause) { _cases.push_back(clause); }
 		void setDefault(StatementBlock* statement) {
 			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ERR_DECORATOR, statement->getPosition());
 			_default = statement;
