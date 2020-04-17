@@ -5,8 +5,8 @@ import "DinoStd/std"
 namespace Prog {
 
 	void Main() {
-		Std.PrintD('\0' as int)
-        Std.PrintD('\n' as int)
-        Std.PrintD('0' as int)
+		const x := int
+		x a := 13
+		Std.PrintD(a)
 	}
 }

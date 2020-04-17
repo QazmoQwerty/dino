@@ -74,6 +74,7 @@ private:
 	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
 	static vector<DST::Node*> _toDelete;
 	static bool _isLibrary;
+	static unsigned _loopCount;
 
 	// Scope
 	static unsigned int currentScope() { return (int)_variables.size() - 1; }
