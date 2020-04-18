@@ -1,0 +1,88 @@
+import "std"
+
+namespace Ideas {
+    void Main() {
+        var a ≡ 10
+        a :≡ 10 
+
+        if b: break
+        break if b
+
+        unless b: break
+        break unless b
+
+        if b: continue
+        continue if b
+
+        unless b: continue
+        continue unless b
+
+        // Postfix if/unless
+        a ≡ 1 if b
+        a ≡ 1 if b else a ≡ 2
+        a ≡ 1 unless b
+        a ≡ 2 unless b then a ≡ 1
+
+        // Need to make room by changing conditional expressions
+        a ≡ 1 if b else 2       // old
+        a ≡ if b then 1 else 2  // new?
+        a ≡ b ? 1 : 2           // C++
+
+
+        // Linebreak-negator '...'
+
+        a := 1 +
+            10 +
+            13 +
+            14
+
+        a :=   1..
+            + 10..
+            + 13..
+            + 14
+
+        a :=   1...
+            + 10...
+            + 13...
+            + 14
+
+        a :=   1…
+            + 10…
+            + 13…
+            + 14
+
+        a += b
+        ...if 12 = 13
+
+
+        if leftType is DST.PointerType and (leftType as DST.PointerType@).PtrType is DST.BasicType
+
+        if left.Type is PointerType...
+        and (left.Type as PointerType).PtrType is BasicType
+
+        if left.Type is PointerType
+        ...and (left.Type as PointerType).PtrType is BasicType
+
+        if left.Type is PointerType and 
+          (left.Type as PointerType).PtrType is BasicType
+    }
+
+    void Print(any obj) {
+        switch a as obj.type {
+            case int: Std.PrintD(a)
+            case string: Std.PrintS(a)
+        }
+    }
+
+    void Foo(int… a) {
+        // Do stuff with vararg
+    }
+
+    void Foo(int... a) {
+        // Do stuff with vararg
+    }
+
+    void Foo(int.. a) {
+        // Do stuff with vararg
+    }
+}

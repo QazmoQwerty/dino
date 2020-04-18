@@ -38,7 +38,7 @@ An interpreter for the esoteric language [Brainfuck](https://en.wikipedia.org/wi
 
 This example can currently be fully built by the compiler.
 
-```python
+```
 import "std"
 
 namespace BrainF {
@@ -47,29 +47,26 @@ namespace BrainF {
 
     void Interpret(string input) {
         int ptr ≡ 0
-        for int i ≡ 0 | i < input.Size | i+=1 {
-            char curr ≡ input.Get(i)
-            if      curr = '>': ptr += 1
-            else if curr = '<': ptr -= 1
-            else if curr = '+': tape[ptr] += 1 as char
-            else if curr = '-': tape[ptr] -= 1 as char
-            else if curr = '.': Std.PrintC(tape[ptr])
-            else if curr = ',': tape[ptr] ≡ Std.GetChar()
-            else if curr = ']' and tape[ptr] ≠ 0 as char {
-                int loop ≡ 1
-                while loop > 0 {
-                    curr ≡ input.Get(i-=1)
-                    if curr =  '[':
-                        loop -= 1
-                    else if curr = ']':
-                        loop += 1
-                }
-            }
+        for int i ≡ 0 | i < input.Size | i++ {
+			switch input.Get(i) {
+				case '>': ptr++
+				case '<': ptr--
+				case '+': tape[ptr]++
+            	case '-': tape[ptr]--
+				case '.': Std.PrintC(tape[ptr])
+				case ',': tape[ptr] ≡ Std.GetChar()
+				case ']': if tape[ptr] ≠ '\0':
+					for int loop ≡ 1 | loop > 0 |:
+						switch input.Get(i--) {
+							case '[': loop--
+							case ']': loop++
+						}
+			}
         }
     }
 
     void Main() {
-        # Hello World!
+        // Hello World!
         Interpret("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.")
     }
 }

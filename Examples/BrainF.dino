@@ -1,4 +1,4 @@
-import "Examples/DinoStd/std"
+import "DinoStd/std"
 
 namespace BrainF {
     
@@ -6,61 +6,32 @@ namespace BrainF {
 
     void Interpret(string input) {
         int ptr ≡ 0
-        for int i ≡ 0 | i < input.Size | i+=1 {
-            char curr ≡ input.Get(i)
-            if      curr = '>': ptr += 1
-            else if curr = '<': ptr -= 1
-            else if curr = '+': tape[ptr] += 1 as char
-            else if curr = '-': tape[ptr] -= 1 as char
-            else if curr = '.': Std.PrintC(tape[ptr])
-            else if curr = ',': tape[ptr] ≡ Std.GetChar()
-            else if curr = ']' and tape[ptr] ≠ 0 as char {
-                int loop ≡ 1
-                while loop > 0 {
-                    curr ≡ input.Get(i-=1)
-                    if curr =  '[':
-                        loop -= 1
-                    else if curr = ']':
-                        loop += 1
-                }
-            }
+        for int i ≡ 0 | i < input.Size | i++ {
+			switch input.Get(i) {
+				case '>': ptr++
+				case '<': ptr--
+				case '+': tape[ptr]++
+            	case '-': tape[ptr]--
+				case '.': Std.PrintC(tape[ptr])
+				case ',': tape[ptr] ≡ Std.GetChar()
+				case ']': if tape[ptr] ≠ '\0':
+					for int loop ≡ 1 | loop > 0
+                        switch input.Get(i--) {
+                            case '[': loop--
+                            case ']': loop++
+                        }
+			}
         }
     }
 
     void Main() {
-        for int i ≡ 0 | i < tape.Size | i+=1:
-            tape[i] ≡ 0 as char
+        // Hello World!
+        Interpret("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.")
 
         // outputs input
         // Interpret(",[.[-],]")
 
         // outputs the ascii charset
         // Interpret(".+[.+]")
-
-        // Hello World!
-        Interpret("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.")
-        
-        // Interpret("Calculate the value 256 and test if it's zero
-        //         If the interpreter errors on overflow this is where it'll happen
-        //         ++++++++[>++++++++<-]>[<++++>-]
-        //         +<[>-<
-        //         Not zero so multiply by 256 again to get 65536
-        //         [>++++<-]>[<++++++++>-]<[>++++++++<-]
-        //         +>[>
-        //         # Print 32
-        //         ++++++++++[>+++++<-]>+.-.[-]<
-        //         <[-]<->] <[>>
-        //         # Print 16
-        //         +++++++[>+++++++<-]>.+++++.[-]<
-        //         <<-]] >[>
-        //         # Print 8
-        //         ++++++++[>+++++++<-]>.[-]<
-        //         <-]<
-        //         # Print bit cells
-        //         +++++++++++[>+++>+++++++++>+++++++++>+<<<<-]>-.>-.+++++++.+++++++++++.<.
-        //         >>.++.+++++++..<-.>>-
-        //         Clean up used cells.
-        //         [[-]<]")
-
     }
 }

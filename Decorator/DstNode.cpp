@@ -1,5 +1,7 @@
 #include "DstNode.h"
 
+// DST::InterfaceDeclaration *DST::_anyInterface;
+
 DST::Type * DST::Type::getType()
 {
 	std::cout << "you probably didn't wanna call this func" << std::endl;
@@ -534,10 +536,7 @@ string DST::PropertyType::toShortString()
 void DST::setup()
 {
 	typeidTypePtr = NULL;	// TODO
-	// DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
-	// std::cout << "setup dst\n" << _anyInterface << std::endl;
-	// std::cout << DST::_anyInterface << "\n";
-	//typeidTypePtr = new BasicType(unicode_string("typeid"));
+	DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
 }
 
 vector<DST::Node*> DST::ArrayType::getChildren()
