@@ -157,10 +157,7 @@ int main(int argc, char *argv[])
 	OperatorsMap::setup();
 	Lexer::setup();
 	DST::setup();
-	// std::cout << DST::_anyInterface << "\n";
 	Decorator::setup(cmd->outputLib);
-	// std::cout << "ummm?\n";
-	// std::cout << DST::_anyInterface << "\n";
 	try
 	{
 		AST::Node *ast = Parser::parseFile(cmd->fileName, cmd->showLexerOutput);

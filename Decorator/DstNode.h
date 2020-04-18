@@ -15,7 +15,7 @@ namespace DST
 	static BasicType *typeidTypePtr;
 
 	class InterfaceDeclaration;
-	static InterfaceDeclaration *_anyInterface;
+	extern InterfaceDeclaration *_anyInterface;
 
 	void setup();
 
@@ -589,9 +589,13 @@ namespace DST
 		Type *_type;
 		Expression *_expression;
 	public: 
-		Conversion(AST::FunctionCall *base, Type *type, Expression *expression) : _base(base), _type(type), _expression(expression) {}
+		Conversion(AST::FunctionCall *base, Type *type, Expression *expression) : _base(base), _expression(expression) { setType(type); }
 		virtual ~Conversion() { if (_base) delete _base; if (_type) delete _type; if(_expression) delete _expression; }
-		void setType(Type *type) { _type = type; }
+		void setType(Type *type) { 
+			if (_expression->getType()->getExactType() == EXACT_BASIC && ((DST::BasicType*)_expression->getType())->getTypeSpecifier()->getInterfaceDecl())
+				_type = new DST::PointerType(type);
+			else _type = type; 
+		}
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
@@ -1090,7 +1094,6 @@ namespace DST
 		
 		void setArguments(ExpressionList* arguments) 
 		{
-			// if (!((FunctionType*)_funcPtr->getType())->getParameters()->equals(arguments->getType()))	SWITCHEROO
 			if (!arguments->getType()->assignableTo(((FunctionType*)_funcPtr->getType())->getParameters()))
 				throw ErrorReporter::report(string("Argument types do not match function parameters.\nArguments are: ") + arguments->getType()->toShortString()
 				 + "\nShould be: " + ((FunctionType*)_funcPtr->getType())->getParameters()->toShortString(), ERR_DECORATOR, getPosition());

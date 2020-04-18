@@ -13,6 +13,8 @@ DST::NamespaceDeclaration *_universalNs;
 bool Decorator::_isLibrary;
 unsigned Decorator::_loopCount;
 
+DST::InterfaceDeclaration *DST::_anyInterface;
+
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
 
@@ -36,10 +38,7 @@ void Decorator::setup(bool isLibrary)
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 	_loopCount = 0;
-	// DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
-	// std::cout << "here1\n" << DST::_anyInterface << "\n";
-	// _variables[0][DST::_anyInterface->getName()] = new DST::TypeSpecifierType(DST::_anyInterface);
-	// std::cout << "here2\n";
+	_variables[0][DST::_anyInterface->getName()] = new DST::TypeSpecifierType(DST::_anyInterface);
 }
 
 void Decorator::createErrorInterfaceType()
@@ -807,14 +806,10 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 
 	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))
 		throw ErrorReporter::report("Type \"" + assignment->getRight()->getType()->toShortString() + "\" is not assignable to type \""
-			  						+ assignment->getLeft()->getType()->toShortString(), ERR_DECORATOR, node->getPosition());
+			  						+ assignment->getLeft()->getType()->toShortString() + "\"", ERR_DECORATOR, node->getPosition());
 
 	if (assignment->getRight()->getType()->getExactType() == EXACT_NULL)
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));
-	
-	// else if (!assignment->getLeft()->getType()->equals(assignment->getRight()->getType()))	SWITCHEROO
-	// 	throw ErrorReporter::report("Assignment of different types invalid.\n\tleft type is: " + assignment->getLeft()->getType()->toShortString() + 
-	// 						"\n\tright type is: " + assignment->getRight()->getType()->toShortString(), ERR_DECORATOR, node->getPosition());
 
 	assignment->setType(assignment->getLeft()->getType());
 	return assignment;
