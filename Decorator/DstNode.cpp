@@ -1,5 +1,7 @@
 #include "DstNode.h"
 
+// DST::InterfaceDeclaration *DST::_anyInterface;
+
 DST::Type * DST::Type::getType()
 {
 	std::cout << "you probably didn't wanna call this func" << std::endl;

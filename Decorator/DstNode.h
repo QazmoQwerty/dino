@@ -1090,6 +1090,8 @@ namespace DST
 				throw ErrorReporter::report("Cannot invoke expression as function", ERR_DECORATOR, funcId->getPosition());
 			_funcPtr = funcId;
 			_type = ((FunctionType*)funcId->getType())->getReturns();
+			if (_type->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)_type)->size() == 1)
+				_type = ((DST::TypeList*)_type)->getTypes()[0];
 		}
 		
 		void setArguments(ExpressionList* arguments) 

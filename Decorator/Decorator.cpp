@@ -961,6 +961,8 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 				_toDelete.push_back(intType);
 			}
+			else throw ErrorReporter::report("type \"" + bo->getLeft()->getType()->toShortString() 
+								+ "\" is not an array", ERR_DECORATOR, bo->getLeft()->getPosition());
 			// // array declaration
 			// else
 			// {
