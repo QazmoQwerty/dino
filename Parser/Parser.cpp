@@ -280,7 +280,12 @@ AST::Node * Parser::std(Token * token)
 				node->setCondition(parseExpression());
 				expectLineBreak();
 				node->setIncrement(parseStatement());
-				node->setStatement(parseInnerBlock());
+				if (peekToken()->_type == TT_LINE_BREAK)
+				{
+					node->setStatement(new AST::StatementBlock());
+					node->getStatement()->setPosition(peekToken()->_pos);
+				}
+				else node->setStatement(parseInnerBlock());				
 				node->setPosition(token->_pos);
 				return node;
 			}

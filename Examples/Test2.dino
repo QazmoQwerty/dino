@@ -1,18 +1,70 @@
 import "DinoStd/std"
 
-// include "LinkedList.dino"
+namespace BrainF {
+    
+    char[30000] tape
 
-namespace Prog {
-
-	void Main() {
-		int i := 10
-		while i != 0 {
-			if i = 5 {
-				i--
-				continue
+    void Interpret(string input) {
+        int ptr ≡ 0
+        for int i ≡ 0 | i < input.Size | i++ {
+			switch input.Get(i) {
+				case '>': ptr++
+				case '<': ptr--
+				case '+': tape[ptr]++
+            	case '-': tape[ptr]--
+				case '.': Std.PrintC(tape[ptr])
+				case ',': tape[ptr] ≡ Std.GetChar()
+				case ']': if tape[ptr] ≠ 0 as char {
+					// int loop ≡ 1
+					// while loop > 0:
+					// 	switch input.Get(i--) {
+					// 		case '[': loop--
+					// 		case ']': loop++
+					// 	}
+					for int n := 1 | n > 0 |:
+						switch input.Get(i--) {
+							case '[': n--
+							case ']': n++
+						}
+				}
 			}
-			Std.PrintD(i)
-			i--
-		}
-	}
+        }
+    }
+
+    void Main() {
+        for int i ≡ 0 | i < tape.Size | i++:
+            tape[i] ≡ 0 as char
+
+        // outputs input
+        // Interpret(",[.[-],]")
+
+        // outputs the ascii charset
+        // Interpret(".+[.+]")
+
+        // Hello World!
+        Interpret("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.")
+        
+        // Interpret("Calculate the value 256 and test if it's zero
+        //         If the interpreter errors on overflow this is where it'll happen
+        //         ++++++++[>++++++++<-]>[<++++>-]
+        //         +<[>-<
+        //         Not zero so multiply by 256 again to get 65536
+        //         [>++++<-]>[<++++++++>-]<[>++++++++<-]
+        //         +>[>
+        //         # Print 32
+        //         ++++++++++[>+++++<-]>+.-.[-]<
+        //         <[-]<->] <[>>
+        //         # Print 16
+        //         +++++++[>+++++++<-]>.+++++.[-]<
+        //         <<-]] >[>
+        //         # Print 8
+        //         ++++++++[>+++++++<-]>.[-]<
+        //         <-]<
+        //         # Print bit cells
+        //         +++++++++++[>+++>+++++++++>+++++++++>+<<<<-]>-.>-.+++++++.+++++++++++.<.
+        //         >>.++.+++++++..<-.>>-
+        //         Clean up used cells.
+        //         [[-]<]")
+
+    }
 }
