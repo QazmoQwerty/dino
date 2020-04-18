@@ -650,13 +650,13 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_MODULUS:
             return _builder.CreateSRem(left, right, "divtmp");
         case OT_SMALLER:
-            return _builder.CreateICmpULT(left, right, "cmptmp");
+            return _builder.CreateICmpSLT(left, right, "cmptmp");
         case OT_SMALLER_EQUAL:
-            return _builder.CreateICmpULE(left, right, "cmptmp");
+            return _builder.CreateICmpSLE(left, right, "cmptmp");
         case OT_GREATER:
-            return _builder.CreateICmpUGT(left, right, "cmptmp");
+            return _builder.CreateICmpSGT(left, right, "cmptmp");
         case OT_GREATER_EQUAL:
-            return _builder.CreateICmpUGE(left, right, "cmptmp");
+            return _builder.CreateICmpSGE(left, right, "cmptmp");
         case OT_EQUAL:
         {
             if (left->getType() != right->getType())
