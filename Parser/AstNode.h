@@ -368,7 +368,7 @@ namespace AST
 		Expression* _expression;
 
 	public:
-		UnaryOperationStatement() : Statement() {};
+		UnaryOperationStatement() : _expression(NULL) {};
 		virtual ~UnaryOperationStatement() { if (_expression) delete _expression; }
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
 		virtual string toString() { return string() + "<UnaryOperationStatement>\\n" + _operator._str.to_string(); };

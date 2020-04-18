@@ -1168,6 +1168,10 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
 
     switch (node->getOperator()._type)
     {
+        case OT_BREAK:
+            return _builder.CreateBr(_currBreakJmp);
+        case OT_CONTINUE:
+            return _builder.CreateBr(_currContinueJmp);
         case OT_RETURN:
         {
             if (node->getExpression() == NULL)
@@ -2023,10 +2027,15 @@ llvm::Function *CodeGenerator::getParentFunction()
 
 llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
 {
+    auto tmpBreakJmp = _currBreakJmp;
+    auto tmpContinueJmp = _currContinueJmp;
     auto parent = getParentFunction();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(_context, "cond");
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(_context, "loop");
     llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(_context, "exitLoop");
+
+    _currContinueJmp = condBB;
+    _currBreakJmp = exitBB;
 
     // first go to the loop statement.
     _builder.CreateBr(loopBB);
@@ -2060,7 +2069,8 @@ llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
     // added exit_block
     parent->getBasicBlockList().push_back(exitBB);
     _builder.SetInsertPoint(exitBB);
-    
+    _currBreakJmp = tmpBreakJmp;
+    _currContinueJmp = tmpContinueJmp;
     return br;
 }
 
@@ -2099,10 +2109,15 @@ llvm::Value *CodeGenerator::codeGen(DST::ForLoop *node)
 
 llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
 {
+    auto tmpBreakJmp = _currBreakJmp;
+    auto tmpContinueJmp = _currContinueJmp;
     auto parent = getParentFunction();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(_context, "cond");
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(_context, "loop");
     llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(_context, "exitLoop");
+
+    _currContinueJmp = condBB;
+    _currBreakJmp = exitBB;
 
     _builder.CreateBr(condBB);
     _builder.SetInsertPoint(condBB);
@@ -2125,6 +2140,8 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
     _builder.CreateBr(condBB);
     parent->getBasicBlockList().push_back(exitBB);
     _builder.SetInsertPoint(exitBB);
+    _currBreakJmp = tmpBreakJmp;
+    _currContinueJmp = tmpContinueJmp;
     return br;
 }
 
