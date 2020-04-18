@@ -121,7 +121,6 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 			if (isStd)
 			{
 				if (decl->getName() == "String") {
-					// specifier->getTypeDecl()->setName(unicode_string("string"));
 					delete _variables[0][unicode_string("string")];
 					_variables[0][unicode_string("string")]	= specifier;
 				}

@@ -1,0 +1,23 @@
+// import "Examples/std"
+import "std"
+
+namespace Test {
+    void Print(any a) {
+        if a is int:
+            Std.PrintD(@(a as int))
+        else if a is Foo:
+            (a as Foo).Show()
+        else: Std.PrintS("??")
+    }
+
+    type Foo {
+        void Show(): Std.PrintS("FOO!")
+    }
+
+    void Main() {
+        int i := 10
+        Foo f
+        Print(&i)
+    }
+
+}

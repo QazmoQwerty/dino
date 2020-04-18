@@ -433,8 +433,8 @@ bool DST::BasicType::assignableTo(DST::Type *type)
 	if (!other->_typeSpec) return false;
 	if (_typeSpec->getTypeDecl())
 		return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
-	// if (_typeSpec->getInterfaceDecl()) 
-	// 	return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
+	if (_typeSpec->getInterfaceDecl() && other->_typeSpec->getInterfaceDecl()) 
+		return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
 	return false;
 }
 

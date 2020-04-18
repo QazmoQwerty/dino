@@ -587,6 +587,20 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
     return _builder.CreateLoad(codeGenLval(node), "accesstmp");
 }
 
+llvm::Value* CodeGenerator::getVtable(llvm::Type *type) {
+    if (auto vtable = _vtables[type])
+        return vtable;
+    else return createEmptyVtable(type);
+}
+
+
+llvm::Value* CodeGenerator::createEmptyVtable(llvm::Type *type) 
+{
+    auto llvmVtable = llvm::ConstantStruct::get(_objVtableType, { _builder.getInt32(0), _builder.getInt32(0) });
+    return _vtables[type] = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, 
+                                            llvmVtable, "empty.vtable");
+}
+
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
     Value *left, *right;
@@ -616,8 +630,12 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
                 return _builder.getInt1(false);
             auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
             auto vtableLoad = _builder.CreateLoad(vtablePtr);
-            auto decl = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getTypeDecl();
-            auto vtable = _types[decl]->vtable;
+            // auto decl = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getTypeDecl();
+            // llvm::Value *vtable = NULL;
+            // if (auto def = _types[decl])
+            //     vtable = def->vtable;
+            // else vtable = createEmptyVtable(evalType(((DST::Type*)node->getRight())));
+            auto vtable = getVtable(evalType(((DST::Type*)node->getRight())));
             auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
             return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
         }
@@ -802,9 +820,9 @@ Value *CodeGenerator::codeGen(DST::Conversion* node)
 {
     auto type = evalType(node->getType());
     auto exp = codeGen(node->getExpression());
-    if (type == _interfaceType || (type == _interfaceType && exp->getType() != _interfaceType))
+    if (type == exp->getType() || type == _interfaceType)
         return exp;
-    if (type != _interfaceType && exp->getType() == _interfaceType)
+    if (type != _interfaceType && exp->getType() == _interfaceType) // Interface to non-interface
     {
         // TODO - throw exception incase of invalid conversion
         auto ptr = _builder.CreateExtractValue(exp, 0, "accessTmp");
@@ -958,7 +976,10 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 auto objPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
                 auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
                 _builder.CreateStore(_builder.CreateBitCast(right, _builder.getInt8PtrTy()), objPtr);
-                _builder.CreateStore(_vtables[right->getType()->getPointerElementType()], vtablePtr);
+                _builder.CreateStore(getVtable(right->getType()->getPointerElementType()), vtablePtr);
+                // if (auto vtable = _vtables[right->getType()->getPointerElementType()])
+                //     _builder.CreateStore(vtable, vtablePtr);
+                // else _builder.CreateStore(createEmptyVtable(right->getType()->getPointerElementType()), vtablePtr);
                 return right;
             }
             
@@ -1155,7 +1176,10 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                     auto objPtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
                     auto vtablePtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
                     _builder.CreateStore(_builder.CreateBitCast(gen, _builder.getInt8PtrTy()), objPtr);
-                    _builder.CreateStore(_vtables[gen->getType()->getPointerElementType()], vtablePtr);
+                    _builder.CreateStore(getVtable(gen->getType()->getPointerElementType()), vtablePtr);
+                    // if (auto vtable = _vtables[gen->getType()->getPointerElementType()])
+                    //     _builder.CreateStore(vtable, vtablePtr);
+                    // else _builder.CreateStore(createEmptyVtable(gen->getType()->getPointerElementType()), vtablePtr);
                     args.push_back(_builder.CreateLoad(alloca));
                 } 
                 else args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
@@ -1561,7 +1585,6 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
         auto arrCast = (llvm::Constant*)_builder.CreateBitCast(arrPtr, _interfaceVtableType->getPointerTo());
         llvmVtable = llvm::ConstantStruct::get(_objVtableType, { numInterfaces, arrCast });
     }
-
     def->vtable = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, 
                                             llvmVtable, node->getName().to_string() + ".vtable");
     _vtables[def->structType] = def->vtable;
