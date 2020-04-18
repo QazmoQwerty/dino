@@ -444,6 +444,12 @@ AST::Node * Parser::std(Token * token)
 				}
 				return node;
 			}
+			case(OT_BREAK): case(OT_CONTINUE): {
+				auto op = new AST::UnaryOperationStatement();
+				op->setOperator(((OperatorToken*)token)->_operator);
+				op->setPosition(token->_pos);
+				return op;
+			}
 			case(OT_DELETE): {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);

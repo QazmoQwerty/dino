@@ -5,8 +5,14 @@ import "DinoStd/std"
 namespace Prog {
 
 	void Main() {
-		Std.PrintD('\0' as int)
-        Std.PrintD('\n' as int)
-        Std.PrintD('0' as int)
+		int i := 10
+		while i != 0 {
+			if i = 5 {
+				i--
+				continue
+			}
+			Std.PrintD(i)
+			i--
+		}
 	}
 }

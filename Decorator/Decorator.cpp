@@ -11,6 +11,7 @@ DST::NullType *Decorator::_nullType;
 DST::UnknownType *Decorator::_unknownType;
 DST::NamespaceDeclaration *_universalNs;
 bool Decorator::_isLibrary;
+unsigned Decorator::_loopCount;
 
 //unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> Decorator::_types;
 vector<DST::Node*> Decorator::_toDelete;
@@ -34,6 +35,7 @@ void Decorator::setup(bool isLibrary)
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
+	_loopCount = 0;
 	// DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
 	// std::cout << "here1\n" << DST::_anyInterface << "\n";
 	// _variables[0][DST::_anyInterface->getName()] = new DST::TypeSpecifierType(DST::_anyInterface);
@@ -652,6 +654,10 @@ DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
 
 DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement * node)
 {
+	if (node->getOperator()._type == OT_BREAK && _loopCount == 0)
+		throw ErrorReporter::report("\"break\" used outside of loop", ERR_DECORATOR, node->getPosition());
+	if (node->getOperator()._type == OT_CONTINUE && _loopCount == 0)
+		throw ErrorReporter::report("\"continue\" used outside of loop", ERR_DECORATOR, node->getPosition());
 	return new DST::UnaryOperationStatement(node, decorate(node->getExpression()));
 }
 
@@ -1123,6 +1129,7 @@ DST::TryCatch * Decorator::decorate(AST::TryCatch *node)
 DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 {
 	enterBlock();
+	_loopCount++;
 	auto loop = new DST::ForLoop(node);
 	loop->setBegin(decorate(node->getBegin()));
 	loop->setCondition(decorate(node->getCondition()));
@@ -1130,6 +1137,7 @@ DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, loop->getCondition()->getPosition());
 	loop->setIncrement(decorate(node->getIncrement()));
 	loop->setStatement(decorate(node->getStatement()));
+	_loopCount--;
 	leaveBlock();
 	return loop;
 }
@@ -1137,18 +1145,19 @@ DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 DST::WhileLoop * Decorator::decorate(AST::WhileLoop * node)
 {
 	auto loop = new DST::WhileLoop(node);
+	_loopCount++;
 	loop->setCondition(decorate(node->getCondition()));
 	if (!isCondition(loop->getCondition()))
 		throw ErrorReporter::report("Expected a condition", ERR_DECORATOR, loop->getCondition()->getPosition());
 	loop->setStatement(decorate(node->getStatement()));
+	_loopCount--;
 	return loop;
 }
 
 DST::DoWhileLoop * Decorator::decorate(AST::DoWhileLoop * node)
 {
 	auto loop = decorate(dynamic_cast<AST::WhileLoop*>(node));
-	auto doLoop = new DST::DoWhileLoop(loop);
-	return doLoop;
+	return new DST::DoWhileLoop(loop);
 }
 
 DST::Type * Decorator::evalType(AST::Expression * node)
