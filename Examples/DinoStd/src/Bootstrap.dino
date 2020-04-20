@@ -21,12 +21,49 @@ namespace Std {
 	}
 
 	int puts(char@ s): extern "puts"
+	char@ gets(char@ s, int maxSize): extern "gets_s"
 	char putchar(char c): extern "putchar"
 	char GetChar(): extern "getchar"
+	char@ fgets(char@ str, int count, void@ stream): extern "fgets"
+	int strlen(char@ str): extern "strlen"
+
+	void@ stdin: get {
+		char[2] c := ['r', '\0']
+		return fdopen(0, &c[0])
+	}
+	void@ fdopen(int filedes, char @mode): extern "fdopen"
+	
+	string ReadLine() {
+		// TODO - this is a HORRIBLE implementation
+		char[100] c
+		if fgets(&c[0], 100, stdin) = null {
+			PrintS("an error occurred in GetLine()")
+			return ""
+		}
+		for int i := 0 | i < c.Size and c[i] != '\0' | i++ {
+			if c[i] = '\n' {
+				c[i] := '\0'
+				i--
+				// break	// FIXME: make this work in codegen...
+			}
+		}
+		int len := strlen(&c[0])
+		char[] buf := new char[len]
+		for int i := 0 | i < len | i++:
+			buf[i] := c[i]
+
+		string@ ret := (&buf as string@)
+		return @ret
+	}
 
 	void PrintLn(): putchar('\n')
-	void PrintS(string s): puts(s.CStr)
+	void PrintSLn(string s) { PrintS(s) | PrintLn() }
+	void PrintS(string s) {
+		for int i := 0 | i < s.Size | i++:
+			putchar(s.Get(i))
+	}
 	void PrintC(char c): putchar(c)
+	void PrintCLn(char c) { PrintC(c) | PrintLn() }
 	void PrintD(int n) {
         int a ≡ 1
         while a ≤ n / 10: a *= 10
@@ -34,6 +71,8 @@ namespace Std {
             putchar((n % (a * 10) / a + 48) as char)
             a /= 10
         }
-        PrintC('\n')
+        // PrintC('\n')
     }
+	void PrintDLn(int n) { PrintD(n) | PrintLn() }
+
 }

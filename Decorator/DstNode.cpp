@@ -73,6 +73,7 @@ void DST::UnaryOperation::setType()
 			if (((DST::ArrayType*)_expression)->getLength() == DST::UNKNOWN_ARRAY_LENGTH && ((DST::ArrayType*)_expression)->getLenExp() == NULL)
 				throw ErrorReporter::report("Expected an array size specifier", ERR_DECORATOR, getPosition());
 			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH, ((DST::ArrayType*)_expression)->getLenExp());
+			// _type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH, NULL);
 		}
 		else _type = new DST::PointerType((DST::Type*)_expression);
 		// if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
