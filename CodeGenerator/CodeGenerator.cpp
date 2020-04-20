@@ -677,11 +677,11 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateICmpSGE(left, right, "cmptmp");
         case OT_EQUAL:
         {
-            if (left->getType() == _interfaceType) 
-                left = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
+            if (left->getType() == _interfaceType)
+                left = _builder.CreateExtractValue(left, 0);
 
-            if (right->getType() == _interfaceType) 
-                right = _builder.CreateInBoundsGEP(right, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
+            if (right->getType() == _interfaceType)
+                right = _builder.CreateExtractValue(right, 0);
 
             if (left->getType() != right->getType())
                 return _builder.CreateICmpEQ(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
@@ -689,6 +689,12 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         }
         case OT_NOT_EQUAL:
         {
+            if (left->getType() == _interfaceType)
+                left = _builder.CreateExtractValue(left, 0);
+
+            if (right->getType() == _interfaceType)
+                right = _builder.CreateExtractValue(right, 0);
+
             if (left->getType() != right->getType())
                 return _builder.CreateICmpNE(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
             return _builder.CreateICmpNE(left, right, "cmptmp");
@@ -1264,8 +1270,15 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
                     _builder.CreateStore(codeGen(expList->getExpressions()[i]), _funcReturns[i]);
                 return _builder.CreateRetVoid();
             }
-
-            return _builder.CreateRet(codeGen(node->getExpression()));
+            auto val = codeGen(node->getExpression());
+            auto returnTy = getParentFunction()->getReturnType();
+            if (val->getType() != returnTy)
+            {
+                if (returnTy == _interfaceType)
+                    return _builder.CreateRet(convertToInterface(val));
+                return _builder.CreateRet(_builder.CreateBitCast(val, returnTy));
+            }
+            return _builder.CreateRet(val);
         }
 
         case OT_THROW:

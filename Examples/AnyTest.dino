@@ -7,6 +7,11 @@ namespace Test {
             Std.PrintD(@(a as int))
         else if a is Foo:
             (a as Foo).Show()
+        else if a is bool:
+            Std.PrintS("true" if @(a as bool) else "false")
+        else if a = null:
+            Std.PrintS("null")
+        // FIXME: "is null"
         else: Std.PrintS("??")
     }
 
@@ -14,13 +19,19 @@ namespace Test {
         void Show(): Std.PrintS("FOO!")
     }
 
+    any AA(): return null
+
     void Main() {
-        // int i := 10
-        // Foo f
-        // bool b
-        // Print(&b)
-        any a := new int
-        any b := a
+        int i := 10
+        Foo f
+        bool c
+        Print(&c)
+        any a := null
+        any b := new int
+        if a = b:
+            Std.PrintS("aa")
+        if a = null:
+            Std.PrintS("bb")
         Print(a)
     }
 
