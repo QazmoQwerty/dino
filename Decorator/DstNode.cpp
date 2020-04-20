@@ -70,9 +70,9 @@ void DST::UnaryOperation::setType()
 			throw ErrorReporter::report("Expected a type", ERR_DECORATOR, getPosition());
 		if (((DST::Type*)_expression)->getExactType() == EXACT_ARRAY)	// new int[10] == int[] != (int[10])@
 		{
-			if (((DST::ArrayType*)_expression)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+			if (((DST::ArrayType*)_expression)->getLength() == DST::UNKNOWN_ARRAY_LENGTH && ((DST::ArrayType*)_expression)->getLenExp() == NULL)
 				throw ErrorReporter::report("Expected an array size specifier", ERR_DECORATOR, getPosition());
-			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH);
+			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH, ((DST::ArrayType*)_expression)->getLenExp());
 		}
 		else _type = new DST::PointerType((DST::Type*)_expression);
 		// if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
@@ -433,9 +433,25 @@ bool DST::BasicType::assignableTo(DST::Type *type)
 	if (!other->_typeSpec) return false;
 	if (_typeSpec->getTypeDecl())
 		return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
-	// if (_typeSpec->getInterfaceDecl()) 
-	// 	return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
+	if (_typeSpec->getInterfaceDecl() && other->_typeSpec->getInterfaceDecl()) 
+		return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
 	return false;
+}
+
+bool DST::NullType::assignableTo(DST::Type *type) 
+{
+	if (!type)
+		return false;
+	switch (type->getExactType()) 
+	{
+		case EXACT_PROPERTY:
+			return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+		case EXACT_BASIC:
+			return ((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl();
+		case EXACT_POINTER: case EXACT_FUNCTION: case EXACT_ARRAY:
+			return true;
+		default: return false;
+	}
 }
 
 bool DST::PointerType::assignableTo(DST::Type *type)

@@ -1,0 +1,29 @@
+namespace Prog {
+    type Pair {
+        int Key
+        int Val
+
+        void Init(int key, int val) {
+            this.Key := key
+            this.Val := val
+        }
+    }
+
+    Pair@ NewPair(int key, int val) {
+        var p := new Pair
+        p.Init(key, val)
+        return p
+    }
+
+    type Map {
+        Pair[] items
+        int count
+
+        void Init() {
+            count := 0
+            items := new Pair[53]   // default size for now
+        }
+
+        
+    }
+}

@@ -1,4 +1,5 @@
-import "DinoStd/std"
+import "std"
+// import "Examples/std"
 
 namespace NS {
     
@@ -25,13 +26,25 @@ namespace NS {
     }
 
     void Main() {
-        Std.PrintS("got here1")
-        var a, var b := Bar()
-        Std.PrintS("got here2")
+        // Std.PrintS("got here1")
+        // var a, var b := Bar()
+        // Std.PrintS("got here2")
+        // for int i := 0 | i < a.Size | i++:
+        //     Std.PrintD(a[i])
+        // for int i := 0 | i < b.Size | i++:
+        //     Std.PrintD(b[i])
+
+        int n := 10
+
+        // const n := 10
+
+        int[] a := new int[n]
+        // Std.PrintD(a.Size)
+        // for int i := 0 | i < a.Size | i++:
+        //     a[i] := i
         for int i := 0 | i < a.Size | i++:
             Std.PrintD(a[i])
-        for int i := 0 | i < b.Size | i++:
-            Std.PrintD(b[i])
+        // Std.PrintD(a.Size)
         // var f1 ≡ new Foo
         // f1.N ≡ 10
         // any n ≡ f1

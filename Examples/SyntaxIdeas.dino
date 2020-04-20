@@ -85,4 +85,14 @@ namespace Ideas {
     void Foo(int.. a) {
         // Do stuff with vararg
     }
+
+    enum Days {
+        Sunday      1
+        Monday      13
+        Tuesday     14
+        Wednesday
+        Thursday
+        Friday
+        Saturday
+    }
 }
