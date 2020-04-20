@@ -1325,9 +1325,19 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             {
                 auto sizePtr = _builder.CreateInBoundsGEP(ptr, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
                 _builder.CreateStore(_builder.getInt32(0), sizePtr);
-                ptr = _builder.CreateInBoundsGEP(codeGenLval(node->getExpression()), { _builder.getInt32(0), _builder.getInt32(1) } );
+                ptr = _builder.CreateInBoundsGEP(ptr, { _builder.getInt32(0), _builder.getInt32(1) } );
             }
             
+            if (ptr->getType()->getPointerElementType() == _interfaceType) 
+            {
+                auto objPtr = _builder.CreateInBoundsGEP(ptr, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
+                auto vtablePtr = _builder.CreateInBoundsGEP(ptr, { _builder.getInt32(0), _builder.getInt32(1) }, "objPtrTmp");
+                auto cast = _builder.CreateBitCast(_builder.CreateLoad(objPtr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
+                createCallOrInvoke(free, cast);
+                _builder.CreateStore(llvm::Constant::getNullValue(vtablePtr->getType()->getPointerElementType()), vtablePtr);
+                return _builder.CreateStore(llvm::Constant::getNullValue(objPtr->getType()->getPointerElementType()), objPtr);
+            }
+
             auto cast = _builder.CreateBitCast(_builder.CreateLoad(ptr), llvm::Type::getInt8Ty(_context)->getPointerTo(), "castTmp");
 
             createCallOrInvoke(free, cast);

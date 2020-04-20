@@ -1,29 +1,51 @@
+import "Examples/std"
+
 namespace Prog {
     type Pair {
-        int Key
-        int Val
+        string Key
+        any Val
 
-        void Init(int key, int val) {
+        void Init(string key, any val) {
             this.Key := key
             this.Val := val
         }
+
+        void Clear(): 
+            if Val != null: 
+                delete Val
     }
 
-    Pair@ NewPair(int key, int val) {
-        var p := new Pair
-        p.Init(key, val)
-        return p
-    }
+    // Pair@ NewPair(string key, any val) {
+    //     var p := new Pair
+    //     p.Init(key, val)
+    //     return p
+    // }
 
-    type Map {
-        Pair[] items
-        int count
+    // Map@ NewMap() {
+    //     var m := new Map
+    //     m.Init()
+    //     return m
+    // }
 
-        void Init() {
-            count := 0
-            items := new Pair[53]   // default size for now
-        }
+    // type Map {
+    //     Pair[] items
+    //     int count
 
-        
+    //     void Init() {
+    //         count := 0
+    //         items := new Pair[53]   // default size for now
+    //     }
+
+    //     void Clear() {
+    //         unless items = null {
+    //             for int i := 0 | i < items.Size | i++:
+    //                 items[i].Clear()
+    //             delete items
+    //         }
+    //     }
+    // }
+
+    void Main() {
+
     }
 }
