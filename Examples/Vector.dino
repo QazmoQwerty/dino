@@ -1,0 +1,27 @@
+namespace NS {
+    type Vector {
+        int[] data
+        int count
+
+        void Init() {
+            data := null
+            cout := 0
+        }
+
+        int Size: get {
+            return count
+        }
+
+        void Add(int d) {
+            if data == null:
+                data := new int[10]
+            
+            // condition to increase data
+            // last slot exhausted
+            if data.Size == count {
+                var tempData := 
+            }
+        }
+        
+    }
+}

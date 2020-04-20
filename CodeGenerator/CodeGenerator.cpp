@@ -722,6 +722,14 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
                 auto type = llvm::FunctionType::get(llvm::Type::getInt8Ty(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
                 malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
             }
+            if (((DST::Type*)node->getExpression())->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getExpression())->getLenExp())
+            {
+                auto type = evalType((DST::Type*)node->getExpression());
+                int size = _dataLayout->getTypeAllocSize(evalType(((DST::ArrayType*)node->getExpression())->getElementType()));
+                auto len = codeGen(((DST::ArrayType*)node->getExpression())->getLenExp());
+                auto allocSize = _builder.CreateMul(_builder.getInt32(size), len, "allocSize");
+                return _builder.CreateBitCast( createCallOrInvoke(malloc, { allocSize }), type, "newTmp");
+            }
             auto type = evalType((DST::Type*)node->getExpression());
             int size = _dataLayout->getTypeAllocSize(type);
             return _builder.CreateBitCast( createCallOrInvoke(malloc, { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
@@ -947,8 +955,11 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         {
             auto sizePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
             auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "arrPtrTmp");
-            _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
             _builder.CreateStore(_builder.CreateBitOrPointerCast(right, arrPtr->getType()->getPointerElementType()), arrPtr);
+
+            if (node->getRight()->getType()->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getRight()->getType())->getLenExp()) 
+                _builder.CreateStore(codeGen(((DST::ArrayType*)node->getRight()->getType())->getLenExp()), sizePtr);
+            else _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
             return right;
         }
         if (right->getType() == left->getType()->getPointerElementType())
@@ -1358,11 +1369,20 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 throw ErrorReporter::report("Type " + node->toShortString() + " does not exist", ERR_CODEGEN, node->getPosition());
             }
         case EXACT_ARRAY:
-            if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+            if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH) 
+            {
+                if (auto exp = ((DST::ArrayType*)node)->getLenExp()) 
+                {
+                    auto v = codeGen(exp);
+                    if (auto len = llvm::dyn_cast<llvm::ConstantInt>(v))
+                        return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), len->getLimitedValue());
+                    else return evalType(((DST::ArrayType*)node)->getElementType())->getPointerTo();
+                }
                 return llvm::StructType::get(_context, {
                     llvm::Type::getInt32Ty(_context), 
                     evalType(((DST::ArrayType*)node)->getElementType())->getPointerTo()
                 });
+            }
             return llvm::ArrayType::get(evalType(((DST::ArrayType*)node)->getElementType()), ((DST::ArrayType*)node)->getLength());
         case EXACT_PROPERTY:
             return evalType(((DST::PropertyType*)node)->getReturn());

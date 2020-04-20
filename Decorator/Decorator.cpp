@@ -937,7 +937,8 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (right)
 		{
 			if (!(right->getExpressionType() == ET_LITERAL && ((DST::Literal*)right)->getLiteralType() == LT_INTEGER))
-				throw ErrorReporter::report("array size must be a literal integer", ERR_DECORATOR, right->getPosition());
+				return new DST::ArrayType((DST::Type*)left, right);	
+				// throw ErrorReporter::report("array size must be a literal integer", ERR_DECORATOR, right->getPosition());
 			return new DST::ArrayType((DST::Type*)left, *((int*)((DST::Literal*)(right))->getValue()));
 		}
 		else return new DST::ArrayType((DST::Type*)left, DST::UNKNOWN_ARRAY_LENGTH);
@@ -962,28 +963,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			}
 			else throw ErrorReporter::report("type \"" + bo->getLeft()->getType()->toShortString() 
 								+ "\" is not an array", ERR_DECORATOR, bo->getLeft()->getPosition());
-			// // array declaration
-			// else
-			// {
-			// 	if (bo->getLeft()->getExpressionType() != ET_TYPE)
-			// 		throw ErrorReporter::report("expected a type", ERR_DECORATOR, node->getPosition());
-			// 	if (bo->getRight())
-			// 	{
-			// 		if (!(bo->getRight()->getExpressionType() == ET_LITERAL && ((DST::Literal*)bo->getRight())->getLiteralType() == LT_INTEGER))
-			// 			throw ErrorReporter::report("array size must be a literal integer", ERR_DECORATOR, node->getPosition());
-			// 		//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue())));
-			// 		auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), *((int*)((DST::Literal*)(bo->getRight()))->getValue()));
-			// 		_toDelete.push_back(bo);
-			// 		return ret;
-			// 	}
-			// 	else 
-			// 	{
-			// 		//bo->setType(new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH));
-			// 		auto ret = new DST::ArrayType((DST::Type*)bo->getLeft(), DST::UNKNOWN_ARRAY_LENGTH);
-			// 		_toDelete.push_back(bo);
-			// 		return ret;
-			// 	}
-			// }
 			break;
 		case RT_VOID: 
 			throw ErrorReporter::report("Could not decorate, unimplemented operator.", ERR_DECORATOR, node->getPosition());

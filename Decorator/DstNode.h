@@ -8,7 +8,7 @@ using std::stack;
 
 namespace DST
 {
-	static const int UNKNOWN_ARRAY_LENGTH = 0;
+	static const size_t UNKNOWN_ARRAY_LENGTH = 0;
 	static int idCount = 0;
 
 	class BasicType;
@@ -356,14 +356,18 @@ namespace DST
 	{
 		Type *_valueType;
 		size_t _length;	// size = 0 means size is unknown.
+		Expression *_lenExp;	// for stuff like "new int[a]"
 
 	public:
-		ArrayType(AST::Expression *base) : Type(base) {  }
-		ArrayType(Type *valueType, size_t length) : Type(NULL), _valueType(valueType), _length(length) { }
-		ArrayType(Type *valueType) : ArrayType(valueType, DST::UNKNOWN_ARRAY_LENGTH) {}
+		ArrayType(AST::Expression *base) : Type(base), _lenExp(NULL) {  }
+		ArrayType(Type *valueType, size_t length) : Type(NULL), _valueType(valueType), _length(length), _lenExp(NULL) { }
+		ArrayType(Type *valueType, Expression *lenExp) : Type(NULL), _valueType(valueType), _length(DST::UNKNOWN_ARRAY_LENGTH), _lenExp(lenExp) { }
+		ArrayType(Type *valueType, size_t length, Expression *lenExp) : Type(NULL), _valueType(valueType), _length(length), _lenExp(lenExp) { }
+		ArrayType(Type *valueType) : Type(NULL), _valueType(valueType), _length(DST::UNKNOWN_ARRAY_LENGTH), _lenExp(NULL) { }
 		virtual ~ArrayType() { if (_valueType) delete _valueType; }
 		ExactType getExactType() { return EXACT_ARRAY; }
 		virtual Type *getType() { return _valueType; }
+		Expression *getLenExp() { return _lenExp; }
 
 		virtual bool equals(Type *other)
 		{
