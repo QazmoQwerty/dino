@@ -1,5 +1,5 @@
-// import "Examples/std"
-import "std"
+import "Examples/std"
+// import "std"
 
 namespace Test {
     void Print(any a) {
@@ -15,10 +15,13 @@ namespace Test {
     }
 
     void Main() {
-        int i := 10
-        Foo f
-        bool b
-        Print(&b)
+        // int i := 10
+        // Foo f
+        // bool b
+        // Print(&b)
+        any a := new int
+        any b := a
+        Print(a)
     }
 
 }

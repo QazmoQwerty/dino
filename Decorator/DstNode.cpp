@@ -438,6 +438,22 @@ bool DST::BasicType::assignableTo(DST::Type *type)
 	return false;
 }
 
+bool DST::NullType::assignableTo(DST::Type *type) 
+{
+	if (!type)
+		return false;
+	switch (type->getExactType()) 
+	{
+		case EXACT_PROPERTY:
+			return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+		case EXACT_BASIC:
+			return ((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl();
+		case EXACT_POINTER: case EXACT_FUNCTION: case EXACT_ARRAY:
+			return true;
+		default: return false;
+	}
+}
+
 bool DST::PointerType::assignableTo(DST::Type *type)
 {
 	if (!type)

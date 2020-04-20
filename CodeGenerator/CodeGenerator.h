@@ -149,6 +149,9 @@ namespace CodeGenerator
     bool isFunc(llvm::Value *funcPtr);
     bool isFuncPtr(llvm::Value *funcPtr);
 
+    llvm::Value* convertToInterface(llvm::Value *ptr);
+    llvm::Value* convertToInterfaceLval(llvm::Value *ptr);
+
     llvm::Value* createEmptyVtable(llvm::Type *type);
     llvm::Value* getVtable(llvm::Type *type);
 

@@ -274,19 +274,7 @@ namespace DST
 		virtual vector<Node*> getChildren() { return {}; };
 		virtual string toString() { return toShortString(); };
 
-		virtual bool assignableTo(DST::Type *type)
-		{
-			if (!type)
-				return false;
-			switch (type->getExactType()) 
-			{
-				case EXACT_PROPERTY:
-					return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-				case EXACT_INTERFACE: case EXACT_POINTER: case EXACT_FUNCTION: case EXACT_ARRAY:
-					return true;
-				default: return false;
-			}
-		}
+		virtual bool assignableTo(DST::Type *type);
 	};
 
 	class TypeList : public Type
