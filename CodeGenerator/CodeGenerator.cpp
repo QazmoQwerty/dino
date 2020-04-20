@@ -754,8 +754,10 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
             return _builder.CreateLoad(codeGen(node->getExpression()));
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
+        case OT_LOGICAL_NOT:
+            return _builder.CreateNot(codeGen(node->getExpression()), "nottmp");
         default:
-            throw ErrorReporter::report("Unimplemented literal type", ERR_CODEGEN, node->getPosition());
+            throw ErrorReporter::report("Unimplemented unary operation", ERR_CODEGEN, node->getPosition());
     }
     
 }
