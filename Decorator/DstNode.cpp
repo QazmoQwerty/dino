@@ -135,13 +135,12 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 					return true;
 				if (((DST::UnaryOperationStatement*)i)->getOperator()._type == OT_RETURN)
 				{
-					if (isVoid) 
-					{
-						if (((DST::UnaryOperationStatement*)i)->getExpression() == NULL)
-							return true;
-					}
+					if (isVoid && ((DST::UnaryOperationStatement*)i)->getExpression() == NULL) 
+						return true;
 					else
 					{
+						if (((DST::UnaryOperationStatement*)i)->getExpression() == NULL)
+							throw ErrorReporter::report("cannot return void in non void function", ERR_DECORATOR, i->getPosition());
 						if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->getExactType() == EXACT_NULL)
 						{
 							auto a = new DST::Conversion(NULL, returnType, ((DST::UnaryOperationStatement*)i)->getExpression());

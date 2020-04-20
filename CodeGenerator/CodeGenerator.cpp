@@ -1263,8 +1263,12 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             return _builder.CreateBr(_currContinueJmp);
         case OT_RETURN:
         {
-            if (node->getExpression() == NULL)
+            if (node->getExpression() == NULL) 
+            {
+                if (!getParentFunction()->getReturnType()->isVoidTy())
+                    throw ErrorReporter::report("cannot return void in non void function", ERR_DECORATOR, node->getPosition());
                 return _builder.CreateRetVoid();
+            }
             if (node->getExpression()->getExpressionType() == ET_LIST)
             {
                 auto expList = (DST::ExpressionList*)node->getExpression();

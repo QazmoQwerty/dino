@@ -51,7 +51,7 @@ namespace NS {
                 Std.PrintS("vector out of range")
                 // FIXME: "return" with no number is accepted by the decorator??
                 // EG:
-                # return
+                return
                 any ret := null
                 return ret  // FIXME: make "return null" work
             }
