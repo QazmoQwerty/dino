@@ -17,7 +17,8 @@ namespace Test {
     void Main() {
         int i := 10
         Foo f
-        Print(&i)
+        bool b
+        Print(&b)
     }
 
 }

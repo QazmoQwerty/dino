@@ -49,6 +49,7 @@ void showHelp()
 		<< "    -o [filepath] (output a .exe file to \"filepath\")\n"
 		<< "    -lib [dirpath] (build as a library to the directory \"dirpath\")\n"
 		<< "    -O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n\n";
+	exit(0);
 }
 
 string runCmd(string cmd, bool printOutput = true) // if print output is false, nothing will be printed untill the entire command is done
@@ -84,68 +85,78 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 
 	try 
 	{
-		if (argc > 1 && strcmp(argv[1], "-help") == 0) {
-			showHelp();
-			exit(0);
-		}
-		else 
+		for(int i = 1; i < argc; i++) 
 		{
-			if (argc == 1)
-				throw "incorrect usage! (use -help for more info)";
-			options->fileName = argv[1];
-			for(int i = 2; i < argc; i++) 
+			if (strlen(argv[i]) && argv[i][0] == '-') 
 			{
-				if 		(strcmp(argv[i], "-help") == 0) 		options->showHelp = true;
-				else if (strcmp(argv[i], "-v") == 0)			options->verbose = true;
-				else if (strcmp(argv[i], "-showLex") == 0) 	options->showLexerOutput = true;
-				else if (strcmp(argv[i], "-outAst") == 0) 	options->outputAstFiles = true;
-				else if (strcmp(argv[i], "-lineAst") == 0) 	options->showLineAST = true;
-				else if (strcmp(argv[i], "-showIR") == 0) 	options->showIR = true;
-				else if (strcmp(argv[i], "-i") == 0)	options->executeInterpret = true;
+				if 		(!strcmp(argv[i], "-help") || 
+							!strcmp(argv[i], "-h")) 		options->showHelp 			= true;
+				else if (!strcmp(argv[i], "-verbose") || 
+							!strcmp(argv[i], "-v"))		options->verbose 			= true;
+				else if (!strcmp(argv[i], "-lex")) 		options->showLexerOutput 	= true;
+				else if (!strcmp(argv[i], "-ast")) 		options->outputAstFiles 	= true;
+				else if (!strcmp(argv[i], "-lineAst")) 	options->showLineAST 		= true;
+				else if (!strcmp(argv[i], "-showIR")) 	options->showIR 			= true;
+				else if (!strcmp(argv[i], "-i"))		options->executeInterpret 	= true;
 				else if (!strcmp(argv[i], "-O0") || !strcmp(argv[i], "-O1") || !strcmp(argv[i], "-O2") 
-					|| !strcmp(argv[i], "-O3") || !strcmp(argv[i], "-Os") || !strcmp(argv[i], "-Oz") || !strcmp(argv[i], "-Od"))	
+						|| !strcmp(argv[i], "-O3") || !strcmp(argv[i], "-Os") || !strcmp(argv[i], "-Oz") || !strcmp(argv[i], "-Od"))	
 					options->optLevel = argv[i];
-				else if (strcmp(argv[i], "-bc") == 0)
+				else if (!strcmp(argv[i], "-bc"))
 				{
 					options->outputBc = true;
 					if (++i >= argc)
-						throw "Error: missing file name after '-bc'";
+						throw "missing file name after '-bc'";
 					else options->bcFileName = argv[i];
 				}	
-				else if (strcmp(argv[i], "-o") == 0)
+				else if (!strcmp(argv[i], "-o"))
 				{
 					options->outputExe = true;
 					if (++i >= argc)
-						throw "Error: missing file name after '-o'";
+						throw "missing file name after '-o'";
 					else options->exeFileName = argv[i];
 				}
-				else if (strcmp(argv[i], "-lib") == 0)
+				else if (!strcmp(argv[i], "-lib"))
 				{
 					options->outputLib = true;
 					if (++i >= argc)
-						throw "Error: missing file name after '-lib'";
+						throw "missing file name after '-lib'";
 					else options->libFileName = argv[i];
 				}
-				else if (strcmp(argv[i], "-ll") == 0)
+				else if (!strcmp(argv[i], "-ll"))
 				{
 					options->outputLl = true;
 					if (++i >= argc)
-						throw "Error: missing file name after '-ll'";
+						throw "missing file name after '-ll'";
 					else options->llFileName = argv[i];
 				}
+				else throw "unknown flag \"" + string(argv[i]) + "\"";
+			}
+			else 
+			{
+				if (options->fileName)
+					throw "more than one input file specified";
+				options->fileName = argv[i];
 			}
 		}
 		if (options->showHelp)
 			showHelp();
+		if (!options->fileName)
+			throw "incorrect usage, missing input file\nTry \"dino -h\" for more info.";
 	} 
 	catch (const char * c) 
 	{
-		llvm::errs() << c << "\n";
+		llvm::errs() << FRED(BOLD("Error: ")) << c << "\n";
 		delete options;
 		exit(0);
 	}
-	if (!options->outputBc)
-		options->bcFileName = "temp.bc";
+	catch (string s) 
+	{
+		llvm::errs() << FRED(BOLD("Error: ")) << s << "\n";
+		delete options;
+		exit(0);
+	}
+	// if (!options->outputBc)
+	// 	options->bcFileName = "temp.bc";
 	return options;
 }
 
