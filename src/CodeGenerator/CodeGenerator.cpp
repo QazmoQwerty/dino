@@ -47,38 +47,38 @@ void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName)
     llvm::WriteBitcodeToFile(_module.get(), out);
 }
 
-void CodeGenerator::execute(llvm::Function *func)
-{
-    // Create Interpreter
-    llvm::Module *M = _module.get();
+// void CodeGenerator::execute(llvm::Function *func)
+// {
+//     // Create Interpreter
+//     llvm::Module *M = _module.get();
     
-    std::string errStr;
-    llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).setEngineKind(llvm::EngineKind::Interpreter).create();
+//     std::string errStr;
+//     llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).setEngineKind(llvm::EngineKind::Interpreter).create();
 
-    if (!EE) {
-        llvm::errs() << ": Failed to construct ExecutionEngine: " << errStr << "\n";
-        return;
-    }
+//     if (!EE) {
+//         llvm::errs() << ": Failed to construct ExecutionEngine: " << errStr << "\n";
+//         return;
+//     }
 
-    llvm::errs() << "We are trying to construct this LLVM module:\n\n---------\n" << *M;
-    llvm::errs() << "verifying... ";
-    if (llvm::verifyModule(*M, &llvm::errs())) {
-        llvm::errs() << ": Error constructing function!\n";
-        return;
-    }
+//     llvm::errs() << "We are trying to construct this LLVM module:\n\n---------\n" << *M;
+//     llvm::errs() << "verifying... ";
+//     if (llvm::verifyModule(*M, &llvm::errs())) {
+//         llvm::errs() << ": Error constructing function!\n";
+//         return;
+//     }
 
-    llvm::errs() << "OK\n";
-    llvm::errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
-    llvm::errs() << "---------\nstarting with Interpreter...\n";
+//     llvm::errs() << "OK\n";
+//     llvm::errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
+//     llvm::errs() << "---------\nstarting with Interpreter...\n";
 
-    std::vector<llvm::GenericValue> noargs;
+//     std::vector<llvm::GenericValue> noargs;
     
-    if (llvm::verifyFunction(*func, &llvm::errs()))
-        std::cout << "Huh\n";
-    llvm::GenericValue GV = EE->runFunction(func, noargs);
+//     if (llvm::verifyFunction(*func, &llvm::errs()))
+//         std::cout << "Huh\n";
+//     llvm::GenericValue GV = EE->runFunction(func, noargs);
 
-    llvm::outs() << "Result: " << GV.IntVal << "\n";
-}
+//     llvm::outs() << "Result: " << GV.IntVal << "\n";
+// }
 
 void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
 {

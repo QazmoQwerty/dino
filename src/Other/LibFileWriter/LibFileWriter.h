@@ -1,4 +1,4 @@
-#include "../Decorator/DstNode.h"
+#include "../../Decorator/DstNode.h"
 #include <sstream>
 #include <fstream>
 

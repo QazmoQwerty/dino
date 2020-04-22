@@ -23,12 +23,12 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
+// #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
-#include "llvm/ExecutionEngine/MCJIT.h"
+// #include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/ExecutionEngine/Interpreter.h"
+// #include "llvm/ExecutionEngine/Interpreter.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
@@ -119,7 +119,7 @@ namespace CodeGenerator
     void setup(bool isLib = false);
 
     void writeBitcodeToFile(DST::Program *prog, string fileName);
-    void execute(llvm::Function *func);
+    // void execute(llvm::Function *func);
 
     // Returns a pointer to the Main function
     llvm::Function *startCodeGen(DST::Program *node);

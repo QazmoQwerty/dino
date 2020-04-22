@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <unordered_map>
-#include "TypeEnums.h"
-#include "../Lexer/Token.h"
+#include "../TypeEnums.h"
+#include "../../Lexer/Token.h"
 
 using std::vector;
 using std::string;

@@ -1,0 +1,89 @@
+import "Examples/std2"
+
+include "reader.dino"
+
+namespace Prog {
+
+    string READ(string str): return str
+
+    string EVAL(string str): return str
+
+    string PRINT(string str): return str
+
+    string rep(string str): return PRINT(EVAL(READ(str)))
+
+    type Reader {
+        string str
+        int pos
+
+        void Init(string s) {
+            str := s
+            pos := 0
+        }
+
+        string peek() {
+            while pos < str.Size and IsWhiteSpace(str.Get(pos)):
+                pos++
+            
+            if pos >= str.Size:
+                return ""
+            
+            switch str[pos] {
+                case '~' {} // TODO
+                case '[', ']', '{', '}', '(', ')', /*'\''*/ '`', '@' {
+                    string s
+                    s.Init()
+                    s.Add(str[pos])
+                    return s
+                }
+                case '"' {
+                    string s
+                    s.Init()
+                    s.Add(str[pos])
+                    bool b1 := true
+                    bool b2 := false
+                    for int i := pos+1 | i < s.Size and b1 | i++ {
+                        char c := str[i]
+                        s.Add(c)
+                        switch c {
+                            case '"' {
+                                b1 := b2
+                                b2 := false
+                            }
+                            case '\\': b2 := true
+                            default: b2 := false
+                        }
+                    }
+                    return s
+                }
+                
+                case ';' {
+                    string s
+                    s.Init()
+                    for int i := pos | i < str.Size and str[i] != '\n' | i++:
+                        s.Add(c)
+                    return s
+                }
+                default {
+
+                }
+                
+            }
+        }
+    }
+
+    bool IsWhiteSpace(char c) {
+        switch c {
+            case '\t', ' ', '\n', '\r':
+                return true
+            default: return false
+        }
+    }
+
+    void Main() {
+        while true {
+            string input := Std.ReadLine()
+            Std.PrintSLn(rep(input))
+        }
+    }
+}

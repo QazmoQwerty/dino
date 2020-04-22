@@ -6,7 +6,7 @@
 #include <iostream>
 #include <stack>
 #include "../Lexer/Token.h"
-#include "../Other/OperatorsMap.h"
+#include "../Other/OperatorsMap/OperatorsMap.h"
 #include "../Other/TypeEnums.h"
 #include "AstNode.h"
 

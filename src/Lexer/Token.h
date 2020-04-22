@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include "../Other/TypeEnums.h"
-#include "../Other/Utf8Handler.h"
+#include "../Other/Unicode/Utf8Handler.h"
 
 #define ESCAPE_CHAR '\\'
 #define LEFT_TO_RIGHT 1
