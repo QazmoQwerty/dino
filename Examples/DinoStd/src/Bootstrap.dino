@@ -1,12 +1,4 @@
 namespace Std {
-	type String {
-		char[] buf
-
-		int Size: get: return buf.Size
-		char@ CStr: get: return &buf[0]
-
-		char Get(int idx): return buf[idx]
-	}
 
 	interface Error {
 		string Msg: get
@@ -75,4 +67,59 @@ namespace Std {
     }
 	void PrintDLn(int n) { PrintD(n) | PrintLn() }
 
+	type String {
+		char[] buf
+		int count
+		
+		// int Size: get: return buf.Size
+		char@ CStr: get: return &buf[0]
+
+		// char Get(int idx): return buf[idx]
+
+		void Init() {
+            buf := null
+            count := 0
+        }
+
+        int Size: get {
+            return count
+        }
+
+        void Add(char e) {
+            if buf.Size = 0:
+                buf := new char[10]
+            
+            if buf.Size = count {
+                char[] temp := new char[count*2]
+                for int i := 0 | i < count | i++:
+                    temp[i] := buf[i]
+                delete buf
+                buf := temp
+            }
+
+            buf[count] := e
+            count++
+        }
+
+        void Set(int idx, char e) {
+            if idx >= count:
+				return	// Print crashes??
+            	// Std.PrintS("vector out of range")
+            else: buf[idx] := e
+            
+        }
+
+        char Get(int idx) {
+            if idx >= count {
+				// PrintS("vector out of range") // Line crashes??
+				return '\0'
+			}
+            return buf[idx]
+        }
+
+        // void Clear() {
+        //     delete buf
+        //     count := 0
+        // }   
+	}
 }
