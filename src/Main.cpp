@@ -5,12 +5,12 @@
 #include "Lexer/Lexer.h"
 #include "Lexer/Preprocessor.h"
 #include "Parser/AstNode.h"
-#include "Other/AstToFile.h"
+#include "Utils/AstToFile.h"
 #include "CodeGenerator/CodeGenerator.h"
 #include "Parser/Parser.h"
-#include "Other/Unicode/Utf8Handler.h"
+#include "Utils/Unicode/Utf8Handler.h"
 #include "Decorator/Decorator.h"
-#include "Other/LibFileWriter/LibFileWriter.h"
+#include "Utils/LibFileWriter/LibFileWriter.h"
 #include <stdio.h>
 #include <sys/stat.h>
 

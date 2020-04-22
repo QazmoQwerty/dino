@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <string>
-#include "../Other/TypeEnums.h"
-#include "../Other/Unicode/Utf8Handler.h"
+#include "../Utils/TypeEnums.h"
+#include "../Utils/Unicode/Utf8Handler.h"
 
 #define ESCAPE_CHAR '\\'
 #define LEFT_TO_RIGHT 1
