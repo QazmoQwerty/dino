@@ -1,5 +1,5 @@
 #include "Token.h"
-#include "../Other/ErrorReporter.h"
+#include "../Other//ErrorReporter/ErrorReporter.h"
 
 /*
 	Function gets a Token and prints it based on its type.

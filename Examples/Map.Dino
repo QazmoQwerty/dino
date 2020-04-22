@@ -1,0 +1,243 @@
+import "Examples/std"
+
+namespace Prog {
+    type Pair {
+        string Key
+        any Val
+
+        void Init(string key, any val) {
+            this.Key ≡ key
+            this.Val ≡ val
+        }
+
+        void Clear():
+            if Val ≠ null: 
+                delete Val
+    }
+
+    Pair@ NewPair(string key, any val) {
+        var p ≡ new Pair
+        p.Init(key, val)
+        return p
+    }
+
+    Map@ NewMap() {
+        var m ≡ new Map
+        m.Init()
+        return m
+    }
+
+    Pair DeletedItem
+
+    const MAP_INIT_SIZE ≡ 10
+    const MIN_LOAD_FACTOR ≡ 10
+    const MAX_LOAD_FACTOR ≡ 70
+
+    type Map {
+        Pair@[] items
+        int count
+        int baseSize
+
+        void Init(): InitSized(MAP_INIT_SIZE)
+
+        int loadFactor: get: return count * 100 / items.Size
+
+        void InitSized(int baseSize) {
+            this.baseSize ≡ baseSize
+            count ≡ 0
+            items ≡ new Pair@[nextPrime(baseSize)]
+        }
+
+        void resizeUp(): resize(baseSize * 2)
+        void resizeDown(): resize(baseSize / 2)
+
+        void resize(int newSize) {
+            if newSize < MAP_INIT_SIZE: 
+                return
+            var tmp ≡ new Map
+            tmp.InitSized(newSize)
+            for int i ≡ 0 | i < items.Size | i++ {
+                var item ≡ items[i]
+                if item ≠ null and item ≠ &DeletedItem:
+                    tmp.Insert(item.Key, item.Val)
+            }
+            count ≡ tmp.count
+            baseSize ≡ tmp.baseSize
+            items, tmp.items ≡ tmp.items, items
+            delete tmp
+        }
+
+        void Clear() {
+            unless items.Size = 0 {
+                for int i ≡ 0 | i < items.Size | i++:
+                    unless items[i] = null or items[i] = &DeletedItem {
+                        items[i].Clear()
+                        delete items[i]
+                    }
+                delete items
+            }
+        }
+
+        void Insert(string key, any val) {
+            if loadFactor > MAX_LOAD_FACTOR:
+                resizeUp()
+
+            int idx ≡ calcHash(key, items.Size, 0)
+            Pair@ item ≡ items[idx]
+            for int i ≡ 1 | item ≠ null | i++ {
+                if item ≠ &DeletedItem and strEq(item.Key, key) {
+                    item.Clear()
+                    delete item
+                    items[idx] ≡ NewPair(key, val)
+                    return
+                }
+                idx ≡ calcHash(key, items.Size, i)
+                item ≡ items[idx]
+            }
+            items[idx] ≡ NewPair(key, val)
+            count++
+        }
+
+        any Search(string key) {
+            int idx ≡ calcHash(key, items.Size, 0)
+            var item ≡ items[idx]
+            for int i ≡ 1 | item ≠ null | i++ {
+                if item ≠ &DeletedItem and strEq(item.Key, key):
+                    return item.Val
+                idx ≡ calcHash(key, items.Size, i)
+                item ≡ items[idx]
+            }
+            return null
+        }
+
+        void Delete(string key) {
+            if loadFactor < MIN_LOAD_FACTOR:
+                resizeDown()
+
+            int idx ≡ calcHash(key, items.Size, 0)
+            var item ≡ items[idx]
+            for int i ≡ 1 | item ≠ null | i++ {
+                if item ≠ &DeletedItem and strEq(item.Key, key) {
+                    item.Clear()
+                    delete item
+                    items[idx] ≡ &DeletedItem
+                }
+                idx ≡ calcHash(key, items.Size, i)
+                item ≡ items[idx]
+            }
+            count--
+        }
+    }
+
+    bool strEq(string a, string b) {
+        if a.Size ≠ b.Size:
+            return false
+        for int i ≡ 0 | i < a.Size | i++:
+            if a.Get(i) ≠ b.Get(i):
+                return false
+        return true
+    }
+
+    int pow(int a, int n) {
+        if n = 0: return 1
+        int t ≡ pow(a, n/2)
+        if n%2 = 0:
+            return t*t
+        return a*t*t
+    }
+
+    int calcHash(string s, int numBuckets, int attempt) {
+        const prime1 ≡ 163
+        const prime2 ≡ 151
+        int hashA ≡ hash(s, prime1, numBuckets)
+        int hashB ≡ hash(s, prime2, numBuckets)
+        return (hashA + (attempt * (hashB + 1))) % numBuckets
+    }
+
+    // (string to hash, large prime number, max number)
+    int hash(string s, int p, int m) {
+        int h ≡ 0
+        int len ≡ s.Size
+        const prime ≡ 151
+        for int i ≡ 0 | i < len | i++ {
+            h += pow(prime, len-i-1) * s.Get(i) as int
+            h %= m
+        }
+        return h
+    }
+
+    string@ NewString(string s) {
+        var ret ≡ new string
+        @ret ≡ s
+        return ret
+    }
+
+    bool isPrime(int x) {
+        // if x < 2: throw error (TODO)
+        if x < 4: return true
+        if x%2 = 0: return false
+        for int i ≡ 3 | i < x | i += 2:
+            if x%i = 0:
+                return false
+        return true
+    }
+
+    int nextPrime(int x) {
+        while not isPrime(x):
+            x++
+        return x
+    }
+
+    void Main() {
+        var map ≡ NewMap()
+        map.Insert("1", NewString("one"))
+        map.Insert("2", NewString("two"))
+        map.Insert("3", NewString("three"))
+        map.Insert("4", NewString("four"))
+        map.Insert("5", NewString("five"))
+        map.Insert("6", NewString("six"))
+        map.Insert("7", NewString("seven"))
+        map.Insert("8", NewString("eight"))
+        map.Insert("9", NewString("nine"))
+        map.Insert("10", NewString("ten"))
+        map.Insert("11", NewString("eleven"))
+        map.Insert("12", NewString("twelve"))
+        map.Insert("13", NewString("thirteen"))
+        map.Insert("14", NewString("fourteen"))
+        map.Insert("15", NewString("fifteen"))
+        map.Insert("16", NewString("sixteen"))
+
+        map.Insert("one", NewString("1"))
+        map.Insert("two", NewString("2"))
+        map.Insert("three", NewString("3"))
+        map.Insert("four", NewString("4"))
+        map.Insert("five", NewString("5"))
+        map.Insert("six", NewString("6"))
+        
+        Std.PrintS(@(map.Search("one") as string))
+        Std.PrintS(@(map.Search("two") as string))
+        Std.PrintS(@(map.Search("three") as string))
+        Std.PrintS(@(map.Search("four") as string))
+        Std.PrintS(@(map.Search("five") as string))
+        Std.PrintS(@(map.Search("six") as string))
+
+        Std.PrintS(@(map.Search("1") as string))
+        Std.PrintS(@(map.Search("2") as string))
+        Std.PrintS(@(map.Search("3") as string))
+        Std.PrintS(@(map.Search("4") as string))
+        Std.PrintS(@(map.Search("5") as string))
+        Std.PrintS(@(map.Search("6") as string))
+        Std.PrintS(@(map.Search("7") as string))
+        Std.PrintS(@(map.Search("8") as string))
+        Std.PrintS(@(map.Search("9") as string))
+        Std.PrintS(@(map.Search("10") as string))
+        Std.PrintS(@(map.Search("11") as string))
+        Std.PrintS(@(map.Search("12") as string))
+        Std.PrintS(@(map.Search("13") as string))
+        Std.PrintS(@(map.Search("14") as string))
+        Std.PrintS(@(map.Search("15") as string))
+        Std.PrintS(@(map.Search("16") as string))
+        map.Clear()
+        delete map
+    }
+}

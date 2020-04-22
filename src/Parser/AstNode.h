@@ -4,8 +4,8 @@
 #include <string>
 #include <iostream>
 #include "../Other/TypeEnums.h"
-#include "../Other/ErrorReporter.h"
-#include "../Other/OperatorsMap.h"
+#include "../Other/ErrorReporter/ErrorReporter.h"
+#include "../Other/OperatorsMap/OperatorsMap.h"
 using std::string;
 using std::vector;
 

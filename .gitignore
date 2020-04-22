@@ -9,3 +9,4 @@ Std/
 *.s
 dino
 test
+build/

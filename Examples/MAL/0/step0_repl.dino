@@ -1,0 +1,32 @@
+import "Examples/std2"
+
+namespace Prog {
+
+    string READ(string str): return str
+
+    string EVAL(string str): return str
+
+    string PRINT(string str): return str
+
+    string rep(string str): return PRINT(EVAL(READ(str)))
+
+
+    // type TokenReader {
+    //     string str
+    //     int idx
+
+    //     void Init(string s) {
+    //         str := s
+    //         idx := 0
+    //     }
+
+
+    // }
+
+    void Main() {
+        while true {
+            string input := Std.ReadLine()
+            Std.PrintSLn(rep(input))
+        }
+    }
+}

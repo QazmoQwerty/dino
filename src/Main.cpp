@@ -8,9 +8,9 @@
 #include "Other/AstToFile.h"
 #include "CodeGenerator/CodeGenerator.h"
 #include "Parser/Parser.h"
-#include "Other/Utf8Handler.h"
+#include "Other/Unicode/Utf8Handler.h"
 #include "Decorator/Decorator.h"
-#include "LibFileWriter/LibFileWriter.h"
+#include "Other/LibFileWriter/LibFileWriter.h"
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -22,7 +22,7 @@ typedef struct cmdOptions
 	bool showLexerOutput = false; 
 	bool outputAstFiles = false; 
 	bool showLineAST = false;
-	bool executeInterpret = false;
+	// bool executeInterpret = false;
 	bool showIR = false;
 	bool outputBc = false;
 	const char *bcFileName;
@@ -43,7 +43,7 @@ void showHelp()
 		<< "    -showlex (prints the output of the lexer)\n"
 		<< "    -outAst (output a .gv file of the AST and DST)\n" 
 		<< "    -lineAst (show line numbers in the AST and DST files)\n" 
-		<< "    -i (run the program in an LLVM interpreter for testing purposes - for debug purposes only!)\n" 
+		// << "    -i (run the program in an LLVM interpreter for testing purposes - for debug purposes only!)\n" 
 		<< "    -bc [filepath] (output a .bc file to \"filepath\")\n" 
 		<< "    -ll [filepath] (output a .ll file to \"filepath\")\n"
 		<< "    -o [filepath] (output a .exe file to \"filepath\")\n"
@@ -97,7 +97,7 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 				else if (!strcmp(argv[i], "-ast")) 		options->outputAstFiles 	= true;
 				else if (!strcmp(argv[i], "-lineAst")) 	options->showLineAST 		= true;
 				else if (!strcmp(argv[i], "-showIR")) 	options->showIR 			= true;
-				else if (!strcmp(argv[i], "-i"))		options->executeInterpret 	= true;
+				// else if (!strcmp(argv[i], "-i"))		options->executeInterpret 	= true;
 				else if (!strcmp(argv[i], "-O0") || !strcmp(argv[i], "-O1") || !strcmp(argv[i], "-O2") 
 						|| !strcmp(argv[i], "-O3") || !strcmp(argv[i], "-Os") || !strcmp(argv[i], "-Oz") || !strcmp(argv[i], "-Od"))	
 					options->optLevel = argv[i];
@@ -193,13 +193,13 @@ int main(int argc, char *argv[])
 				llvm::errs() << "Wrote \"DstDisplay.gv\"...\n";	
 		}
 		
-		auto mainFunc = CodeGenerator::startCodeGen(dst);
+		CodeGenerator::startCodeGen(dst);
 
 		if (cmd->verbose)
 			llvm::errs() << "Finished generating IR...\n";
 
-		if (cmd->executeInterpret)
-			CodeGenerator::execute(mainFunc);
+		// if (cmd->executeInterpret)
+		// 	CodeGenerator::execute(mainFunc);
 
 		string bcFileName = "";
 		if (cmd->outputBc) 
