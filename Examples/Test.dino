@@ -14,9 +14,8 @@ namespace Prog {
 	// 	// }
 	// }
 
-	void Foo: get {
-		Std.PrintDLn(1234)
-		// return 10
+	type Foo {
+		int A
 	}
 
 	void Main() {
@@ -25,15 +24,24 @@ namespace Prog {
 		// } catch: Std.PrintSLn(caught.Msg)
 		// any a := null
 
-		var v := Foo
+		try {
+			Foo@ f := null
+			// var d := 
+			// (@f).A := 20
+			(@f).A := 20
+			// Foo f2 := @f
+			// f2.A := 27
+			Std.PrintDLn(123)
+			Std.PrintDLn(f.A)
+		} catch: Std.PrintSLn(caught.Msg)
 
 		
-		try {
-			int@ a := new int
-			@a := 20
-			int@ b := null
-			Std.PrintDLn(@a)
-			Std.PrintDLn(@b)
-		} catch: Std.PrintSLn(caught.Msg)
+		// try {
+		// 	int@ a := new int
+		// 	@a := 20
+		// 	int@ b := null
+		// 	Std.PrintDLn(@a)
+		// 	Std.PrintDLn(@b)
+		// } catch: Std.PrintSLn(caught.Msg)
 	}
 }

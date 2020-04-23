@@ -115,7 +115,7 @@ namespace CodeGenerator
 
     static std::unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
 
-    static llvm::AllocaInst *_currThisPtr = NULL;
+    // static llvm::AllocaInst *_currThisPtr = NULL;
 
     void setup(bool isLib = false);
 
@@ -143,6 +143,7 @@ namespace CodeGenerator
 
     llvm::Function *getVtableInterfaceLookupFunction();
     llvm::Function *getNullCheckFunc();
+    llvm::Value *assertNotNull(llvm::Value *val);
     llvm::Function *getMallocFunc();
     Value *createThrow(llvm::Value *exception, bool dontInvoke = false);
 

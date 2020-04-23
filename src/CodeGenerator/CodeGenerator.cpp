@@ -279,6 +279,11 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
     return bb;
 }
 
+llvm::Value *CodeGenerator::assertNotNull(llvm::Value *val)
+{
+    return createCallOrInvoke(getNullCheckFunc(), _builder.CreateBitCast(val, _builder.getInt8PtrTy()));
+}
+
 /*
     // get a pointer to a function like this:
     void assertNotNull(void@ ptr) {
@@ -489,9 +494,11 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 
         auto bt = (DST::BasicType*)leftType;
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        auto lval = codeGenLval(node->getLeft());
+        assertNotNull(lval);
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
-            codeGenLval(node->getLeft()), 
+            lval, 
             { _builder.getInt32(0), _builder.getInt32(typeDef->variableIndexes[node->getRight()]) }, 
             node->getRight().to_string()
         );
@@ -501,9 +508,11 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     {
         auto bt = (DST::BasicType*)((DST::PointerType*)leftType)->getPtrType();
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        auto lval = _builder.CreateLoad(codeGenLval(node->getLeft()));
+        assertNotNull(lval);
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
-            _builder.CreateLoad(codeGenLval(node->getLeft())), 
+            lval, 
             { _builder.getInt32(0), _builder.getInt32(typeDef->variableIndexes[node->getRight()]) }, 
             node->getRight().to_string()
         );
@@ -603,7 +612,9 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
     }
     if (node->getType()->isConst())
         return codeGenLval(node);
-    return _builder.CreateLoad(codeGenLval(node), "accesstmp");
+    auto val = codeGenLval(node);
+    assertNotNull(val);
+    return _builder.CreateLoad(val, "accesstmp");
 }
 
 llvm::Value* CodeGenerator::getVtable(llvm::Type *type) {
@@ -778,7 +789,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         case OT_AT:
         {
             auto val = codeGen(node->getExpression());
-            createCallOrInvoke(getNullCheckFunc(), _builder.CreateBitCast(val, _builder.getInt8PtrTy()));
+            assertNotNull(val);
             return _builder.CreateLoad(val);
         }
         case OT_BITWISE_AND:
@@ -824,7 +835,7 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
     switch (node->getOperator()._type)
     {
         case OT_AT:
-            createCallOrInvoke(getNullCheckFunc(), _builder.CreateBitCast(val, _builder.getInt8PtrTy()));
+            assertNotNull(val);
             return _builder.CreateLoad(val);
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
@@ -1914,7 +1925,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
                 AllocaInst *alloca = CreateEntryBlockAlloca(getFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
                 _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
                 _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-                _currThisPtr = alloca;
+                // _currThisPtr = alloca;
             }
         }
 
@@ -1966,8 +1977,8 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
             _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
             _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
 
-            if (typeDef && isFirst)
-                _currThisPtr = alloca;
+            // if (typeDef && isFirst)
+            //     _currThisPtr = alloca;
             isFirst = false;
         }
 
@@ -2108,8 +2119,8 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
             _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
             _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
 
-            if (isFirst && typeDef)
-                _currThisPtr = alloca;
+            // if (isFirst && typeDef)
+            //     _currThisPtr = alloca;
         }
         
         isFirst = false;
