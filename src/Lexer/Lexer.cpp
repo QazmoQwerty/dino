@@ -77,6 +77,8 @@ vector<Token*> Lexer::lex(unicode_string str, string fileName)
 */
 Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int & line, unsigned int & pos, const string fileName, vector<Token*>& tokens)
 {
+	static bool ignoreLineBreak = false;
+
 	Token* token = new struct Token;
 	unicode_char curr = str[index++];
 	token->_data = curr;
@@ -113,7 +115,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 			{
 				if (getCharType(str[index]) == CT_DIGIT)
 					token->_data += str[index];
-				else if (str[index] == '.' && !isFraction)
+				else if (str[index] == '.' && !isFraction && index + 1 < str.length() && getCharType(str[index+1]) == CT_DIGIT)
 				{
 					isFraction = true;
 					token->_data += '.';
@@ -299,10 +301,23 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 		}
 	}
 
-	if (token->_type == TT_LINE_BREAK && (tokens.size() == 0 || tokens.back()->_type == TT_LINE_BREAK))
+	if (token->_type == TT_LINE_BREAK && (ignoreLineBreak || tokens.size() == 0 || tokens.back()->_type == TT_LINE_BREAK))
 	{
 		delete token;
 		return NULL;
 	}
+
+	if (token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == OT_IGNORE_LINEBREAK)
+	{
+		ignoreLineBreak = true;
+		if (tokens.size() != 0 && tokens.back()->_type == TT_LINE_BREAK)
+		{
+			delete tokens.back();
+			tokens.pop_back();
+		}
+		delete token;
+		return NULL;
+	}
+	else ignoreLineBreak = false;
 	return token;
 }

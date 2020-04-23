@@ -20,11 +20,20 @@ namespace Prog {
 		void Foo(): A := 20
 	}
 
+	/*
+		// Testeing?
+	*/
 	void Main() {
 		// try {
 		// 	NullCheck(null)
 		// } catch: Std.PrintSLn(caught.Msg)
 		// any a := null
+
+		int a := 12..|||
+			 + 12
+			.. + 12
+
+		Std.PrintDLn(a)
 
 		try {
 			Foo@ f := null
