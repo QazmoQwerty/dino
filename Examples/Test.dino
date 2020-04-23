@@ -14,16 +14,20 @@ namespace Prog {
 	// 	// }
 	// }
 
-	int Main() {
+	void Main() {
 		// try {
 		// 	NullCheck(null)
 		// } catch: Std.PrintSLn(caught.Msg)
 		// any a := null
 
-		int@ a := new int
-		@a := 20
+		
+
+		
 		
 		try {
+			int@ a := new int
+			@a := 20
+			int@ b := null
 			Std.PrintDLn(@a)
 			Std.PrintDLn(@b)
 		} catch: Std.PrintSLn(caught.Msg)
@@ -32,7 +36,7 @@ namespace Prog {
 		// if a is int:
 		// 	Std.PrintDLn(123)
 
-		return 10
+		// return 10
 		// int d := @(a as int@)
 	}
 }

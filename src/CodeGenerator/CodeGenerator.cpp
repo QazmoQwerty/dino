@@ -290,7 +290,6 @@ llvm::Function *CodeGenerator::getNullCheckFunc()
         return func;
 
     auto savedInsertPoint = _builder.GetInsertBlock();
-    // llvm::errs() << "got here...\n";
 
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
     _builder.SetInsertPoint(bb);
@@ -302,24 +301,24 @@ llvm::Function *CodeGenerator::getNullCheckFunc()
     llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
     llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
     _builder.CreateCondBr(isNull, thenBB, elseBB);
+    func->getBasicBlockList().push_back(thenBB);
+    func->getBasicBlockList().push_back(elseBB);
 
     _builder.SetInsertPoint(thenBB);
 
-    auto errAlloc = createCallOrInvoke(getMallocFunc(), { _builder.getInt32(_dataLayout->getTypeAllocSize(_nullPtrErrorTy)) });
+    auto errAlloc = _builder.CreateCall(getMallocFunc(), { _builder.getInt32(_dataLayout->getTypeAllocSize(_nullPtrErrorTy)) });
     auto alloca = CreateEntryBlockAlloca(func, _interfaceType, "errAlloc");
     auto objPtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(0) }, "objPtr");
     auto vtablePtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(1) }, "vtablePtr");
     _builder.CreateStore(errAlloc, objPtr);
     _builder.CreateStore(getVtable(_nullPtrErrorTy), vtablePtr);
 
-    createThrow(_builder.CreateLoad(alloca));
+    createThrow(_builder.CreateLoad(alloca), true);
 
     _builder.CreateBr(elseBB);
-    func->getBasicBlockList().push_back(thenBB);
 
     _builder.SetInsertPoint(elseBB);
     _builder.CreateRetVoid();
-    func->getBasicBlockList().push_back(elseBB);
 
     _builder.SetInsertPoint(savedInsertPoint);
     return func;
@@ -336,6 +335,8 @@ llvm::Function *CodeGenerator::getVtableInterfaceLookupFunction()
 
     if (_isLib)
         return func;
+
+    auto savedInsertPoint = _builder.GetInsertBlock();
 
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
     _builder.SetInsertPoint(bb);
@@ -383,8 +384,9 @@ llvm::Function *CodeGenerator::getVtableInterfaceLookupFunction()
     _builder.CreateBr(loopCondBB);
 
     _builder.SetInsertPoint(exitBB);
-
     _builder.CreateRet(llvm::Constant::getNullValue(_interfaceVtableType->getPointerTo()));
+
+    _builder.SetInsertPoint(savedInsertPoint);
 
     return func;
 }
@@ -1282,7 +1284,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     return createCallOrInvoke(funcPtr, args);
 }
 
-Value *CodeGenerator::createThrow(llvm::Value *exceptionVal)
+Value *CodeGenerator::createThrow(llvm::Value *exceptionVal, bool dontInvoke)
 {
     static llvm::Function *throwFunc = NULL;
     static llvm::Function *allocExceptionFunc = NULL;
@@ -1300,6 +1302,9 @@ Value *CodeGenerator::createThrow(llvm::Value *exceptionVal)
     auto cast = _builder.CreateBitCast(alloc, _interfaceType->getPointerTo());
     _builder.CreateStore(exceptionVal, cast);
     auto nullPtr = llvm::ConstantPointerNull::get(_builder.getInt8PtrTy());
+
+    if (dontInvoke)
+        return _builder.CreateCall(throwFunc, { alloc, nullPtr, nullPtr });
 
     return createCallOrInvoke(throwFunc, { alloc, nullPtr, nullPtr });
 }

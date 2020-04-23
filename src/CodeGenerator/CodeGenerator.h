@@ -144,7 +144,7 @@ namespace CodeGenerator
     llvm::Function *getVtableInterfaceLookupFunction();
     llvm::Function *getNullCheckFunc();
     llvm::Function *getMallocFunc();
-    Value *createThrow(llvm::Value *exception);
+    Value *createThrow(llvm::Value *exception, bool dontInvoke = false);
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);
