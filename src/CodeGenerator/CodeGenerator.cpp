@@ -18,7 +18,7 @@ void CodeGenerator::setup(bool isLib)
     _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 
-    _vtableInterfaceLookupFunc = createVtableInterfaceLookupFunction();
+    getVtableInterfaceLookupFunction();
 }
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
@@ -325,11 +325,14 @@ llvm::Function *CodeGenerator::getNullCheckFunc()
     return func;
 }
 
-llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
+llvm::Function *CodeGenerator::getVtableInterfaceLookupFunction()
 {
-    auto funcTy = llvm::FunctionType::get(_interfaceVtableType->getPointerTo(), {_objVtableType->getPointerTo(), _builder.getInt32Ty() }, false);
+    static llvm::Function *func = NULL;
+    if (func)   
+        return func;
 
-    llvm::Function *func = llvm::Function::Create(funcTy, llvm::Function::ExternalLinkage, ".getInterfaceVtable", _module.get());
+    auto funcTy = llvm::FunctionType::get(_interfaceVtableType->getPointerTo(), {_objVtableType->getPointerTo(), _builder.getInt32Ty() }, false);
+    func = llvm::Function::Create(funcTy, llvm::Function::ExternalLinkage, ".getInterfaceVtable", _module.get());
 
     if (_isLib)
         return func;
@@ -388,7 +391,7 @@ llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
 
 llvm::Value *CodeGenerator::getFuncFromVtable(llvm::Value *vtable, DST::InterfaceDeclaration *interface, unicode_string &funcName) 
 {
-    auto interfaceVtable = _builder.CreateCall(_vtableInterfaceLookupFunc, { vtable, _builder.getInt32((unsigned long)interface) });
+    auto interfaceVtable = _builder.CreateCall(getVtableInterfaceLookupFunction(), { vtable, _builder.getInt32((unsigned long)interface) });
 
     auto idx = _builder.getInt32(_interfaceVtableFuncInfo[interface][funcName].index);
 
@@ -625,7 +628,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
             auto vtableLoad = _builder.CreateLoad(vtablePtr);
             auto interface = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getInterfaceDecl();
-            auto interfaceVtable = _builder.CreateCall(_vtableInterfaceLookupFunc, { vtableLoad, _builder.getInt32((unsigned long)interface) }); 
+            auto interfaceVtable = _builder.CreateCall(getVtableInterfaceLookupFunction(), { vtableLoad, _builder.getInt32((unsigned long)interface) }); 
             auto diff = _builder.CreatePtrDiff(interfaceVtable, llvm::ConstantPointerNull::get(_interfaceVtableType->getPointerTo()));
             return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
         }

@@ -81,7 +81,6 @@ namespace CodeGenerator
     } InterfaceFuncInfo;
 
     static std::unordered_map<DST::InterfaceDeclaration*, std::unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
-    static llvm::Function *_vtableInterfaceLookupFunc = NULL;
 
     typedef struct TypeDefinition {
         llvm::StructType *structType;
@@ -142,7 +141,7 @@ namespace CodeGenerator
     DST::InterfaceDeclaration *getFunctionInterface(DST::TypeDeclaration *typeDecl, DST::FunctionDeclaration *funcDecl);
     DST::InterfaceDeclaration *getFunctionInterface(DST::InterfaceDeclaration *interfaceDecl, DST::FunctionDeclaration *funcDecl);
 
-    llvm::Function *createVtableInterfaceLookupFunction();
+    llvm::Function *getVtableInterfaceLookupFunction();
     llvm::Function *getNullCheckFunc();
     llvm::Function *getMallocFunc();
     Value *createThrow(llvm::Value *exception);
