@@ -14,19 +14,20 @@ namespace Prog {
 	// 	// }
 	// }
 
+	void Foo: get {
+		Std.PrintDLn(1234)
+		// return 10
+	}
+
 	void Main() {
 		// try {
 		// 	NullCheck(null)
 		// } catch: Std.PrintSLn(caught.Msg)
 		// any a := null
 
-		
+		var v := Foo
 
-		any v := new void
 		
-		if v is void {
-			Std.PrintSLn("huh")	
-		}
 		try {
 			int@ a := new int
 			@a := 20

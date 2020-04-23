@@ -198,6 +198,8 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
 llvm::GlobalVariable * CodeGenerator::createGlobalVariable(DST::VariableDeclaration *node)
 {
     auto type = evalType(node->getType());
+    if (type->isVoidTy())
+        throw ErrorReporter::report("Cannot create instance of type \"void\"", ERR_CODEGEN, node->getPosition());
     auto name = node->getVarId().to_string();
     auto glob = new llvm::GlobalVariable(*_module, type, false, llvm::GlobalVariable::CommonLinkage, llvm::Constant::getNullValue(type), name);
     _currentNamespace.back()->values[node->getVarId()] = glob;
@@ -1273,18 +1275,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             if (gen->getType() != argTy)
             {
                 if (argTy == _interfaceType)
-                {
-                    // auto alloca = _builder.CreateAlloca(_interfaceType);
-                    // auto objPtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
-                    // auto vtablePtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
-                    // _builder.CreateStore(_builder.CreateBitCast(gen, _builder.getInt8PtrTy()), objPtr);
-                    // _builder.CreateStore(getVtable(gen->getType()->getPointerElementType()), vtablePtr);
-                    // if (auto vtable = _vtables[gen->getType()->getPointerElementType()])
-                    //     _builder.CreateStore(vtable, vtablePtr);
-                    // else _builder.CreateStore(createEmptyVtable(gen->getType()->getPointerElementType()), vtablePtr);
-                    // args.push_back(_builder.CreateLoad(alloca));
                     args.push_back(convertToInterface(gen));
-                } 
                 else args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
             }
             else args.push_back(gen);   
@@ -1435,6 +1426,9 @@ Value *CodeGenerator::codeGen(DST::ConstDeclaration *node)
 AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node) 
 {
     auto type = evalType(node->getType());
+    if (type->isVoidTy())
+        throw ErrorReporter::report("Cannot create instance of type \"void\"", ERR_CODEGEN, node->getPosition());
+
     auto name = node->getVarId().to_string();
     if (!_builder.GetInsertBlock())
         throw "will this ever happen? idk...";
@@ -1513,8 +1507,6 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 params.push_back(evalType(i));
             return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false)->getPointerTo();
         }
-        case EXACT_INTERFACE: 
-            return _interfaceType;
         case EXACT_TYPELIST:
         {
             auto tl = (DST::TypeList*)node;
@@ -1788,6 +1780,8 @@ void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
 std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::PropertyDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
     auto propType = evalType(node->getReturnType());
+    if (propType->isVoidTy())
+        throw ErrorReporter::report("Property type may not be \"void\"", ERR_CODEGEN, node->getPosition());
 
     auto ret = std::make_pair<llvm::Function*, llvm::Function*>(NULL, NULL);
 
@@ -2138,8 +2132,12 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
 {
     vector<llvm::Type*> types;
     auto params = node->getParameters();
-    for (auto i : params) 
-        types.push_back(evalType(i->getType()));
+    for (auto i : params) {
+        auto ty = evalType(i->getType());
+        if (ty->isVoidTy())
+            throw ErrorReporter::report("Cannot create instance of type \"void\"", ERR_CODEGEN, i->getPosition());
+        types.push_back(ty);
+    }
     auto returnType = evalType(node->getReturnType());
     auto funcType = llvm::FunctionType::get(returnType, types, false);
     auto funcId = node->getVarDecl()->getVarId().to_string();
