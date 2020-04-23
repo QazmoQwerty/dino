@@ -7,6 +7,7 @@
 #include "Utils/AstToFile.h"
 #include "CodeGenerator/CodeGenerator.h"
 #include "Parser/Parser.h"
+#include "Utils/Prettifier.h"
 #include "Utils/Unicode/Utf8Handler.h"
 #include "Decorator/Decorator.h"
 #include "Utils/LibFileWriter/LibFileWriter.h"
@@ -32,17 +33,18 @@ typedef struct cmdOptions
 	bool outputLib = false;
 	const char *libFileName;
 	char *optLevel = NULL;
+	bool prettify = false;
 } cmdOptions;
 
 void showHelp() 
 {
 	llvm::errs() << "Dino.exe [filepath] [args]\n" 
 		<< "    -help (show this help message)\n"
-		<< "    -v (verbose: show ongoing compilation status\n"
+		<< "    -fmt (format: swaps all operators with their unicode counterparts)\n"
+		<< "    -v (verbose: show ongoing compilation status)\n"
 		<< "    -showlex (prints the output of the lexer)\n"
 		<< "    -outAst (output a .gv file of the AST and DST)\n" 
 		<< "    -lineAst (show line numbers in the AST and DST files)\n" 
-		// << "    -i (run the program in an LLVM interpreter for testing purposes - for debug purposes only!)\n" 
 		<< "    -bc [filepath] (output a .bc file to \"filepath\")\n" 
 		<< "    -ll [filepath] (output a .ll file to \"filepath\")\n"
 		<< "    -o [filepath] (output a .exe file to \"filepath\")\n"
@@ -94,9 +96,9 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 							!strcmp(argv[i], "-v"))		options->verbose 			= true;
 				else if (!strcmp(argv[i], "-lex")) 		options->showLexerOutput 	= true;
 				else if (!strcmp(argv[i], "-ast")) 		options->outputAstFiles 	= true;
+				else if (!strcmp(argv[i], "-fmt")) 		options->prettify 			= true;
 				else if (!strcmp(argv[i], "-lineAst")) 	options->showLineAST 		= true;
 				else if (!strcmp(argv[i], "-showIR")) 	options->showIR 			= true;
-				// else if (!strcmp(argv[i], "-i"))		options->executeInterpret 	= true;
 				else if (!strcmp(argv[i], "-O0") || !strcmp(argv[i], "-O1") || !strcmp(argv[i], "-O2") 
 						|| !strcmp(argv[i], "-O3") || !strcmp(argv[i], "-Os") || !strcmp(argv[i], "-Oz") || !strcmp(argv[i], "-Od"))	
 					options->optLevel = argv[i];
@@ -154,14 +156,19 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 		delete options;
 		exit(0);
 	}
-	// if (!options->outputBc)
-	// 	options->bcFileName = "temp.bc";
 	return options;
 }
 
 int main(int argc, char *argv[])
 {
 	auto cmd = getCmdOptions(argc, argv);
+
+	if (cmd->prettify) 
+	{
+		Prettifier::Prettify(cmd->fileName);
+		exit(0);
+	}
+
 
 	CodeGenerator::setup(cmd->outputLib);
 	OperatorsMap::setup();
@@ -199,9 +206,6 @@ int main(int argc, char *argv[])
 		if (cmd->verbose)
 			llvm::errs() << "Finished generating IR...\n";
 
-		// if (cmd->executeInterpret)
-		// 	CodeGenerator::execute(mainFunc);
-
 		string bcFileName = "";
 		if (cmd->outputBc) 
 			bcFileName = string(cmd->bcFileName);
@@ -221,7 +225,6 @@ int main(int argc, char *argv[])
 
 		if (cmd->outputLib)
 		{
-			// llvm::errs() << "outputting lib files\n";
 			mkdir(cmd->libFileName, 0777);
 			auto libBcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
 			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinh", libBcFileName, dst);

@@ -35,6 +35,7 @@ public:
 			  so make sure to check the _type variable of each token.
 	*/
 	static vector<Token*> lex(unicode_string str, string fileName);
+	
 private:
 	static unordered_map<unicode_char, CharType, UnicodeHasherFunction> _map;
 	static Token * getToken(unicode_string str, unsigned int & index, unsigned int & line, unsigned int & pos, string fileName, vector<Token*>& tokens);

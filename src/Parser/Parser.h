@@ -3,7 +3,6 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include <iostream>
 #include <stack>
 #include "../Lexer/Token.h"
 #include "../Utils/OperatorsMap/OperatorsMap.h"
