@@ -277,6 +277,13 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
     return bb;
 }
 
+/*
+    // get a pointer to a function like this:
+    void assertNotNull(void@ ptr) {
+        if ptr = null:
+            throw new Std.NullPtrError
+    }
+*/
 llvm::Function *CodeGenerator::getNullCheckFunc()
 {
     static llvm::Function *func = NULL;
@@ -757,6 +764,8 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
                 return _builder.CreateBitCast( createCallOrInvoke(getMallocFunc(), { allocSize }), type, "newTmp");
             }
             auto type = evalType((DST::Type*)node->getExpression());
+            if (type->isVoidTy())
+                throw ErrorReporter::report("Cannot create instance of 'void'", ERR_CODEGEN, node->getPosition());
             int size = _dataLayout->getTypeAllocSize(type);
             return _builder.CreateBitCast( createCallOrInvoke(getMallocFunc(), { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
         }
