@@ -150,6 +150,7 @@ enum OperatorType
 
 
 	// Misc:
+	OT_IGNORE_LINEBREAK,			// ...
 	OT_AT,							//	@
 	OT_SINGLE_QUOTE,				//	'
 	OT_DOUBLE_QUOTE,				//	"

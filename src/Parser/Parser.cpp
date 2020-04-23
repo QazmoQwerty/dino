@@ -148,9 +148,9 @@ AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	std::string str = buffer.str();
-	auto lexed = Lexer::lex(str, fileName);
+	auto vec = Lexer::lex(str, fileName);
 	// std::cout << "File: " << fileName << std::endl;
-	auto vec = Preprocessor::preprocess(lexed);
+	// auto vec = Preprocessor::preprocess(lexed);
 	if (showLexerOutput)
 		for (auto i : vec) 
 			printToken(i);

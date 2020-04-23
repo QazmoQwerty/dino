@@ -3,7 +3,6 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include <iostream>
 #include <stack>
 #include "../Lexer/Token.h"
 #include "../Utils/OperatorsMap/OperatorsMap.h"
@@ -18,7 +17,6 @@
 #include <set>
 
 #include "../Lexer/Lexer.h"
-#include "../Lexer/Preprocessor.h"
 
 using std::set;
 using std::unordered_map;
@@ -30,7 +28,7 @@ public:
 	AST::StatementBlock * includeFile();
 	AST::StatementBlock * importFile(PositionInfo currPos);
 
-	Parser(vector<Token*>& tokens) : _tokens(tokens) {_index = 0; }
+	Parser(vector<Token*> tokens) : _tokens(tokens) {_index = 0; }
 	Token* getToken(unsigned int index);
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
@@ -66,7 +64,7 @@ private:
 	AST::Node* nud(Token* token);
 	AST::Node* led(AST::Node * left, Token * token);
 
-	vector<Token*>& _tokens;
+	vector<Token*> _tokens;
 	unordered_map<unicode_string, AST::NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
 	unsigned int _index;
 };

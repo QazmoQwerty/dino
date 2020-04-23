@@ -9,26 +9,6 @@ const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& OperatorsM
 
 bool OperatorsMap::isWord(OperatorType type)
 {
-	/*OperatorType wordTypes[] = {
-		OT_WHILE,
-		OT_DO,
-		OT_FOR,
-		OT_IF,
-		OT_ELSE, 
-		OT_LOGICAL_AND,
-		OT_LOGICAL_OR,
-		OT_LOGICAL_NOT,
-		OT_TYPE,
-		OT_INTERFACE,
-		OT_NAMESPACE,
-		OT_NEW,
-		OT_DELETE,
-		OT_GET,
-		OT_SET,
-		OT_IMPLEMENTS,
-	};
-	return std::find(std::begin(wordTypes), std::end(wordTypes), type) != std::end(wordTypes);*/
-
 	switch(type) {
 		case OT_WHILE: case OT_DO: case OT_FOR: case OT_IF: case OT_ELSE: case OT_LOGICAL_AND: case OT_LOGICAL_OR: case OT_LOGICAL_NOT: case OT_CONST: case OT_TRY: case OT_CATCH:
 		case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_GET: case OT_SET: case OT_IMPLEMENTS: case OT_INCLUDE: case OT_IMPORT:
@@ -76,21 +56,6 @@ bool OperatorsMap::isKeyword(Operator op)
 
 bool OperatorsMap::isAssignment(OperatorType type)
 {
-	/*OperatorType assignmentTypes[] = {
-		OT_ASSIGN_EQUAL,
-		OT_ASSIGN_ADD,
-		OT_ASSIGN_DIVIDE,
-		OT_ASSIGN_MULTIPLY,
-		OT_ASSIGN_SUBTRACT,
-		OT_ASSIGN_MODULUS,
-		OT_ASSIGN_BITWISE_AND,
-		OT_ASSIGN_BITWISE_OR,
-		OT_ASSIGN_BITWISE_XOR,
-		OT_ASSIGN_SHIFT_LEFT,
-		OT_ASSIGN_SHIFT_RIGHT,
-	};
-	return std::find(std::begin(assignmentTypes), std::end(assignmentTypes), type) != std::end(assignmentTypes);*/
-
 	switch (type) 
 	{
 		case OT_ASSIGN_EQUAL: case OT_ASSIGN_ADD: case OT_ASSIGN_DIVIDE: case OT_ASSIGN_MULTIPLY: case OT_ASSIGN_SUBTRACT: case OT_ASSIGN_MODULUS:
@@ -103,57 +68,6 @@ bool OperatorsMap::isAssignment(OperatorType type)
 
 ReturnType OperatorsMap::getReturnType(OperatorType type)
 {
-	// OperatorType leftTypes[] = {
-	// 	OT_ADD,							//	+
-	// 	OT_SUBTRACT,					//	-
-	// 	OT_DIVIDE,						//	/
-	// 	OT_MULTIPLY,					//	*
-	// 	OT_MODULUS,						//	%
-	// 	OT_INCREMENT,					//	++
-	// 	OT_DECREMENT,					//	--
-	// 	OT_BITWISE_AND,					//	&
-	// 	OT_BITWISE_OR,					//	?
-	// 	OT_BITWISE_XOR,					//	^
-	// 	OT_BITWISE_NOT,					//	~
-	// 	OT_BITWISE_SHIFT_LEFT,			//	<<
-	// 	OT_BITWISE_SHIFT_RIGHT,			//	>>
-	// 	OT_ASSIGN_EQUAL,				//	:=
-	// 	OT_ASSIGN_ADD,					//	+=
-	// 	OT_ASSIGN_SUBTRACT,				//	-=
-	// 	OT_ASSIGN_MULTIPLY,				//	*=
-	// 	OT_ASSIGN_DIVIDE,				//	/=
-	// 	OT_ASSIGN_MODULUS,				//	%=
-	// 	OT_ASSIGN_SHIFT_LEFT,			//	<<=
-	// 	OT_ASSIGN_SHIFT_RIGHT,			//	>>=
-	// 	OT_ASSIGN_BITWISE_AND,			//	&=
-	// 	OT_ASSIGN_BITWISE_OR,			//	?=
-	// 	OT_ASSIGN_BITWISE_XOR,			//	^=
-	// };
-	// if (std::find(std::begin(leftTypes), std::end(leftTypes), type) != std::end(leftTypes))
-	// 	return RT_LEFT;
-
-	// OperatorType logicalTypes[] = {
-	// 	OT_EQUAL,						//	=
-	// 	OT_NOT_EQUAL,					//	!=
-	// 	OT_GREATER,						//	>
-	// 	OT_SMALLER,						//	<
-	// 	OT_GREATER_EQUAL,				//	>=
-	// 	OT_SMALLER_EQUAL,				//	<=
-	// 	OT_IS,							//	is
-	// 	OT_LOGICAL_AND,					//	and
-	// 	OT_LOGICAL_OR,					//	or
-	// 	OT_LOGICAL_NOT,					//	not
-	// };
-	// if (std::find(std::begin(logicalTypes), std::end(logicalTypes), type) != std::end(logicalTypes))
-	// 	return RT_BOOLEAN;
-
-	// if (type == OT_SQUARE_BRACKETS_OPEN)
-	// 	return RT_ARRAY;
-
-
-	// return RT_VOID;
-
-
 	switch (type) 
 	{
 		case OT_ADD:						//	+
@@ -303,6 +217,7 @@ void OperatorsMap::setup()
 	_map[UTF8("\"")]		= { OT_DOUBLE_QUOTE,				UTF8("\""),	NON_PARSER };
 	_map[UTF8("\\")]		= { OT_DOUBLE_QUOTE,				UTF8("\""),	NON_PARSER };
 	_map[UTF8("'")]			= { OT_SINGLE_QUOTE,				UTF8("'"),	NON_PARSER };
+	_map[UTF8("..")]		= { OT_IGNORE_LINEBREAK,			UTF8(".."),	NON_PARSER };
 
 	// Word operators:
 	_wordsMap[UTF8("while")]		= { OT_WHILE,		UTF8("while"),		KEYWORD };

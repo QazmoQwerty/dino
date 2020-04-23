@@ -1,58 +1,38 @@
-import "std"
-// import "Examples/std"
+import "Examples/std"
+// import "std"
 
-namespace NS {
-    
-    // type Foo {
-    //     int n
-    //     int N {
-    //         get: return n
-    //         set: n ≡ value
-    //     }
-    // }
-
-    // type Foo {
-    //     int[10] A
-    //     int Size: get: return A.Size
-    // }
-
-    (int[10], int[10]) Bar() {
-        // int[10] a := [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        // int[10] b := [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        // return a, b
-
-        return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-               [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+namespace Test {
+    void Print(any a) {
+        if a is int:
+            Std.PrintD(@(a as int))
+        else if a is Foo:
+            (a as Foo).Show()
+        else if a is bool:
+            Std.PrintS("true" if @(a as bool) else "false")
+        else if a = null:
+            Std.PrintS("null")
+        // FIXME: "is null"
+        else: Std.PrintS("??")
     }
+
+    type Foo {
+        void Show(): Std.PrintS("FOO!")
+    }
+
+    any AA(): return null
 
     void Main() {
-        // Std.PrintS("got here1")
-        // var a, var b := Bar()
-        // Std.PrintS("got here2")
-        // for int i := 0 | i < a.Size | i++:
-        //     Std.PrintD(a[i])
-        // for int i := 0 | i < b.Size | i++:
-        //     Std.PrintD(b[i])
-
-        int n := 10
-
-        // const n := 10
-
-        int[] a := new int[n]
-        // Std.PrintD(a.Size)
-        // for int i := 0 | i < a.Size | i++:
-        //     a[i] := i
-        for int i := 0 | i < a.Size | i++:
-            Std.PrintD(a[i])
-        // Std.PrintD(a.Size)
-        // var f1 ≡ new Foo
-        // f1.N ≡ 10
-        // any n ≡ f1
-        // if n is Foo {
-        //     var f2 ≡ n as Foo
-        //     Std.PrintD(f2.N)
-        //     f2.N ≡ 20
-        //     Std.PrintD(f2.N)
-        // }
+        int i := 10
+        Foo f
+        bool c
+        Print(&c)
+        any a := null
+        any b := new int
+        if a = b:
+            Std.PrintS("aa")
+        if a = null:
+            Std.PrintS("bb")
+        Print(a)
     }
+
 }
