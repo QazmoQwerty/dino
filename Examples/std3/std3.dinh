@@ -1,0 +1,37 @@
+namespace Std {
+	void PrintDLn(int n): extern "Std.PrintDLn"
+	void PrintCLn(char c): extern "Std.PrintCLn"
+	void PrintC(char c): extern "Std.PrintC"
+	char@ gets(char@ s, int maxSize): extern "gets_s"
+	int puts(char@ s): extern "puts"
+	interface Error {
+		String Msg: get
+	}
+	void PrintS(String s): extern "Std.PrintS"
+	type String {
+		int Size: get: extern "Std.type.Std.String.Size.get"
+		char@ CStr: get: extern "Std.type.Std.String.CStr.get"
+		int count
+		void Add(char e): extern "Std.type.Std.String.Add"
+		void Init(): extern "Std.type.Std.String.Init"
+		void Set(int idx, char e): extern "Std.type.Std.String.Set"
+		char[] buf
+		char Get(int idx): extern "Std.type.Std.String.Get"
+	}
+	char GetChar(): extern "getchar"
+	char@ fgets(char@ str, int count, void@ stream): extern "fgets"
+	type ArrayIndexOutOfBoundsError is Error {
+		String Msg: get: extern "Std.type.Std.ArrayIndexOutOfBoundsError.Msg.get"
+	}
+	void PrintD(int n): extern "Std.PrintD"
+	char putchar(char c): extern "putchar"
+	type NullPointerError is Error {
+		String Msg: get: extern "Std.type.Std.NullPointerError.Msg.get"
+	}
+	int strlen(char@ str): extern "strlen"
+	void PrintSLn(String s): extern "Std.PrintSLn"
+	void@ fdopen(int filedes, char@ mode): extern "fdopen"
+	void@ stdin: get: extern "Std.stdin.get"
+	String ReadLine(): extern "Std.ReadLine"
+	void PrintLn(): extern "Std.PrintLn"
+}

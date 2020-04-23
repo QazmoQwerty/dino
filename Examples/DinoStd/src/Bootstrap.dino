@@ -1,12 +1,4 @@
 namespace Std {
-	type String {
-		char[] buf
-
-		int Size: get: return buf.Size
-		char@ CStr: get: return &buf[0]
-
-		char Get(int idx): return buf[idx]
-	}
 
 	interface Error {
 		string Msg: get
@@ -21,12 +13,49 @@ namespace Std {
 	}
 
 	int puts(char@ s): extern "puts"
+	char@ gets(char@ s, int maxSize): extern "gets_s"
 	char putchar(char c): extern "putchar"
 	char GetChar(): extern "getchar"
+	char@ fgets(char@ str, int count, void@ stream): extern "fgets"
+	int strlen(char@ str): extern "strlen"
+
+	void@ stdin: get {
+		char[2] c := ['r', '\0']
+		return fdopen(0, &c[0])
+	}
+	void@ fdopen(int filedes, char @mode): extern "fdopen"
+	
+	string ReadLine() {
+		// TODO - this is a HORRIBLE implementation
+		char[100] c
+		if fgets(&c[0], 100, stdin) = null {
+			PrintS("an error occurred in GetLine()")
+			return ""
+		}
+		for int i := 0 | i < c.Size and c[i] != '\0' | i++ {
+			if c[i] = '\n' {
+				c[i] := '\0'
+				i--
+				// break	// FIXME: make this work in codegen...
+			}
+		}
+		int len := strlen(&c[0])
+		char[] buf := new char[len]
+		for int i := 0 | i < len | i++:
+			buf[i] := c[i]
+
+		string@ ret := (&buf as string@)
+		return @ret
+	}
 
 	void PrintLn(): putchar('\n')
-	void PrintS(string s): puts(s.CStr)
+	void PrintSLn(string s) { PrintS(s) | PrintLn() }
+	void PrintS(string s) {
+		for int i := 0 | i < s.Size | i++:
+			putchar(s.Get(i))
+	}
 	void PrintC(char c): putchar(c)
+	void PrintCLn(char c) { PrintC(c) | PrintLn() }
 	void PrintD(int n) {
         int a ≡ 1
         while a ≤ n / 10: a *= 10
@@ -34,6 +63,63 @@ namespace Std {
             putchar((n % (a * 10) / a + 48) as char)
             a /= 10
         }
-        PrintC('\n')
+        // PrintC('\n')
     }
+	void PrintDLn(int n) { PrintD(n) | PrintLn() }
+
+	type String {
+		char[] buf
+		int count
+		
+		// int Size: get: return buf.Size
+		char@ CStr: get: return &buf[0]
+
+		// char Get(int idx): return buf[idx]
+
+		void Init() {
+            buf := null
+            count := 0
+        }
+
+        int Size: get {
+            return count
+        }
+
+        void Add(char e) {
+            if buf.Size = 0:
+                buf := new char[10]
+            
+            if buf.Size = count {
+                char[] temp := new char[count*2]
+                for int i := 0 | i < count | i++:
+                    temp[i] := buf[i]
+                delete buf
+                buf := temp
+            }
+
+            buf[count] := e
+            count++
+        }
+
+        void Set(int idx, char e) {
+            if idx >= count:
+				return	// Print crashes??
+            	// Std.PrintS("vector out of range")
+            else: buf[idx] := e
+            
+        }
+
+        char Get(int idx) {
+            if idx >= count {
+				// PrintS("vector out of range") // Line crashes??
+				return '\0'
+			}
+            return buf[idx]
+        }
+
+        // void Clear() {
+        //     delete buf
+        //     count := 0
+        // }   
+	}
 }

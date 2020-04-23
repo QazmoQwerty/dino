@@ -95,4 +95,44 @@ namespace Ideas {
         Friday
         Saturday
     }
+
+
+    type Bar {
+        int a
+        int b
+
+        init {  
+            // Default constructor
+        }
+
+        init (int a, int b) {
+            // constructor with two parameters
+        }
+
+        Bar(int a, int b) { this.a := a | this.b := b }
+    } 
+
+    (Bar, Bar) Ex1(int a, int b) {
+        return Bar{a, b}, Bar{}
+    }
+
+    (Bar, Bar) Ex1(int a, int b) {
+        return Bar(a, b), Bar()
+    }
+
+    void Ex2() {
+        Std.Map[string, int] myMap {
+            ("aaa", 1),
+            ("bbb", 2),
+            ("aaa", 3),
+            ("bbb", 4),
+        }
+
+        Std.Map[string, int] myMap (
+            ("aaa", 1),
+            ("bbb", 2),
+            ("aaa", 3),
+            ("bbb", 4)
+        ..)
+    }
 }

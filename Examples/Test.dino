@@ -1,54 +1,47 @@
 // import "DinoStd/std"
 
+import "std2"
+
 // include "LinkedList.dino"
 
 namespace Prog {
 
-	// int Sum(int a, int b): return a + b
-
-	// (int, char) Foo(char c): return c as int, c
-
-	// void Main() {
-	// 	Std.PrintD(Sum(48, 6))
-	// 	int a, char c := Foo('0')
-	// 	Std.PrintD(a)
-	// 	Std.PrintS("and...")
-	// 	Std.PrintC(c)
-	// 	Std.PrintLn()
-	// LL.LinkedList list
-	// 	list.Init()
-	// 	for int i := 0 | i < 10 | i++:
-	// 		list.InsertAtBack(i)
-	// 	list.Show()
+	// void NullCheck(void@ a) {
+	// 	// if a = null {
+	// 	// 	error e := new Std.NullPointerError
+	// 	// 	// error e := null as Std.NullPointerError@
+	// 	// 	throw e
+	// 	// }
 	// }
 
-	# interface Foo: int Str { get }
-	interface Foo {
-		char C()
-	} 
-		
-	char putchar(char c): extern "putchar"
-	void Print(char c) { 
-		putchar(c)
-		putchar('\n') 
-	}
-
-	type A is Foo {
-		char C(): return 'a'
-	}
-
-	type B is Foo {
-		char C(): return 'b'
+	type Foo {
+		int A
 	}
 
 	void Main() {
-		A a
-		Foo fa := new A
-		Foo fb := new B
-		B b
-		Print(a.C())
-		Print(b.C())
-		Print(fa.C())
-		Print(fb.C())
+		// try {
+		// 	NullCheck(null)
+		// } catch: Std.PrintSLn(caught.Msg)
+		// any a := null
+
+		try {
+			Foo@ f := null
+			// var d := 
+			// (@f).A := 20
+			(@f).A := 20
+			// Foo f2 := @f
+			// f2.A := 27
+			Std.PrintDLn(123)
+			Std.PrintDLn(f.A)
+		} catch: Std.PrintSLn(caught.Msg)
+
+		
+		// try {
+		// 	int@ a := new int
+		// 	@a := 20
+		// 	int@ b := null
+		// 	Std.PrintDLn(@a)
+		// 	Std.PrintDLn(@b)
+		// } catch: Std.PrintSLn(caught.Msg)
 	}
 }

@@ -24,7 +24,7 @@ namespace NS {
             // condition to increase data - last slot exhausted
             if data.Size = count {
                 // Line causes crash:
-                // var temp := new int[count*2] FIXME
+                // var temp2 := new int[count] //FIXME
                 any[] temp := new any[count*2]
                 for int i := 0 | i < count | i++:
                     temp[i] := data[i]
@@ -49,11 +49,7 @@ namespace NS {
             if idx >= count {
                 // TODO - throw
                 Std.PrintS("vector out of range")
-                // FIXME: "return" with no number is accepted by the decorator??
-                // EG:
-                # return
-                any ret := null
-                return ret  // FIXME: make "return null" work
+                return null  
             }
             return data[idx]
         }
@@ -70,15 +66,36 @@ namespace NS {
         return a
     }
 
+    string@ NewString(string s) {
+        var ret := new string
+        @ret := s
+        return ret
+    }
+
+    void Print(any a) {
+        if a is int:
+            Std.PrintD(@(a as int))
+        else if a is bool:
+            Std.PrintS("true" if @(a as bool) else "false")
+        else if a is string:
+            Std.PrintS(@(a as string))
+        else if a = null:
+            Std.PrintS("null")
+        else: Std.PrintS("Unprintable type")
+    }
+
     void Main() {
         Vector v
         v.Init()
         for int i := 0 | i < 10 | i++ {
             v.Add(NewInt(i))
         }
+
+        v.Add(NewString("wow"))
+        v.Add(NewString("it"))
+        v.Add(NewString("works!"))
+        
         for int i := 0 | i < v.Size | i++:
-            Std.PrintD(@(v.Get(i) as int))
-        // for int i := 0 | i < v.Size | i++:
-        //     Std.PrintD(@(v.Get(i) as int))
+            Print(v.Get(i))
     }
 }
