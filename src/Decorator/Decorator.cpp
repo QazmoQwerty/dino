@@ -927,7 +927,20 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	}
 
 	if (node->getOperator()._type == OT_AS)
+	{
+		auto exp = decorate(node->getLeft());
+		auto ty = evalType(node->getRight());
+		if (exp->getType()->getExactType() == EXACT_BASIC && ((DST::BasicType*)exp->getType())->getTypeSpecifier()->getInterfaceDecl() &&
+			ty->getExactType() == EXACT_BASIC && ((DST::BasicType*)ty)->getTypeSpecifier()->getTypeDecl())
+		{
+			auto conv = new DST::Conversion(NULL, new DST::PointerType(ty), exp);
+			auto op = new AST::UnaryOperation();
+			op->setPosition(node->getPosition());
+			op->setOperator(OperatorsMap::getOperatorByDefinition(OT_AT).second);
+			return new DST::UnaryOperation(op, conv);
+		}
 		return new DST::Conversion(NULL, evalType(node->getRight()), decorate(node->getLeft()));
+	}
 
 	auto left = decorate(node->getLeft());
 	auto right = decorate(node->getRight());

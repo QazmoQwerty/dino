@@ -834,8 +834,24 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_MEMBER_ACCESS: return codeGenLval((DST::MemberAccess*)node);
         case ET_UNARY_OPERATION: return codeGenLval((DST::UnaryOperation*)node);
         case ET_BINARY_OPERATION: return codeGenLval((DST::BinaryOperation*)node);
+        case ET_CONVERSION: return codeGenLval((DST::Conversion*)node);
         default: throw ErrorReporter::report("unimplemented lval expression type.", ERR_CODEGEN, node->getPosition());
     }
+}
+
+Value *CodeGenerator::codeGenLval(DST::Conversion* node) 
+{
+    auto type = evalType(node->getType());
+    auto exp = codeGenLval(node->getExpression());
+    if (type->getPointerTo() == exp->getType() || type == _interfaceType)
+        return exp;
+    if (type != _interfaceType && exp->getType() == _interfaceType->getPointerTo()) // Interface to non-interface
+    {
+        // TODO - throw exception incase of invalid conversion
+        auto ptr = _builder.CreateGEP(exp, {_builder.getInt32(0), _builder.getInt32(0)}, "accessTmp");
+        return _builder.CreateBitCast(ptr, type->getPointerTo(), "cnvrttmp");
+    }
+    throw "TODO";
 }
 
 Value *CodeGenerator::codeGen(DST::Conversion* node)

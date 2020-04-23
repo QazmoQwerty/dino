@@ -584,9 +584,10 @@ namespace DST
 		Conversion(AST::FunctionCall *base, Type *type, Expression *expression) : _base(base), _expression(expression) { setType(type); }
 		virtual ~Conversion() { if (_base) delete _base; if (_type) delete _type; if(_expression) delete _expression; }
 		void setType(Type *type) { 
-			if (_expression->getType()->getExactType() == EXACT_BASIC && ((DST::BasicType*)_expression->getType())->getTypeSpecifier()->getInterfaceDecl())
-				_type = new DST::PointerType(type);
-			else _type = type; 
+			// if (_expression->getType()->getExactType() == EXACT_BASIC && ((DST::BasicType*)_expression->getType())->getTypeSpecifier()->getInterfaceDecl())
+			// 	_type = new DST::PointerType(type);
+			// else _type = type; 
+			_type = type; 
 		}
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }

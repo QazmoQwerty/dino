@@ -168,6 +168,8 @@ namespace CodeGenerator
     AllocaInst *codeGenLval(DST::VariableDeclaration *node);
     Value *codeGenLval(DST::UnaryOperation* node);
     Value *codeGenLval(DST::BinaryOperation* node);
+    Value *codeGenLval(DST::Conversion* node);
+
 
     Value *codeGen(DST::Node *node);
     Value *codeGen(DST::Statement *node);
