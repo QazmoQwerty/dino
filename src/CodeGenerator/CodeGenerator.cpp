@@ -19,17 +19,7 @@ void CodeGenerator::setup(bool isLib)
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 
     _vtableInterfaceLookupFunc = createVtableInterfaceLookupFunction();
-
-    // auto i64Ty = _builder.getInt64Ty();
-    // auto jmpBufTy = llvm::StructType::create(_context, { i64Ty, i64Ty, i64Ty, i64Ty, i64Ty }, ".jmp_buf_type");
-    // auto nullVal = llvm::Constant::getNullValue(i64Ty);
-    // auto zeroInitVal = llvm::ConstantStruct::get(jmpBufTy, { nullVal, nullVal, nullVal, nullVal, nullVal });
-    // _globJmpBuf = new llvm::GlobalVariable(*_module, jmpBufTy, false, llvm::GlobalVariable::ExternalLinkage, zeroInitVal, ".jmp_buf");
-    // _globCaughtErr = new llvm::GlobalVariable(*_module, _interfaceType, false, llvm::GlobalVariable::PrivateLinkage, 
-                                                    // llvm::Constant::getNullValue(_interfaceType), ".caughtErr");
 }
-
-#include "llvm/MC/MCObjectWriter.h"
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
 {
@@ -46,39 +36,6 @@ void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName)
     llvm::raw_fd_ostream out(fileName, ec, llvm::sys::fs::F_None);
     llvm::WriteBitcodeToFile(_module.get(), out);
 }
-
-// void CodeGenerator::execute(llvm::Function *func)
-// {
-//     // Create Interpreter
-//     llvm::Module *M = _module.get();
-    
-//     std::string errStr;
-//     llvm::ExecutionEngine *EE = llvm::EngineBuilder(std::move(_module)).setErrorStr(&errStr).setEngineKind(llvm::EngineKind::Interpreter).create();
-
-//     if (!EE) {
-//         llvm::errs() << ": Failed to construct ExecutionEngine: " << errStr << "\n";
-//         return;
-//     }
-
-//     llvm::errs() << "We are trying to construct this LLVM module:\n\n---------\n" << *M;
-//     llvm::errs() << "verifying... ";
-//     if (llvm::verifyModule(*M, &llvm::errs())) {
-//         llvm::errs() << ": Error constructing function!\n";
-//         return;
-//     }
-
-//     llvm::errs() << "OK\n";
-//     llvm::errs() << "We just constructed this LLVM module:\n\n---------\n" << *M;
-//     llvm::errs() << "---------\nstarting with Interpreter...\n";
-
-//     std::vector<llvm::GenericValue> noargs;
-    
-//     if (llvm::verifyFunction(*func, &llvm::errs()))
-//         std::cout << "Huh\n";
-//     llvm::GenericValue GV = EE->runFunction(func, noargs);
-
-//     llvm::outs() << "Result: " << GV.IntVal << "\n";
-// }
 
 void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
 {
@@ -318,6 +275,54 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
             throw ErrorReporter::report("Error while generating ir for statementblock", ERR_CODEGEN, node->getPosition());
     }
     return bb;
+}
+
+llvm::Function *CodeGenerator::getNullCheckFunc()
+{
+    static llvm::Function *func = NULL;
+    if (func)
+        return func;
+    
+    auto funcTy = llvm::FunctionType::get(_builder.getVoidTy(), _builder.getInt8PtrTy(), false);
+    func = llvm::Function::Create(funcTy, llvm::Function::ExternalLinkage, ".assertNotNull", _module.get());
+
+    if (_isLib)
+        return func;
+
+    auto savedInsertPoint = _builder.GetInsertBlock();
+    // llvm::errs() << "got here...\n";
+
+    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
+    _builder.SetInsertPoint(bb);
+
+    llvm::Argument *ptr = func->args().begin();
+
+    auto isNull = _builder.CreateIsNull(ptr, "isNull");
+
+    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(_context, "then");
+    llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(_context, "else");
+    _builder.CreateCondBr(isNull, thenBB, elseBB);
+
+    _builder.SetInsertPoint(thenBB);
+
+    auto errAlloc = createCallOrInvoke(getMallocFunc(), { _builder.getInt32(_dataLayout->getTypeAllocSize(_nullPtrErrorTy)) });
+    auto alloca = CreateEntryBlockAlloca(func, _interfaceType, "errAlloc");
+    auto objPtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(0) }, "objPtr");
+    auto vtablePtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(1) }, "vtablePtr");
+    _builder.CreateStore(errAlloc, objPtr);
+    _builder.CreateStore(getVtable(_nullPtrErrorTy), vtablePtr);
+
+    createThrow(_builder.CreateLoad(alloca));
+
+    _builder.CreateBr(elseBB);
+    func->getBasicBlockList().push_back(thenBB);
+
+    _builder.SetInsertPoint(elseBB);
+    _builder.CreateRetVoid();
+    func->getBasicBlockList().push_back(elseBB);
+
+    _builder.SetInsertPoint(savedInsertPoint);
+    return func;
 }
 
 llvm::Function *CodeGenerator::createVtableInterfaceLookupFunction()
@@ -721,37 +726,45 @@ Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
     );
 }
 
-Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
+llvm::Function *CodeGenerator::getMallocFunc()
 {
     static llvm::Function *malloc = NULL;
+    if (malloc == NULL)
+    {
+        auto type = llvm::FunctionType::get(llvm::Type::getInt8Ty(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
+        malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
+    }
+    return malloc;
+}
 
+Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
+{
     switch (node->getOperator()._type)
     {
         case OT_NEW:
         {
-            if (malloc == NULL)
-            {
-                auto type = llvm::FunctionType::get(llvm::Type::getInt8Ty(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
-                malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
-            }
             if (((DST::Type*)node->getExpression())->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getExpression())->getLenExp())
             {
                 auto type = evalType((DST::Type*)node->getExpression());
                 int size = _dataLayout->getTypeAllocSize(evalType(((DST::ArrayType*)node->getExpression())->getElementType()));
                 auto len = codeGen(((DST::ArrayType*)node->getExpression())->getLenExp());
                 auto allocSize = _builder.CreateMul(_builder.getInt32(size), len, "allocSize");
-                return _builder.CreateBitCast( createCallOrInvoke(malloc, { allocSize }), type, "newTmp");
+                return _builder.CreateBitCast( createCallOrInvoke(getMallocFunc(), { allocSize }), type, "newTmp");
             }
             auto type = evalType((DST::Type*)node->getExpression());
             int size = _dataLayout->getTypeAllocSize(type);
-            return _builder.CreateBitCast( createCallOrInvoke(malloc, { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
+            return _builder.CreateBitCast( createCallOrInvoke(getMallocFunc(), { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
         }
         case OT_ADD:
             return codeGen(node->getExpression());
         case OT_SUBTRACT:
             throw ErrorReporter::report("Unimplemented literal type", ERR_CODEGEN, node->getPosition());
         case OT_AT:
-            return _builder.CreateLoad(codeGen(node->getExpression()));
+        {
+            auto val = codeGen(node->getExpression());
+            createCallOrInvoke(getNullCheckFunc(), _builder.CreateBitCast(val, _builder.getInt8PtrTy()));
+            return _builder.CreateLoad(val);
+        }
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
         case OT_LOGICAL_NOT:
@@ -795,6 +808,7 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
     switch (node->getOperator()._type)
     {
         case OT_AT:
+            createCallOrInvoke(getNullCheckFunc(), _builder.CreateBitCast(val, _builder.getInt8PtrTy()));
             return _builder.CreateLoad(val);
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
@@ -1265,11 +1279,31 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     return createCallOrInvoke(funcPtr, args);
 }
 
+Value *CodeGenerator::createThrow(llvm::Value *exceptionVal)
+{
+    static llvm::Function *throwFunc = NULL;
+    static llvm::Function *allocExceptionFunc = NULL;
+
+    if (throwFunc == NULL)
+    {
+        auto throwFuncTy = llvm::FunctionType::get(_builder.getVoidTy(), { _builder.getInt8PtrTy(), _builder.getInt8PtrTy(), _builder.getInt8PtrTy() }, false);
+        throwFunc = llvm::Function::Create(throwFuncTy, llvm::Function::ExternalLinkage, "__cxa_throw", _module.get());
+
+        auto allocExceptionFuncTy = llvm::FunctionType::get(_builder.getInt8PtrTy(), _builder.getInt64Ty(), false);
+        allocExceptionFunc = llvm::Function::Create(allocExceptionFuncTy, llvm::Function::ExternalLinkage, "__cxa_allocate_exception", _module.get());
+    }
+
+    auto alloc = _builder.CreateCall(allocExceptionFunc, _builder.getInt64(_dataLayout->getTypeAllocSize(_builder.getInt8PtrTy())));
+    auto cast = _builder.CreateBitCast(alloc, _interfaceType->getPointerTo());
+    _builder.CreateStore(exceptionVal, cast);
+    auto nullPtr = llvm::ConstantPointerNull::get(_builder.getInt8PtrTy());
+
+    return createCallOrInvoke(throwFunc, { alloc, nullPtr, nullPtr });
+}
+
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
 {
     static llvm::Function *free = NULL;
-    static llvm::Function *throwFunc = NULL;
-    static llvm::Function *allocExceptionFunc = NULL;
 
     switch (node->getOperator()._type)
     {
@@ -1277,6 +1311,8 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             return _builder.CreateBr(_currBreakJmp);
         case OT_CONTINUE:
             return _builder.CreateBr(_currContinueJmp);
+        case OT_THROW: 
+            return createThrow(codeGen(node->getExpression()));
         case OT_RETURN:
         {
             if (node->getExpression() == NULL) 
@@ -1303,36 +1339,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             return _builder.CreateRet(val);
         }
 
-        case OT_THROW:
-        {
-            if (throwFunc == NULL)
-            {
-                auto throwFuncTy = llvm::FunctionType::get(_builder.getVoidTy(), { _builder.getInt8PtrTy(), _builder.getInt8PtrTy(), _builder.getInt8PtrTy() }, false);
-                throwFunc = llvm::Function::Create(throwFuncTy, llvm::Function::ExternalLinkage, "__cxa_throw", _module.get());
-
-                auto allocExceptionFuncTy = llvm::FunctionType::get(_builder.getInt8PtrTy(), _builder.getInt64Ty(), false);
-                allocExceptionFunc = llvm::Function::Create(allocExceptionFuncTy, llvm::Function::ExternalLinkage, "__cxa_allocate_exception", _module.get());
-            }
-
-            auto alloc = _builder.CreateCall(allocExceptionFunc, _builder.getInt64(_dataLayout->getTypeAllocSize(_builder.getInt8PtrTy())));
-            auto cast = _builder.CreateBitCast(alloc, _interfaceType->getPointerTo());
-            _builder.CreateStore(codeGen(node->getExpression()), cast);
-            auto nullPtr = llvm::ConstantPointerNull::get(_builder.getInt8PtrTy());
-
-            return createCallOrInvoke(throwFunc, { alloc, nullPtr, nullPtr });
-
-
-            // if (longJump == NULL)
-            // {
-            //     auto type = llvm::FunctionType::get(_builder.getVoidTy(), _builder.getInt8PtrTy(), false);
-            //     longJump = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "llvm.eh.sjlj.longjmp", _module.get());
-            // }
-
-            // _builder.CreateStore(codeGen(node->getExpression()), _globCaughtErr);
-            // auto cast = _builder.CreateBitCast(_globJmpBuf, _builder.getInt8PtrTy());
-            // return _builder.CreateCall(longJump, {cast, _builder.getInt32(1)});
-            
-        }
+        
 
         case OT_DELETE:
         {
@@ -1579,6 +1586,9 @@ void CodeGenerator::declareType(DST::TypeDeclaration *node)
     typeName += node->getName().to_string();
 
     def->structType = llvm::StructType::create(_context, typeName);
+
+    if (!_nullPtrErrorTy && typeName == "type.Std.NullPointerError")
+        _nullPtrErrorTy = def->structType;
 
     if (!_stringTy && typeName == "type.Std.String")
         _stringTy = def->structType;

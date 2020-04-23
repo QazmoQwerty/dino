@@ -1,4 +1,4 @@
-import "Examples/std"
+import "std2"
 
 namespace Prog {
     type Pair {
@@ -213,30 +213,30 @@ namespace Prog {
         map.Insert("four", NewString("4"))
         map.Insert("five", NewString("5"))
         map.Insert("six", NewString("6"))
-        
-        Std.PrintS(@(map.Search("one") as string))
-        Std.PrintS(@(map.Search("two") as string))
-        Std.PrintS(@(map.Search("three") as string))
-        Std.PrintS(@(map.Search("four") as string))
-        Std.PrintS(@(map.Search("five") as string))
-        Std.PrintS(@(map.Search("six") as string))
 
-        Std.PrintS(@(map.Search("1") as string))
-        Std.PrintS(@(map.Search("2") as string))
-        Std.PrintS(@(map.Search("3") as string))
-        Std.PrintS(@(map.Search("4") as string))
-        Std.PrintS(@(map.Search("5") as string))
-        Std.PrintS(@(map.Search("6") as string))
-        Std.PrintS(@(map.Search("7") as string))
-        Std.PrintS(@(map.Search("8") as string))
-        Std.PrintS(@(map.Search("9") as string))
-        Std.PrintS(@(map.Search("10") as string))
-        Std.PrintS(@(map.Search("11") as string))
-        Std.PrintS(@(map.Search("12") as string))
-        Std.PrintS(@(map.Search("13") as string))
-        Std.PrintS(@(map.Search("14") as string))
-        Std.PrintS(@(map.Search("15") as string))
-        Std.PrintS(@(map.Search("16") as string))
+        Std.PrintSLn(map.Search("one") as string)
+        Std.PrintSLn(map.Search("two") as string)
+        Std.PrintSLn(map.Search("three") as string)
+        Std.PrintSLn(map.Search("four") as string)
+        Std.PrintSLn(map.Search("five") as string)
+        Std.PrintSLn(map.Search("six") as string)
+
+        Std.PrintSLn(map.Search("1") as string)
+        Std.PrintSLn(map.Search("2") as string)
+        Std.PrintSLn(map.Search("3") as string)
+        Std.PrintSLn(map.Search("4") as string)
+        Std.PrintSLn(map.Search("5") as string)
+        Std.PrintSLn(map.Search("6") as string)
+        Std.PrintSLn(map.Search("7") as string)
+        Std.PrintSLn(map.Search("8") as string)
+        Std.PrintSLn(map.Search("9") as string)
+        Std.PrintSLn(map.Search("10") as string)
+        Std.PrintSLn(map.Search("11") as string)
+        Std.PrintSLn(map.Search("12") as string)
+        Std.PrintSLn(map.Search("13") as string)
+        Std.PrintSLn(map.Search("14") as string)
+        Std.PrintSLn(map.Search("15") as string)
+        Std.PrintSLn(map.Search("16") as string)
         map.Clear()
         delete map
     }

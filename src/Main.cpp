@@ -171,6 +171,8 @@ int main(int argc, char *argv[])
 	Decorator::setup(cmd->outputLib);
 	try
 	{
+		if (cmd->verbose)
+			llvm::errs() << "Starting build...\n";
 		AST::Node *ast = Parser::parseFile(cmd->fileName, cmd->showLexerOutput);
 
 		if (cmd->verbose)

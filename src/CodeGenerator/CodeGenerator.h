@@ -16,9 +16,9 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
-#include "llvm/Transforms/InstCombine/InstCombine.h"
-#include "llvm/Transforms/Scalar.h"
-#include "llvm/Transforms/Scalar/GVN.h"
+// #include "llvm/Transforms/InstCombine/InstCombine.h"
+// #include "llvm/Transforms/Scalar.h"
+// #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/IRReader/IRReader.h"
@@ -34,6 +34,7 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/ConstantRange.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/MC/MCObjectWriter.h"
 //#include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 
@@ -71,6 +72,7 @@ namespace CodeGenerator
     static llvm::BasicBlock *_currBreakJmp = NULL;
     static llvm::BasicBlock *_currContinueJmp = NULL;
     static llvm::StructType *_stringTy = NULL;
+    static llvm::StructType *_nullPtrErrorTy = NULL;
     static unordered_map<llvm::Type*, llvm::Value*> _vtables;
 
     typedef struct InterfaceFuncInfo {
@@ -141,6 +143,9 @@ namespace CodeGenerator
     DST::InterfaceDeclaration *getFunctionInterface(DST::InterfaceDeclaration *interfaceDecl, DST::FunctionDeclaration *funcDecl);
 
     llvm::Function *createVtableInterfaceLookupFunction();
+    llvm::Function *getNullCheckFunc();
+    llvm::Function *getMallocFunc();
+    Value *createThrow(llvm::Value *exception);
 
     void declareType(DST::TypeDeclaration *node);
     void declareTypeContent(DST::TypeDeclaration *node);
