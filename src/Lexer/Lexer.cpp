@@ -50,13 +50,23 @@ CharType Lexer::getCharType(unicode_char c)
 	NOTE: Token could be of type "OperatorToken" or "LiteralToken<T>" as well as regular "Token",
 			so make sure to check the _type variable of each token.
 */
-vector<Token*>& Lexer::lex(unicode_string str, string fileName)
+vector<Token*> Lexer::lex(unicode_string str, string fileName)
 {
-	vector<Token*> *tokens = new vector<Token*>();
+	vector<Token*> tokens;
 	unsigned int index = 0, line = 1, pos = 0;
 	while (index < str.length()) 
-		tokens->push_back(getToken(str, index, line, pos, fileName));
-	return *tokens;
+		if (auto tok = getToken(str, index, line, pos, fileName, tokens))
+			tokens.push_back(tok);
+
+	auto eof = new OperatorToken;
+	eof->_data = "EOF";
+	eof->_type = TT_OPERATOR;
+	if (tokens.size() == 0)
+		throw "empty program";
+	eof->_pos = tokens.back()->_pos;
+	eof->_operator = { OT_EOF, unicode_string("EOF"), NON_ASSCOCIATIVE, 0 };
+	tokens.push_back(eof);
+	return tokens;
 }
 
 /*
@@ -65,7 +75,7 @@ vector<Token*>& Lexer::lex(unicode_string str, string fileName)
 	NOTE: "index" and "line" parameters are passed by reference, and are 
 		  changed internally, no need to increment them outside of this function.
 */
-Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int & line, unsigned int & pos, const string fileName)
+Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int & line, unsigned int & pos, const string fileName, vector<Token*>& tokens)
 {
 	Token* token = new struct Token;
 	unicode_char curr = str[index++];
@@ -78,22 +88,19 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 	{
 		case CT_WHITESPACE:
 		{
-			token->_type = TT_WHITESPACE;
-			// token->_pos.line = line;
-			break;
+			delete token;
+			return NULL;
 		}
 
 		case CT_LINE_BREAK:
 		{
 			token->_type = TT_LINE_BREAK;
-			// token->_pos.line = line;
 			break;
 		}
 
 		case CT_NEWLINE:
 		{
 			token->_type = TT_NEWLINE;
-			// token->_pos.line = line;
 			line++;
 			pos = 0;
 			break;
@@ -153,10 +160,17 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 				delete token;
 				token = nullToken;
 			}
-			else
+			else if (OperatorsMap::getWordOperators().count(token->_data))
 			{
-				token->_type = TT_IDENTIFIER;
+				auto ot = new OperatorToken;
+				ot->_data = token->_data;
+				ot->_pos = token->_pos;
+				ot->_type = TT_OPERATOR;
+				ot->_operator = OperatorsMap::getWordOperators().find(ot->_data)->second;
+				delete token;
+				token = ot;
 			}
+			else token->_type = TT_IDENTIFIER;
 			token->_pos.endPos = pos;
 			
 			break;
@@ -227,9 +241,8 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 					line++;
 					pos = 0;
 				}
-				if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)
+				else if (temp->_operator._type == OT_MULTI_LINE_COMMENT_OPEN)
 				{
-					temp->_data = "";
 					while (index + 1 < str.length() && !(str[index] == MULTI_LINE_COMMENT_END_1 && str[index + 1] == MULTI_LINE_COMMENT_END_2))
 					{
 						if (str[index] == '\n')
@@ -242,7 +255,9 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 					}
 					index += 2;
 					pos += 2;
-					temp->_type = TT_MULTI_LINE_COMMENT;
+					delete temp;
+					delete token;
+					return NULL;
 				}
 				delete token;
 				token = temp;
@@ -251,9 +266,43 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 		}
 
 		case CT_UNKNOWN:
-			throw ErrorReporter::report("internal lexer error", ERR_LEXER, token->_pos);
+			throw ErrorReporter::report("Unknown character", ERR_LEXER, token->_pos);
 	}
 	if (pos != 0)
 		token->_pos.endPos = pos;
+
+	if (token->_type == TT_SINGLE_LINE_COMMENT || token->_type == TT_NEWLINE)
+	{
+		bool b = false;
+		if (tokens.size() != 0)
+		{
+			if (tokens.back()->_type == TT_IDENTIFIER || tokens.back()->_type == TT_LITERAL)
+				b = true;
+			else if (tokens.back()->_type == TT_OPERATOR) {
+				switch (((OperatorToken*)tokens.back())->_operator._type)
+				{
+					case OT_RETURN: case OT_BREAK: case OT_CONTINUE: case OT_EXTERN: case OT_INCREMENT: case OT_DECREMENT: 
+					case OT_CURLY_BRACES_CLOSE: case OT_PARENTHESIS_CLOSE: case OT_SQUARE_BRACKETS_CLOSE: case OT_AT:
+						b = true;
+					default: break;
+				}
+			}
+		}
+		if (b)
+		{
+			token->_type = TT_LINE_BREAK;
+			token->_data = "\n";
+		}
+		else {
+			delete token;
+			return NULL;
+		}
+	}
+
+	if (token->_type == TT_LINE_BREAK && (tokens.size() == 0 || tokens.back()->_type == TT_LINE_BREAK))
+	{
+		delete token;
+		return NULL;
+	}
 	return token;
 }
