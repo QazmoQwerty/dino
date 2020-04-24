@@ -38,7 +38,7 @@ typedef struct cmdOptions
 
 void showHelp() 
 {
-	llvm::errs() << "Dino.exe [filepath] [args]\n" 
+	llvm::errs() << "dino [filepath] [args]\n" 
 		<< "    -help (show this help message)\n"
 		<< "    -fmt (format: swaps all operators with their unicode counterparts)\n"
 		<< "    -v (verbose: show ongoing compilation status)\n"
@@ -47,7 +47,7 @@ void showHelp()
 		<< "    -lineAst (show line numbers in the AST and DST files)\n" 
 		<< "    -bc [filepath] (output a .bc file to \"filepath\")\n" 
 		<< "    -ll [filepath] (output a .ll file to \"filepath\")\n"
-		<< "    -o [filepath] (output a .exe file to \"filepath\")\n"
+		<< "    -o [filepath] (output an executable file to \"filepath\")\n"
 		<< "    -lib [dirpath] (build as a library to the directory \"dirpath\")\n"
 		<< "    -O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n\n";
 	exit(0);

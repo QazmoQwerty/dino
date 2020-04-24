@@ -2,22 +2,53 @@
 import "std"
 
 namespace Test {
-    
-    void Main() {
-        a :≡ 20
-        b :≡ true
-        
-        if b: 
-            Std.PrintD(30)
-        else if a = 10: 
-            Std.PrintD(10)
-        else: 
-            Std.PrintD(20)
 
-        (if a = 10:
-            Std.PrintD(10)
-        else:
-            Std.PrintD(20)
-        ) unless b then Std.PrintD(30)
+    bool Foo(int a) {
+        Std.PrintD(a)
+        return a = 2
+    }
+
+    void Main() {
+        a :≡ 0
+        b :≡ 0
+
+        a ≡ if   Foo(1)
+            then 1
+            else if   Foo(2)
+                 then 2
+                 else 3
+
+        b ≡ if Foo(1) then 1 else
+            if Foo(2) then 2 else
+                           3
+
+        
+
+        // if Foo(1) {
+        //     Std.PrintD(10)
+        // }
+        // else if Foo(2) {
+        //     Std.PrintD(20)
+        // }
+        // else: Std.PrintD(200)
+
+        Std.PrintD(a)
+        Std.PrintD(b)
+
+            
+        // } unless true
+
+        // if b: 
+        //     Std.PrintD(30)
+        // else if a = 10: 
+        //     Std.PrintD(10)
+        // else: 
+        //     Std.PrintD(20)
+
+        // (if a = 10:
+        //     Std.PrintD(10)
+        // else:
+        //     Std.PrintD(20)
+        // ) unless b then Std.PrintD(30)
     }
 }

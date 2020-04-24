@@ -96,9 +96,9 @@ AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
 	throw ErrorReporter::report("expected a statement", ERR_PARSER, node->getPosition());
 }
 
-AST::Statement * Parser::parseStatement()
+AST::Statement * Parser::parseStatement(int precedence)
 {
-	return convertToStatement(parse());
+	return convertToStatement(parse(precedence));
 }
 
 AST::Expression * Parser::parseExpression(int precedence)
@@ -320,8 +320,21 @@ AST::Node * Parser::std(Token * token)
 				return node;
 			}
 			case(OT_IF): {
+				auto cond = parseExpression();
+				if (eatOperator(OT_THEN)) {	// conditional expression
+					auto node = new AST::ConditionalExpression();
+					node->setCondition(cond);
+					node->setThenBranch(parseExpression());
+					skipLineBreaks();
+					expectOperator(OT_ELSE);
+					node->setElseBranch(parseExpression());
+					node->setPosition(token->_pos);
+					return node;
+				}
+
+
 				auto node = new AST::IfThenElse();
-				node->setCondition(parseExpression());
+				node->setCondition(cond);
 				node->setThenBranch(parseInnerBlock());
 				bool b = eatLineBreak();
 				if (eatOperator(OT_ELSE)) {
@@ -647,17 +660,17 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		}
 		return varDecl;
 	}
-	if (isOperator(token, OT_IF))
-	{
-		auto node = new AST::ConditionalExpression();
-		node->setThenBranch(convertToExpression(left));
-		node->setCondition(parseExpression());
-		skipLineBreaks();
-		expectOperator(OT_ELSE);
-		node->setElseBranch(parseExpression());
-		node->setPosition(token->_pos);
-		return node;
-	}
+	// if (isOperator(token, OT_IF))
+	// {
+	// 	auto node = new AST::ConditionalExpression();
+	// 	node->setThenBranch(convertToExpression(left));
+	// 	node->setCondition(parseExpression());
+	// 	skipLineBreaks();
+	// 	expectOperator(OT_ELSE);
+	// 	node->setElseBranch(parseExpression());
+	// 	node->setPosition(token->_pos);
+	// 	return node;
+	// }
 	if (isOperator(token, OT_COMMA))
 	{
 		auto list = new AST::ExpressionList();
@@ -688,6 +701,19 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 					node->setThenBranch(parseInnerBlock());
 				else node->setThenBranch(convertToStatementBlock(parseStatement()));
 			else node->setThenBranch(NULL);
+			node->setPosition(token->_pos);
+			return node;
+		}
+		if (ot->_operator._type == OT_IF)
+		{
+			auto node = new AST::IfThenElse();
+			node->setCondition(parseExpression());
+			node->setThenBranch(convertToStatementBlock(left));
+			if (eatOperator(OT_ELSE))
+				if (isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
+					node->setElseBranch(parseInnerBlock());
+				else node->setElseBranch(convertToStatementBlock(parseStatement()));
+			else node->setElseBranch(NULL);
 			node->setPosition(token->_pos);
 			return node;
 		}

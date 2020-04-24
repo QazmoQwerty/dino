@@ -187,7 +187,7 @@ void OperatorsMap::setup()
 	_wordsMap[UTF8("or")]	= { OT_LOGICAL_OR,				UTF8("or"),		LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[UTF8(u8"∨")]		= { OT_LOGICAL_OR,				UTF8(u8"∨"),	LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[UTF8(",")]			= { OT_COMMA,					UTF8(","),		LEFT_TO_RIGHT,		20,		NONE,	NONE };
-	_wordsMap[UTF8("if")]	= { OT_IF,						UTF8("if"),		LEFT_TO_RIGHT,		15,		NONE,	NONE };
+	// _wordsMap[UTF8("if")]	= { OT_IF,						UTF8("if"),		LEFT_TO_RIGHT,		15,		NONE,	NONE };
 	_map[UTF8("::=")]		= { OT_SHORT_VAR_DECL,			UTF8("::="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8(u8":≡")]		= { OT_SHORT_VAR_DECL,			UTF8(u8":≡"),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8(":=")]		= { OT_ASSIGN_EQUAL,			UTF8(":="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
@@ -205,7 +205,8 @@ void OperatorsMap::setup()
 	_map[UTF8("?=")]		= { OT_ASSIGN_BITWISE_OR,		UTF8("?="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8("^=")]		= { OT_ASSIGN_BITWISE_XOR,		UTF8("^="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
 
-	_wordsMap[UTF8("unless")]={ OT_UNLESS,					UTF8("unless"),	LEFT_TO_RIGHT, 		5, 		NONE, 	NONE };
+	_wordsMap[UTF8("unless")]={ OT_UNLESS,					UTF8("unless"),	RIGHT_TO_LEFT, 		5, 		NONE, 	NONE };
+	_wordsMap[UTF8("if")]	= { OT_IF,						UTF8("if"),		RIGHT_TO_LEFT,		5,		NONE,	NONE };
 
 	_map[UTF8(":")]			= { OT_COLON,					UTF8(":"),		LEFT_TO_RIGHT,		NONE,	NONE,	NONE };
 	_map[UTF8("(")]			= { OT_PARENTHESIS_OPEN,		UTF8("("),		LEFT_TO_RIGHT,		150,	150,	150  };
