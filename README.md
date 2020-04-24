@@ -47,7 +47,7 @@ namespace BrainF {
 
     void Interpret(string input) {
         int ptr ≡ 0
-        for int i ≡ 0 | i < input.Size | i++ {
+        for i :≡ 0 | i < input.Size | i++ {
 			switch input.Get(i) {
 				case '>': ptr++
 				case '<': ptr--
@@ -56,7 +56,7 @@ namespace BrainF {
 				case '.': Std.PrintC(tape[ptr])
 				case ',': tape[ptr] ≡ Std.GetChar()
 				case ']': if tape[ptr] ≠ '\0':
-					for int loop ≡ 1 | loop > 0 |:
+					for loop :≡ 1 | loop > 0
 						switch input.Get(i--) {
 							case '[': loop--
 							case ']': loop++
