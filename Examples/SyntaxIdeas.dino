@@ -29,24 +29,56 @@ namespace Ideas {
         a ≡ b ? 1 : 2           // C++
 
 
+        // Switch without the 'case' operator:
+        switch val {
+            'a': return 1
+            'b': return 2
+            'c': return 3
+            default: return 0
+        }
+        // Instead of:
+        switch val {
+            case 'a': return 1
+            case 'b': return 2
+            case 'c': return 3
+            default:  return 0
+        }
+
+        // type switch:
+        switch v :≡ val.type {
+            int:     Std.PrintD(v)
+            bool:    Std.PrintB(v)
+            Foo:     v.Show()
+            default: Std.PrintS("unknown type")
+        }
+
+        // with 'case', withot 'v :≡ ...'
+        switch val.type {
+            case int:   return "int"
+            case bool:  return "bool"
+            case Foo:   return "Foo"
+            default:    return "unknown"
+        }
+
+
         // Linebreak-negator '...'
 
-        a := 1 +
+        a ≡ 1 +
             10 +
             13 +
             14
 
-        a :=   1..
+        a ≡   1..
             + 10..
             + 13..
             + 14
 
-        a :=   1...
+        a ≡   1...
             + 10...
             + 13...
             + 14
 
-        a :=   1…
+        a ≡   1…
             + 10…
             + 13…
             + 14
@@ -68,9 +100,14 @@ namespace Ideas {
     }
 
     void Print(any obj) {
-        switch a as obj.type {
-            case int: Std.PrintD(a)
-            case string: Std.PrintS(a)
+        switch t as obj.type {
+            case int: Std.PrintD(t)
+            case string: Std.PrintS(t)
+        }
+
+        switch t :≡ obj.type {
+            int:    Std.PrintD(t)
+            string: Std.PrintS(t)
         }
     }
 
@@ -109,7 +146,7 @@ namespace Ideas {
             // constructor with two parameters
         }
 
-        Bar(int a, int b) { this.a := a | this.b := b }
+        Bar(int a, int b) { this.a ≡ a | this.b ≡ b }
     } 
 
     (Bar, Bar) Ex1(int a, int b) {

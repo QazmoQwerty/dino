@@ -61,6 +61,13 @@ AST::ExpressionList * Parser::expectIdentifierList()
 	return l;
 }
 
+AST::Identifier * Parser::convertToIdentifier(AST::Node * node, string errMsg)
+{
+	if (node != nullptr && node->isExpression() && dynamic_cast<AST::Expression*>(node)->getExpressionType() == ET_IDENTIFIER)
+		return dynamic_cast<AST::Identifier*>(node);
+	throw ErrorReporter::report(errMsg, ERR_PARSER, node->getPosition());
+}
+
 AST::Expression * Parser::convertToExpression(AST::Node * node)
 {
 	if (node == nullptr || node->isExpression())
@@ -562,7 +569,7 @@ AST::Node * Parser::nud(Token * token)
 		op->setExpression(parseExpression(leftPrecedence(ot, PREFIX)));
 		return op;
 	}
-	throw ErrorReporter::report("nud couldn't find an option", ERR_PARSER, token->_pos);
+	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ERR_PARSER, token->_pos);
 }
 
 AST::Node * Parser::led(AST::Node * left, Token * token)
@@ -571,6 +578,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 	{
 		auto varDecl = new AST::VariableDeclaration();
 		varDecl->setPosition(token->_pos);
+		varDecl->getPosition().startPos = left->getPosition().startPos;
 		varDecl->setType(convertToExpression(left));
 		varDecl->setVarId(token->_data);
 
@@ -658,6 +666,22 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		}
 		if (OperatorsMap::isAssignment(ot->_operator._type))
 		{
+			if (ot->_operator._type == OT_SHORT_VAR_DECL)
+			{
+				auto ident = convertToIdentifier(left, "left of short variable declaration must be an identifier");
+				auto varDecl = new AST::VariableDeclaration();
+				varDecl->setType(new AST::Identifier(unicode_string("var")));
+				varDecl->setVarId(ident->getVarId());
+
+				auto op = new AST::Assignment();
+				op->setOperator(OperatorsMap::getOperatorByDefinition(OT_ASSIGN_EQUAL).second);
+				op->setLeft(varDecl);
+				op->setRight(parseExpression(leftPrecedence(ot, BINARY)));
+				op->setPosition(token->_pos);
+				return op;
+			}
+			
+
 			auto op = new AST::Assignment();
 			op->setOperator(ot->_operator);
 			op->setLeft(convertToExpression(left));
@@ -695,5 +719,5 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		op->setExpression(convertToExpression(left));
 		return op;
 	}
-	throw ErrorReporter::report("led could not find an option.", ERR_PARSER, token->_pos);
+	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ERR_PARSER, token->_pos);
 }

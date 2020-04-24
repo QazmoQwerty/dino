@@ -30,7 +30,7 @@ namespace AST
 		/* Line the node is on */
 		// int getLine() const { return _line; }
 
-		PositionInfo getPosition() { return _pos; }
+		PositionInfo &getPosition() { return _pos; }
 		void setPosition(PositionInfo pos) { _pos = pos; }
 		
 		/* Returns whether the node represents a Statement */

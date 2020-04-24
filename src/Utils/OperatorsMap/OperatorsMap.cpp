@@ -58,7 +58,7 @@ bool OperatorsMap::isAssignment(OperatorType type)
 {
 	switch (type) 
 	{
-		case OT_ASSIGN_EQUAL: case OT_ASSIGN_ADD: case OT_ASSIGN_DIVIDE: case OT_ASSIGN_MULTIPLY: case OT_ASSIGN_SUBTRACT: case OT_ASSIGN_MODULUS:
+		case OT_ASSIGN_EQUAL: case OT_SHORT_VAR_DECL: case OT_ASSIGN_ADD: case OT_ASSIGN_DIVIDE: case OT_ASSIGN_MULTIPLY: case OT_ASSIGN_SUBTRACT: case OT_ASSIGN_MODULUS:
 		case OT_ASSIGN_BITWISE_AND: case OT_ASSIGN_BITWISE_OR: case OT_ASSIGN_BITWISE_XOR: case OT_ASSIGN_SHIFT_LEFT: case OT_ASSIGN_SHIFT_RIGHT:
 			return true;
 		default: 
@@ -83,7 +83,8 @@ ReturnType OperatorsMap::getReturnType(OperatorType type)
 		case OT_BITWISE_NOT:				//	~
 		case OT_BITWISE_SHIFT_LEFT:			//	<<
 		case OT_BITWISE_SHIFT_RIGHT:		//	>>
-		case OT_ASSIGN_EQUAL:				//	:=
+		case OT_ASSIGN_EQUAL: 				//	:=
+		case OT_SHORT_VAR_DECL:				//	::=
 		case OT_ASSIGN_ADD:					//	+=
 		case OT_ASSIGN_SUBTRACT:			//	-=
 		case OT_ASSIGN_MULTIPLY:			//	*=
@@ -187,6 +188,8 @@ void OperatorsMap::setup()
 	_map[UTF8(u8"∨")]		= { OT_LOGICAL_OR,				UTF8(u8"∨"),	LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[UTF8(",")]			= { OT_COMMA,					UTF8(","),		LEFT_TO_RIGHT,		20,		NONE,	NONE };
 	_wordsMap[UTF8("if")]	= { OT_IF,						UTF8("if"),		LEFT_TO_RIGHT,		15,		NONE,	NONE };
+	_map[UTF8("::=")]		= { OT_SHORT_VAR_DECL,			UTF8("::="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8(u8":≡")]		= { OT_SHORT_VAR_DECL,			UTF8(u8":≡"),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8(":=")]		= { OT_ASSIGN_EQUAL,			UTF8(":="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8(u8"≡")]		= { OT_ASSIGN_EQUAL,			UTF8(u8"≡"),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8("+=")]		= { OT_ASSIGN_ADD,				UTF8("+="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
@@ -218,6 +221,9 @@ void OperatorsMap::setup()
 	_map[UTF8("\\")]		= { OT_DOUBLE_QUOTE,				UTF8("\""),	NON_PARSER };
 	_map[UTF8("'")]			= { OT_SINGLE_QUOTE,				UTF8("'"),	NON_PARSER };
 	_map[UTF8("..")]		= { OT_IGNORE_LINEBREAK,			UTF8(".."),	NON_PARSER };
+
+	// Unused operators:
+	_map[UTF8("::")]		= { OT_UNKNOWN,						UTF8("::"),	NON_PARSER };
 
 	// Word operators:
 	_wordsMap[UTF8("while")]		= { OT_WHILE,		UTF8("while"),		KEYWORD };
