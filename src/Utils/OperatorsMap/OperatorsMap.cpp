@@ -23,7 +23,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 	switch (type) 
 	{
 		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT: case OT_INCREMENT: case OT_DECREMENT: case OT_PARENTHESIS_OPEN: case OT_TRY: case OT_CATCH:
-		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_IS: case OT_AS: case OT_FOR: case OT_RETURN: case OT_THROW:
+		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: /*case OT_ELSE:*/ case OT_UNLESS: case OT_IS: case OT_AS: case OT_FOR: case OT_RETURN: case OT_THROW:
 		case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_EXTERN:
 			return true;
 		default: 
@@ -46,7 +46,7 @@ bool OperatorsMap::isKeyword(Operator op)
 {
 	switch (op._type) 
 	{
-		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_UNLESS: case OT_EXTERN: case OT_TRY: case OT_CATCH:
+		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_THEN: case OT_UNLESS: case OT_EXTERN: case OT_TRY: case OT_CATCH:
 		case OT_RETURN: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_GET: case OT_SET: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_THROW:
 			return true;
 		default: 
@@ -58,7 +58,7 @@ bool OperatorsMap::isAssignment(OperatorType type)
 {
 	switch (type) 
 	{
-		case OT_ASSIGN_EQUAL: case OT_ASSIGN_ADD: case OT_ASSIGN_DIVIDE: case OT_ASSIGN_MULTIPLY: case OT_ASSIGN_SUBTRACT: case OT_ASSIGN_MODULUS:
+		case OT_ASSIGN_EQUAL: case OT_SHORT_VAR_DECL: case OT_ASSIGN_ADD: case OT_ASSIGN_DIVIDE: case OT_ASSIGN_MULTIPLY: case OT_ASSIGN_SUBTRACT: case OT_ASSIGN_MODULUS:
 		case OT_ASSIGN_BITWISE_AND: case OT_ASSIGN_BITWISE_OR: case OT_ASSIGN_BITWISE_XOR: case OT_ASSIGN_SHIFT_LEFT: case OT_ASSIGN_SHIFT_RIGHT:
 			return true;
 		default: 
@@ -83,7 +83,8 @@ ReturnType OperatorsMap::getReturnType(OperatorType type)
 		case OT_BITWISE_NOT:				//	~
 		case OT_BITWISE_SHIFT_LEFT:			//	<<
 		case OT_BITWISE_SHIFT_RIGHT:		//	>>
-		case OT_ASSIGN_EQUAL:				//	:=
+		case OT_ASSIGN_EQUAL: 				//	:=
+		case OT_SHORT_VAR_DECL:				//	::=
 		case OT_ASSIGN_ADD:					//	+=
 		case OT_ASSIGN_SUBTRACT:			//	-=
 		case OT_ASSIGN_MULTIPLY:			//	*=
@@ -186,7 +187,9 @@ void OperatorsMap::setup()
 	_wordsMap[UTF8("or")]	= { OT_LOGICAL_OR,				UTF8("or"),		LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[UTF8(u8"∨")]		= { OT_LOGICAL_OR,				UTF8(u8"∨"),	LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[UTF8(",")]			= { OT_COMMA,					UTF8(","),		LEFT_TO_RIGHT,		20,		NONE,	NONE };
-	_wordsMap[UTF8("if")]	= { OT_IF,						UTF8("if"),		LEFT_TO_RIGHT,		15,		NONE,	NONE };
+	// _wordsMap[UTF8("if")]	= { OT_IF,						UTF8("if"),		LEFT_TO_RIGHT,		15,		NONE,	NONE };
+	_map[UTF8("::=")]		= { OT_SHORT_VAR_DECL,			UTF8("::="),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
+	_map[UTF8(u8":≡")]		= { OT_SHORT_VAR_DECL,			UTF8(u8":≡"),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8(":=")]		= { OT_ASSIGN_EQUAL,			UTF8(":="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8(u8"≡")]		= { OT_ASSIGN_EQUAL,			UTF8(u8"≡"),	RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8("+=")]		= { OT_ASSIGN_ADD,				UTF8("+="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
@@ -201,6 +204,10 @@ void OperatorsMap::setup()
 	_map[UTF8("&=")]		= { OT_ASSIGN_BITWISE_AND,		UTF8("&="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8("?=")]		= { OT_ASSIGN_BITWISE_OR,		UTF8("?="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
 	_map[UTF8("^=")]		= { OT_ASSIGN_BITWISE_XOR,		UTF8("^="),		RIGHT_TO_LEFT,		10,		NONE,	NONE };
+
+	_wordsMap[UTF8("unless")]={ OT_UNLESS,					UTF8("unless"),	RIGHT_TO_LEFT, 		5, 		NONE, 	NONE };
+	_wordsMap[UTF8("if")]	= { OT_IF,						UTF8("if"),		RIGHT_TO_LEFT,		5,		NONE,	NONE };
+
 	_map[UTF8(":")]			= { OT_COLON,					UTF8(":"),		LEFT_TO_RIGHT,		NONE,	NONE,	NONE };
 	_map[UTF8("(")]			= { OT_PARENTHESIS_OPEN,		UTF8("("),		LEFT_TO_RIGHT,		150,	150,	150  };
 	_map[UTF8(")")]			= { OT_PARENTHESIS_CLOSE,		UTF8(")"),		LEFT_TO_RIGHT,		0,		0,		0	 };
@@ -219,6 +226,9 @@ void OperatorsMap::setup()
 	_map[UTF8("'")]			= { OT_SINGLE_QUOTE,				UTF8("'"),	NON_PARSER };
 	_map[UTF8("..")]		= { OT_IGNORE_LINEBREAK,			UTF8(".."),	NON_PARSER };
 
+	// Unused operators:
+	_map[UTF8("::")]		= { OT_UNKNOWN,						UTF8("::"),	NON_PARSER };
+
 	// Word operators:
 	_wordsMap[UTF8("while")]		= { OT_WHILE,		UTF8("while"),		KEYWORD };
 	_wordsMap[UTF8("for")]			= { OT_FOR,			UTF8("for"),		KEYWORD };
@@ -229,7 +239,8 @@ void OperatorsMap::setup()
 	_wordsMap[UTF8("else")]			= { OT_ELSE,		UTF8("else"),		KEYWORD };
 	_wordsMap[UTF8("try")]			= { OT_TRY,			UTF8("try"),		KEYWORD };
 	_wordsMap[UTF8("catch")]		= { OT_CATCH,		UTF8("catch"),		KEYWORD };
-	_wordsMap[UTF8("unless")]		= { OT_UNLESS,		UTF8("unless"),		KEYWORD };
+	// _wordsMap[UTF8("unless")]		= { OT_UNLESS,		UTF8("unless"),		KEYWORD };
+	_wordsMap[UTF8("then")]			= { OT_THEN,		UTF8("then"),		KEYWORD };
 	_wordsMap[UTF8("return")]		= { OT_RETURN,		UTF8("return"),		KEYWORD };
 	_wordsMap[UTF8("throw")]		= { OT_THROW,		UTF8("throw"),		KEYWORD };
 	_wordsMap[UTF8("get")]			= { OT_GET,			UTF8("get"),		KEYWORD };

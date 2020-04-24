@@ -71,7 +71,7 @@ enum OperatorType
 	OT_EXPONENTIATION,				//	^^
 
 	// Relational Operators:
-	OT_EQUAL,						//	==
+	OT_EQUAL,						//	=
 	OT_NOT_EQUAL,					//	!=
 	OT_GREATER,						//	>
 	OT_SMALLER,						//	<
@@ -92,7 +92,8 @@ enum OperatorType
 	OT_LOGICAL_NOT,					//	!
 					
 	// Assignment Operators:
-	OT_ASSIGN_EQUAL,				//	=
+	OT_ASSIGN_EQUAL,				//	:=
+	OT_SHORT_VAR_DECL,				//	::=
 	OT_ASSIGN_ADD,					//	+=
 	OT_ASSIGN_SUBTRACT,				//	-=
 	OT_ASSIGN_MULTIPLY,				//	*=
@@ -128,6 +129,7 @@ enum OperatorType
 	OT_IS,
 	OT_AS,
 	OT_RETURN,
+	OT_THEN,
 	OT_TRY,
 	OT_CATCH,
 	OT_THROW,

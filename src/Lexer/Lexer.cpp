@@ -307,17 +307,33 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 		return NULL;
 	}
 
-	if (token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == OT_IGNORE_LINEBREAK)
+	if (token->_type == TT_OPERATOR)
 	{
-		ignoreLineBreak = true;
-		if (tokens.size() != 0 && tokens.back()->_type == TT_LINE_BREAK)
+		switch (((OperatorToken*)token)->_operator._type) 
 		{
-			delete tokens.back();
-			tokens.pop_back();
+			case OT_IGNORE_LINEBREAK:
+				ignoreLineBreak = true;
+				if (tokens.size() != 0 && tokens.back()->_type == TT_LINE_BREAK)
+				{
+					delete tokens.back();
+					tokens.pop_back();
+				}
+				delete token;
+				return NULL;
+			case OT_THEN: case OT_LOGICAL_AND: case OT_LOGICAL_OR:
+				if (tokens.size() != 0 && tokens.back()->_type == TT_LINE_BREAK)
+				{
+					delete tokens.back();
+					tokens.pop_back();
+				}
+				ignoreLineBreak = false;
+				break;
+			default: 
+				ignoreLineBreak = false; 
+				break;
 		}
-		delete token;
-		return NULL;
 	}
 	else ignoreLineBreak = false;
+
 	return token;
 }

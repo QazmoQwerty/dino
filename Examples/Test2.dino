@@ -1,38 +1,54 @@
-import "Examples/std"
-// import "std"
+// import "Examples/std"
+import "std"
 
 namespace Test {
-    void Print(any a) {
-        if a is int:
-            Std.PrintD(@(a as int))
-        else if a is Foo:
-            (a as Foo).Show()
-        else if a is bool:
-            Std.PrintS("true" if @(a as bool) else "false")
-        else if a = null:
-            Std.PrintS("null")
-        // FIXME: "is null"
-        else: Std.PrintS("??")
-    }
 
-    type Foo {
-        void Show(): Std.PrintS("FOO!")
+    bool Foo(int a) {
+        Std.PrintD(a)
+        return a = 2
     }
-
-    any AA(): return null
 
     void Main() {
-        int i := 10
-        Foo f
-        bool c
-        Print(&c)
-        any a := null
-        any b := new int
-        if a = b:
-            Std.PrintS("aa")
-        if a = null:
-            Std.PrintS("bb")
-        Print(a)
-    }
+        a :≡ 0
+        b :≡ 0
 
+        a ≡ if   Foo(1)
+            then 1
+            else if   Foo(2)
+                 then 2
+                 else 3
+
+        b ≡ if Foo(1) then 1 else
+            if Foo(2) then 2 else
+                           3
+
+        
+
+        // if Foo(1) {
+        //     Std.PrintD(10)
+        // }
+        // else if Foo(2) {
+        //     Std.PrintD(20)
+        // }
+        // else: Std.PrintD(200)
+
+        Std.PrintD(a)
+        Std.PrintD(b)
+
+            
+        // } unless true
+
+        // if b: 
+        //     Std.PrintD(30)
+        // else if a = 10: 
+        //     Std.PrintD(10)
+        // else: 
+        //     Std.PrintD(20)
+
+        // (if a = 10:
+        //     Std.PrintD(10)
+        // else:
+        //     Std.PrintD(20)
+        // ) unless b then Std.PrintD(30)
+    }
 }

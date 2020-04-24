@@ -7,16 +7,16 @@ See the [language specification](https://docs.google.com/document/d/11jGM8cC0KQR
 
 ### No Semicolons
 
-```python
+```
 foo.Foo()
-a() | b()  # the line break operator is '|'.
+a() | b()  // the line break operator is '|'.
 ```
 
 The most important thing in a language, really.
 
 ### Unicode Operators
 
-```python
+```
 if b ≠ 0 {
     a ≡ b
 }
@@ -26,10 +26,24 @@ The IDE will make entering them convenient, I promise!
 
 ### And a bunch of Syntatic Sugar
 
-```perl
-# unless - equivalent to "if not":
-unless a: # Use ':' rather than braces if a block only has one statement
+```
+// unless - equivalent to "if not":
+unless a: // Use ':' rather than braces if a block only has one statement
     return 10
+
+// postfix conditionals
+break if a = 10
+
+// Shorthand variable declarations
+int a ≡ 1
+var a ≡ 1
+a :≡ 1
+
+// easy type checks and conversions
+if a is int {
+	i :≡ a as int
+	// Do stuff with integers...
+}
 ```
 
 ## Example program
@@ -47,7 +61,7 @@ namespace BrainF {
 
     void Interpret(string input) {
         int ptr ≡ 0
-        for int i ≡ 0 | i < input.Size | i++ {
+        for i :≡ 0 | i < input.Size | i++ {
 			switch input.Get(i) {
 				case '>': ptr++
 				case '<': ptr--
@@ -56,7 +70,7 @@ namespace BrainF {
 				case '.': Std.PrintC(tape[ptr])
 				case ',': tape[ptr] ≡ Std.GetChar()
 				case ']': if tape[ptr] ≠ '\0':
-					for int loop ≡ 1 | loop > 0 |:
+					for loop :≡ 1 | loop > 0
 						switch input.Get(i--) {
 							case '[': loop--
 							case ']': loop++
