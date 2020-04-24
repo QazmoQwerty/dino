@@ -5,6 +5,19 @@ namespace Test {
     
     void Main() {
         a :≡ 20
-        Std.PrintD(a)
+        b :≡ true
+        
+        if b: 
+            Std.PrintD(30)
+        else if a = 10: 
+            Std.PrintD(10)
+        else: 
+            Std.PrintD(20)
+
+        (if a = 10:
+            Std.PrintD(10)
+        else:
+            Std.PrintD(20)
+        ) unless b then Std.PrintD(30)
     }
 }

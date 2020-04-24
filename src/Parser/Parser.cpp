@@ -82,6 +82,20 @@ AST::Statement * Parser::convertToStatement(AST::Node * node)
 	throw ErrorReporter::report("expected a statement", ERR_PARSER, node->getPosition());
 }
 
+AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
+{
+	if (node == nullptr || node->isStatement())
+	{
+		auto stmnt = dynamic_cast<AST::Statement*>(node);
+		if (stmnt->getStatementType() == ST_STATEMENT_BLOCK)
+			return (AST::StatementBlock*)stmnt;
+		auto bl = new AST::StatementBlock();
+		bl->addStatement(stmnt);
+		return bl;
+	}
+	throw ErrorReporter::report("expected a statement", ERR_PARSER, node->getPosition());
+}
+
 AST::Statement * Parser::parseStatement()
 {
 	return convertToStatement(parse());
@@ -663,6 +677,19 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			expectOperator(OT_PARENTHESIS_CLOSE);
 			funcCall->setPosition(token->_pos);
 			return funcCall;
+		}
+		if (ot->_operator._type == OT_UNLESS)
+		{
+			auto node = new AST::IfThenElse();
+			node->setCondition(parseExpression());
+			node->setElseBranch(convertToStatementBlock(left));
+			if (eatOperator(OT_THEN))
+				if (isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
+					node->setThenBranch(parseInnerBlock());
+				else node->setThenBranch(convertToStatementBlock(parseStatement()));
+			else node->setThenBranch(NULL);
+			node->setPosition(token->_pos);
+			return node;
 		}
 		if (OperatorsMap::isAssignment(ot->_operator._type))
 		{

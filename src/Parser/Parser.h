@@ -43,6 +43,7 @@ public:
 
 	AST::Expression* convertToExpression(AST::Node* node);
 	AST::Statement* convertToStatement(AST::Node* node);
+	AST::StatementBlock* convertToStatementBlock(AST::Node* node);
 	AST::Identifier* convertToIdentifier(AST::Node * node, string errMsg = "expected an identifier");
 
 	AST::Statement* parseStatement();

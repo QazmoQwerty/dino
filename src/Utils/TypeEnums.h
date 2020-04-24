@@ -129,6 +129,7 @@ enum OperatorType
 	OT_IS,
 	OT_AS,
 	OT_RETURN,
+	OT_THEN,
 	OT_TRY,
 	OT_CATCH,
 	OT_THROW,
