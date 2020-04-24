@@ -7,16 +7,16 @@ See the [language specification](https://docs.google.com/document/d/11jGM8cC0KQR
 
 ### No Semicolons
 
-```python
+```
 foo.Foo()
-a() | b()  # the line break operator is '|'.
+a() | b()  // the line break operator is '|'.
 ```
 
 The most important thing in a language, really.
 
 ### Unicode Operators
 
-```python
+```
 if b ≠ 0 {
     a ≡ b
 }
@@ -26,10 +26,24 @@ The IDE will make entering them convenient, I promise!
 
 ### And a bunch of Syntatic Sugar
 
-```perl
-# unless - equivalent to "if not":
-unless a: # Use ':' rather than braces if a block only has one statement
+```
+// unless - equivalent to "if not":
+unless a: // Use ':' rather than braces if a block only has one statement
     return 10
+
+// postfix conditionals
+break if a = 10
+
+// Shorthand variable declarations
+int a ≡ 1
+var a ≡ 1
+a :≡ 1
+
+// easy type checks and conversions
+if a is int {
+	i :≡ a as int
+	// Do stuff with integers...
+}
 ```
 
 ## Example program
