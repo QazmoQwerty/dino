@@ -2380,60 +2380,6 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     }
 
     return catchBB;
-
-    // static llvm::Function *setJmpFunc = NULL;
-
-    // if (setJmpFunc == NULL)
-    // {
-    //     auto type = llvm::FunctionType::get(_builder.getInt32Ty(), _builder.getInt8PtrTy(), false);
-    //     setJmpFunc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "llvm.eh.sjlj.setjmp", _module.get());
-    // }
-
-    // auto jmpBufVal = _builder.CreateLoad(_globJmpBuf);
-
-    // llvm::BasicBlock *tryBB = llvm::BasicBlock::Create(_context, "try");
-    // llvm::BasicBlock *catchBB = llvm::BasicBlock::Create(_context, "catch");
-    // llvm::BasicBlock *mergeBB = NULL;
-    // if (!(node->getTryBlock()->hasReturn() && node->getCatchBlock()->hasReturn()))
-    //     mergeBB = llvm::BasicBlock::Create(_context, "tryCont");    // No need to create a continue branch if it's unreachable
-
-    // auto val = _builder.CreateCall(setJmpFunc,  _builder.CreateBitCast(_globJmpBuf, _builder.getInt8PtrTy()));
-    // auto cond = _builder.CreateICmpEQ(val, _builder.getInt32(0));
-    // _builder.CreateCondBr(cond, tryBB, catchBB);
-
-    // auto parent = getParentFunction();
-
-    // parent->getBasicBlockList().push_back(tryBB);
-    // _builder.SetInsertPoint(tryBB);
-    // for (auto i : node->getTryBlock()->getStatements()) 
-    //     if (codeGen(i) == nullptr) 
-    //         throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-    // // tryBB->getInstList().insertBefore(NULL);
-    // if (auto tryTerminator = _builder.GetInsertBlock()->getTerminator())
-    //     llvm::StoreInst(jmpBufVal, _globJmpBuf, tryTerminator);
-    // else 
-    // {
-    //     _builder.CreateStore(jmpBufVal, _globJmpBuf);
-    //     _builder.CreateBr(mergeBB);
-    // }
-
-    // parent->getBasicBlockList().push_back(catchBB);
-    // _builder.SetInsertPoint(catchBB);
-    // _builder.CreateStore(jmpBufVal, _globJmpBuf);
-    // for (auto i : node->getCatchBlock()->getStatements()) 
-    //     if (codeGen(i) == nullptr) 
-    //         throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-    
-    
-
-    // if (mergeBB)
-    // {
-    //     if (!_builder.GetInsertBlock()->getTerminator())
-    //         _builder.CreateBr(mergeBB);
-    //     parent->getBasicBlockList().push_back(mergeBB);
-    //     _builder.SetInsertPoint(mergeBB);
-    // }
-    // return val;
 }
 
 llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node) 
