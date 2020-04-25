@@ -8,6 +8,9 @@
 using std::stack;
 using std::unordered_map;
 
+#define ERROR_TYPE_NAME "error"
+#define MAIN_FUNC "Main"
+
 class Decorator
 {
 public:
@@ -52,13 +55,10 @@ private:
 	// ExpressionStatements
 	static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
 	static DST::Assignment *decorate(AST::Assignment *node);
-	
-
 	static DST::TypeSpecifierType *getPrimitiveType(std::string name);
 	static DST::Type *evalType(AST::Expression *node);
 
 	static bool isCondition(DST::Expression *node);
-	//static bool isBool(DST::Type *type);
 
 	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
 	static vector<DST::NamespaceDeclaration*> _currentNamespace;
@@ -67,7 +67,7 @@ private:
 	static DST::FunctionDeclaration* _main;
 	static DST::NullType *_nullType;
 	static DST::UnknownType *_unknownType;
-	//static unordered_map<unicode_string, DST::TypeDeclaration*, UnicodeHasherFunction> _types;
+	static DST::NamespaceDeclaration *_universalNs;
 	static vector<DST::Node*> _toDelete;
 	static bool _isLibrary;
 	static unsigned _loopCount;
