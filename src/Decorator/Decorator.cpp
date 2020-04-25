@@ -519,10 +519,6 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 			throw ErrorReporter::report("expected a statement", ERR_DECORATOR, node->getPosition());
 		return dynamic_cast<DST::ExpressionStatement*>(n);
 	}
-	case ST_NAMESPACE_DECLARATION:
-		return decorate(dynamic_cast<AST::NamespaceDeclaration*>(node));
-	case ST_FUNCTION_DECLARATION:
-		return decorate(dynamic_cast<AST::FunctionDeclaration*>(node));
 	case ST_VARIABLE_DECLARATION:
 		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
 	case ST_CONST_DECLARATION:
@@ -531,8 +527,6 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::Assignment*>(node));
 	case ST_STATEMENT_BLOCK:
 		return decorate(dynamic_cast<AST::StatementBlock*>(node));
-	case ST_PROPERTY_DECLARATION:
-		return decorate(dynamic_cast<AST::PropertyDeclaration*>(node));
 	case ST_IF_THEN_ELSE:
 		return decorate(dynamic_cast<AST::IfThenElse*>(node));
 	case ST_SWITCH:
@@ -543,8 +537,6 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 		return decorate(dynamic_cast<AST::WhileLoop*>(node));
 	case ST_UNARY_OPERATION:
 		return decorate(dynamic_cast<AST::UnaryOperationStatement*>(node));
-	case ST_TYPE_DECLARATION:
-		return decorate(dynamic_cast<AST::TypeDeclaration*>(node));
 	case ST_DO_WHILE_LOOP: 
 		return decorate(dynamic_cast<AST::DoWhileLoop*>(node));
 	case ST_INCREMENT:
@@ -562,7 +554,6 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 
 	if (name == unicode_string("var"))
 		return _unknownType;
-
 
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (auto var = _variables[scope][name]) {
@@ -608,48 +599,6 @@ DST::Increment *Decorator::decorate(AST::Increment *node)
 	return new DST::Increment(node, decorate(node->getExpression()), node->isIncrement());
 }
 
-DST::FunctionDeclaration * Decorator::decorate(AST::FunctionDeclaration * node)
-{
-	enterBlock();
-	auto decl = new DST::FunctionDeclaration(node, decorate(node->getVarDecl()));
-	for (auto i : node->getParameters())
-		decl->addParameter(decorate(i));
-
-	auto type = new DST::FunctionType();
-	type->addReturn(decl->getReturnType());
-	for (auto i : decl->getParameters())
-		type->addParameter(i->getType());
-	_variables[currentScope() - 1][decl->getVarDecl()->getVarId()] = type;
-
-	decl->setContent(decorate(node->getContent()));
-	if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
-		throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
-	leaveBlock();
-	return decl;
-}
-
-DST::PropertyDeclaration * Decorator::decorate(AST::PropertyDeclaration * node)
-{
-	unicode_string name = node->getVarDecl()->getVarId();
-	DST::Type* type = evalType(node->getVarDecl()->getVarType());
-	for (int scope = currentScope(); scope >= 0; scope--)
-		if (_variables[scope].count(name))
-			throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
-
-	DST::StatementBlock *get = decorate(node->getGet());
-
-	if (get && !get->hasReturnType(type))
-		throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_DECORATOR, node->getPosition());
-
-	enterBlock();
-	_variables[currentScope()][unicode_string("value")] = type;
-	DST::StatementBlock *set = decorate(node->getSet());
-	leaveBlock();
-
-	_variables[currentScope()][name] = new DST::PropertyType(type, get, set);
-	return new DST::PropertyDeclaration(node, get, set, type);
-}
-
 DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement * node)
 {
 	if (node->getOperator()._type == OT_BREAK && _loopCount == 0)
@@ -657,33 +606,6 @@ DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement 
 	if (node->getOperator()._type == OT_CONTINUE && _loopCount == 0)
 		throw ErrorReporter::report("\"continue\" used outside of loop", ERR_DECORATOR, node->getPosition());
 	return new DST::UnaryOperationStatement(node, decorate(node->getExpression()));
-}
-
-DST::TypeDeclaration * Decorator::decorate(AST::TypeDeclaration * node)
-{
-	enterBlock();
-	auto decl = new DST::TypeDeclaration(node);
-	vector<DST::Statement*> decls;
-
-	for (auto i : node->getVariableDeclarations()) 
-	{
-		auto dec = decorate(i);
-		decl->addDeclaration(dec, _variables[currentScope()][dec->getVarId()]);
-	}
-	for (auto i : node->getFunctionDeclarations()) 
-	{
-		auto dec = decorate(i);
-		decl->addDeclaration(dec, _variables[currentScope()][dec->getVarDecl()->getVarId()]);
-	}
-	for (auto i : node->getPropertyDeclarations())
-	{
-		auto dec = decorate(i);
-		decl->addDeclaration(dec, _variables[currentScope()][dec->getPropId()]);
-	}
-
-	leaveBlock();
-	_variables[currentScope()][decl->getName()] = new DST::TypeSpecifierType(decl);
-	return decl;
 }
 
 DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
@@ -719,8 +641,6 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 
 	return new DST::UnaryOperation(node, val);
 }
-
-//bool Decorator::isBool(DST::Type *type) { return DST::BasicType(getPrimitiveType("bool")).equals(type); }
 
 DST::Expression * Decorator::decorate(AST::ConditionalExpression * node)
 {
@@ -1042,33 +962,6 @@ DST::Expression * Decorator::decorate(AST::ExpressionList * node)
 	}
 
 	return new DST::ExpressionList(node, vec);
-}
-
-DST::NamespaceDeclaration * Decorator::decorate(AST::NamespaceDeclaration * node)
-{
-	auto decl = new DST::NamespaceDeclaration(node);
-	_variables[currentScope()][decl->getName()] = new DST::NamespaceType(decl);
-	enterBlock();
-	for (auto i : node->getStatement()->getStatements())
-	{
-		auto d = decorate(i);
-		unicode_string name;
-		
-		switch (d->getStatementType())
-		{
-		case ST_NAMESPACE_DECLARATION: 	name = ((DST::NamespaceDeclaration*)d)->getName(); break;
-		case ST_PROPERTY_DECLARATION:  	name = ((DST::PropertyDeclaration*)d)->getName(); break;
-		case ST_FUNCTION_DECLARATION:  	name = ((DST::FunctionDeclaration*)d)->getVarDecl()->getVarId(); break;
-		case ST_VARIABLE_DECLARATION:  	name = ((DST::VariableDeclaration*)d)->getVarId(); break;
-		case ST_TYPE_DECLARATION: 		name = ((DST::TypeDeclaration*)d)->getName(); break;
-		default: throw ErrorReporter::report("Expected a declaration", ERR_DECORATOR, d->getPosition());
-		}
-
-		decl->addMember(name, d, _variables[currentScope()][name]);
-	}
-		
-	leaveBlock();
-	return decl;
 }
 
 DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)

@@ -39,7 +39,6 @@ private:
 	static DST::Increment *decorate(AST::Increment *node);
 
 	// Statements
-	static DST::NamespaceDeclaration *decorate(AST::NamespaceDeclaration *node);
 	static DST::StatementBlock *decorate(AST::StatementBlock *node);
 	static DST::IfThenElse *decorate(AST::IfThenElse *node);
 	static DST::SwitchCase *decorate(AST::SwitchCase *node);
@@ -47,10 +46,7 @@ private:
 	static DST::ForLoop *decorate(AST::ForLoop *node);
 	static DST::WhileLoop *decorate(AST::WhileLoop *node);
 	static DST::DoWhileLoop *decorate(AST::DoWhileLoop *node);
-	static DST::FunctionDeclaration *decorate(AST::FunctionDeclaration *node);
-	static DST::PropertyDeclaration * decorate(AST::PropertyDeclaration * node);
 	static DST::UnaryOperationStatement * decorate(AST::UnaryOperationStatement * node);
-	static DST::TypeDeclaration * decorate(AST::TypeDeclaration * node);
 	static DST::ConstDeclaration * decorate(AST::ConstDeclaration *node);
 	
 	// ExpressionStatements
