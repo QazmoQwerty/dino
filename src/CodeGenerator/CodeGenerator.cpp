@@ -17,8 +17,6 @@ void CodeGenerator::setup(bool isLib)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
     _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
-
-    getVtableInterfaceLookupFunction();
 }
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
@@ -102,9 +100,6 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
                 _currentNamespace.pop_back();
                 break;
             }
-            // case ST_TYPE_DECLARATION:
-            //     declareTypeContent((DST::TypeDeclaration*)member);
-            //     break;
             case ST_INTERFACE_DECLARATION:
                 declareInterfaceMembers((DST::InterfaceDeclaration*)member);
                 break;
@@ -222,7 +217,6 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
     switch (node->getStatementType()) 
     {
         case ST_ASSIGNMENT: return codeGen((DST::Assignment*)node);
-        case ST_FUNCTION_DECLARATION: return codeGen((DST::FunctionDeclaration*)node);
         case ST_STATEMENT_BLOCK: return codeGen((DST::StatementBlock*)node);
         case ST_UNARY_OPERATION: return codeGen((DST::UnaryOperationStatement*)node);
         case ST_VARIABLE_DECLARATION: return codeGen((DST::VariableDeclaration*)node);
@@ -2138,58 +2132,6 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         _builder.CreateRetVoid();
     
     llvm::verifyFunction(*func, &llvm::errs());
-}
-
-llvm::Function *CodeGenerator::codeGen(DST::FunctionDeclaration *node)
-{
-    vector<llvm::Type*> types;
-    auto params = node->getParameters();
-    for (auto i : params) {
-        auto ty = evalType(i->getType());
-        if (ty->isVoidTy())
-            throw ErrorReporter::report("Cannot create instance of type \"void\"", ERR_CODEGEN, i->getPosition());
-        types.push_back(ty);
-    }
-    auto returnType = evalType(node->getReturnType());
-    auto funcType = llvm::FunctionType::get(returnType, types, false);
-    auto funcId = node->getVarDecl()->getVarId().to_string();
-    llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, funcId, _module.get());
-
-    // Set names for all arguments.
-    unsigned Idx = 0;
-    for (auto &arg : func->args())
-        arg.setName(params[Idx++]->getVarId().to_string());
-
-    if (node->getContent() == nullptr)
-        return func;
-
-    // Create a new basic block to start insertion into.
-    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
-    _builder.SetInsertPoint(bb);
-
-    // Record the function arguments in the NamedValues map.
-    _namedValues.clear();
-    for (llvm::Argument &arg : func->args())
-    {
-        AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
-        _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-        _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-    }
-
-    for (auto i : node->getContent()->getStatements()) 
-    {
-        auto val = codeGen(i);
-        if (val == nullptr)
-            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-    }
-
-    if (!_builder.GetInsertBlock()->getTerminator())
-        _builder.CreateBr(_builder.GetInsertBlock());
-    
-    if (!llvm::verifyFunction(*func, &llvm::errs()))
-        llvm::errs() << "Function Vertified!\n---------------------------\n";
-
-    return func;
 }
 
 llvm::Function *CodeGenerator::getParentFunction() 
