@@ -32,6 +32,10 @@ public:
 	/* Returns unicode letter in std::string form. */
 	string to_string() const;
 
+	/* 
+		Returns whether character is a utf8 uppercase character.
+		FIXME: currently only checks for values from 'A'-'Z', needs to be updated.
+	*/
 	bool isUpper() { return 'A' <= _val && _val <= 'Z'; }
 
 	/* ----------  Operators ---------- */
@@ -68,6 +72,11 @@ public:
 		NOTE: does not include null-terminator.
 	*/
 	size_t length();
+
+	/* 
+		Number of unicode characters in string.
+		NOTE: does not include null-terminator.
+	*/
 	size_t length() const;
 
 	/* ----------  Operators ---------- */
@@ -93,7 +102,7 @@ private:
 };
 
 /*
-	Class to has unicode_strings and unicode_chars (needed for std::unordered_map).
+	Class to hash unicode_strings and unicode_chars (needed for std::unordered_map).
 */
 class UnicodeHasherFunction {
 public:
