@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 
 		if (cmd->outputExe)
 		{
-			runCmd(string("clang++ -Wno-override-module ") + bcFileName + " -o " + cmd->exeFileName);
+			runCmd(string("clang++ -Wno-override-module -lgc ") + bcFileName + " -o " + cmd->exeFileName);
 			if (cmd->verbose)
 				llvm::errs() << "outputted ELF file\n";
 		}
