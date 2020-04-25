@@ -1,3 +1,7 @@
+/*
+	The Parser gets the output of the Lexer and builds an AST out of it.
+	This parser is a Pratt Parser, a type of parsing introduced by Vaughan Pratt in a 1973 paper.
+*/
 #pragma once
 
 #include <vector>
@@ -25,6 +29,8 @@ class Parser
 {
 public:
 	static AST::StatementBlock * parseFile(string fileName, bool showLexerOutput = false);
+
+private:
 	AST::StatementBlock * includeFile();
 	AST::StatementBlock * importFile(PositionInfo currPos);
 
@@ -52,8 +58,8 @@ public:
 	AST::StatementBlock* parseInnerBlock();
 	int precedence(Token* token, int category);
 	int leftPrecedence(OperatorToken* token, int category);
-private:
-	static set<string> _parsedFiles;
+
+	static set<string> _parsedFiles;	// files which have already been included into the compilation processs
 
 	bool isOperator(Token * token, OperatorType type) { return token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == type; };
 	bool eatOperator(OperatorType type) { if (isOperator(peekToken(), type)) { nextToken(); return true; } return false; }

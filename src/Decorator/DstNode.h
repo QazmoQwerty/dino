@@ -1,3 +1,8 @@
+/*
+	DST = Decorated Syntax Tree.
+	The Decorator outputs a DST, which is similar to an AST, 
+	except it includes type information, as well as some more useful context.
+*/
 #pragma once
 
 #include "../Parser/AstNode.h"
@@ -6,6 +11,9 @@
 
 using std::stack;
 
+/*
+	Decorated Syntax Tree: Abstract Syntax Tree with type info.
+*/
 namespace DST
 {
 	static const size_t UNKNOWN_ARRAY_LENGTH = 0;
@@ -17,6 +25,10 @@ namespace DST
 	class InterfaceDeclaration;
 	extern InterfaceDeclaration *_anyInterface;
 
+	/*
+		Setup some global variables in the namespace.
+		NOTE: function must be called before using any members of this namespace.
+	*/
 	void setup();
 
 	class Node
@@ -118,7 +130,6 @@ namespace DST
 	class Program : public Node 
 	{
 	private:
-		//vector<NamespaceDeclaration*> _namespaces;
 		unordered_map<unicode_string, NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
 		vector<string> _bcFileImports;
 	public:
@@ -128,9 +139,6 @@ namespace DST
 		void addImport(string bcFileName);
 		vector<string> getBcFileImports() { return _bcFileImports; }
 		virtual vector<Node*> getChildren();
-
-		//void addNamespace(NamespaceDeclaration *decl) { _namespaces.push_back(decl); }
-		//vector<NamespaceDeclaration*> getNamespaces() { return _namespaces; }
 
 		void addNamespace(NamespaceDeclaration *decl);
 		NamespaceDeclaration *getNamespace(unicode_string name) { return _namespaces[name]; }
@@ -147,31 +155,85 @@ namespace DST
 		bool _isWritable;
 		bool _isConst;
 	public:
+		/* types are readable, writable, and non-constant by default */
 		Type(AST::Expression *base) : _base(base) { _isReadable = _isWritable = true; _isConst = false; }
 		Type(AST::Expression *base, bool isReadable, bool isWritable) : _base(base) { _isReadable = isReadable;  _isWritable = isWritable; }
 		virtual ~Type() { if (_base) delete _base; }
+		/*
+			The type of the actual type itself is meaningless:
+			For example, the expression 'int' has no meaningful type in dino.
+			This means this function should NEVER be called.
+		*/
 		virtual Type *getType();
+
+		/* get the type of type (pointer, basic, array, etc.) */
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
+
+		/* 
+			In theory, types are equal if they are EXACTLY the same.
+			FIXME - remove this, change the type structure so that each type has a single, unique pointer.
+		*/
 		virtual bool equals(Type *other) = 0;
 		void setNotReadable() { _isReadable = false; }
 		void setNotWritable() { _isWritable = false; }
 		void setConst() { _isConst = true; }
+
+		/* types are readable by default */
 		virtual bool readable() { return _isReadable; }
+
+		/* types are writable by default */
 		virtual bool writeable() { return _isWritable; }
+
+		/* types are non-constant by default */
 		bool isConst() { return _isConst; }
+
+		/* 
+			Taken from the language specification:
+			A value x is assignable to a variable of type T ("x is assignable to T") if one of the following conditions applies:
+			  * x’s type is identical to T.
+			  * x’s type is an interface which implements T.
+			  * T is an interface and x is a pointer to a type which implements T.
+			  * x is the constant ‘null’  and T is a pointer, function, interface, or array.
+			  * T is a setter, which gets a type which x is assignable to.
+		*/
 		virtual bool assignableTo(Type *type) = 0;
+
+		/* currently, only types with a base AST node have a position */
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Examples:
+				int
+				(int, bool)
+				void(int, int)
+				int { get | set }
+				int[20]
+		*/ 
 		virtual string toShortString() = 0;
+
+		/*
+			This is a string to be outputted by AstToFile.h.
+			Use toShortString instead for pretty-printing of types.
+		*/
 		virtual string toString() { return "<Type>"; };
 		virtual vector<Node*> getChildren();
 	};
 
+	/*
+		A placeholder type for variables initialized as 'var'.
+		This type should never make it past decoration into the codeGen phase.
+	*/
 	class UnknownType : public Type
 	{
 	public:
 		UnknownType(AST::Expression *base) : Type(base) {}
 		UnknownType() : Type(NULL) {}
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			In other words, always returns "var".
+		*/ 
 		virtual string toShortString() { return "var"; };
 		virtual bool assignableTo(Type *type) { return false; /* 'var' type is not assignable to anything */ }
 		virtual ExactType getExactType() { return EXACT_UNKNOWN; };
@@ -182,6 +244,9 @@ namespace DST
 	class TypeDeclaration;
 	class InterfaceDeclaration;
 
+	/*
+		Type for identifiers bound to regular types and interfaces.
+	*/
 	class TypeSpecifierType : public Type
 	{
 		private:
@@ -200,11 +265,19 @@ namespace DST
 
 			unicode_string getTypeName();
 			Type *getMemberType(unicode_string name);
+
+			/* 
+				Short string representation of the type, ready to be pretty-printed. 
+				In other words, always returns "typeid".
+			*/ 
 			virtual string toShortString() { return "typeid"; };
 	};
 
 	class NamespaceDeclaration;
 
+	/*
+		Type for identifiers bound to namespaces.
+	*/
 	class NamespaceType : public Type
 	{
 		private:
@@ -216,10 +289,18 @@ namespace DST
 			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
 			NamespaceDeclaration *getNamespaceDecl() { return _decl; }
+
+			/* 
+				Short string representation of the type, ready to be pretty-printed. 
+				Example: "Std"
+			*/ 
 			virtual string toShortString() { return "namespaceType"; };
 			virtual bool assignableTo(Type *type) {  return false; /* namespaces are not assignable */ }
 	};
 	
+	/*
+		Type for identifiers bound to properties.
+	*/
 	class PropertyType : public Type
 	{
 	protected:
@@ -232,14 +313,23 @@ namespace DST
 		virtual ~PropertyType() { if (_return) delete _return; }
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
+
+		/* The actual type the property gets/sets */
 		Type *getReturn() { return _return; }
 
 		ExactType getExactType() { return EXACT_PROPERTY; }
 		virtual bool equals(Type *other);
 
+		/* property is readable if it has a getter */
 		virtual bool readable() { return hasGet(); }
+
+		/* property is writeable if it has a setter */
 		virtual bool writeable() { return hasSet(); }
 
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Example: "int { get | set }"
+		*/ 
 		virtual string toShortString();
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
@@ -257,6 +347,11 @@ namespace DST
 		Type *getPtrType() { return _type; } // returns what type the pointer points to
 		ExactType getExactType() { return EXACT_POINTER; }
 		virtual bool equals(Type *other);
+
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Example: "int@"
+		*/ 
 		virtual string toShortString();
 		virtual vector<Node*> getChildren();
 		virtual string toString() { return "<PointerType>" + toShortString(); };
@@ -270,6 +365,10 @@ namespace DST
 		NullType() : Type(NULL) {}
 		ExactType getExactType() { return EXACT_NULL; }
 		virtual bool equals(Type *other) { return other->equals(this); };
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Always returns "<NullType>"
+		*/ 
 		virtual string toShortString() { return "<NullType>"; };
 		virtual vector<Node*> getChildren() { return {}; };
 		virtual string toString() { return toShortString(); };
@@ -290,26 +389,15 @@ namespace DST
 		ExactType getExactType() { return EXACT_TYPELIST; }
 		virtual bool equals(Type *other);
 
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Example: "(int, bool)"
+		*/ 
 		virtual string toShortString();
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren();
 
-		virtual bool assignableTo(DST::Type *type)
-		{
-			if (!type) 
-				return false;
-			if (type->getExactType() == EXACT_PROPERTY)
-				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-			if (type->getExactType() != EXACT_TYPELIST) 
-				return size() == 1 && _types[0]->assignableTo(type);
-			auto other = ((DST::TypeList*)type);
-			if (other->_types.size() != _types.size())
-				return false;
-			for (unsigned int i = 0; i < _types.size(); i++)
-				if (!_types[i]->assignableTo(other->_types[i]))
-					return false;
-			return true;
-		}
+		virtual bool assignableTo(DST::Type *type);
 	};
 
 	class BasicType : public Type
@@ -331,7 +419,14 @@ namespace DST
 				(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
 		}
 		Type *getMember(unicode_string id);
+
+		// TODO - someone somewhere is calling this instead of getTypeSpecifier(): find it and remove this
 		virtual Type *getType() { return _typeSpec; }
+
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Example: "int"
+		*/ 
 		virtual string toShortString();
 		virtual string toString() { return "<BasicType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -343,7 +438,7 @@ namespace DST
 	class ArrayType : public Type
 	{
 		Type *_valueType;
-		size_t _length;	// size = 0 means size is unknown.
+		size_t _length;			// size = 0 means size is unknown.
 		Expression *_lenExp;	// for stuff like "new int[a]"
 
 	public:
@@ -368,6 +463,10 @@ namespace DST
 		size_t getLength() { return _length; }
 		Type *getElementType() { return _valueType; }
 
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Example: "int[10]"
+		*/ 
 		virtual string toShortString() { return _valueType->toShortString() + "[" + ((_length != DST::UNKNOWN_ARRAY_LENGTH) ? std::to_string(_length) : "") + "]"; };
 		virtual string toString() { return "<ArrayType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -412,6 +511,10 @@ namespace DST
 				_parameters->assignableTo(((DST::FunctionType*)type)->_parameters);
 		}
 
+		/* 
+			Short string representation of the type, ready to be pretty-printed. 
+			Example: "void(int, bool)"
+		*/ 
 		virtual string toShortString();
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren();

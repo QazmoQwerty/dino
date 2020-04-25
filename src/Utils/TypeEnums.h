@@ -164,6 +164,9 @@ enum OperatorType
 	OT_EOF,
 };
 
+/*
+	At which stage was the error found?
+*/
 enum ErrorType
 {
 	ERR_LEXER,
@@ -174,16 +177,7 @@ enum ErrorType
 };
 
 /*
-	Types of exceptions (in all of the project)
-*/
-enum ExceptionType
-{
-	EXT_GENERAL,
-	EXT_LEXER,
-};
-
-/*
-	Types of AST statements 
+	Types of AST/DST statements 
 */
 enum StatementType
 {
@@ -213,7 +207,7 @@ enum StatementType
 };
 
 /*
-	Types of AST expressions
+	Types of AST/DST expressions
 */
 enum ExpressionType
 {
@@ -237,16 +231,19 @@ enum ExpressionType
 	ET_MEMBER_ACCESS,
 };
 
+/*
+	Types of DST::Type-s
+*/
 enum ExactType 
 {
-	EXACT_BASIC,
-	EXACT_ARRAY,
-	EXACT_TYPELIST,
-	EXACT_NULL,
-	EXACT_FUNCTION,
-	EXACT_POINTER,
-	EXACT_PROPERTY,
-	EXACT_SPECIFIER,
-	EXACT_NAMESPACE,
-	EXACT_UNKNOWN,
+	EXACT_BASIC,		// Example: int a
+	EXACT_ARRAY,		// Example: int[] a
+	EXACT_TYPELIST, 	// Example: (int, int) a
+	EXACT_NULL,			// Example: null
+	EXACT_FUNCTION,		// Example: bool(int) a
+	EXACT_POINTER,		// Example: int@ a
+	EXACT_PROPERTY,		// Example: int a { get | set }
+	EXACT_SPECIFIER,	// The type of a specifier (int, bool, etc)
+	EXACT_NAMESPACE,	// Example: namespace a {}
+	EXACT_UNKNOWN,		// Example: var a
 };

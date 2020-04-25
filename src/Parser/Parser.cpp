@@ -1,228 +1,13 @@
+/*
+	This file defines the four core functions of a pratt-parser: 
+		* parse
+		* std
+		* nud
+		* led.
+*/
 #include "Parser.h"
 
-int _lineNum;
-int _index;
-
-set<string> Parser::_parsedFiles;
-
-Token * Parser::getToken(unsigned int index)
-{
-	if (index >= _tokens.size())
-		return NULL;
-	return _tokens[index];
-}
-
-AST::StatementBlock * Parser::parseBlock(OperatorType expected)
-{
-	if (peekToken() == nullptr)
-		return NULL;
-	auto block = new AST::StatementBlock();
-	block->setPosition(peekToken()->_pos);
-	while (peekToken() && !eatOperator(expected))
-	{
-		block->addStatement(convertToStatement(parse()));
-		if (eatOperator(expected)) return block;
-		expectLineBreak();
-	}
-	return block;
-}
-
-void Parser::expectLineBreak()
-{
-	if (!eatLineBreak())
-		throw ErrorReporter::report("expected a line break", ERR_PARSER, peekToken()->_pos);
-}
-
-void Parser::expectOperator(OperatorType ot)
-{
-	if (!eatOperator(ot)) 
-		throw ErrorReporter::report("expected a '" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "'", ERR_PARSER, peekToken()->_pos);
-}
-
-unicode_string Parser::expectIdentifier()
-{
-	if (peekToken()->_type == TT_IDENTIFIER)
-		return nextToken()->_data;
-	else throw ErrorReporter::report("expected an identifier.", ERR_PARSER, peekToken()->_pos);
-}
-
-AST::ExpressionList * Parser::expectIdentifierList()
-{
-	auto l = new AST::ExpressionList();
-	l->setPosition(peekToken()->_pos);
-	do
-	{
-		auto node = parseExpression(OperatorsMap::getOperatorByDefinition(OT_COMMA).second._binaryPrecedence);
-		if (node && (node->getExpressionType() == ET_IDENTIFIER ||
-			(node->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)node)->getOperator()._type == OT_PERIOD)))
-			l->addExpression(node);
-		else throw ErrorReporter::report("Expected an identifier or member access", ERR_PARSER, peekToken()->_pos);
-	} while (eatOperator(OT_COMMA));
-	return l;
-}
-
-AST::Identifier * Parser::convertToIdentifier(AST::Node * node, string errMsg)
-{
-	if (node != nullptr && node->isExpression() && dynamic_cast<AST::Expression*>(node)->getExpressionType() == ET_IDENTIFIER)
-		return dynamic_cast<AST::Identifier*>(node);
-	throw ErrorReporter::report(errMsg, ERR_PARSER, node->getPosition());
-}
-
-AST::Expression * Parser::convertToExpression(AST::Node * node)
-{
-	if (node == nullptr || node->isExpression())
-		return dynamic_cast<AST::Expression*>(node);
-	throw ErrorReporter::report("expected an expression", ERR_PARSER, node->getPosition());
-}
-
-AST::Statement * Parser::convertToStatement(AST::Node * node)
-{
-	if (node == nullptr || node->isStatement())
-		return dynamic_cast<AST::Statement*>(node);
-	throw ErrorReporter::report("expected a statement", ERR_PARSER, node->getPosition());
-}
-
-AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
-{
-	if (node == nullptr || node->isStatement())
-	{
-		auto stmnt = dynamic_cast<AST::Statement*>(node);
-		if (stmnt->getStatementType() == ST_STATEMENT_BLOCK)
-			return (AST::StatementBlock*)stmnt;
-		auto bl = new AST::StatementBlock();
-		bl->addStatement(stmnt);
-		return bl;
-	}
-	throw ErrorReporter::report("expected a statement", ERR_PARSER, node->getPosition());
-}
-
-AST::Statement * Parser::parseStatement(int precedence)
-{
-	return convertToStatement(parse(precedence));
-}
-
-AST::Expression * Parser::parseExpression(int precedence)
-{
-	AST::Node* node = parse(precedence);
-	if (node != nullptr && node->isExpression())
-		return dynamic_cast<AST::Expression*>(node);
-	throw ErrorReporter::report("expected an expression", ERR_PARSER, node ? node->getPosition() : peekToken()->_pos);
-}
-
-AST::Expression * Parser::parseOptionalExpression(int precedence)
-{
-	return convertToExpression(parse(precedence));
-}
-
-AST::StatementBlock * Parser::parseInnerBlock()
-{
-	if (eatOperator(OT_CURLY_BRACES_OPEN))
-		return parseBlock(OT_CURLY_BRACES_CLOSE);
-	else if (eatOperator(OT_COLON))
-	{
-		skipLineBreaks();
-		auto *block = new AST::StatementBlock();
-		block->addStatement(convertToStatement(parse()));
-		return block;
-	}
-	throw ErrorReporter::report("expected a block statement.", ERR_PARSER, peekToken()->_pos);
-}
-
 #define fromCategory(tok, cat) (tok->_type == TT_OPERATOR && precedence(tok, cat) != NONE)
-
-/*
-	Returns the relevant operator precedence from the selected category(s) if token is an operator, otherwise returns NULL.
-*/
-int Parser::precedence(Token * token, int category)
-{
-	if (token->_type == TT_IDENTIFIER)
-		return 135;
-	if (token->_type != TT_OPERATOR)
-		return 0;
-	auto op = ((OperatorToken*)token)->_operator;
-	switch (category) {
-		case(BINARY):	return op._binaryPrecedence;
-		case(PREFIX):	return op._prefixPrecedence;
-		case(POSTFIX):	return op._postfixPrecedence;
-		case(BINARY | POSTFIX):	return op._binaryPrecedence != NONE ? op._binaryPrecedence : op._postfixPrecedence;
-		default:		return 0;
-	}
-	
-}
-
-int Parser::leftPrecedence(OperatorToken * token, int category)
-{
-	int prec = precedence(token, category);
-	if (token->_operator._associativity == RIGHT_TO_LEFT) prec--;
-	return prec;
-}
-
-
-AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
-{
-	if (_parsedFiles.count(fileName))
-		return new AST::StatementBlock();
-	_parsedFiles.insert(fileName);
-	std::ifstream t;
-	try { t = std::ifstream(fileName); }
-	catch (exception e) { std::cout << e.what() << std::endl; exit(0); }
-	std::stringstream buffer;
-	buffer << t.rdbuf();
-	std::string str = buffer.str();
-	auto vec = Lexer::lex(str, fileName);
-	// std::cout << "File: " << fileName << std::endl;
-	// auto vec = Preprocessor::preprocess(lexed);
-	if (showLexerOutput)
-		for (auto i : vec) 
-			printToken(i);
-	Parser p = Parser(vec);
-	auto block = p.parseBlock();
-	// block->setFile(fileName);
-	return block;
-}
-
-
-
-AST::StatementBlock * Parser::importFile(PositionInfo currPos)
-{
-	auto t = nextToken();
-	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType != LT_STRING)
-		throw ErrorReporter::report("Expected a file path", ERR_PARSER, currPos);
-
-	string importPath = ((LiteralToken<string>*)t)->_value;
-	auto dir = opendir(importPath.c_str());
-	if (!dir)
-		throw ErrorReporter::report("Could not open directory \"" + importPath + '\"', ERR_PARSER, currPos);
-	AST::StatementBlock *block = NULL;
-	while (auto ent = readdir(dir))
-	{
-		string fileName(ent->d_name);
-		if (fileName.substr(fileName.find_last_of(".")) == ".dinh")
-		{
-			if (block)
-				block->addStatement(parseFile(importPath + '/' + fileName));
-			else block = parseFile(importPath + '/' + fileName);
-		}
-	}
-	closedir(dir);
-	if (!block)
-		throw ErrorReporter::report("No .dinh files in directory \"" + importPath + '\"', ERR_PARSER, currPos);
-	auto import = new AST::Import(importPath);
-	import->setPosition(currPos);
-	block->addStatement(import);
-	return block;
-}
-
-AST::StatementBlock * Parser::includeFile()
-{
-	auto t = nextToken();
-	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType == LT_STRING)
-	{
-		string fileName = ((LiteralToken<string>*)t)->_value;
-		return parseFile(fileName);
-	}
-	else throw ErrorReporter::report("Expected a file path", ERR_PARSER, peekToken()->_pos);
-}
 
 AST::Node * Parser::parse(int lastPrecedence)
 {
@@ -245,6 +30,7 @@ AST::Node * Parser::parse(int lastPrecedence)
 	return left;
 }
 
+/* Standard-denotation */
 AST::Node * Parser::std(Token * token)
 {
 	if (token->_type == TT_OPERATOR && OperatorsMap::isKeyword(((OperatorToken*)token)->_operator))
@@ -510,6 +296,7 @@ AST::Node * Parser::std(Token * token)
 	return NULL;
 }
 
+/* Null-denotation */
 AST::Node * Parser::nud(Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)
@@ -599,6 +386,7 @@ AST::Node * Parser::nud(Token * token)
 	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ERR_PARSER, token->_pos);
 }
 
+/* Left-denotation */
 AST::Node * Parser::led(AST::Node * left, Token * token)
 {
 	if (token->_type == TT_IDENTIFIER)	// variable declaration
@@ -660,17 +448,6 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		}
 		return varDecl;
 	}
-	// if (isOperator(token, OT_IF))
-	// {
-	// 	auto node = new AST::ConditionalExpression();
-	// 	node->setThenBranch(convertToExpression(left));
-	// 	node->setCondition(parseExpression());
-	// 	skipLineBreaks();
-	// 	expectOperator(OT_ELSE);
-	// 	node->setElseBranch(parseExpression());
-	// 	node->setPosition(token->_pos);
-	// 	return node;
-	// }
 	if (isOperator(token, OT_COMMA))
 	{
 		auto list = new AST::ExpressionList();

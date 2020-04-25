@@ -9,6 +9,10 @@
 using std::stringstream;
 using std::ofstream;
 
+/*
+	Returns a string (graphviz format) representation of an AST.
+	NOTE: The 'showline' option is currently redacted.
+*/
 string astToString(AST::Node* node, bool showLine)
 {
 	static int nullCount = -1;
@@ -35,6 +39,10 @@ string astToString(AST::Node* node, bool showLine)
 	return ss.str();
 }
 
+/*
+	Outputs a .gv (graphviz) representation of an AST to fileName.
+	NOTE: The 'showline' option is currently redacted.
+*/
 void astToFile(string filename, AST::Node* ast, bool showLine)
 {
 	ofstream file;
@@ -49,7 +57,10 @@ void astToFile(string filename, AST::Node* ast, bool showLine)
 
 /****************************************/
 
-
+/*
+	Returns a string (graphviz format) representation of a DST.
+	NOTE: The 'showline' option is currently redacted.
+*/
 string dstToString(DST::Node* node, bool showLine)
 {
 	static int nullCount = -1;
@@ -76,11 +87,15 @@ string dstToString(DST::Node* node, bool showLine)
 	return ss.str();
 }
 
+/*
+	Outputs a .gv (graphviz) representation of a DST to fileName.
+	NOTE: The 'showline' option is currently redacted.
+*/
 void dstToFile(string filename, DST::Node* dst, bool showLine)
 {
 	ofstream file;
 	file.open(filename);
-	//file << utf8::bom;	// make sure output file is utf8 encoded
+	//file << utf8::bom;	// make sure output file is utf8 encoded - needed in windows
 	file << "digraph G {\n";
 	file << dstToString(dst, showLine);
 	file << '}';

@@ -32,14 +32,32 @@ public:
 	/* Funtion returns map with an operator string as the key, and the corresponding OperatorType as the value. */
 	static const unordered_map<unicode_string, Operator, UnicodeHasherFunction>& getWordOperators();
 
+	/* Is the operator a word operator? */
 	static bool isWord(OperatorType type);
+
+	/* Is the operator a unary operator? */
 	static bool isUnary(OperatorType type);
+
+	/* Is the operator a binary operator? */
 	static bool isBinary(OperatorType type);
+
+	/* Is the operator a keyword? */
 	static bool isKeyword(Operator op);
+
+	/* Is the operator an assignment operator? */
 	static bool isAssignment(OperatorType type);
 
+	/*
+		Get output type of an operator. 
+		Options are:
+			RT_BOOLEAN 	- boolean type
+			RT_LEFT 	- left operand's type
+			RT_ARRAY 	- array member's type
+			RT_VOID 	- no type (operator is does not create expressions)
+	*/
 	static ReturnType getReturnType(OperatorType type);
 
+	/* Get a (string, operator) pair corresponding to an OperatorType */
 	static pair<const unicode_string, Operator> getOperatorByDefinition(OperatorType operatorType);
 private:
 	static unordered_map<unicode_string, Operator, UnicodeHasherFunction> _map;

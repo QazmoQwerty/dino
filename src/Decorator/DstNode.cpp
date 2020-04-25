@@ -1,27 +1,13 @@
+/*
+	This file implements the bulk of the DST classes' member functions.
+	For implementations of DST::Type see DstTypes.cpp.
+*/
 #include "DstNode.h"
 
-// DST::InterfaceDeclaration *DST::_anyInterface;
-
-DST::Type * DST::Type::getType()
+void DST::setup()
 {
-	std::cout << "you probably didn't wanna call this func" << std::endl;
-	return typeidTypePtr;
-}
-
-vector<DST::Node*> DST::Type::getChildren()
-{
-	return vector<Node*>();
-}
-
-vector<DST::Node*> DST::BasicType::getChildren()
-{
-	return vector<Node*>();
-}
-
-vector<DST::Node*> DST::Variable::getChildren()
-{
-	vector<Node*> v;
-	return v;
+	typeidTypePtr = NULL;
+	DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
 }
 
 DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
@@ -31,30 +17,6 @@ DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * 
 	if (_right && _right->getType() && !_right->getType()->readable())
 		throw ErrorReporter::report("right value is write-only", ERR_DECORATOR, _left->getPosition());
 };
-
-vector<DST::Node*> DST::BinaryOperation::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_left);
-	v.push_back(_right);
-	return v;
-}
-
-vector<DST::Node*> DST::UnaryOperation::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_expression);
-	return v;
-}
-
-vector<DST::Node*> DST::ConditionalExpression::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_condition);
-	v.push_back(_thenBranch);
-	v.push_back(_elseBranch);
-	return v;
-}
 
 void DST::UnaryOperation::setType()
 {
@@ -90,35 +52,6 @@ void DST::UnaryOperation::setType()
 	}
 }
 
-vector<DST::Node*> DST::MemberAccess::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_left);
-	return v;
-}
-
-vector<DST::Node*> DST::Literal::getChildren()
-{
-	vector<Node*> v;
-	return v;
-}
-
-vector<DST::Node*> DST::ExpressionList::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _expressions)
-		v.push_back(i);
-	return v;
-}
-
-vector<DST::Node*> DST::ArrayLiteral::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _array)
-		v.push_back(i);
-	return v;
-}
-
 bool DST::StatementBlock::hasReturnType(Type * returnType)
 {
 	/*if (this == nullptr)
@@ -148,7 +81,7 @@ bool DST::StatementBlock::hasReturnType(Type * returnType)
 							((DST::UnaryOperationStatement*)i)->setExpression(a);
 							return true;
 						}
-						if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->equals(returnType))
+						if (((DST::UnaryOperationStatement*)i)->getExpression()->getType()->assignableTo(returnType))
 							return true;
 					}
 					std::cout << isVoid << std::endl;
@@ -190,14 +123,6 @@ void DST::StatementBlock::addStatement(DST::Statement *statement)
 		_hasReturn = true;
 }
 
-vector<DST::Node*> DST::StatementBlock::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _statements)
-		v.push_back(i);
-	return v;
-}
-
 void DST::TypeDeclaration::addDeclaration(Statement * decl, Type * type)
 {
 	unicode_string varId;
@@ -235,22 +160,6 @@ bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
 		if (i->implements(inter))
 			return true;
 	return false;
-}
-
-vector<DST::Node*> DST::TypeDeclaration::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _decls)
-		v.push_back(i.second.first);
-	return v;
-}
-
-vector<DST::Node*> DST::NamespaceDeclaration::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _decls)
-		v.push_back(i.second.first);
-	return v;
 }
 
 void DST::NamespaceDeclaration::addMember(unicode_string name, Statement * decl, Type * type)
@@ -317,102 +226,9 @@ DST::Type *DST::InterfaceDeclaration::getMemberType(unicode_string id)
 	return NULL;
 }
 
-vector<DST::Node*> DST::InterfaceDeclaration::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _decls)
-		v.push_back(i.second.first);
-	return v;
-}
-
-vector<DST::Node*> DST::IfThenElse::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_condition);
-	v.push_back(_thenBranch);
-	v.push_back(_elseBranch);
-	return v;
-}
-
-vector<DST::Node*> DST::SwitchCase::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_expression);
-	v.push_back(_default);
-	for (CaseClause i : _cases)
-	{
-		for (auto e : i._expressions)
-		v.push_back(e);
-		v.push_back(i._statement);
-	}
-	return v;
-}
-
-vector<DST::Node*> DST::WhileLoop::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_condition);
-	v.push_back(_statement);
-	return v;
-}
-
-vector<DST::Node*> DST::ForLoop::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_begin);
-	v.push_back(_condition);
-	v.push_back(_increment);
-	v.push_back(_statement);
-	return v;
-}
-
-vector<DST::Node*> DST::UnaryOperationStatement::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_expression);
-	return v;
-}
-
-vector<DST::Node*> DST::ConstDeclaration::getChildren()
-{
-	return { _expression };
-}
-
-vector<DST::Node*> DST::VariableDeclaration::getChildren()
-{
-	vector<Node*> v;
-	return v;
-}
-
-vector<DST::Node*> DST::Assignment::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_left);
-	v.push_back(_right);
-	return v;
-}
-
-vector<DST::Node*> DST::FunctionDeclaration::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_decl);
-	for (auto i : _parameters)
-		v.push_back(i);
-	v.push_back(_content);
-	return v;
-}
-
 DST::Type * DST::FunctionDeclaration::getReturnType()
 {
 	return _decl->getType();
-}
-
-vector<DST::Node*> DST::PropertyDeclaration::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_get);
-	v.push_back(_set);
-	return v;
 }
 
 DST::FunctionCall::FunctionCall(AST::FunctionCall * base, Expression * funcPtr, ExpressionList * arguments) : _base(base)
@@ -421,169 +237,9 @@ DST::FunctionCall::FunctionCall(AST::FunctionCall * base, Expression * funcPtr, 
 	setArguments(arguments);
 }
 
-bool DST::BasicType::assignableTo(DST::Type *type)
-{
-	if (!type)
-		return false;
-	if (type->getExactType() == EXACT_PROPERTY)
-		return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-	if (type->getExactType() != EXACT_BASIC) 
-		return false;
-	auto other = (DST::BasicType*)type;
-	if (!other->_typeSpec) return false;
-	if (_typeSpec->getTypeDecl())
-		return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
-	if (_typeSpec->getInterfaceDecl() && other->_typeSpec->getInterfaceDecl()) 
-		return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
-	return false;
-}
-
-bool DST::NullType::assignableTo(DST::Type *type) 
-{
-	if (!type)
-		return false;
-	switch (type->getExactType()) 
-	{
-		case EXACT_PROPERTY:
-			return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-		case EXACT_BASIC:
-			return ((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl();
-		case EXACT_POINTER: case EXACT_FUNCTION: case EXACT_ARRAY:
-			return true;
-		default: return false;
-	}
-}
-
-bool DST::PointerType::assignableTo(DST::Type *type)
-{
-	if (!type)
-		return false;
-	if (type->getExactType() == EXACT_PROPERTY)
-		return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-	if (type->getExactType() == EXACT_BASIC && _type->getExactType() == EXACT_BASIC && ((DST::BasicType*)_type)->getTypeSpecifier()->getTypeDecl())
-		return ((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl() &&
-				((DST::BasicType*)_type)->getTypeSpecifier()->getTypeDecl()->implements(((DST::BasicType*)type)->getTypeSpecifier()->getInterfaceDecl());
-	return type->getExactType() == EXACT_POINTER && _type->assignableTo(((DST::PointerType*)type)->_type);
-}
-
-vector<DST::Node*> DST::FunctionCall::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_funcPtr);
-	v.push_back(_arguments);
-	return v;
-}
-
-bool DST::FunctionType::equals(Type * other)
-{
-	if (other->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)other)->size() == 1)
-		return equals(((DST::TypeList*)other)->getTypes()[0]);
-	if (other->getExactType() != EXACT_FUNCTION)
-		return false;
-	auto othr = (FunctionType*)other;
-	return _returns->equals(othr->_returns) && _parameters->equals(othr->_parameters);
-}
-
-string DST::FunctionType::toShortString()
-{
-	return _returns->toShortString() + "(" + _parameters->toShortString() + ")";
-}
-
-vector<DST::Node*> DST::FunctionType::getChildren()
-{
-	return vector<Node*>();
-}
-
-void DST::TypeList::addType(Type * type)
-{
-	if (type->getExactType() == EXACT_TYPELIST)
-		for (auto i : ((TypeList*)type)->getTypes())
-			_types.push_back(i);
-	else _types.push_back(type);
-}
-
-bool DST::TypeList::equals(Type * other)
-{
-	// if (other->getExactType() == EXACT_BASIC)
-	// 	return _types.size() == 1 && _types[0]->equals(other);
-	if (_types.size() == 1)
-		return _types[0]->equals(other);
-	if (other->getExactType() != EXACT_TYPELIST)
-		return false;
-	auto othr = (TypeList*)other;
-	if (_types.size() != othr->_types.size())
-		return false;
-	for (unsigned int i = 0; i < _types.size(); i++)
-		if (!_types[i]->equals(othr->_types[i]))
-			return false;
-	return true;
-}
-
 DST::FunctionDeclaration::~FunctionDeclaration() { if (_base) delete _base; if (_decl) delete _decl; if (_content) delete _content; _parameters.clear(); }
 
-string DST::TypeList::toShortString()
-{
-	string str = "(";
-	for (unsigned int i = 0; i < _types.size(); i++)
-	{
-		if (i > 0)
-			str += ", ";
-		str += _types[i]->toShortString();
-	}
-	str += ")";
-	return str;
-}
-
-vector<DST::Node*> DST::TypeList::getChildren()
-{
-	return vector<Node*>();
-}
-
-bool DST::PropertyType::equals(Type * other)
-{
-	return _return->equals(other);
-}
-
-string DST::PropertyType::toShortString()
-{
-	return _return->toShortString() + ((_hasGet && _hasSet) ? "{get|set}" : _hasGet ? "{get}" : "{set}");
-}
-
-void DST::setup()
-{
-	typeidTypePtr = NULL;	// TODO
-	DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
-}
-
-vector<DST::Node*> DST::ArrayType::getChildren()
-{
-	return vector<Node*>();
-}
-
 DST::FunctionLiteral::~FunctionLiteral() { if (_base) delete _base; if (_type) delete _type; if (_content) delete _content; _parameters.clear(); }
-
-vector<DST::Node*> DST::FunctionLiteral::getChildren()
-{
-	vector<Node*> v;
-	for (auto i : _parameters)
-		v.push_back(i);
-	v.push_back(_content);
-	return v;
-}
-
-DST::Type *DST::BasicType::getMember(unicode_string id) 
-{ 
-	return _typeSpec->getMemberType(id); 
-}
-
-unicode_string DST::BasicType::getTypeId() { return _typeSpec->getTypeName(); }
-
-vector<DST::Node*> DST::Conversion::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_expression);
-	return v;
-}
 
 void * DST::Literal::getValue() 
 {
@@ -593,99 +249,6 @@ void * DST::Literal::getValue()
 			return new int((dynamic_cast<AST::Integer*>(_base)->getValue()));
 		default: return NULL;
 	}
-}
-
-DST::TypeSpecifierType::~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; if (_interfaceDecl) delete _interfaceDecl; }
-
-unicode_string DST::TypeSpecifierType::getTypeName()
-{
-	if (_typeDecl) return _typeDecl->getName();
-	if (_interfaceDecl) return _interfaceDecl->getName();
-	return unicode_string();
-}
-
-DST::Type * DST::TypeSpecifierType::getMemberType(unicode_string name)
-{
-	if (_typeDecl) return _typeDecl->getMemberType(name);
-	if (_interfaceDecl) return _interfaceDecl->getMemberType(name);
-	return NULL;
-}
-
-DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }
-
-bool DST::PointerType::equals(Type * other)
-{
-	if (other == nullptr) 
-		return false;
-
-	switch (other->getExactType())
-	{
-		case EXACT_NULL:
-			return true;
-
-		case EXACT_TYPELIST:
-			return equals(((TypeList*)other)->getTypes()[0]);
-		
-		case EXACT_PROPERTY:
-			return equals(((PropertyType*)other)->getReturn());
-		
-		case EXACT_POINTER:
-			if (_type->getExactType() != EXACT_SPECIFIER)
-				return ((PointerType*)other)->_type->equals(_type);
-			else if (auto inter = ((TypeSpecifierType*)(_type))->getInterfaceDecl())
-			{
-				auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type)->getTypeDecl();
-				auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type)->getInterfaceDecl();
-				if (otype)
-					return otype->implements(inter);
-				else if (ointer)
-					return inter->implements(ointer) || ointer->implements(inter);
-				else return false;
-			}
-		default:
-			return false;
-	}
-}
-
-string DST::BasicType::toShortString() 
-{ 
-	if (!_base || _base->getExpressionType() == ET_IDENTIFIER)
-		return getTypeId().to_string(); 
-	else if (_base->getExpressionType() != ET_BINARY_OPERATION || ((AST::BinaryOperation*)_base)->getOperator()._type != OT_PERIOD)
-		throw "internal error in DST::BasicType::toShortString()";
-	stack<AST::Identifier*> ids;
-	auto bo = ((AST::BinaryOperation*)_base);
-	while (bo)
-	{
-		if (auto id = dynamic_cast<AST::Identifier*>(bo->getRight()))
-			ids.push(id);
-		else throw "internal error in DST::BasicType::toShortString()";
-		if (bo->getLeft()->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)_base)->getOperator()._type == OT_PERIOD)
-			bo = (AST::BinaryOperation*)bo->getLeft();
-		else if (auto id = dynamic_cast<AST::Identifier*>(bo->getLeft()))
-			ids.push(id);
-		else throw "internal error in DST::BasicType::toShortString()";
-	}
-	string ret = ids.top()->getVarId().to_string();
-	ids.pop();
-	while (!ids.empty()) 
-	{
-		ret += "." + ids.top()->getVarId().to_string();
-		ids.pop();
-	}
-	return ret;
-}
-
-string DST::PointerType::toShortString()
-{
-	return _type->toShortString() + "@";
-}
-
-vector<DST::Node*> DST::PointerType::getChildren()
-{
-	vector<Node*> v;
-	v.push_back(_type);
-	return v;
 }
 
 void DST::Program::addImport(string bcFileName) {
@@ -700,14 +263,6 @@ void DST::Program::addImport(string bcFileName) {
 			_bcFileImports.push_back(bcFileName + '/' + fileName); 
 	}
 	closedir(dir);
-}
-
-vector<DST::Node*> DST::Program::getChildren()
-{
-	vector <Node*> v;
-	for (auto i : _namespaces)
-		v.push_back(i.second);
-	return v;
 }
 
 void DST::Program::addNamespace(NamespaceDeclaration * decl ) { _namespaces[decl->getName()] = decl; }

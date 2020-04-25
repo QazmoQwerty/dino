@@ -22,7 +22,6 @@ typedef struct cmdOptions
 	bool showLexerOutput = false; 
 	bool outputAstFiles = false; 
 	bool showLineAST = false;
-	// bool executeInterpret = false;
 	bool showIR = false;
 	bool outputBc = false;
 	const char *bcFileName;
@@ -166,7 +165,8 @@ int main(int argc, char *argv[])
 	if (cmd->prettify) 
 	{
 		Prettifier::Prettify(cmd->fileName);
-		exit(0);
+		if (!cmd->outputBc && !cmd->outputExe && !cmd->outputLib && !cmd->outputLl && !cmd->outputAstFiles)
+			exit(0);
 	}
 
 
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 
 		if (cmd->outputExe)
 		{
-			runCmd(string("clang++ -Wno-override-module ") + bcFileName + " -o " + cmd->exeFileName);
+			runCmd(string("clang++ -Wno-override-module -lgc ") + bcFileName + " -o " + cmd->exeFileName);
 			if (cmd->verbose)
 				llvm::errs() << "outputted ELF file\n";
 		}
