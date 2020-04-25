@@ -3,7 +3,6 @@
 	These functions declare all namespace/types/funcions/etc and call the decoration functions on their contents.
 	FIXME - rename parts A-E to something more meaningful.
 */
-
 #include "Decorator.h"
 
 vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> Decorator::_variables;

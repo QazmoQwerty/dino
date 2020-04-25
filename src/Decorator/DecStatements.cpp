@@ -1,3 +1,6 @@
+/*
+    Decoration of statements.
+*/
 #include "Decorator.h"
 
 DST::Statement * Decorator::decorate(AST::Statement * node)
@@ -100,7 +103,7 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 			clause = { ((DST::ExpressionList*)expr)->getExpressions(), decorate(c._statement) };
 		else clause = { { expr }, decorate(c._statement) };
 		for (auto i : clause._expressions) 
-			if (!i->getType()->equals(sc->getExpression()->getType()))
+			if (!i->getType()->assignableTo(sc->getExpression()->getType()))
 				throw ErrorReporter::report("case clause has type \"" + i->getType()->toShortString() + "\" instead of the required \"" 
 					+ sc->getExpression()->getType()->toShortString() + "\" type", ERR_DECORATOR, i->getPosition());
 		sc->addCase(clause);

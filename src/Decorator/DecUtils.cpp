@@ -1,3 +1,6 @@
+/*
+    Utility functions for the decorator.
+*/
 #include "Decorator.h"
 
 DST::Node *Decorator::decorate(AST::Node * node)

@@ -1,3 +1,12 @@
+/*
+	The Decorator is our semantic analyzer.
+	The Decorator gets an AST from the Parser and transforms it into a DST (Decorated Syntax Tree).
+	This process includes the checking of (most) compile-time errors:
+		* type checking
+		* making sure there are no duplicate variable names
+		* making sure there is a 'Main' function
+		* etc.
+*/
 #pragma once
 
 #include "DstNode.h"

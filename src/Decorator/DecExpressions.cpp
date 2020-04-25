@@ -1,4 +1,6 @@
-
+/*
+    Decoration of Expressions.
+*/
 #include "Decorator.h"
 
 DST::Expression * Decorator::decorate(AST::Expression * node)

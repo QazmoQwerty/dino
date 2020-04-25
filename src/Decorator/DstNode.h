@@ -1,3 +1,8 @@
+/*
+	DST = Decorated Syntax Tree.
+	The Decorator outputs a DST, which is similar to an AST, 
+	except it includes type information, as well as some more useful context.
+*/
 #pragma once
 
 #include "../Parser/AstNode.h"

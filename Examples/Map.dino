@@ -120,7 +120,7 @@ namespace Prog {
             var item ≡ items[idx]
             for int i ≡ 1 | item ≠ null | i++ {
                 if item ≠ &DeletedItem and strEq(item.Key, key) {
-                    item.Clear()
+                    // item.Clear()
                     item := null
                     // delete item
                     items[idx] ≡ &DeletedItem
