@@ -9,11 +9,11 @@
 #define CONDITION_TYPE unicode_string("bool")
 
 namespace CodeGenerator 
-{
+{ 
     /*
-		Initializes LLVM and some variables.
+        Initializes LLVM and some variables.
         If the optional flag isLib is activated the code generator will output a library directory.
-		IMPORTANT: Function MUST be called once before using any other functions of this namespace.
+        IMPORTANT: Function MUST be called once before using any other functions of this namespace.
 	*/
     void setup(bool isLib = false);
 
