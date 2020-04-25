@@ -438,6 +438,23 @@ bool DST::BasicType::assignableTo(DST::Type *type)
 	return false;
 }
 
+bool DST::TypeList::assignableTo(DST::Type *type) 
+{
+	if (!type) 
+		return false;
+	if (type->getExactType() == EXACT_PROPERTY)
+		return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
+	if (type->getExactType() != EXACT_TYPELIST) 
+		return size() == 1 && _types[0]->assignableTo(type);
+	auto other = ((DST::TypeList*)type);
+	if (other->_types.size() != _types.size())
+		return false;
+	for (unsigned int i = 0; i < _types.size(); i++)
+		if (!_types[i]->assignableTo(other->_types[i]))
+			return false;
+	return true;
+}
+
 bool DST::NullType::assignableTo(DST::Type *type) 
 {
 	if (!type)
@@ -551,7 +568,7 @@ string DST::PropertyType::toShortString()
 
 void DST::setup()
 {
-	typeidTypePtr = NULL;	// TODO
+	typeidTypePtr = NULL;
 	DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
 }
 

@@ -11,6 +11,9 @@
 
 using std::string;
 
+/* 
+	Basic information about the position of a token or node 
+*/
 typedef struct PositionInfo 
 {
 	int line;
@@ -27,25 +30,26 @@ struct Token
 	TokenType _type;
 	unicode_string _data;
 	PositionInfo _pos;
-	// int _line;
 };
 
+/*
+	Struct representing a dino operator.
+	Information about operators comes from 'OperatorsMap'
+*/
 typedef struct Operator
 {
 	OperatorType _type;
 	unicode_string _str;
-	unsigned char _associativity;
+	unsigned char _associativity;	// LEFT_TO_RIGHT, RIGHT_TO_LEFT, or NONE
 
-	//int _categories;
 	int _binaryPrecedence;
 	int _prefixPrecedence;
 	int _postfixPrecedence;
-	//int _precedence; // higher value means higher precedence.
 } Operator;
 
 /*
 	Struct that represents operator tokens.
-	NOTE: _type MUST be "TT_OPERATOR".
+	NOTE: Token::_type MUST be "TT_OPERATOR".
 */
 struct OperatorToken : public Token
 {
@@ -109,6 +113,7 @@ string getSpecialCharConstant(string value);
 /*
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_STRING based on the input.
+	TODO: String literals with escaped characters (eg. '\n') in them.
 */
 LiteralToken<string> * createStringLiteralToken(unicode_string data, PositionInfo pos);
 
