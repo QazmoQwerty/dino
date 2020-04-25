@@ -1,9 +1,12 @@
+/*
+    The Code Generator gets a DST from the decorator (see Decorator.h for more info) and 
+    emmits LLVM IR based on it. This IR is then compiles by LLVM into an executable.
+*/
 #pragma once
 
 #include "CodeGenContext.h"
 
 #define CONDITION_TYPE unicode_string("bool")
-
 
 namespace CodeGenerator 
 {
@@ -14,11 +17,21 @@ namespace CodeGenerator
 	*/
     void setup(bool isLib = false);
 
-    /* Handles linkage of imports + writes the Module to a .bc file */
+    /* 
+        Main entry point to the Code Generator, invokes the entire code generation process.
+        Returns a pointer to the Main function (this feature can be removed since we're not executing the IR anymore). 
+    */
+    llvm::Function *startCodeGen(DST::Program *node);
+
+    /* 
+        Handles linkage of imports + writes the Module to a .bc file 
+    */
     void writeBitcodeToFile(DST::Program *prog, string fileName);
 
-    /* Returns a pointer to the Main function - this feature can be removed since we're not executing the IR anymore */
-    llvm::Function *startCodeGen(DST::Program *node);
+    /********************************************************************************
+    *                    HERE ENDS THE EXTERNAL CODEGENERATOR API                   *
+    *                       the rest is implementation details.                     *
+    ********************************************************************************/
 
     /* 
         Recursively declares opaque llvm structs for every type.
@@ -73,7 +86,6 @@ namespace CodeGenerator
                codegenProperty()
     */
     void defineNamespaceMembers(DST::NamespaceDeclaration *node);
-
 
     /*
         Generates code for function/property contents of the type.
@@ -222,10 +234,10 @@ namespace CodeGenerator
 
     ///////////////////// Code Gen Functions /////////////////////
 
+    llvm::Value      *codeGen(DST::Node                    *node);
+
     // --------------------- Expressions ---------------------- //
 
-    llvm::Value      *codeGen(DST::Node                    *node);
-    llvm::Value      *codeGen(DST::Statement               *node);
     llvm::Value      *codeGen(DST::Expression              *node);
     llvm::Value      *codeGen(DST::Literal                 *node);
     llvm::Value      *codeGen(DST::BinaryOperation         *node);
@@ -238,6 +250,7 @@ namespace CodeGenerator
 
     // ---------------------- Statements ---------------------- //
 
+    llvm::Value      *codeGen(DST::Statement               *node);
     llvm::BasicBlock *codeGen(DST::StatementBlock          *node, const llvm::Twine &blockName = "entry");
     llvm::Value      *codeGen(DST::ConstDeclaration        *node);
     llvm::Value      *codeGen(DST::UnaryOperationStatement *node);

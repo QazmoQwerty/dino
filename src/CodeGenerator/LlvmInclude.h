@@ -1,3 +1,7 @@
+/*
+    Headers to include from the LLVM library.
+    Include this and add whatever you need rather than directly including llvm headers in other files.
+*/
 #pragma once
 
 #include "llvm/ADT/APFloat.h"
