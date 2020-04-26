@@ -21,6 +21,8 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_CONVERSION: return codeGen((DST::Conversion*)node);
         case ET_INCREMENT: return codeGen((DST::Increment*)node);
         case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
+        case ET_FUNCTION_LITERAL: return codeGen((DST::FunctionLiteral*)node);
+        case ET_LIST: return codeGen((DST::ExpressionList*)node);
         default: throw ErrorReporter::report("Unimplemented codegen for expression", ERR_CODEGEN, node->getPosition());
     }
 }
@@ -49,6 +51,68 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     default:
         throw ErrorReporter::report("Unimplemented literal type", ERR_CODEGEN, node->getPosition());
     }
+}
+
+llvm::Value *CodeGenerator::codeGen(DST::ExpressionList *node)
+{
+    auto ty = evalType(node->getType());
+    llvm::Value* ret = llvm::UndefValue::get(ty);
+    int idx = 0;
+    for (auto i : node->getExpressions())
+        ret = _builder.CreateInsertValue(ret, codeGen(i), idx++);
+    return ret;
+}
+
+llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node) 
+{
+    vector<llvm::Type*> types;
+    auto returnType = evalType(node->getType()->getReturns());
+    auto params = node->getParameters();
+    for (auto i : params) 
+        types.push_back(evalType(i->getType()));
+    auto funcType = llvm::FunctionType::get(returnType, types, false);
+
+    llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, ".anonFunc", _module.get());
+
+    // Set names for all arguments.
+    unsigned idx = 0;
+    for (auto &arg : func->args())
+        arg.setName(params[idx++]->getVarId().to_string());
+
+    if (node->getContent() == NULL)
+        throw ErrorReporter::report("function literal with no body", ERR_CODEGEN, node->getPosition());
+
+    // Create a new basic block to start insertion into.
+    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
+    auto savedInsertPoint = _builder.GetInsertBlock();
+    _builder.SetInsertPoint(bb);
+
+    // Record the function arguments in the NamedValues map.
+    _namedValues.push({});
+    bool isFirst = true;
+    
+    for (llvm::Argument &arg : func->args())
+    {
+        AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
+        _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+        _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table. 
+        isFirst = false;
+    }
+
+    for (auto i : node->getContent()->getStatements()) 
+    {
+        auto val = codeGen(i);
+        if (val == nullptr)
+            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
+    }
+
+    if (!_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateRetVoid();
+
+    llvm::verifyFunction(*func, &llvm::errs());
+    _namedValues.pop(); // leave block
+    _builder.SetInsertPoint(savedInsertPoint);
+    return func;
 }
 
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
@@ -99,7 +163,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         return NULL;
     }
 
-    if(node->getOperator()._type != OT_SQUARE_BRACKETS_OPEN)
+    if (node->getOperator()._type != OT_SQUARE_BRACKETS_OPEN)
     {
         left = codeGen(node->getLeft());
         right = codeGen(node->getRight());
@@ -159,7 +223,6 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         default:
             throw ErrorReporter::report("Unimplemented Binary operation!", ERR_CODEGEN, node->getPosition());
     }
-    
 }
 
 Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
@@ -315,7 +378,7 @@ Value *CodeGenerator::codeGen(DST::ArrayLiteral *node)
     vector<llvm::Constant*> IRvalues;
     llvm::Type *atype = evalType(node->getType());
 
-    for(auto val : node->getArray())
+    for (auto val : node->getArray())
     {
         IRvalues.push_back((llvm::Constant*)codeGen(val));
     }

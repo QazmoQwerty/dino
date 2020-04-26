@@ -15,7 +15,7 @@ namespace CodeGenerator
         If the optional flag isLib is activated the code generator will output a library directory.
         IMPORTANT: Function MUST be called once before using any other functions of this namespace.
 	*/
-    void setup(bool isLib = false);
+    void setup(bool isLib = false, bool noGC = false);
 
     /* 
         Main entry point to the Code Generator, invokes the entire code generation process.
@@ -112,9 +112,6 @@ namespace CodeGenerator
 
     /* Boxes a pointer value into an interface value */
     llvm::Value* convertToInterface(llvm::Value *ptr);
-
-    /* Boxes a pointer value into an interface alloca */
-    llvm::Value* convertToInterfaceLval(llvm::Value *ptr);
 
     /* Finds which interface a property belongs to. */
     DST::InterfaceDeclaration *getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl);
@@ -224,13 +221,14 @@ namespace CodeGenerator
     /////////////////////// Code Gen Lval ///////////////////////
     // these return a pointer to a value rather than a value   //
 
-    Value       *codeGenLval(DST::Expression            *node);
-    Value       *codeGenLval(DST::Variable              *node);
-    Value       *codeGenLval(DST::MemberAccess          *node);
-    Value       *codeGenLval(DST::UnaryOperation        *node);
-    Value       *codeGenLval(DST::BinaryOperation       *node);
-    Value       *codeGenLval(DST::Conversion            *node);
-    AllocaInst  *codeGenLval(DST::VariableDeclaration   *node);
+    llvm::Value       *codeGenLval(DST::Expression            *node);
+    llvm::Value       *codeGenLval(DST::Variable              *node);
+    llvm::Value       *codeGenLval(DST::MemberAccess          *node);
+    llvm::Value       *codeGenLval(DST::UnaryOperation        *node);
+    llvm::Value       *codeGenLval(DST::BinaryOperation       *node);
+    llvm::Value       *codeGenLval(DST::Conversion            *node);
+    llvm::AllocaInst  *codeGenLval(DST::VariableDeclaration   *node);
+    llvm::Function    *codeGenLval(DST::FunctionLiteral       *node);
 
     ///////////////////// Code Gen Functions /////////////////////
 
@@ -247,6 +245,8 @@ namespace CodeGenerator
     llvm::Value      *codeGen(DST::ArrayLiteral            *node);
     llvm::Value      *codeGen(DST::ConditionalExpression   *node);
     llvm::Value      *codeGen(DST::Variable                *node);
+    llvm::Function   *codeGen(DST::FunctionLiteral         *node);
+    llvm::Value      *codeGen(DST::ExpressionList          *node);
 
     // ---------------------- Statements ---------------------- //
 

@@ -46,7 +46,7 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
 
 Value *CodeGenerator::codeGen(DST::ConstDeclaration *node) 
 {
-    return _namedValues[node->getName().to_string()] = codeGen(node->getExpression());
+    return _namedValues.top()[node->getName().to_string()] = codeGen(node->getExpression());
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
@@ -69,13 +69,6 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
                     throw ErrorReporter::report("cannot return void in non void function", ERR_DECORATOR, node->getPosition());
                 return _builder.CreateRetVoid();
             }
-            if (node->getExpression()->getExpressionType() == ET_LIST)
-            {
-                auto expList = (DST::ExpressionList*)node->getExpression();
-                for (unsigned int i = 0; i < expList->size(); i++)
-                    _builder.CreateStore(codeGen(expList->getExpressions()[i]), _funcReturns[i]);
-                return _builder.CreateRetVoid();
-            }
             auto val = codeGen(node->getExpression());
             auto returnTy = getParentFunction()->getReturnType();
             if (val->getType() != returnTy)
@@ -87,14 +80,14 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             return _builder.CreateRet(val);
         }
 
-        
-
         case OT_DELETE:
         {
             if (free == NULL)
             {
                 auto type = llvm::FunctionType::get(_builder.getVoidTy(), _builder.getInt8PtrTy(), false);
-                free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "free", _module.get());
+                if (_noGC)
+                    free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "free", _module.get());
+                else free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "GC_free", _module.get());
             }
             Value *ptr = codeGenLval(node->getExpression());
             if (node->getExpression()->getType()->getExactType() == EXACT_ARRAY && 
@@ -128,7 +121,6 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 {
 
     auto parent = getParentFunction();
-    // static llvm::Function *personality = _module.get()->getFunction("__gxx_personality_v0");
     static llvm::Function *personality = NULL;
     static llvm::Function *beginCatchFunc = NULL;
     static llvm::Function *endCatchFunc = NULL;
@@ -164,13 +156,11 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 
     parent->getBasicBlockList().push_back(catchBB);
     _builder.SetInsertPoint(catchBB);
-    // auto pad = _builder.CreateLandingPad(_interfaceType->getPointerTo(), 1);
     auto pad = _builder.CreateLandingPad(_builder.getInt8PtrTy(), 1);
-    // pad->addClause(llvm::ConstantPointerNull::get(_interfaceType->getPointerTo()) );
     pad->addClause(llvm::ConstantPointerNull::get(_builder.getInt8PtrTy()));
 
     auto caught = _builder.CreateCall(beginCatchFunc, pad);
-    _namedValues["caught"] = _builder.CreateBitCast(caught, _interfaceType->getPointerTo());
+    _namedValues.top()["caught"] = _builder.CreateBitCast(caught, _interfaceType->getPointerTo());
 
     for (auto i : node->getCatchBlock()->getStatements())
         if (!codeGen(i))
@@ -230,7 +220,6 @@ llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node)
         getParentFunction()->getBasicBlockList().push_back(mergeBB);
         _builder.SetInsertPoint(mergeBB);
     }
-    // ret->print(llvm::errs());
     return ret;
 }
 

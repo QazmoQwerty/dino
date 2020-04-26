@@ -4,22 +4,24 @@
 */
 #include "CodeGenerator.h"
 
-void CodeGenerator::setup(bool isLib)
+void CodeGenerator::setup(bool isLib, bool noGC)
 {
     _isLib = isLib;
+    _noGC = noGC;
+
+    _namedValues.push({});
 
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    /* 
-        @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
-        @.vtable_type = type { i32, @.interface_vtable* } (interface count, array of vtables for each interface)
-        @.interface_type = type { i8*, @.vtable_type* } (object ptr, vtable ptr)    
-    */
-
+    // @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
+
+    // @.vtable_type = type { i32, @.interface_vtable* } (interface count, array of vtables for each interface)
     _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
+
+    // @.interface_type = type { i8*, @.vtable_type* } (object ptr, vtable ptr)
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 }
 
@@ -518,8 +520,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
             {
                 AllocaInst *alloca = CreateEntryBlockAlloca(getFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
                 _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-                _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-                // _currThisPtr = alloca;
+                _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
             }
         }
 
@@ -562,17 +563,13 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         _builder.SetInsertPoint(bb);
 
         // Record the function arguments in the NamedValues map.
-        _namedValues.clear();
-
+        _namedValues.push({});
         bool isFirst = false;
         for (llvm::Argument &arg : setFunc->args())
         {
             AllocaInst *alloca = CreateEntryBlockAlloca(setFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
             _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-            _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-
-            // if (typeDef && isFirst)
-            //     _currThisPtr = alloca;
+            _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
             isFirst = false;
         }
 
@@ -585,31 +582,21 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         if (!_builder.GetInsertBlock()->getTerminator())
             _builder.CreateRetVoid();
         llvm::verifyFunction(*setFunc, &llvm::errs());
+        _namedValues.pop(); // leave block
     }
 }
 
 llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
     vector<llvm::Type*> types;
-    auto params = node->getParameters();
-
-    llvm::Type *returnType = NULL; 
-
     if (typeDef)
         types.push_back(typeDef->structType->getPointerTo());
+    auto returnType = evalType(node->getReturnType());
 
-    // functions that return multiple values return them based on pointers they get as arguments
-    bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
-    if (isMultiReturnFunc)
-    {
-        for (auto i : ((DST::TypeList*)node->getReturnType())->getTypes())
-            types.push_back(evalType(i)->getPointerTo());
-        returnType = _builder.getVoidTy();
-    }
-    else returnType = evalType(node->getReturnType());
-    
+    auto params = node->getParameters();
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
+
     auto funcType = llvm::FunctionType::get(returnType, types, false);
 
     string funcId = "";
@@ -631,7 +618,7 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
         funcId = "main";
     else 
     {
-        // Todo - add file name as well
+        // TODO - add file name as well
         for (auto i : _currentNamespace)
             funcId += i->decl->getName().to_string() + ".";
         if (typeDef) funcId += typeDef->structType->getName().str() + ".";
@@ -643,7 +630,6 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
     // Set names for all arguments.
     unsigned idx = 0;
-    unsigned idx2 = 0;
     bool b = true;
     for (auto &arg : func->args())
     {
@@ -652,8 +638,6 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
             arg.setName("this");
             b = false;
         }
-        else if (isMultiReturnFunc && idx2 < ((DST::TypeList*)node->getReturnType())->size())
-            arg.setName(".ret" + std::to_string(idx2++));
         else arg.setName(params[idx++]->getVarId().to_string());
     }
 
@@ -665,8 +649,6 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
 void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
-    bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
-
     llvm::Value *funcPtr = NULL;
     if (typeDef)
         funcPtr = typeDef->functions[node->getVarDecl()->getVarId()];
@@ -695,28 +677,13 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     _builder.SetInsertPoint(bb);
 
     // Record the function arguments in the NamedValues map.
-    _namedValues.clear();
+    _namedValues.push({});
     bool isFirst = true;
-    unsigned idx = 0;
-    if (isMultiReturnFunc)
-        _funcReturns.clear();
     for (llvm::Argument &arg : func->args())
     {
-        if (!(isFirst && typeDef) && isMultiReturnFunc && idx < ((DST::TypeList*)node->getReturnType())->size())
-        {
-            _funcReturns.push_back(&arg);
-            idx++;
-        }
-        else 
-        {
-            AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
-            _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-            _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-
-            // if (isFirst && typeDef)
-            //     _currThisPtr = alloca;
-        }
-        
+        AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
+        _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+        _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
         isFirst = false;
     }
 
@@ -731,4 +698,5 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         _builder.CreateRetVoid();
     
     llvm::verifyFunction(*func, &llvm::errs());
+    _namedValues.pop(); // leave block
 }

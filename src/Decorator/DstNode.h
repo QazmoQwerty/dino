@@ -685,7 +685,7 @@ namespace DST
 		Expression *_expression;
 	public: 
 		Conversion(AST::FunctionCall *base, Type *type, Expression *expression) : _base(base), _expression(expression) { setType(type); }
-		virtual ~Conversion() { if (_base) delete _base; if (_type) delete _type; if(_expression) delete _expression; }
+		virtual ~Conversion() { if (_base) delete _base; if (_type) delete _type; if (_expression) delete _expression; }
 		void setType(Type *type) { 
 			// if (_expression->getType()->getExactType() == EXACT_BASIC && ((DST::BasicType*)_expression->getType())->getTypeSpecifier()->getInterfaceDecl())
 			// 	_type = new DST::PointerType(type);
@@ -714,7 +714,7 @@ namespace DST
 		FunctionLiteral(AST::Function* base) : _base(base) {}
 		virtual ~FunctionLiteral();
 		void setType(FunctionType *type) { _type = type; }
-		Type *getType() { return _type; }
+		FunctionType *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
 
@@ -1044,7 +1044,7 @@ namespace DST
 	public:
 		string _llvmFuncId;
 
-		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _decl(decl), _content(NULL) {};
+		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _content(NULL) { setVarDecl(decl); };
 		virtual ~FunctionDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
@@ -1054,9 +1054,9 @@ namespace DST
 
 		AST::FunctionDeclaration *getBase() { return _base; }
 
-		void setVarDecl(VariableDeclaration* decl) { _decl = decl; }
-		void addParameter(VariableDeclaration* parameter) { _parameters.push_back(parameter); }
-		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
+		void setVarDecl(VariableDeclaration* decl);
+		void addParameter(VariableDeclaration* parameter);
+		void addParameterToStart(VariableDeclaration* parameter);
 		void setContent(StatementBlock* content) { _content = content; }
 
 		VariableDeclaration* getVarDecl() { return _decl; }
@@ -1083,7 +1083,6 @@ namespace DST
 		virtual vector<Node*> getChildren();
 		unicode_string getName() { return _base->getVarDecl()->getVarId(); }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
-		unicode_string getPropId() { return _base->getVarDecl()->getVarId(); }
 		Type *getReturnType() { return _type; }
 		void setGet(StatementBlock* get) { _get = get; }
 		void setSet(StatementBlock* set) { _set = set; }

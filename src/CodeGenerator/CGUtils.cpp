@@ -61,9 +61,18 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         {
             auto ft = (DST::FunctionType*)node;
             vector<llvm::Type*> params;
-            for(auto i : ft->getParameters()->getTypes())
+            // llvm::Type *retTy = NULL;
+            // if (ft->getReturns()->size() > 1)
+            // {   // multi-return functions return their values through references passed as arguments
+            //     for (auto i : ft->getReturns()->getTypes())
+            //         params.push_back(evalType(i)->getPointerTo());    
+            //     retTy = _builder.getVoidTy();
+            // }
+            // else 
+            auto retTy = evalType(ft->getReturns());
+            for (auto i : ft->getParameters()->getTypes())
                 params.push_back(evalType(i));
-            return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false)->getPointerTo();
+            return llvm::FunctionType::get(retTy, params, /*isVarArgs=*/false)->getPointerTo();
         }
         case EXACT_TYPELIST:
         {
@@ -239,8 +248,9 @@ llvm::Function *CodeGenerator::getMallocFunc()
     if (malloc == NULL)
     {
         auto type = llvm::FunctionType::get(llvm::Type::getInt8Ty(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
-        // malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
-        malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "GC_malloc", _module.get());
+        if (_noGC)
+             malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
+        else malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "GC_malloc", _module.get());
     }
     return malloc;
 }

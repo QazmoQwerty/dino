@@ -15,8 +15,14 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_UNARY_OPERATION: return codeGenLval((DST::UnaryOperation*)node);
         case ET_BINARY_OPERATION: return codeGenLval((DST::BinaryOperation*)node);
         case ET_CONVERSION: return codeGenLval((DST::Conversion*)node);
+        case ET_FUNCTION_LITERAL: return codeGenLval((DST::FunctionLiteral*)node);
         default: throw ErrorReporter::report("unimplemented lval expression type.", ERR_CODEGEN, node->getPosition());
     }
+}
+
+llvm::Function *CodeGenerator::codeGenLval(DST::FunctionLiteral *node) { 
+    // FIXME: function literals aren't actually literals, even though they ARE references.
+    return codeGen(node);  
 }
 
 AllocaInst *CodeGenerator::codeGenLval(DST::VariableDeclaration *node) { 
@@ -76,7 +82,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
 
 Value *CodeGenerator::codeGenLval(DST::Variable *node)
 {
-    if (auto var = _namedValues[node->getVarId().to_string()])
+    if (auto var = _namedValues.top()[node->getVarId().to_string()])
         return var;
     else for (int i = _currentNamespace.size() - 1; i >= 0; i--)
         if (auto var = _currentNamespace[i]->values[node->getVarId().to_string()])

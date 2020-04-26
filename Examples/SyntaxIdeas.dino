@@ -1,5 +1,133 @@
 import "std"
 
+namespace ExtendTypes {
+
+    interface Showable {
+        void Show()
+    }
+
+    # extern? extend? 
+
+    extern type int is Showable {
+        void Show() {
+            Std.PrintD(@this)
+        }
+    }
+
+    void Main() {
+        Showable s := new int(10)
+        s.Show()
+    }
+}
+
+namespace Conditionals {
+    void Foo() {
+        int a := 10
+        int@ b := null
+
+
+        normalExecution() unless edgeCase then treatEdgeCase()
+
+        Foo1() unless edgeCase1 then Foo2() unless edgeCase2 then Foo3() unless edgeCase3
+
+{
+    normalExecution()
+} unless edgeCase1 then {
+    treatEdgeCase1()
+} unless edgeCase2 then {
+    treatEdgeCase2()
+} 
+
+if edgeCase1 {
+    treatEdgeCase1()
+} else if edgeCase2 {
+    treatEdgeCase2()
+} else {
+    normalExecution()
+}
+
+        (({
+            Foo1()
+        } unless edgeCase1 then {
+            Foo2()
+        }) unless edgeCase2 then {
+            Foo3() 
+        }) unless edgeCase3
+
+        Foo1() unless edgeCase1 then 
+            (Foo2() unless edgeCase2 then 
+                (Foo3() unless edgeCase3)
+
+        ((A() unless edgeCase1 then B()) unless edgeCase2 then C()) unless edgeCase3
+
+        A() unless edgeCase1 then B() unless edgeCase2 then C() unless edgeCase3
+
+        A() unless edgeCase1 then (B() unless edgeCase2 then (C() unless edgeCase3))
+
+        unless edgeCase {
+            normalExecution()
+        } then {
+            treatEdgeCase()
+        }
+
+
+        if edgeCase1 {
+            // treat edge case 2
+        } else if edgeCase2 {
+            // treat edge case 1
+        } else {
+            // normal execution
+        }
+
+        Foo1() if a else Foo2() if b else Foo3()
+
+        Foo1() unless a then Foo2() unless b then Foo(3)
+
+        {
+            // normal execution
+        } unless edgeCase1 then {
+            // treat edge case 1
+        } unless edgeCase2 then {
+            // treat edge case 2
+        }
+
+        unless edgeCase1 {
+            // normal execution
+        } then unless edgeCase2 {
+
+        } then {
+
+        }
+
+
+        # different ideas for scope syntaxes:
+
+        if cond:    # python-esque
+            fooA()
+            fooB()
+        else if cond2:
+            a += 10
+            a *= 20
+        else:
+            while a < 100:
+                a += 2
+                i++
+
+        if cond    # ruby-esque
+            fooA()
+            fooB()
+        else if cond2
+            a += 10
+            a *= 20
+        else 
+            while a < 100
+                a += 2
+                i++
+            end
+        end
+    }
+}
+
 namespace Ideas {
     void Main() {
         var a ≡ 10
@@ -181,5 +309,25 @@ namespace Ideas {
             ("aaa", 3),
             ("bbb", 4)
         ..)
+
+        Std.Map[string, int] myMap [
+            ("aaa", 1),
+            ("bbb", 2),
+            ("aaa", 3),
+            ("bbb", 4),
+        ]
+
+        new List[int] myList [
+            1, 2, 3, 4, 5, 6,
+        ]
+    }
+
+    T Foo[T is Std.Enumerable](T n) {
+        return T
+    }
+
+    void Main() {
+        var a := Foo(10)
+        var b := Foo[int](10)
     }
 }

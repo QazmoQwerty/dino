@@ -11,6 +11,9 @@ using llvm::AllocaInst;
 #include "../Decorator/DstNode.h"
 #include <string>
 #include <fstream>
+#include <stack>
+using std::stack;
+using std::unordered_map;
 using std::fstream;
 
 namespace CodeGenerator 
@@ -21,31 +24,34 @@ namespace CodeGenerator
     } InterfaceFuncInfo;
 
     /* Maps vtable function index information to interface's member's name. */
-    extern std::unordered_map<DST::InterfaceDeclaration*, std::unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
+    extern unordered_map<DST::InterfaceDeclaration*, unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
     
     typedef struct TypeDefinition {
         llvm::StructType *structType;
-        std::unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
-        std::unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
-        std::unordered_map<llvm::Function*, unsigned int> vtableFuncIndexes;
+        unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
+        unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
+        unordered_map<llvm::Function*, unsigned int> vtableFuncIndexes;
         llvm::Value *vtable;
     } TypeDefinition;
 
     /* Maps DST::TypeDeclarations to useful codeGen info */
-    extern std::unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
+    extern unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
 
     typedef struct NamespaceMembers {
-        std::unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
-        std::unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
-        std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
+        unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
+        unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
+        unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
         DST::NamespaceDeclaration *decl = NULL;
     } NamespaceMembers;
 
     /* Maps a namespace's id to all values, types, and namespaces contained in it */
-    extern std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
+    extern unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
 
     /* Are we compiling a library or a regular file? */
     extern bool _isLib;
+
+    /* Turn off garbage collection */
+    extern bool _noGC;
 
     /* Needed for any codeGen */
     extern llvm::LLVMContext _context;
@@ -60,10 +66,7 @@ namespace CodeGenerator
     extern llvm::DataLayout *_dataLayout;
 
     /* All the values existing in the local scope */
-    extern std::unordered_map<std::string, Value*> _namedValues;
-
-    /* Since multi-return functions are not supported in LLVM we have to return them by reference (through arguments) */
-    extern vector<Value*> _funcReturns;
+    extern stack<unordered_map<std::string, Value*>> _namedValues;
 
     /*
         %.interface_type = type { i8*, %.vtable_type* }

@@ -12,26 +12,13 @@ Value *CodeGenerator::convertToInterface(Value* node)
         });
     if (node->getType() == _interfaceType)
         return node;
-    return _builder.CreateLoad(convertToInterfaceLval(node));
-}
-
-Value *CodeGenerator::convertToInterfaceLval(Value* node)
-{
-    auto alloca = CreateEntryBlockAlloca(getParentFunction(), _interfaceType, "cnvrttmp");
-    if (node == NULL || node->getType() == _interfaceType) 
-    {
-        _builder.CreateStore(convertToInterface(node), alloca);
-        return alloca;
-    }
 
     if (!node->getType()->isPointerTy())
         throw "cannot convert non pointer to interface";
-    
-    auto objPtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(0) }, "objPtrTmp");
-    auto vtablePtr = _builder.CreateInBoundsGEP(alloca, { _builder.getInt32(0), _builder.getInt32(1) }, "vtableTmp");
-    _builder.CreateStore(_builder.CreateBitCast(node, _builder.getInt8PtrTy()), objPtr);
-    _builder.CreateStore(getVtable(node->getType()->getPointerElementType()), vtablePtr);
-    return alloca;
+
+    auto undef = llvm ::UndefValue::get(_interfaceType);
+    auto val = _builder.CreateInsertValue(undef, _builder.CreateBitCast(node, _builder.getInt8PtrTy()), 0);
+    return _builder.CreateInsertValue(val, getVtable(node->getType()->getPointerElementType()), 1);
 }
 
 DST::InterfaceDeclaration *CodeGenerator::getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl) 

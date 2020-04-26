@@ -246,7 +246,7 @@ AST::Node * Parser::std(Token * token)
 				AST::NamespaceDeclaration *node;
 				auto inner = parseInnerBlock();
 
-				if(_namespaces.count(name) == 0)
+				if (_namespaces.count(name) == 0)
 				{	
 					node = new AST::NamespaceDeclaration();
 					node->setName(name); 

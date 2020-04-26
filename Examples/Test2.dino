@@ -1,56 +1,59 @@
 // import "Examples/std"
-import "std"
+// import "std"
 
 namespace Test {
 
-    // bool Foo(int a) {
-    //     Std.PrintD(a)
-    //     return a = 2
+    // char putchar(char c): extern "putchar"
+
+    // (char, char) A(char a) {
+    //     return a, a + 1 as char
     // }
 
+    // void Bar(char c, (char, char)(char) f) {
+    //     char a, char b := f(a)
+    //     putchar(a)
+    //     putchar('\n')
+    //     putchar(b)
+    //     putchar('\n')
+    // }
+
+    // (int, int) F(int a): return a, a + 1 
+
+    // (int, int) Sort(int a, int b): return if a > b then a, b else b, a 
+
+    any Foo2() {
+        return new int
+    }
+
+    // (int, int) Foo(): return 10, 12
+
     void Main() {
-        // a :≡ 0
-        // b :≡ 0
-        int@ a := new int
-        @a := 10
-        Std.PrintD(@a)
-        // a ≡ if   Foo(1)
-        //     then 1
-        //     else if   Foo(2)
-        //          then 2
-        //          else 3
-
-        // b ≡ if Foo(1) then 1 else
-        //     if Foo(2) then 2 else
-        //                    3
-
-        
-
-        // if Foo(1) {
-        //     Std.PrintD(10)
-        // }
-        // else if Foo(2) {
-        //     Std.PrintD(20)
-        // }
-        // else: Std.PrintD(200)
-
+        // int a, int b := if a > b then 1, 2 else 2, 3
+        // int a, int b := if true then 1, 2 else 2, 1 
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        // a, b := if false then 1, 2 else 2, 1 
         // Std.PrintD(a)
         // Std.PrintD(b)
 
-            
-        // } unless true
+        // a, b := Foo()
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        // // Bar('a', A)
+        // var sort := (int a, int b) int, int { return if a > b then a, b else b, a }
+        // a, b := sort(a, b)
+        // Std.PrintD(a)
+        // Std.PrintD(b)
 
-        // if b: 
-        //     Std.PrintD(30)
-        // else if a = 10: 
-        //     Std.PrintD(10)
-        // else: 
-        //     Std.PrintD(20)
+        // int a, int b := Sort(10, 20)
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        // Std.PrintD(max)
 
-        // (if a = 10:
-        //     Std.PrintD(10)
-        // else:
-        //     Std.PrintD(20)
-        // ) unless b then Std.PrintD(30)
+        // int a, int b := sort(10, 12)
+
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        
     }
 }
