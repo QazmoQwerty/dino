@@ -87,14 +87,14 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             return _builder.CreateRet(val);
         }
 
-        
-
         case OT_DELETE:
         {
             if (free == NULL)
             {
                 auto type = llvm::FunctionType::get(_builder.getVoidTy(), _builder.getInt8PtrTy(), false);
-                free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "free", _module.get());
+                if (_noGC)
+                    free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "free", _module.get());
+                else free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "GC_free", _module.get());
             }
             Value *ptr = codeGenLval(node->getExpression());
             if (node->getExpression()->getType()->getExactType() == EXACT_ARRAY && 
@@ -128,7 +128,6 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 {
 
     auto parent = getParentFunction();
-    // static llvm::Function *personality = _module.get()->getFunction("__gxx_personality_v0");
     static llvm::Function *personality = NULL;
     static llvm::Function *beginCatchFunc = NULL;
     static llvm::Function *endCatchFunc = NULL;
@@ -164,9 +163,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 
     parent->getBasicBlockList().push_back(catchBB);
     _builder.SetInsertPoint(catchBB);
-    // auto pad = _builder.CreateLandingPad(_interfaceType->getPointerTo(), 1);
     auto pad = _builder.CreateLandingPad(_builder.getInt8PtrTy(), 1);
-    // pad->addClause(llvm::ConstantPointerNull::get(_interfaceType->getPointerTo()) );
     pad->addClause(llvm::ConstantPointerNull::get(_builder.getInt8PtrTy()));
 
     auto caught = _builder.CreateCall(beginCatchFunc, pad);
@@ -230,7 +227,6 @@ llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node)
         getParentFunction()->getBasicBlockList().push_back(mergeBB);
         _builder.SetInsertPoint(mergeBB);
     }
-    // ret->print(llvm::errs());
     return ret;
 }
 

@@ -8,12 +8,18 @@ namespace Test {
     //     return a = 2
     // }
 
+    // var Foo() {
+    //     return 10
+    // }
+
     void Main() {
         // a :≡ 0
         // b :≡ 0
-        int@ a := new int
+        var a := new int
+        // a := new int
         @a := 10
         Std.PrintD(@a)
+        delete a
         // a ≡ if   Foo(1)
         //     then 1
         //     else if   Foo(2)

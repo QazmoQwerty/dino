@@ -239,8 +239,9 @@ llvm::Function *CodeGenerator::getMallocFunc()
     if (malloc == NULL)
     {
         auto type = llvm::FunctionType::get(llvm::Type::getInt8Ty(_context)->getPointerTo(), { llvm::Type::getInt32Ty(_context) }, false);
-        // malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
-        malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "GC_malloc", _module.get());
+        if (_noGC)
+             malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "malloc", _module.get());
+        else malloc = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "GC_malloc", _module.get());
     }
     return malloc;
 }

@@ -33,6 +33,7 @@ typedef struct cmdOptions
 	const char *libFileName;
 	char *optLevel = NULL;
 	bool prettify = false;
+	bool noGC = false;
 } cmdOptions;
 
 void showHelp() 
@@ -48,7 +49,8 @@ void showHelp()
 		<< "    -ll [filepath] (output a .ll file to \"filepath\")\n"
 		<< "    -o [filepath] (output an executable file to \"filepath\")\n"
 		<< "    -lib [dirpath] (build as a library to the directory \"dirpath\")\n"
-		<< "    -O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n\n";
+		<< "    -O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n"
+		<< "    -noGC (turn off garbage collection)";
 	exit(0);
 }
 
@@ -98,6 +100,7 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 				else if (!strcmp(argv[i], "-fmt")) 		options->prettify 			= true;
 				else if (!strcmp(argv[i], "-lineAst")) 	options->showLineAST 		= true;
 				else if (!strcmp(argv[i], "-showIR")) 	options->showIR 			= true;
+				else if (!strcmp(argv[i], "-noGC")) 	options->noGC 				= true;
 				else if (!strcmp(argv[i], "-O0") || !strcmp(argv[i], "-O1") || !strcmp(argv[i], "-O2") 
 						|| !strcmp(argv[i], "-O3") || !strcmp(argv[i], "-Os") || !strcmp(argv[i], "-Oz") || !strcmp(argv[i], "-Od"))	
 					options->optLevel = argv[i];
@@ -170,7 +173,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	CodeGenerator::setup(cmd->outputLib);
+	CodeGenerator::setup(cmd->outputLib, cmd->noGC);
 	OperatorsMap::setup();
 	Lexer::setup();
 	DST::setup();
@@ -191,9 +194,9 @@ int main(int argc, char *argv[])
 		}
 
 		DST::Program* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
-
-		if (cmd->verbose)
+		if (cmd->verbose) 
 			llvm::errs() << "Finished decorating...\n";
+
 		if (cmd->outputAstFiles)
 		{
 			dstToFile("DstDisplay.gv", dst, false);

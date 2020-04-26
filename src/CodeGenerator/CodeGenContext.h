@@ -47,6 +47,9 @@ namespace CodeGenerator
     /* Are we compiling a library or a regular file? */
     extern bool _isLib;
 
+    /* Turn off garbage collection */
+    extern bool _noGC;
+
     /* Needed for any codeGen */
     extern llvm::LLVMContext _context;
     

@@ -4,22 +4,22 @@
 */
 #include "CodeGenerator.h"
 
-void CodeGenerator::setup(bool isLib)
+void CodeGenerator::setup(bool isLib, bool noGC)
 {
     _isLib = isLib;
+    _noGC = noGC;
 
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    /* 
-        @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
-        @.vtable_type = type { i32, @.interface_vtable* } (interface count, array of vtables for each interface)
-        @.interface_type = type { i8*, @.vtable_type* } (object ptr, vtable ptr)    
-    */
-
+    // @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
+
+    // @.vtable_type = type { i32, @.interface_vtable* } (interface count, array of vtables for each interface)
     _objVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _interfaceVtableType->getPointerTo() }, ".vtable_type");
+
+    // @.interface_type = type { i8*, @.vtable_type* } (object ptr, vtable ptr)
     _interfaceType = llvm::StructType::create(_context, { _builder.getInt8Ty()->getPointerTo(), _objVtableType->getPointerTo() }, ".interface_type");
 }
 
