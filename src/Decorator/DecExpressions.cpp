@@ -295,7 +295,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			if (bo->getLeft()->getType()->getExactType() == EXACT_ARRAY)
 			{
 				DST::BasicType *intType = new DST::BasicType(getPrimitiveType("int"));
-				if(!bo->getRight()->getType()->equals(intType))
+				if (!bo->getRight()->getType()->equals(intType))
 					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 				_toDelete.push_back(intType);

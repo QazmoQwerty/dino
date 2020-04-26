@@ -130,7 +130,7 @@ void DST::TypeDeclaration::addDeclaration(Statement * decl, Type * type)
 	{
 	case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
 	case ST_VARIABLE_DECLARATION: varId = ((VariableDeclaration*)decl)->getVarId(); break;
-	case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getPropId(); break;
+	case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getName(); break;
 	default: throw ErrorReporter::report("Type declarations may only specify variable, property, and function declarations.", ERR_DECORATOR, decl->getPosition());
 	}
 	if (_decls.count(varId))
@@ -217,7 +217,7 @@ bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
 
 DST::Type *DST::InterfaceDeclaration::getMemberType(unicode_string id)
 {
-	if(_decls.count(id))
+	if (_decls.count(id))
 		return _decls[id].second;
 	
 	for (auto i : _implements)
@@ -249,6 +249,27 @@ void * DST::Literal::getValue()
 			return new int((dynamic_cast<AST::Integer*>(_base)->getValue()));
 		default: return NULL;
 	}
+}
+
+void DST::FunctionDeclaration::setVarDecl(DST::VariableDeclaration *decl)
+{ 
+	if (decl->getType()->getExactType() == EXACT_UNKNOWN)
+		throw ErrorReporter::report("function return types may not be inferred", ERR_DECORATOR, decl->getPosition());
+	_decl = decl; 
+}
+
+void DST::FunctionDeclaration::addParameter(DST::VariableDeclaration *parameter)
+{ 
+	if (parameter->getType()->getExactType() == EXACT_UNKNOWN)
+		throw ErrorReporter::report("function parameter types may not be inferred", ERR_DECORATOR, parameter->getPosition());
+	_parameters.push_back(parameter); 
+}
+
+void DST::FunctionDeclaration::addParameterToStart(DST::VariableDeclaration *parameter)
+{
+	if (parameter->getType()->getExactType() == EXACT_UNKNOWN)
+		throw ErrorReporter::report("function parameter types may not be inferred", ERR_DECORATOR, parameter->getPosition());
+	_parameters.insert(_parameters.begin(), parameter); 
 }
 
 void DST::Program::addImport(string bcFileName) {

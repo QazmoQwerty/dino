@@ -322,7 +322,7 @@ Value *CodeGenerator::codeGen(DST::Increment *node)
     int varSize = lvalue->getType()->getPointerElementType()->getPrimitiveSizeInBits();
     
     llvm::Value *inc;
-    if(node->isIncrement())
+    if (node->isIncrement())
         inc = _builder.CreateAdd(_builder.CreateLoad(lvalue), _builder.getIntN(varSize, 1));
     else inc = _builder.CreateSub(_builder.CreateLoad(lvalue), _builder.getIntN(varSize, 1));
     
@@ -346,7 +346,7 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
     AllocaInst *alloca = CreateEntryBlockAlloca(func, type, name);
     _namedValues[name] = alloca;
 
-    /*if(type->isArrayTy())
+    /*if (type->isArrayTy())
     {
         _builder.CreateStore(llvm::ConstantAggregateZero::get(type), alloca); 
     }*/

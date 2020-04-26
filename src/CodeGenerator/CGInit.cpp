@@ -631,7 +631,7 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
         funcId = "main";
     else 
     {
-        // Todo - add file name as well
+        // TODO - add file name as well
         for (auto i : _currentNamespace)
             funcId += i->decl->getName().to_string() + ".";
         if (typeDef) funcId += typeDef->structType->getName().str() + ".";

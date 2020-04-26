@@ -87,7 +87,7 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 
 	try 
 	{
-		for(int i = 1; i < argc; i++) 
+		for (int i = 1; i < argc; i++) 
 		{
 			if (strlen(argv[i]) && argv[i][0] == '-') 
 			{
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 		string bcFileName = "";
 		if (cmd->outputBc) 
 			bcFileName = string(cmd->bcFileName);
-		else if(cmd->outputExe || cmd->outputLl)
+		else if (cmd->outputExe || cmd->outputLl)
 		{
 			bcFileName = runCmd("mktemp dinoBcTmp-XXXXX.bc", false);
 			if (bcFileName[bcFileName.size() - 1] == '\n')

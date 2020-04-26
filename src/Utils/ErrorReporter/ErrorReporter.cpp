@@ -55,7 +55,7 @@ string ErrorReporter::getLine(string fileName, int line)
 {
     std::fstream file(fileName);
     file.seekg(std::ios::beg);
-    for(int i=0; i < line - 1; ++i)
+    for (int i=0; i < line - 1; ++i)
         file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
     string ret;
     std::getline(file, ret);

@@ -325,7 +325,7 @@ void Decorator::partD(DST::NamespaceDeclaration *node)
 					
 					// check if the interfaces that the type implements are distinct
 					for (auto otherI : decl->getInterfaces())
-						if(i != otherI) 
+						if (i != otherI) 
 							otherI->notImplements(i);
 				}
 				break;

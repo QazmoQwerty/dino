@@ -61,9 +61,17 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         {
             auto ft = (DST::FunctionType*)node;
             vector<llvm::Type*> params;
-            for(auto i : ft->getParameters()->getTypes())
+            llvm::Type *retTy = NULL;
+            if (ft->getReturns()->size() > 1)
+            {   // multi-return functions return their values through references passed as arguments
+                for (auto i : ft->getReturns()->getTypes())
+                    params.push_back(evalType(i)->getPointerTo());    
+                retTy = _builder.getVoidTy();
+            }
+            else retTy = evalType(ft->getReturns());
+            for (auto i : ft->getParameters()->getTypes())
                 params.push_back(evalType(i));
-            return llvm::FunctionType::get(evalType(ft->getReturns()), params, /*isVarArgs=*/false)->getPointerTo();
+            return llvm::FunctionType::get(retTy, params, /*isVarArgs=*/false)->getPointerTo();
         }
         case EXACT_TYPELIST:
         {

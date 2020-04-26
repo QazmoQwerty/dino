@@ -247,6 +247,7 @@ namespace CodeGenerator
     llvm::Value      *codeGen(DST::ArrayLiteral            *node);
     llvm::Value      *codeGen(DST::ConditionalExpression   *node);
     llvm::Value      *codeGen(DST::Variable                *node);
+    llvm::Function   *codeGen(DST::FunctionLiteral         *node);
 
     // ---------------------- Statements ---------------------- //
 

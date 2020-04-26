@@ -202,7 +202,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		switch (assignment->getRight()->getType()->getExactType())
 		{
 			case EXACT_UNKNOWN: case EXACT_NULL:
-				throw ErrorReporter::report("Could not deduct type of left value", ERR_DECORATOR, assignment->getLeft()->getPosition());
+				throw ErrorReporter::report("Could not infer type of left value", ERR_DECORATOR, assignment->getLeft()->getPosition());
 			case EXACT_PROPERTY:
 				((DST::VariableDeclaration*)assignment->getLeft())->setType(
 					((DST::PropertyType*)assignment->getRight()->getType())->getReturn()
