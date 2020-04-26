@@ -1,14 +1,14 @@
-import "Examples/std"
-// import "std"
+// import "Examples/std"
+import "std"
 
 namespace Test {
     void Print(any a) {
         if a is int:
-            Std.PrintD(@(a as int))
+            Std.PrintD(a as int)
         else if a is Foo:
             (a as Foo).Show()
         else if a is bool:
-            Std.PrintS("true" if @(a as bool) else "false")
+            Std.PrintS(if a as bool then "true" else "false")
         else if a = null:
             Std.PrintS("null")
         // FIXME: "is null"

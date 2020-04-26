@@ -69,13 +69,6 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
                     throw ErrorReporter::report("cannot return void in non void function", ERR_DECORATOR, node->getPosition());
                 return _builder.CreateRetVoid();
             }
-            if (node->getExpression()->getExpressionType() == ET_LIST)
-            {
-                auto expList = (DST::ExpressionList*)node->getExpression();
-                for (unsigned int i = 0; i < expList->size(); i++)
-                    _builder.CreateStore(codeGen(expList->getExpressions()[i]), _funcReturns[i]);
-                return _builder.CreateRetVoid();
-            }
             auto val = codeGen(node->getExpression());
             auto returnTy = getParentFunction()->getReturnType();
             if (val->getType() != returnTy)

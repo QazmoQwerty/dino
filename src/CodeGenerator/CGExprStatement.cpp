@@ -206,28 +206,40 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         return right;
     }
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
+    if (node->getLeft()->getExpressionType() == ET_LIST) 
     {
-        if (node->getRight()->getExpressionType() == ET_FUNCTION_CALL)
-        {
-            vector<Value*> retPtrs;
-            for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
-                retPtrs.push_back(codeGenLval(i));
-            return codeGen(((DST::FunctionCall*)node->getRight()), retPtrs);
-        }
-
-        if (node->getRight()->getExpressionType() != ET_LIST)
-            throw ErrorReporter::report("Multi-return functions are not implemented yet", ERR_CODEGEN, node->getPosition());
-        vector<Value*> lefts, rights;
-        for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
-            lefts.push_back(codeGenLval(i));
-        for (auto i : ((DST::ExpressionList*)node->getRight())->getExpressions())
-            rights.push_back(codeGen(i));
-        Value *lastStore = NULL;
-        for (unsigned int i = 0; i < lefts.size(); i++)
-            lastStore = _builder.CreateStore(rights[i], lefts[i]);
-        return lastStore;   // Temporary fix.
+        right = codeGen(node->getRight());
+        auto list = (DST::ExpressionList*)node->getLeft();
+        for (unsigned int i = 0; i < list->size(); i++) 
+            _builder.CreateStore(
+                _builder.CreateExtractValue(right, i), 
+                codeGenLval(list->getExpressions()[i])
+            );
+        return right;
     }
+
+    /*if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
+    {
+        // if (node->getRight()->getExpressionType() == ET_FUNCTION_CALL)
+        // {
+        //     vector<Value*> retPtrs;
+        //     for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
+        //         retPtrs.push_back(codeGenLval(i));
+        //     return codeGen(((DST::FunctionCall*)node->getRight()), retPtrs);
+        // }
+
+        // if (node->getRight()->getExpressionType() != ET_LIST)
+        //     throw ErrorReporter::report("Multi-return functions are not implemented yet", ERR_CODEGEN, node->getPosition());
+        // vector<Value*> lefts, rights;
+        // for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
+        //     lefts.push_back(codeGenLval(i));
+        // for (auto i : ((DST::ExpressionList*)node->getRight())->getExpressions())
+        //     rights.push_back(codeGen(i));
+        // Value *lastStore = NULL;
+        // for (unsigned int i = 0; i < lefts.size(); i++)
+        //     lastStore = _builder.CreateStore(rights[i], lefts[i]);
+        // return lastStore;   // Temporary fix.
+    }*/
 
     if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && 
         ((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)

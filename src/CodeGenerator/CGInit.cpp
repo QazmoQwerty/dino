@@ -589,25 +589,14 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
 llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
     vector<llvm::Type*> types;
-    auto params = node->getParameters();
-
-    llvm::Type *returnType = NULL; 
-
     if (typeDef)
         types.push_back(typeDef->structType->getPointerTo());
+    auto returnType = evalType(node->getReturnType());
 
-    // functions that return multiple values return them based on pointers they get as arguments
-    bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
-    if (isMultiReturnFunc)
-    {
-        for (auto i : ((DST::TypeList*)node->getReturnType())->getTypes())
-            types.push_back(evalType(i)->getPointerTo());
-        returnType = _builder.getVoidTy();
-    }
-    else returnType = evalType(node->getReturnType());
-    
+    auto params = node->getParameters();
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
+
     auto funcType = llvm::FunctionType::get(returnType, types, false);
 
     string funcId = "";
@@ -641,7 +630,6 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
     // Set names for all arguments.
     unsigned idx = 0;
-    unsigned idx2 = 0;
     bool b = true;
     for (auto &arg : func->args())
     {
@@ -650,8 +638,6 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
             arg.setName("this");
             b = false;
         }
-        else if (isMultiReturnFunc && idx2 < ((DST::TypeList*)node->getReturnType())->size())
-            arg.setName(".ret" + std::to_string(idx2++));
         else arg.setName(params[idx++]->getVarId().to_string());
     }
 
@@ -663,8 +649,6 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
 
 void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerator::TypeDefinition *typeDef)
 {
-    bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
-
     llvm::Value *funcPtr = NULL;
     if (typeDef)
         funcPtr = typeDef->functions[node->getVarDecl()->getVarId()];
@@ -695,23 +679,11 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     // Record the function arguments in the NamedValues map.
     _namedValues.push({});
     bool isFirst = true;
-    unsigned idx = 0;
-    if (isMultiReturnFunc)
-        _funcReturns.clear();
     for (llvm::Argument &arg : func->args())
     {
-        if (!(isFirst && typeDef) && isMultiReturnFunc && idx < ((DST::TypeList*)node->getReturnType())->size())
-        {
-            _funcReturns.push_back(&arg);
-            idx++;
-        }
-        else 
-        {
-            AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
-            _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-            _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-        }
-        
+        AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
+        _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+        _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
         isFirst = false;
     }
 

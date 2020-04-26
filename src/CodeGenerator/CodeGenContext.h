@@ -68,9 +68,6 @@ namespace CodeGenerator
     /* All the values existing in the local scope */
     extern stack<unordered_map<std::string, Value*>> _namedValues;
 
-    /* Since multi-return functions are not supported in LLVM we have to return them by reference (through arguments) */
-    extern vector<Value*> _funcReturns;
-
     /*
         %.interface_type = type { i8*, %.vtable_type* }
         First member is a ptr to the object, second is a ptr to the object's vtable.
