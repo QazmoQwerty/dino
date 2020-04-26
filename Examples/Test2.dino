@@ -21,12 +21,29 @@ namespace Test {
 
     // (int, int) Sort(int a, int b): return if a > b then a, b else b, a 
 
+    any Foo2() {
+        return new int
+    }
+
+    // (int, int) Foo(): return 10, 12
+
     void Main() {
         // int a, int b := if a > b then 1, 2 else 2, 3
-        int a, int b := 1, 2
-        (int, bool) c := 10, false
-        // Bar('a', A)
+        // int a, int b := if true then 1, 2 else 2, 1 
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        // a, b := if false then 1, 2 else 2, 1 
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+
+        // a, b := Foo()
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        // // Bar('a', A)
         // var sort := (int a, int b) int, int { return if a > b then a, b else b, a }
+        // a, b := sort(a, b)
+        // Std.PrintD(a)
+        // Std.PrintD(b)
 
         // int a, int b := Sort(10, 20)
         // Std.PrintD(a)

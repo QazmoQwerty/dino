@@ -30,19 +30,8 @@ llvm::FunctionType *CodeGenerator::getInterfaceFuncType(DST::FunctionDeclaration
 {
     vector<llvm::Type*> types;
     auto params = node->getParameters();
-    llvm::Type *returnType = NULL; 
     types.push_back(_builder.getInt8PtrTy());
-
-    // functions that return multiple values return them based on pointers they get as arguments
-    bool isMultiReturnFunc = node->getReturnType()->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)node->getReturnType())->size() > 1;
-    if (isMultiReturnFunc)
-    {
-        for (auto i : ((DST::TypeList*)node->getReturnType())->getTypes())
-            types.push_back(evalType(i)->getPointerTo());
-        returnType = _builder.getVoidTy();
-    }
-    else returnType = evalType(node->getReturnType());
-    
+    auto returnType = evalType(node->getReturnType());
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
     return llvm::FunctionType::get(returnType, types, false);

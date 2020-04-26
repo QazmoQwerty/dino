@@ -113,9 +113,6 @@ namespace CodeGenerator
     /* Boxes a pointer value into an interface value */
     llvm::Value* convertToInterface(llvm::Value *ptr);
 
-    /* Boxes a pointer value into an interface alloca */
-    llvm::Value* convertToInterfaceLval(llvm::Value *ptr);
-
     /* Finds which interface a property belongs to. */
     DST::InterfaceDeclaration *getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl);
 
@@ -249,6 +246,7 @@ namespace CodeGenerator
     llvm::Value      *codeGen(DST::ConditionalExpression   *node);
     llvm::Value      *codeGen(DST::Variable                *node);
     llvm::Function   *codeGen(DST::FunctionLiteral         *node);
+    llvm::Value      *codeGen(DST::ExpressionList          *node);
 
     // ---------------------- Statements ---------------------- //
 

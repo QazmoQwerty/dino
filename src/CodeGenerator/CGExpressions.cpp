@@ -22,6 +22,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_INCREMENT: return codeGen((DST::Increment*)node);
         case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
         case ET_FUNCTION_LITERAL: return codeGen((DST::FunctionLiteral*)node);
+        case ET_LIST: return codeGen((DST::ExpressionList*)node);
         default: throw ErrorReporter::report("Unimplemented codegen for expression", ERR_CODEGEN, node->getPosition());
     }
 }
@@ -52,42 +53,31 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
     }
 }
 
+llvm::Value *CodeGenerator::codeGen(DST::ExpressionList *node)
+{
+    auto ty = evalType(node->getType());
+    llvm::Value* ret = llvm::UndefValue::get(ty);
+    int idx = 0;
+    for (auto i : node->getExpressions())
+        ret = _builder.CreateInsertValue(ret, codeGen(i), idx++);
+    return ret;
+}
+
 llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node) 
 {
-    llvm::errs() << "1\n";
     vector<llvm::Type*> types;
+    auto returnType = evalType(node->getType()->getReturns());
     auto params = node->getParameters();
-llvm::errs() << "1\n";
-    llvm::Type *returnType = NULL; 
-llvm::errs() << "1\n";
-    // functions that return multiple values return them based on pointers they get as arguments
-    bool isMultiReturnFunc = 1 < node->getType()->getReturns()->size();
-    if (isMultiReturnFunc)
-    {
-        for (auto i : node->getType()->getReturns()->getTypes())
-            types.push_back(evalType(i)->getPointerTo());
-        returnType = _builder.getVoidTy();
-    }
-    else returnType = evalType(node->getType()->getReturns());
-    llvm::errs() << "1\n";
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
-    
     auto funcType = llvm::FunctionType::get(returnType, types, false);
 
     llvm::Function *func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, ".anonFunc", _module.get());
-llvm::errs() << "1\n";
+
     // Set names for all arguments.
     unsigned idx = 0;
-    unsigned idx2 = 0;
     for (auto &arg : func->args())
-    {
-        llvm::errs() << std::to_string(idx);
-        if (isMultiReturnFunc && idx < node->getType()->getReturns()->size())
-            arg.setName(".ret" + std::to_string(idx++));
-        else arg.setName(params[idx2++]->getVarId().to_string());
-    }
-llvm::errs() << "1\n";
+        arg.setName(params[idx++]->getVarId().to_string());
 
     if (node->getContent() == NULL)
         throw ErrorReporter::report("function literal with no body", ERR_CODEGEN, node->getPosition());
@@ -96,40 +86,29 @@ llvm::errs() << "1\n";
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
     auto savedInsertPoint = _builder.GetInsertBlock();
     _builder.SetInsertPoint(bb);
-llvm::errs() << "1\n";
+
     // Record the function arguments in the NamedValues map.
     _namedValues.push({});
     bool isFirst = true;
-    idx = 0;
-    if (isMultiReturnFunc)  // breaks this too :)
-        _funcReturns.clear();
-    llvm::errs() << "1\n";
+    
     for (llvm::Argument &arg : func->args())
     {
-        if (isMultiReturnFunc && idx < ((DST::TypeList*)node->getType()->getReturns())->size())
-        {
-            _funcReturns.push_back(&arg);
-            idx++;
-        }
-        else 
-        {
-            AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
-            _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-            _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-        }    
+        AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
+        _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
+        _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table. 
         isFirst = false;
     }
-llvm::errs() << "1\n";
+
     for (auto i : node->getContent()->getStatements()) 
     {
         auto val = codeGen(i);
         if (val == nullptr)
             throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
     }
-llvm::errs() << "1\n";
+
     if (!_builder.GetInsertBlock()->getTerminator())
         _builder.CreateRetVoid();
-llvm::errs() << "1\n";
+
     llvm::verifyFunction(*func, &llvm::errs());
     _namedValues.pop(); // leave block
     _builder.SetInsertPoint(savedInsertPoint);
@@ -244,7 +223,6 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         default:
             throw ErrorReporter::report("Unimplemented Binary operation!", ERR_CODEGEN, node->getPosition());
     }
-    
 }
 
 Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
