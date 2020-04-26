@@ -9,6 +9,8 @@ void CodeGenerator::setup(bool isLib, bool noGC)
     _isLib = isLib;
     _noGC = noGC;
 
+    _namedValues.push({});
+
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
@@ -518,8 +520,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
             {
                 AllocaInst *alloca = CreateEntryBlockAlloca(getFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
                 _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-                _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-                // _currThisPtr = alloca;
+                _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
             }
         }
 
@@ -562,17 +563,13 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         _builder.SetInsertPoint(bb);
 
         // Record the function arguments in the NamedValues map.
-        _namedValues.clear();
-
+        _namedValues.push({});
         bool isFirst = false;
         for (llvm::Argument &arg : setFunc->args())
         {
             AllocaInst *alloca = CreateEntryBlockAlloca(setFunc, arg.getType(), arg.getName());    // Create an alloca for this variable.
             _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-            _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-
-            // if (typeDef && isFirst)
-            //     _currThisPtr = alloca;
+            _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
             isFirst = false;
         }
 
@@ -585,6 +582,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         if (!_builder.GetInsertBlock()->getTerminator())
             _builder.CreateRetVoid();
         llvm::verifyFunction(*setFunc, &llvm::errs());
+        _namedValues.pop(); // leave block
     }
 }
 
@@ -695,7 +693,7 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     _builder.SetInsertPoint(bb);
 
     // Record the function arguments in the NamedValues map.
-    _namedValues.clear();
+    _namedValues.push({});
     bool isFirst = true;
     unsigned idx = 0;
     if (isMultiReturnFunc)
@@ -711,10 +709,7 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         {
             AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
             _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
-            _namedValues[arg.getName()] = alloca;   // Add arguments to variable symbol table.
-
-            // if (isFirst && typeDef)
-            //     _currThisPtr = alloca;
+            _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
         }
         
         isFirst = false;
@@ -731,4 +726,5 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         _builder.CreateRetVoid();
     
     llvm::verifyFunction(*func, &llvm::errs());
+    _namedValues.pop(); // leave block
 }

@@ -1,31 +1,42 @@
 // import "Examples/std"
-import "std"
+// import "std"
 
 namespace Test {
 
-    // bool Foo(int a) {
-    //     Std.PrintD(a)
-    //     return a = 2
+    // char putchar(char c): extern "putchar"
+
+    // (char, char) A(char a) {
+    //     return a, a + 1 as char
     // }
 
-    (int, int) A(int a) {
-        return a, a * 10
-    }
-
-    // (int, int) B(int a) {
-    //     return a, a + 10
+    // void Bar(char c, (char, char)(char) f) {
+    //     char a, char b := f(a)
+    //     putchar(a)
+    //     putchar('\n')
+    //     putchar(b)
+    //     putchar('\n')
     // }
 
-    // int C(int a, (int, int)(int) f) {
-    //     int a, int b := f(a)
-    //     return a + b
-    // }
+    // (int, int) F(int a): return a, a + 1 
+
+    // (int, int) Sort(int a, int b): return if a > b then a, b else b, a 
 
     void Main() {
-        (int, int)(int) f := A
-        int a, int b := f(10)   
-        Std.PrintD(a + b)
-        // int c, int d := B(10)   
-        // Std.PrintD(c + d)
+        // int a, int b := if a > b then 1, 2 else 2, 3
+        int a, int b := 1, 2
+        (int, bool) c := 10, false
+        // Bar('a', A)
+        // var sort := (int a, int b) int, int { return if a > b then a, b else b, a }
+
+        // int a, int b := Sort(10, 20)
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        // Std.PrintD(max)
+
+        // int a, int b := sort(10, 12)
+
+        // Std.PrintD(a)
+        // Std.PrintD(b)
+        
     }
 }

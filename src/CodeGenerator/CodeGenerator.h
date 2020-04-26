@@ -224,13 +224,14 @@ namespace CodeGenerator
     /////////////////////// Code Gen Lval ///////////////////////
     // these return a pointer to a value rather than a value   //
 
-    Value       *codeGenLval(DST::Expression            *node);
-    Value       *codeGenLval(DST::Variable              *node);
-    Value       *codeGenLval(DST::MemberAccess          *node);
-    Value       *codeGenLval(DST::UnaryOperation        *node);
-    Value       *codeGenLval(DST::BinaryOperation       *node);
-    Value       *codeGenLval(DST::Conversion            *node);
-    AllocaInst  *codeGenLval(DST::VariableDeclaration   *node);
+    llvm::Value       *codeGenLval(DST::Expression            *node);
+    llvm::Value       *codeGenLval(DST::Variable              *node);
+    llvm::Value       *codeGenLval(DST::MemberAccess          *node);
+    llvm::Value       *codeGenLval(DST::UnaryOperation        *node);
+    llvm::Value       *codeGenLval(DST::BinaryOperation       *node);
+    llvm::Value       *codeGenLval(DST::Conversion            *node);
+    llvm::AllocaInst  *codeGenLval(DST::VariableDeclaration   *node);
+    llvm::Function    *codeGenLval(DST::FunctionLiteral       *node);
 
     ///////////////////// Code Gen Functions /////////////////////
 

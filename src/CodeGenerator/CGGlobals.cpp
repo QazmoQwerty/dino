@@ -6,13 +6,13 @@
 namespace CodeGenerator 
 {
     /* Maps vtable function index information to interface's member's name. */
-    std::unordered_map<DST::InterfaceDeclaration*, std::unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
+    unordered_map<DST::InterfaceDeclaration*, unordered_map<unicode_string, InterfaceFuncInfo, UnicodeHasherFunction>> _interfaceVtableFuncInfo;
 
     /* Maps DST::TypeDeclarations to useful codeGen info */
-    std::unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
+    unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
 
     /* Maps a namespace's id to all values, types, and namespaces contained in it */
-    std::unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
+    unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
 
     /* Are we compiling a library or a regular file? */
     bool _isLib;
@@ -33,7 +33,7 @@ namespace CodeGenerator
     llvm::DataLayout *_dataLayout(new llvm::DataLayout(_module.get()));
 
     /* All the values existing in the local scope */
-    std::unordered_map<std::string, Value*> _namedValues;
+    stack<unordered_map<std::string, Value*>> _namedValues;
 
     /* Since multi-return functions are not supported in LLVM we have to return them by reference (through arguments) */
     vector<Value*> _funcReturns;

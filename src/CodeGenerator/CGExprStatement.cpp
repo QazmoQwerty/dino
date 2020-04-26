@@ -344,7 +344,7 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
 
     // Create an alloca for the variable in the entry block.
     AllocaInst *alloca = CreateEntryBlockAlloca(func, type, name);
-    _namedValues[name] = alloca;
+    _namedValues.top()[name] = alloca;
 
     /*if (type->isArrayTy())
     {

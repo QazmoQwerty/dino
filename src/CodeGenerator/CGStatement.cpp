@@ -46,7 +46,7 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
 
 Value *CodeGenerator::codeGen(DST::ConstDeclaration *node) 
 {
-    return _namedValues[node->getName().to_string()] = codeGen(node->getExpression());
+    return _namedValues.top()[node->getName().to_string()] = codeGen(node->getExpression());
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
@@ -167,7 +167,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     pad->addClause(llvm::ConstantPointerNull::get(_builder.getInt8PtrTy()));
 
     auto caught = _builder.CreateCall(beginCatchFunc, pad);
-    _namedValues["caught"] = _builder.CreateBitCast(caught, _interfaceType->getPointerTo());
+    _namedValues.top()["caught"] = _builder.CreateBitCast(caught, _interfaceType->getPointerTo());
 
     for (auto i : node->getCatchBlock()->getStatements())
         if (!codeGen(i))
