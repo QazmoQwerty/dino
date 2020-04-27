@@ -1,47 +1,20 @@
 // import "Examples/std"
-import "std2"
+// import "Examples/std2"
+
+import "std"
 
 namespace Test {
 
-    // char putchar(char c): extern "putchar
-
-    void PrintBLn(bool b) {
-        Std.PrintSLn(if b then "true" else "false")
-    }
-    // (int, int) Foo(): return 10, 12
-
 
     void Main() {
-        (int, bool) a := 10, false
-        // Std.PrintDLn(a[0])
-        Std.PrintDLn(a[0])
-        PrintBLn(a[2])
-        // int a, int b := if a > b then 1, 2 else 2, 3
-        // int a, int b := if true then 1, 2 else 2, 1 
-        // Std.PrintD(a)
-        // Std.PrintD(b)
-        // a, b := if false then 1, 2 else 2, 1 
-        // Std.PrintD(a)
-        // Std.PrintD(b)
 
-        // a, b := Foo()
-        // Std.PrintD(a)
-        // Std.PrintD(b)
-        // // Bar('a', A)
-        // var sort := (int a, int b) int, int { return if a > b then a, b else b, a }
-        // a, b := sort(a, b)
-        // Std.PrintD(a)
-        // Std.PrintD(b)
-
-        // int a, int b := Sort(10, 20)
-        // Std.PrintD(a)
-        // Std.PrintD(b)
-        // Std.PrintD(max)
-
-        // int a, int b := sort(10, 12)
-
-        // Std.PrintD(a)
-        // Std.PrintD(b)
-        
+        int[4] a := [1, 2, 3, 4]
+        a[2] := 2
+        for int i := 0 | i < a.Size | i++ {
+            Std.PrintD(i)
+        }
+        // int n := a[3]
+        // a[3] := 10
+        // int i := 10
     }
 }

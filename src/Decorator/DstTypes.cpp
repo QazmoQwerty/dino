@@ -20,8 +20,6 @@ DST::Type * DST::TypeSpecifierType::getMemberType(unicode_string name)
 	return NULL;
 }
 
-DST::NamespaceType::~NamespaceType() { if (_decl) delete _decl; }
-
 bool DST::PointerType::equals(Type * other)
 {
 	if (other == nullptr) 
