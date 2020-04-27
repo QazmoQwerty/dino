@@ -1,18 +1,46 @@
 // import "Examples/std"
 // import "Examples/std2"
 
-import "std"
+import "std2"
 
 namespace Test {
 
+    // bool Or(bool a, bool b): return a or b
+
+    // bool And(bool a, bool b): return a and b
+
+    // char put(char c): extern "putchar"
+
+    void show(bool b):
+        Std.PrintDLn(if b then 1 else 0)
 
     void Main() {
+        // int@ a := null
 
-        int[4] a := [1, 2, 3, 4]
-        a[2] := 2
-        for int i := 0 | i < a.Size | i++ {
-            Std.PrintD(i)
-        }
+        // show(a = null or @a = 20)
+
+        // show(a = null)
+        // int v := @a
+        // show(@a = 20)
+
+        show(true and false)
+        show(true and true)
+        show(false and true)
+        show(false and false)
+
+        // show(Or(true, true))
+
+        // show(Or(true, false))
+
+        // show(Or(false, false))
+
+        // show(Or(false, true))
+        
+        // int[4] a := [1, 2, 3, 4]
+        // a[2] := 2
+        // for int i := 0 | i < a.Size | i++ {
+        //     Std.PrintD(i)
+        // }
         // int n := a[3]
         // a[3] := 10
         // int i := 10
