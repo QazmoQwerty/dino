@@ -1,33 +1,21 @@
 // import "Examples/std"
-// import "std"
+import "std2"
 
 namespace Test {
 
-    // char putchar(char c): extern "putchar"
+    // char putchar(char c): extern "putchar
 
-    // (char, char) A(char a) {
-    //     return a, a + 1 as char
-    // }
-
-    // void Bar(char c, (char, char)(char) f) {
-    //     char a, char b := f(a)
-    //     putchar(a)
-    //     putchar('\n')
-    //     putchar(b)
-    //     putchar('\n')
-    // }
-
-    // (int, int) F(int a): return a, a + 1 
-
-    // (int, int) Sort(int a, int b): return if a > b then a, b else b, a 
-
-    any Foo2() {
-        return new int
+    void PrintBLn(bool b) {
+        Std.PrintSLn(if b then "true" else "false")
     }
-
     // (int, int) Foo(): return 10, 12
 
+
     void Main() {
+        (int, bool) a := 10, false
+        // Std.PrintDLn(a[0])
+        Std.PrintDLn(a[0])
+        PrintBLn(a[2])
         // int a, int b := if a > b then 1, 2 else 2, 3
         // int a, int b := if true then 1, 2 else 2, 1 
         // Std.PrintD(a)

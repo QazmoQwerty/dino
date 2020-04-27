@@ -66,15 +66,24 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
     switch (node->getOperator()._type)
     {
         case OT_SQUARE_BRACKETS_OPEN:
-            if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+            if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY)
             {
-                auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
-                return _builder.CreateGEP(_builder.CreateLoad(arrPtr), codeGen(node->getRight()) );
+                if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+                {
+                    auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
+                    return _builder.CreateGEP(_builder.CreateLoad(arrPtr), codeGen(node->getRight()) );
+                }
+                else {
+                    // TODO - array literal access
+                    return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } );
+                }
             }
-            else {
-                // TODO - array literal access
-                return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } );
+            if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST)
+            {
+                int idx = ((DST::Literal*)node->getRight())->getIntValue();
+                return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(idx) });
             }
+            else throw "unreachable";
         default:
             throw ErrorReporter::report("Unimplemented lval Binary operation", ERR_CODEGEN, node->getPosition());
     }

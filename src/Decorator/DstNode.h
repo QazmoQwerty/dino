@@ -669,6 +669,7 @@ namespace DST
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
 		void *getValue();
+		int getIntValue();
 		LiteralType getLiteralType() { return _base->getLiteralType(); }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
 
