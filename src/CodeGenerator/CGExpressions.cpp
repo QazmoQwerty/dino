@@ -115,60 +115,103 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node)
     return func;
 }
 
+Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
+{
+    auto right = evalType((DST::Type*)node->getRight());
+    auto left = codeGenLval(node->getLeft());
+    if (right == _interfaceType)
+    {
+        if (left->getType() != _interfaceType)
+        {
+            // should be known at compile-time
+            throw "TODO";
+        }
+
+        auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
+        auto vtableLoad = _builder.CreateLoad(vtablePtr);
+        auto interface = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getInterfaceDecl();
+        auto interfaceVtable = _builder.CreateCall(getVtableInterfaceLookupFunction(), { vtableLoad, _builder.getInt32((unsigned long)interface) }); 
+        auto diff = _builder.CreatePtrDiff(interfaceVtable, llvm::ConstantPointerNull::get(_interfaceVtableType->getPointerTo()));
+        return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
+    }
+    else if (((DST::Type*)node->getRight())->getExactType() == EXACT_BASIC)
+    {
+        if (left->getType()->getPointerElementType() != _interfaceType)
+            return _builder.getInt1(false);
+        auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
+        auto vtableLoad = _builder.CreateLoad(vtablePtr);
+        auto vtable = getVtable(evalType(((DST::Type*)node->getRight())));
+        auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
+        return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
+    }
+    else throw ErrorReporter::report("The \"is\" operator is currently only implemented for basic types!", ERR_CODEGEN, node->getPosition());
+}
+
+Value *CodeGenerator::createLogicalOr(DST::BinaryOperation *node)
+{
+    auto parent = getParentFunction();
+    auto left = codeGen(node->getLeft());
+    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "isTrue", parent);
+    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "isFalse", parent);
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "merge", parent);
+    _builder.CreateCondBr(left, isTrue, isFalse);
+
+    _builder.SetInsertPoint(isTrue);
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(isFalse);
+    auto right = codeGen(node->getRight());
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(merge);
+    auto phi = _builder.CreatePHI(_builder.getInt1Ty(), 2);
+    phi->addIncoming(_builder.getInt1(true), isTrue);
+    phi->addIncoming(right, isFalse);
+    return phi;
+}
+
+Value *CodeGenerator::createLogicalAnd(DST::BinaryOperation *node)
+{
+    auto parent = getParentFunction();
+    auto left = codeGen(node->getLeft());
+    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "isTrue", parent);
+    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "isFalse", parent);
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "merge", parent);
+    _builder.CreateCondBr(left, isTrue, isFalse);
+
+    _builder.SetInsertPoint(isFalse);
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(isTrue);
+    auto right = codeGen(node->getRight());
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(merge);
+    auto phi = _builder.CreatePHI(_builder.getInt1Ty(), 2);
+    phi->addIncoming(_builder.getInt1(false), isFalse);
+    phi->addIncoming(right, isTrue);
+    return phi;
+}
+
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
-    Value *left, *right;
-    
-    if (node->getOperator()._type == OT_IS)
+    /* special cases that might not eval both sides of the operation */
+    switch (node->getOperator()._type)
     {
-        auto right = evalType((DST::Type*)node->getRight());
-        auto left = codeGenLval(node->getLeft());
-        if (right == _interfaceType)
-        {
-            if (left->getType() != _interfaceType)
-            {
-                // should be known at compile-time
-                throw "TODO";
-            }
-
-            auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
-            auto vtableLoad = _builder.CreateLoad(vtablePtr);
-            auto interface = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getInterfaceDecl();
-            auto interfaceVtable = _builder.CreateCall(getVtableInterfaceLookupFunction(), { vtableLoad, _builder.getInt32((unsigned long)interface) }); 
-            auto diff = _builder.CreatePtrDiff(interfaceVtable, llvm::ConstantPointerNull::get(_interfaceVtableType->getPointerTo()));
-            return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
-        }
-        else if (((DST::Type*)node->getRight())->getExactType() == EXACT_BASIC)
-        {
-            if (left->getType()->getPointerElementType() != _interfaceType)
-                return _builder.getInt1(false);
-            auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
-            auto vtableLoad = _builder.CreateLoad(vtablePtr);
-            // auto decl = ((DST::BasicType*)node->getRight())->getTypeSpecifier()->getTypeDecl();
-            // llvm::Value *vtable = NULL;
-            // if (auto def = _types[decl])
-            //     vtable = def->vtable;
-            // else vtable = createEmptyVtable(evalType(((DST::Type*)node->getRight())));
-            auto vtable = getVtable(evalType(((DST::Type*)node->getRight())));
-            auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
-            return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
-        }
-        else throw ErrorReporter::report("The \"is\" operator is currently only implemented for basic types!", ERR_CODEGEN, node->getPosition());
-
-        // auto interfaceVtable = _builder.CreateCall(_vtableInterfaceLookupFunc, { vtable, _builder.getInt32((unsigned long)interface) });
-
-        // funcPtr = getFuncFromVtable(vtable, interfaceDecl, funcId);
-        // funcTy = _interfaceVtableFuncInfo[interfaceDecl][funcId].type;
-        // thisPtr = _builder.CreateLoad(_builder.CreateInBoundsGEP(thisPtr, { _builder.getInt32(0), _builder.getInt32(0) }));
-        return NULL;
+        case OT_IS:
+            return createIsOperation(node);
+        case OT_SQUARE_BRACKETS_OPEN:
+            return _builder.CreateLoad(codeGenLval(node));
+        case OT_LOGICAL_OR:
+            return createLogicalOr(node);   
+        case OT_LOGICAL_AND:
+            return createLogicalAnd(node);   
+        default: break;
     }
 
-    if (node->getOperator()._type != OT_SQUARE_BRACKETS_OPEN)
-    {
-        left = codeGen(node->getLeft());
-        right = codeGen(node->getRight());
-    }
-    
+    auto left = codeGen(node->getLeft());
+    auto right = codeGen(node->getRight());
+
     switch (node->getOperator()._type)
     {
         case OT_ADD:
@@ -213,13 +256,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
                 return _builder.CreateICmpNE(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
             return _builder.CreateICmpNE(left, right, "cmptmp");
         }
-        case OT_LOGICAL_AND:
-            return _builder.CreateAnd(left, right, "andtmp");
-        case OT_LOGICAL_OR:
-            return _builder.CreateOr(left, right, "ortmp");
 
-        case OT_SQUARE_BRACKETS_OPEN:
-            return _builder.CreateLoad(codeGenLval(node));
         default:
             throw ErrorReporter::report("Unimplemented Binary operation!", ERR_CODEGEN, node->getPosition());
     }
@@ -227,12 +264,25 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 
 Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
 {
-    // FIXME: currently both branches are evaluated, should only eval the needed branch.
-    return _builder.CreateSelect(
-        codeGen(node->getCondition()),
-        codeGen(node->getThenBranch()),
-        codeGen(node->getElseBranch())
-    );
+    auto parent = getParentFunction();
+    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "then", parent);
+    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "then", parent);
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "then", parent);
+    _builder.CreateCondBr(codeGen(node->getCondition()), isTrue, isFalse);
+
+    _builder.SetInsertPoint(isTrue);
+    auto thenBranch = codeGen(node->getThenBranch());
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(isFalse);
+    auto elseBranch = codeGen(node->getElseBranch());
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(merge);
+    auto phi = _builder.CreatePHI(evalType(node->getType()), 2);
+    phi->addIncoming(thenBranch, isTrue);
+    phi->addIncoming(elseBranch, isFalse);
+    return phi;
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperation* node)

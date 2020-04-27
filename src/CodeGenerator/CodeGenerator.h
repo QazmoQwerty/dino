@@ -200,6 +200,13 @@ namespace CodeGenerator
     /* generate a runtime null check - if the pointer is null a runtime error will be thrown */
     llvm::Value *assertNotNull(llvm::Value *val);
 
+    /* these are a little trickier than you'd think because of short-circuiting */
+    Value *createLogicalOr(DST::BinaryOperation *node);
+    Value *createLogicalAnd(DST::BinaryOperation *node);
+
+    /* generate code for the 'is' binary operation */
+    Value *createIsOperation(DST::BinaryOperation *node);
+
     /*
         create and get an IR function similar to this:
         void assertNotNull(void@ ptr) {
