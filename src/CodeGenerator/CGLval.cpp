@@ -73,10 +73,8 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
                     auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
                     return _builder.CreateGEP(_builder.CreateLoad(arrPtr), codeGen(node->getRight()) );
                 }
-                else {
-                    // TODO - array literal access
-                    return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } );
-                }
+                else // TODO - array literal access
+                    return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } ); 
             }
             if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST)
             {

@@ -247,6 +247,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			auto func = (AST::FunctionDeclaration*)i;
 			enterBlock();
 			auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
+			
 			for (auto param : func->getParameters())
 				funcDecl->addParameter(decorate(param));
 			leaveBlock();

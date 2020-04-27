@@ -284,7 +284,7 @@ namespace DST
 			NamespaceDeclaration *_decl;
 		public:
 			NamespaceType(DST::NamespaceDeclaration *decl) : Type(NULL), _decl(decl) {}
-			virtual ~NamespaceType();
+			virtual ~NamespaceType() {}
 			virtual ExactType getExactType() { return EXACT_NAMESPACE; };
 			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
@@ -343,7 +343,7 @@ namespace DST
 	public:
 		PointerType(AST::Expression *base, Type *ptrTo) : Type(base), _type(ptrTo) { }
 		PointerType(Type *ptrTo) : Type(NULL), _type(ptrTo) { }
-		virtual ~PointerType() { if (_type) delete _type; }
+		virtual ~PointerType() { }
 		Type *getPtrType() { return _type; } // returns what type the pointer points to
 		ExactType getExactType() { return EXACT_POINTER; }
 		virtual bool equals(Type *other);
@@ -406,7 +406,7 @@ namespace DST
 	public:
 		BasicType(AST::Expression *base, TypeSpecifierType *typeSpec) : Type(base), _typeSpec(typeSpec) {}
 		BasicType(TypeSpecifierType *typeSpec) : Type(NULL), _typeSpec(typeSpec) {}
-		virtual ~BasicType() { if (_typeSpec) delete _typeSpec; }
+		virtual ~BasicType() { }
 
 		TypeSpecifierType *getTypeSpecifier() { return _typeSpec; }
 		unicode_string getTypeId();

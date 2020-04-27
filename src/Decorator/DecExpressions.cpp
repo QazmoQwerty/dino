@@ -270,7 +270,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 
 	auto left = decorate(node->getLeft());
 	auto right = decorate(node->getRight());
-
 	if (left->getExpressionType() == ET_TYPE)
 	{
 		if (right)
@@ -294,9 +293,12 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			if (bo->getLeft()->getType()->getExactType() == EXACT_ARRAY)
 			{
 				// array access
-				DST::BasicType intType(getPrimitiveType("int"));
-				if (!bo->getRight()->getType()->equals(&intType))
+				// DST::BasicType intType(getPrimitiveType("int"));
+				// auto intType = new DST::BasicType(getPrimitiveType("int"));
+				if (bo->getRight()->getType()->getExactType() != EXACT_BASIC || ((DST::BasicType*)bo->getRight()->getType())->getTypeSpecifier() != getPrimitiveType("int"))
 					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
+				// if (!bo->getRight()->getType()->equals(&intType))
+				// 	throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 			}
 			else if (bo->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
