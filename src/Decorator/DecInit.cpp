@@ -15,36 +15,26 @@ DST::UnknownType *Decorator::_unknownType;
 DST::NamespaceDeclaration *Decorator::_universalNs;
 bool Decorator::_isLibrary;
 unsigned Decorator::_loopCount;
-DST::InterfaceDeclaration *DST::_anyInterface;
 vector<DST::Node*> Decorator::_toDelete;
-
-//#define createBasicType(name) _variables[0][unicode_string(name)] = new DST::TypeSpecifierType(new DST::TypeDeclaration(unicode_string(name)));
 
 void Decorator::setup(bool isLibrary)
 {
 	_isLibrary = isLibrary;
 	enterBlock();
-	// createBasicType("type");
-	// createBasicType("int");
-	// createBasicType("bool");
-	// createBasicType("string");
-	// createBasicType("char");
-	// createBasicType("float");
-	// createBasicType("void");
 
-	_variables[0][unicode_string("bool")] = DST::_primitiveTypeSpecs._bool;
-	_variables[0][unicode_string("int")] = DST::_primitiveTypeSpecs._int;
-	_variables[0][unicode_string("string")] = DST::_primitiveTypeSpecs._string;
-	_variables[0][unicode_string("char")] = DST::_primitiveTypeSpecs._char;
-	_variables[0][unicode_string("float")] = DST::_primitiveTypeSpecs._float;
-	_variables[0][unicode_string("void")] = DST::_primitiveTypeSpecs._void;
-	_variables[0][unicode_string("tpye")] = DST::_primitiveTypeSpecs._type;
+	_variables[0][unicode_string("bool")] = DST::_builtinTypes._bool;
+	_variables[0][unicode_string("int")] = DST::_builtinTypes._int;
+	_variables[0][unicode_string("string")] = DST::_builtinTypes._string;
+	_variables[0][unicode_string("char")] = DST::_builtinTypes._char;
+	_variables[0][unicode_string("float")] = DST::_builtinTypes._float;
+	_variables[0][unicode_string("void")] = DST::_builtinTypes._void;
+	_variables[0][unicode_string("type")] = DST::_builtinTypes._type;
+	_variables[0][unicode_string("any")] = DST::_builtinTypes._any;
 
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 	_loopCount = 0;
-	_variables[0][DST::_anyInterface->getName()] = new DST::TypeSpecifierType(DST::_anyInterface);
 }
 
 DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
@@ -107,7 +97,7 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 				if (decl->getName() == "Error")
 				{
 					// specifier->getInterfaceDecl()->getBase()->setName(unicode_string("error"));
-					_variables[0][unicode_string("error")] = specifier;
+					_variables[0][unicode_string("error")] = DST::_builtinTypes._error = specifier;
 				}
 			}
 		}
@@ -120,8 +110,8 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 			if (isStd)
 			{
 				if (decl->getName() == "String") {
-					delete _variables[0][unicode_string("string")];
-					_variables[0][unicode_string("string")]	= specifier;
+					delete DST::_builtinTypes._string;
+					_variables[0][unicode_string("string")]	= DST::_builtinTypes._string = specifier;
 				}
 			}
 		}

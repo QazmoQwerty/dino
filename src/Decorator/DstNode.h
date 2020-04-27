@@ -23,7 +23,6 @@ namespace DST
 	static BasicType *typeidTypePtr;
 
 	class InterfaceDeclaration;
-	extern InterfaceDeclaration *_anyInterface;
 
 	class TypeSpecifierType;
 	typedef struct PrimitiveTypeSpecifiers {
@@ -34,9 +33,23 @@ namespace DST
 		TypeSpecifierType *_string;
 		TypeSpecifierType *_void;
 		TypeSpecifierType *_type;
+		TypeSpecifierType *_error;
+		TypeSpecifierType *_any;
 	} PrimitiveTypeSpecifiers;
 
-	extern PrimitiveTypeSpecifiers _primitiveTypeSpecs;
+	extern PrimitiveTypeSpecifiers _builtinTypes;
+
+	BasicType *getIntTy();
+	BasicType *getBoolTy();
+	BasicType *getFloatTy();
+	BasicType *getCharTy();
+	BasicType *getStringTy();
+	BasicType *getVoidTy();
+	BasicType *getTypeidTy();
+	BasicType *getAnyTy();
+	BasicType *getErrorTy();
+
+	InterfaceDeclaration *getAnyInterface();
 
 	/*
 		Setup some global variables in the namespace.

@@ -185,7 +185,7 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 	auto lit = new DST::FunctionLiteral(node);
 	auto type = new DST::FunctionType();
 	if (node->getReturnType() == NULL)
-		type->addReturn(getPrimitiveType("void")->getBasicTy());
+		type->addReturn(DST::getVoidTy());
 	else type->addReturn(evalType(node->getReturnType()));
 	for (auto i : node->getParameters())
 	{
@@ -233,7 +233,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		else if (type->getExactType() == EXACT_NAMESPACE)
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
 		else if (type->getExactType() == EXACT_ARRAY && varId == unicode_string("Size"))
-			memberType = new DST::PropertyType(getPrimitiveType("int")->getBasicTy(), true, false);
+			memberType = new DST::PropertyType(DST::getIntTy(), true, false);
 		else throw ErrorReporter::report("Expression must have class or namespace type", ERR_DECORATOR, left->getPosition());
 
 		if (memberType == nullptr)
@@ -286,13 +286,13 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))
 	{
 		case RT_BOOLEAN: 
-			bo->setType(getPrimitiveType("bool")->getBasicTy());
+			bo->setType(DST::getBoolTy());
 			break;
 		case RT_ARRAY:
 			if (bo->getLeft()->getType()->getExactType() == EXACT_ARRAY)
 			{
 				// array access
-				if (bo->getRight()->getType()->getExactType() != EXACT_BASIC || ((DST::BasicType*)bo->getRight()->getType())->getTypeSpecifier() != getPrimitiveType("int"))
+				if (bo->getRight()->getType() != DST::getIntTy() || (bo->getRight()->getType()->isConstTy() && bo->getRight()->getType() == DST::getIntTy()->getConstOf()))
 					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 			}
@@ -332,12 +332,12 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 	auto lit = new DST::Literal(node);
 	switch (node->getLiteralType()) 
 	{
-	case (LT_BOOLEAN):		lit->setType(getPrimitiveType("bool")->getBasicTy());	break;
-	case (LT_CHARACTER):	lit->setType(getPrimitiveType("char")->getBasicTy());	break;
-	case (LT_FRACTION):		lit->setType(getPrimitiveType("float")->getBasicTy());	break;
-	case (LT_INTEGER):		lit->setType(getPrimitiveType("int")->getBasicTy());	break;
-	case (LT_STRING):		lit->setType(getPrimitiveType("string")->getBasicTy()); break;
-	case (LT_NULL):			lit->setType(_nullType);	break;
+	case (LT_BOOLEAN):		lit->setType(DST::getBoolTy());		break;
+	case (LT_CHARACTER):	lit->setType(DST::getCharTy());		break;
+	case (LT_FRACTION):		lit->setType(DST::getFloatTy());	break;
+	case (LT_INTEGER):		lit->setType(DST::getIntTy());		break;
+	case (LT_STRING):		lit->setType(DST::getStringTy()); 	break;
+	case (LT_NULL):			lit->setType(_nullType);			break;
 	default: break;
 	}
 	return lit;

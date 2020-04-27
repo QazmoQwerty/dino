@@ -8,18 +8,30 @@
 
 namespace DST 
 {
-	PrimitiveTypeSpecifiers _primitiveTypeSpecs;
+	PrimitiveTypeSpecifiers _builtinTypes;
 
 	void setup() {
-		_anyInterface = new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
-		_primitiveTypeSpecs._bool = createPrimitiveTypeSpec("bool");
-		_primitiveTypeSpecs._int = createPrimitiveTypeSpec("int");
-		_primitiveTypeSpecs._string = createPrimitiveTypeSpec("string");
-		_primitiveTypeSpecs._char = createPrimitiveTypeSpec("char");
-		_primitiveTypeSpecs._float = createPrimitiveTypeSpec("float");
-		_primitiveTypeSpecs._void = createPrimitiveTypeSpec("void");
-		_primitiveTypeSpecs._type = createPrimitiveTypeSpec("type");
+		_builtinTypes._bool = createPrimitiveTypeSpec("bool");
+		_builtinTypes._int = createPrimitiveTypeSpec("int");
+		_builtinTypes._string = createPrimitiveTypeSpec("string");
+		_builtinTypes._char = createPrimitiveTypeSpec("char");
+		_builtinTypes._float = createPrimitiveTypeSpec("float");
+		_builtinTypes._void = createPrimitiveTypeSpec("void");
+		_builtinTypes._type = createPrimitiveTypeSpec("type");
+		_builtinTypes._any = new DST::TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
 	}
+
+	BasicType *getIntTy() 	 { return _builtinTypes._int    -> getBasicTy(); }
+	BasicType *getBoolTy() 	 { return _builtinTypes._bool   -> getBasicTy(); }
+	BasicType *getCharTy() 	 { return _builtinTypes._char   -> getBasicTy(); }
+	BasicType *getVoidTy()   { return _builtinTypes._void	-> getBasicTy(); }
+	BasicType *getFloatTy()  { return _builtinTypes._float  -> getBasicTy(); }
+	BasicType *getTypeidTy() { return _builtinTypes._type   -> getBasicTy(); }
+	BasicType *getStringTy() { return _builtinTypes._string -> getBasicTy(); }
+	BasicType *getAnyTy() 	 { return _builtinTypes._any    -> getBasicTy(); }
+	BasicType *getErrorTy()  { return _builtinTypes._error  -> getBasicTy(); }
+
+	InterfaceDeclaration *getAnyInterface() { return _builtinTypes._any->getInterfaceDecl(); }
 }
 
 
@@ -133,7 +145,7 @@ string DST::PointerType::toShortString()
 DST::Type * DST::Type::getType()
 {
 	std::cout << "you probably didn't wanna call this func" << std::endl;
-	return typeidTypePtr;
+	return getTypeidTy();
 }
 
 bool DST::BasicType::assignableTo(DST::Type *type)

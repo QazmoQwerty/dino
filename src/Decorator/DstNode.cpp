@@ -144,7 +144,7 @@ bool DST::TypeDeclaration::validateImplements(InterfaceDeclaration * inter)
 
 bool DST::TypeDeclaration::implements(InterfaceDeclaration * inter)
 {
-	if (inter == _anyInterface)
+	if (inter == getAnyInterface())
 		return true;
 	for (auto i : _interfaces)
 		if (i->implements(inter))
@@ -186,7 +186,7 @@ void DST::InterfaceDeclaration::notImplements(InterfaceDeclaration * inter)
 
 bool DST::InterfaceDeclaration::implements(InterfaceDeclaration * inter)
 {
-	if (inter == this || inter == _anyInterface)
+	if (inter == this || inter == getAnyInterface())
 		return true;
 	for (auto i : _implements)
 		if (i->implements(inter))
