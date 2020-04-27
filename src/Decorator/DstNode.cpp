@@ -241,6 +241,14 @@ DST::FunctionDeclaration::~FunctionDeclaration() { if (_base) delete _base; if (
 
 DST::FunctionLiteral::~FunctionLiteral() { if (_base) delete _base; if (_type) delete _type; if (_content) delete _content; _parameters.clear(); }
 
+int DST::Literal::getIntValue() 
+{
+	if (getLiteralType() != LT_INTEGER)
+		throw "literal is not an integer";
+	return ((AST::Integer*)_base)->getValue();
+}
+
+
 void * DST::Literal::getValue() 
 {
 	switch (_base->getLiteralType())

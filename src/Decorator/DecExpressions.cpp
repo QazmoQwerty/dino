@@ -291,14 +291,26 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			bo->setType(new DST::BasicType(getPrimitiveType("bool")));
 			break;
 		case RT_ARRAY:
-			// array access
 			if (bo->getLeft()->getType()->getExactType() == EXACT_ARRAY)
 			{
-				DST::BasicType *intType = new DST::BasicType(getPrimitiveType("int"));
-				if (!bo->getRight()->getType()->equals(intType))
+				// array access
+				DST::BasicType intType(getPrimitiveType("int"));
+				if (!bo->getRight()->getType()->equals(&intType))
 					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
-				_toDelete.push_back(intType);
+			}
+			else if (bo->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
+			{
+				// aggregate type access. 
+				if (bo->getRight()->getExpressionType() != ET_LITERAL ||
+					((DST::Literal*)bo->getRight())->getLiteralType() != LT_INTEGER)
+					throw ErrorReporter::report("aggregate index must be a constant integer value", ERR_DECORATOR, bo->getRight()->getPosition());
+				int idx = ((DST::Literal*)bo->getRight())->getIntValue();
+				auto list = ((DST::TypeList*)bo->getLeft()->getType());
+				if (idx < 0 || size_t(idx) >= list->size())
+					throw ErrorReporter::report("aggregate index [" + std::to_string(idx) + "] out of range [" + 
+							std::to_string(list->size()) + "]", ERR_DECORATOR, bo->getRight()->getPosition());
+				bo->setType(list->getTypes()[idx]);
 			}
 			else throw ErrorReporter::report("type \"" + bo->getLeft()->getType()->toShortString() 
 								+ "\" is not an array", ERR_DECORATOR, bo->getLeft()->getPosition());
