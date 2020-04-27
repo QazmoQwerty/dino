@@ -151,9 +151,9 @@ Value *CodeGenerator::createLogicalOr(DST::BinaryOperation *node)
 {
     auto parent = getParentFunction();
     auto left = codeGen(node->getLeft());
-    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "then");
-    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "then");
-    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "then");
+    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "isTrue", parent);
+    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "isFalse", parent);
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "merge", parent);
     _builder.CreateCondBr(left, isTrue, isFalse);
 
     _builder.SetInsertPoint(isTrue);
@@ -167,10 +167,6 @@ Value *CodeGenerator::createLogicalOr(DST::BinaryOperation *node)
     auto phi = _builder.CreatePHI(_builder.getInt1Ty(), 2);
     phi->addIncoming(_builder.getInt1(true), isTrue);
     phi->addIncoming(right, isFalse);
-
-    parent->getBasicBlockList().push_back(isTrue);
-    parent->getBasicBlockList().push_back(isFalse);
-    parent->getBasicBlockList().push_back(merge);
     return phi;
 }
 
@@ -178,9 +174,9 @@ Value *CodeGenerator::createLogicalAnd(DST::BinaryOperation *node)
 {
     auto parent = getParentFunction();
     auto left = codeGen(node->getLeft());
-    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "then");
-    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "then");
-    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "then");
+    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "isTrue", parent);
+    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "isFalse", parent);
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "merge", parent);
     _builder.CreateCondBr(left, isTrue, isFalse);
 
     _builder.SetInsertPoint(isFalse);
@@ -194,10 +190,6 @@ Value *CodeGenerator::createLogicalAnd(DST::BinaryOperation *node)
     auto phi = _builder.CreatePHI(_builder.getInt1Ty(), 2);
     phi->addIncoming(_builder.getInt1(false), isFalse);
     phi->addIncoming(right, isTrue);
-
-    parent->getBasicBlockList().push_back(isTrue);
-    parent->getBasicBlockList().push_back(isFalse);
-    parent->getBasicBlockList().push_back(merge);
     return phi;
 }
 
@@ -272,12 +264,25 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 
 Value *CodeGenerator::codeGen(DST::ConditionalExpression *node)
 {
-    // FIXME: currently both branches are evaluated, should only eval the needed branch.
-    return _builder.CreateSelect(
-        codeGen(node->getCondition()),
-        codeGen(node->getThenBranch()),
-        codeGen(node->getElseBranch())
-    );
+    auto parent = getParentFunction();
+    llvm::BasicBlock *isTrue = llvm::BasicBlock::Create(_context, "then", parent);
+    llvm::BasicBlock *isFalse = llvm::BasicBlock::Create(_context, "then", parent);
+    llvm::BasicBlock *merge = llvm::BasicBlock::Create(_context, "then", parent);
+    _builder.CreateCondBr(codeGen(node->getCondition()), isTrue, isFalse);
+
+    _builder.SetInsertPoint(isTrue);
+    auto thenBranch = codeGen(node->getThenBranch());
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(isFalse);
+    auto elseBranch = codeGen(node->getElseBranch());
+    _builder.CreateBr(merge);
+
+    _builder.SetInsertPoint(merge);
+    auto phi = _builder.CreatePHI(evalType(node->getType()), 2);
+    phi->addIncoming(thenBranch, isTrue);
+    phi->addIncoming(elseBranch, isFalse);
+    return phi;
 }
 
 Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
