@@ -416,7 +416,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 leftTy->toShortString() + std::to_string(leftTy->getExactType()), ERR_CODEGEN, node->getPosition());   // TODO
         }
     }
-    if (node->getType()->isConst())
+    if (node->getType()->isConstTy())
         return codeGenLval(node);
     auto val = codeGenLval(node);
     assertNotNull(val);
@@ -449,7 +449,7 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
         return createCallOrInvoke(func, {});
     }
     auto t = codeGenLval(node);
-    if (node->getType()->isConst())
+    if (node->getType()->isConstTy())
         return t;
     if (t->getType()->getPointerElementType()->isFunctionTy())
         return t;

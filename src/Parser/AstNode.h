@@ -193,7 +193,7 @@ namespace AST
 
 	public:
 		VariableDeclaration() : ExpressionStatement() {};
-		virtual ~VariableDeclaration() { if (_type) delete _type; }
+		virtual ~VariableDeclaration() { }
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; };
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; };
@@ -562,7 +562,7 @@ namespace AST
 		Expression* _right;
 
 	public:
-		BinaryOperation() : Expression() {};
+		BinaryOperation() : Expression(), _left(NULL), _right(NULL) {};
 		virtual ~BinaryOperation() { if (_right) delete _right; if (_left) delete _left; }
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; };
 		virtual string toString() { return string() + "<BinaryOperator>\\n" + _operator._str.to_string(); };
@@ -709,7 +709,7 @@ namespace AST
 
 	public:
 		Function() : Literal(LT_FUNCTION) { }
-		virtual ~Function() { if (_content) delete _content; if (_returnType) delete _returnType; _parameters.clear(); }
+		virtual ~Function() { if (_content) delete _content; _parameters.clear(); }
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
 		virtual vector<Node*> getChildren();
 

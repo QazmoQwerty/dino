@@ -61,9 +61,7 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 	unicode_string name = node->getName();
 	if (_variables[currentScope()].count(name))
 		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
-	decl->getExpression()->getType()->setNotWritable();
-	decl->getExpression()->getType()->setConst();
-	_variables[currentScope()][name] = decl->getExpression()->getType();
+	_variables[currentScope()][name] = decl->getExpression()->getType()->getConstOf();
 	return decl;
 }
 
@@ -116,7 +114,7 @@ DST::TryCatch * Decorator::decorate(AST::TryCatch *node)
 	auto tryCatch = new DST::TryCatch(node);
 	tryCatch->setTryBlock(decorate(node->getTryBlock()));
 	enterBlock();
-	_variables[currentScope()][unicode_string("caught")] = new DST::BasicType(getPrimitiveType(ERROR_TYPE_NAME));
+	_variables[currentScope()][unicode_string("caught")] = getPrimitiveType(ERROR_TYPE_NAME)->getBasicTy();
 	tryCatch->setCatchBlock(decorate(node->getCatchBlock()));
 	leaveBlock();
 	return tryCatch;

@@ -26,7 +26,7 @@ void Decorator::createErrorInterfaceType()
 	auto varDecl = new AST::VariableDeclaration();
 	varDecl->setVarId(unicode_string("Msg"));
 	auto propDecl = new AST::PropertyDeclaration(varDecl);
-	auto stringTy = new DST::BasicType(getPrimitiveType("int"));
+	auto stringTy = getPrimitiveType("int")->getBasicTy();
 	auto propTy = new DST::PropertyType(stringTy, true, false);
 	auto decPropDecl = new DST::PropertyDeclaration(propDecl, NULL, NULL, propTy);
 

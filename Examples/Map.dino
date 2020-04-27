@@ -1,5 +1,5 @@
+// import "std2"
 import "std2"
-
 namespace Prog {
     type Pair {
         string Key
@@ -152,6 +152,8 @@ namespace Prog {
     int calcHash(string s, int numBuckets, int attempt) {
         const prime1 ≡ 163
         const prime2 ≡ 151
+        // int prime1 ≡ 163
+        // int prime2 ≡ 151
         int hashA ≡ hash(s, prime1, numBuckets)
         int hashB ≡ hash(s, prime2, numBuckets)
         return (hashA + (attempt × (hashB + 1))) % numBuckets
@@ -162,6 +164,7 @@ namespace Prog {
         int h ≡ 0
         int len ≡ s.Size
         const prime ≡ 151
+        // int prime ≡ 151
         for int i ≡ 0 | i < len | i++ {
             h += pow(prime, len-i-1) × s.Get(i) as int
             h %= m
@@ -209,7 +212,6 @@ namespace Prog {
         map.Insert("14", NewString("fourteen"))
         map.Insert("15", NewString("fifteen"))
         map.Insert("16", NewString("sixteen"))
-
         map.Insert("one", NewString("1"))
         map.Insert("two", NewString("2"))
         map.Insert("three", NewString("3"))

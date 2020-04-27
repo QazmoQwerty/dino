@@ -4,7 +4,26 @@
 */
 #include "DstNode.h"
 
-DST::TypeSpecifierType::~TypeSpecifierType() { if (_typeDecl) delete _typeDecl; if (_interfaceDecl) delete _interfaceDecl; }
+#define createPrimitiveTypeSpec(name) (new DST::TypeSpecifierType(new DST::TypeDeclaration(unicode_string(name))))
+
+namespace DST 
+{
+	PrimitiveTypeSpecifiers _primitiveTypeSpecs;
+
+	void setup() {
+		_anyInterface = new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
+		_primitiveTypeSpecs._bool = createPrimitiveTypeSpec("bool");
+		_primitiveTypeSpecs._int = createPrimitiveTypeSpec("int");
+		_primitiveTypeSpecs._string = createPrimitiveTypeSpec("string");
+		_primitiveTypeSpecs._char = createPrimitiveTypeSpec("char");
+		_primitiveTypeSpecs._float = createPrimitiveTypeSpec("float");
+		_primitiveTypeSpecs._void = createPrimitiveTypeSpec("void");
+		_primitiveTypeSpecs._type = createPrimitiveTypeSpec("type");
+	}
+}
+
+
+DST::TypeSpecifierType::~TypeSpecifierType() { }
 
 unicode_string DST::TypeSpecifierType::getTypeName()
 {
@@ -18,6 +37,29 @@ DST::Type * DST::TypeSpecifierType::getMemberType(unicode_string name)
 	if (_typeDecl) return _typeDecl->getMemberType(name);
 	if (_interfaceDecl) return _interfaceDecl->getMemberType(name);
 	return NULL;
+}
+
+DST::ConstType *DST::Type::getConstOf()
+{
+	if (isConstTy())
+		return (DST::ConstType*)this;
+	if (_constOf == NULL)
+		_constOf = new DST::ConstType(this);
+	return _constOf;
+}
+
+DST::PointerType *DST::Type::getPtrTo()
+{
+	if (_ptrTo == NULL)
+		_ptrTo = new DST::PointerType(this);
+	return _ptrTo;
+}
+
+DST::BasicType *DST::TypeSpecifierType::getBasicTy()
+{
+	if (_basicTy == NULL)
+		_basicTy = new DST::BasicType(this);
+	return _basicTy;
 }
 
 bool DST::PointerType::equals(Type * other)
@@ -56,31 +98,31 @@ bool DST::PointerType::equals(Type * other)
 
 string DST::BasicType::toShortString() 
 { 
-	if (!_base || _base->getExpressionType() == ET_IDENTIFIER)
-		return getTypeId().to_string(); 
-	else if (_base->getExpressionType() != ET_BINARY_OPERATION || ((AST::BinaryOperation*)_base)->getOperator()._type != OT_PERIOD)
-		throw "internal error in DST::BasicType::toShortString()";
-	stack<AST::Identifier*> ids;
-	auto bo = ((AST::BinaryOperation*)_base);
-	while (bo)
-	{
-		if (auto id = dynamic_cast<AST::Identifier*>(bo->getRight()))
-			ids.push(id);
-		else throw "internal error in DST::BasicType::toShortString()";
-		if (bo->getLeft()->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)_base)->getOperator()._type == OT_PERIOD)
-			bo = (AST::BinaryOperation*)bo->getLeft();
-		else if (auto id = dynamic_cast<AST::Identifier*>(bo->getLeft()))
-			ids.push(id);
-		else throw "internal error in DST::BasicType::toShortString()";
-	}
-	string ret = ids.top()->getVarId().to_string();
-	ids.pop();
-	while (!ids.empty()) 
-	{
-		ret += "." + ids.top()->getVarId().to_string();
-		ids.pop();
-	}
-	return ret;
+	// TODO - add scope!
+	return getTypeId().to_string(); 
+	// else if (_base->getExpressionType() != ET_BINARY_OPERATION || ((AST::BinaryOperation*)_base)->getOperator()._type != OT_PERIOD)
+	// 	throw "internal error in DST::BasicType::toShortString()";
+	// stack<AST::Identifier*> ids;
+	// auto bo = ((AST::BinaryOperation*)_base);
+	// while (bo)
+	// {
+	// 	if (auto id = dynamic_cast<AST::Identifier*>(bo->getRight()))
+	// 		ids.push(id);
+	// 	else throw "internal error in DST::BasicType::toShortString()";
+	// 	if (bo->getLeft()->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)_base)->getOperator()._type == OT_PERIOD)
+	// 		bo = (AST::BinaryOperation*)bo->getLeft();
+	// 	else if (auto id = dynamic_cast<AST::Identifier*>(bo->getLeft()))
+	// 		ids.push(id);
+	// 	else throw "internal error in DST::BasicType::toShortString()";
+	// }
+	// string ret = ids.top()->getVarId().to_string();
+	// ids.pop();
+	// while (!ids.empty()) 
+	// {
+	// 	ret += "." + ids.top()->getVarId().to_string();
+	// 	ids.pop();
+	// }
+	// return ret;
 }
 
 string DST::PointerType::toShortString()

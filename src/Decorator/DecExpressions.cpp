@@ -44,7 +44,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (auto var = _variables[scope][name]) {
 			if (var->getExactType() == EXACT_SPECIFIER)
-				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
+				return ((DST::TypeSpecifierType*)var)->getBasicTy();
 			return new DST::Variable(node, var);
 		}
 
@@ -58,17 +58,13 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 		auto acc = new DST::MemberAccess(bop, decorate(thisId));
 		acc->setType(var);
 		return acc;
-
-		//if (var->getExactType() == EXACT_SPECIFIER)
-		//	return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
-		//return new DST::Variable(node, var);
 	}
 
 	for (int i = _currentNamespace.size() - 1; i >= 0; i--)
 	{
 		if (auto var = _currentNamespace[i]->getMemberType(name)) {
 			if (var->getExactType() == EXACT_SPECIFIER)
-				return new DST::BasicType(node, (DST::TypeSpecifierType*)var);
+				return ((DST::TypeSpecifierType*)var)->getBasicTy();
 			return new DST::Variable(node, var);
 		}
 	}
@@ -114,7 +110,7 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 	}
 	
 	if (node->getOperator()._type == OT_AT && val->getExpressionType() == ET_TYPE)	// Pointer Type
-		return new DST::PointerType(node, (DST::Type*)val);
+		return ((DST::Type*)val)->getPtrTo();
 
 	return new DST::UnaryOperation(node, val);
 }
@@ -168,7 +164,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		if (areAllTypes)
 		{
 			// function type
-			auto type = new DST::FunctionType(node);
+			auto type = new DST::FunctionType();
 			type->addReturn((DST::Type*)funcId);
 			for (auto i : arguments->getExpressions())
 				type->addParameter((DST::Type*)i);
@@ -189,7 +185,7 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 	auto lit = new DST::FunctionLiteral(node);
 	auto type = new DST::FunctionType();
 	if (node->getReturnType() == NULL)
-		type->addReturn(new DST::BasicType(getPrimitiveType("void")));
+		type->addReturn(getPrimitiveType("void")->getBasicTy());
 	else type->addReturn(evalType(node->getReturnType()));
 	for (auto i : node->getParameters())
 	{
@@ -237,7 +233,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		else if (type->getExactType() == EXACT_NAMESPACE)
 			memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
 		else if (type->getExactType() == EXACT_ARRAY && varId == unicode_string("Size"))
-			memberType = new DST::PropertyType(new DST::BasicType(getPrimitiveType("int")), true, false);
+			memberType = new DST::PropertyType(getPrimitiveType("int")->getBasicTy(), true, false);
 		else throw ErrorReporter::report("Expression must have class or namespace type", ERR_DECORATOR, left->getPosition());
 
 		if (memberType == nullptr)
@@ -245,7 +241,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		
 		// TODO - are we leaking memory here?
 		if (memberType->getExactType() == EXACT_SPECIFIER)
-			return new DST::BasicType((DST::TypeSpecifierType*)memberType);	
+			return ((DST::TypeSpecifierType*)memberType)->getBasicTy();
 
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
@@ -259,7 +255,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (exp->getType()->getExactType() == EXACT_BASIC && ((DST::BasicType*)exp->getType())->getTypeSpecifier()->getInterfaceDecl() &&
 			ty->getExactType() == EXACT_BASIC && ((DST::BasicType*)ty)->getTypeSpecifier()->getTypeDecl())
 		{
-			auto conv = new DST::Conversion(NULL, new DST::PointerType(ty), exp);
+			auto conv = new DST::Conversion(NULL, ty->getPtrTo(), exp);
 			auto op = new AST::UnaryOperation();
 			op->setPosition(node->getPosition());
 			op->setOperator(OperatorsMap::getOperatorByDefinition(OT_AT).second);
@@ -269,7 +265,10 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	}
 
 	auto left = decorate(node->getLeft());
+	// std::cout << node->getLeft()->toString() << "\n";
 	auto right = decorate(node->getRight());
+	// std::cout << node->getOperator()._str.to_string() << "\n";
+	// std::cout << node->getRight()->toString() << "\n";
 	if (left->getExpressionType() == ET_TYPE)
 	{
 		if (right)
@@ -287,18 +286,14 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))
 	{
 		case RT_BOOLEAN: 
-			bo->setType(new DST::BasicType(getPrimitiveType("bool")));
+			bo->setType(getPrimitiveType("bool")->getBasicTy());
 			break;
 		case RT_ARRAY:
 			if (bo->getLeft()->getType()->getExactType() == EXACT_ARRAY)
 			{
 				// array access
-				// DST::BasicType intType(getPrimitiveType("int"));
-				// auto intType = new DST::BasicType(getPrimitiveType("int"));
 				if (bo->getRight()->getType()->getExactType() != EXACT_BASIC || ((DST::BasicType*)bo->getRight()->getType())->getTypeSpecifier() != getPrimitiveType("int"))
 					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
-				// if (!bo->getRight()->getType()->equals(&intType))
-				// 	throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
 			}
 			else if (bo->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
@@ -337,11 +332,11 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 	auto lit = new DST::Literal(node);
 	switch (node->getLiteralType()) 
 	{
-	case (LT_BOOLEAN):		lit->setType(new DST::BasicType(getPrimitiveType("bool")));	break;
-	case (LT_CHARACTER):	lit->setType(new DST::BasicType(getPrimitiveType("char")));	break;
-	case (LT_FRACTION):		lit->setType(new DST::BasicType(getPrimitiveType("float")));	break;
-	case (LT_INTEGER):		lit->setType(new DST::BasicType(getPrimitiveType("int")));	break;
-	case (LT_STRING):		lit->setType(new DST::BasicType(getPrimitiveType("string"))); break;
+	case (LT_BOOLEAN):		lit->setType(getPrimitiveType("bool")->getBasicTy());	break;
+	case (LT_CHARACTER):	lit->setType(getPrimitiveType("char")->getBasicTy());	break;
+	case (LT_FRACTION):		lit->setType(getPrimitiveType("float")->getBasicTy());	break;
+	case (LT_INTEGER):		lit->setType(getPrimitiveType("int")->getBasicTy());	break;
+	case (LT_STRING):		lit->setType(getPrimitiveType("string")->getBasicTy()); break;
 	case (LT_NULL):			lit->setType(_nullType);	break;
 	default: break;
 	}
@@ -363,7 +358,7 @@ DST::Expression * Decorator::decorate(AST::ExpressionList * node)
 
 	if (isTypeList)
 	{
-		auto list = new DST::TypeList(node);
+		auto list = new DST::TypeList({});
 		for (auto i : vec)
 			list->addType((DST::Type*)i);
 		return list;

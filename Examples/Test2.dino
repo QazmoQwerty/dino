@@ -11,24 +11,30 @@ namespace Test {
 
     // char put(char c): extern "putchar"
 
-    void show(bool b):
-        Std.PrintDLn(if b then 1 else 0)
+    // void show(bool b):
+    //     Std.PrintDLn(if b then 1 else 0)
+    const c := 10   
 
     void Main() {
-        int@ a := null
+        // int@ a := null
 
+        // int n := 10
+
+        // int c := 20
+
+        // c := 30
         // show(a = null or @a = 20)
 
-        Std.PrintDLn(if a != null then @a else 20)
+        Std.PrintDLn(c)
 
         // show(a = null)
         // int v := @a
         // show(@a = 20)
 
-        show(true and false)
-        show(true and true)
-        show(false and true)
-        show(false and false)
+        // show(true and false)
+        // show(true and true)
+        // show(false and true)
+        // show(false and false)
 
         // show(Or(true, true))
 

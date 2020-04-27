@@ -246,4 +246,5 @@ enum ExactType
 	EXACT_SPECIFIER,	// The type of a specifier (int, bool, etc)
 	EXACT_NAMESPACE,	// Example: namespace a {}
 	EXACT_UNKNOWN,		// Example: var a
+	EXACT_CONST,		// Examples: const a := 10
 };

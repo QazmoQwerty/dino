@@ -18,19 +18,27 @@ unsigned Decorator::_loopCount;
 DST::InterfaceDeclaration *DST::_anyInterface;
 vector<DST::Node*> Decorator::_toDelete;
 
-#define createBasicType(name) _variables[0][unicode_string(name)] = new DST::TypeSpecifierType(new DST::TypeDeclaration(unicode_string(name)));
+//#define createBasicType(name) _variables[0][unicode_string(name)] = new DST::TypeSpecifierType(new DST::TypeDeclaration(unicode_string(name)));
 
 void Decorator::setup(bool isLibrary)
 {
 	_isLibrary = isLibrary;
 	enterBlock();
-	createBasicType("type");
-	createBasicType("int");
-	createBasicType("bool");
-	createBasicType("string");
-	createBasicType("char");
-	createBasicType("float");
-	createBasicType("void");
+	// createBasicType("type");
+	// createBasicType("int");
+	// createBasicType("bool");
+	// createBasicType("string");
+	// createBasicType("char");
+	// createBasicType("float");
+	// createBasicType("void");
+
+	_variables[0][unicode_string("bool")] = DST::_primitiveTypeSpecs._bool;
+	_variables[0][unicode_string("int")] = DST::_primitiveTypeSpecs._int;
+	_variables[0][unicode_string("string")] = DST::_primitiveTypeSpecs._string;
+	_variables[0][unicode_string("char")] = DST::_primitiveTypeSpecs._char;
+	_variables[0][unicode_string("float")] = DST::_primitiveTypeSpecs._float;
+	_variables[0][unicode_string("void")] = DST::_primitiveTypeSpecs._void;
+	_variables[0][unicode_string("tpye")] = DST::_primitiveTypeSpecs._type;
 
 	_unknownType = new DST::UnknownType();
 	_nullType = new DST::NullType();
@@ -288,10 +296,8 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			auto decl = (AST::ConstDeclaration*)i;
 			auto constDecl = new DST::ConstDeclaration(decl);
 			auto exp = decorate(decl->getExpression());
-			exp->getType()->setNotWritable();
-			exp->getType()->setConst();
 			constDecl->setExpression(exp);
-			node->addMember(decl->getName(), constDecl, constDecl->getExpression()->getType());
+			node->addMember(decl->getName(), constDecl, constDecl->getType());
 			break;
 		}
 		default:
@@ -358,7 +364,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				{
 					auto decl = (DST::FunctionDeclaration*)member.second.first;
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
+					_variables[currentScope()][unicode_string("this")] = (((DST::TypeSpecifierType*)i.second.second)->getBasicTy())->getPtrTo();
 					
 					for (auto param : decl->getParameters())	// Add function parameters to variables map
 						_variables[currentScope()][param->getVarId()] = param->getType();
@@ -374,7 +380,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					auto decl = (DST::PropertyDeclaration*)member.second.first;
 					auto retType = ((DST::PropertyType*)member.second.second)->getReturn();
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::PointerType(new DST::BasicType((DST::TypeSpecifierType*)i.second.second));
+					_variables[currentScope()][unicode_string("this")] = ((DST::TypeSpecifierType*)i.second.second)->getBasicTy()->getPtrTo();
 					if (decl->getBase()->getGet())
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));

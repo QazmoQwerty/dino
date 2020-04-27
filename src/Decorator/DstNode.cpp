@@ -4,12 +4,6 @@
 */
 #include "DstNode.h"
 
-void DST::setup()
-{
-	typeidTypePtr = NULL;
-	DST::_anyInterface = new DST::InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any")));
-}
-
 DST::BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
 {
 	if (_left && _left->getType() && !_left->getType()->readable())
@@ -35,15 +29,11 @@ void DST::UnaryOperation::setType()
 			if (((DST::ArrayType*)_expression)->getLength() == DST::UNKNOWN_ARRAY_LENGTH && ((DST::ArrayType*)_expression)->getLenExp() == NULL)
 				throw ErrorReporter::report("Expected an array size specifier", ERR_DECORATOR, getPosition());
 			_type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH, ((DST::ArrayType*)_expression)->getLenExp());
-			// _type = new DST::ArrayType(((DST::ArrayType*)_expression)->getElementType(), DST::UNKNOWN_ARRAY_LENGTH, NULL);
 		}
-		else _type = new DST::PointerType((DST::Type*)_expression);
-		// if (_expression->getType()->getExactType() != EXACT_SPECIFIER)
-		// 	throw ErrorReporter::report("Expected a type specifier", ERR_DECORATOR, getPosition());
-		// _type = new DST::PointerType(new BasicType((TypeSpecifierType*)_expression->getType()));
+		else _type = ((DST::Type*)_expression)->getPtrTo();
 		break;
 	case OT_BITWISE_AND:	// address-of
-		_type = new DST::PointerType(_expression->getType());
+		_type = _expression->getType()->getPtrTo();
 		break;
 	case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
 		_type = _expression->getType();
@@ -239,7 +229,7 @@ DST::FunctionCall::FunctionCall(AST::FunctionCall * base, Expression * funcPtr, 
 
 DST::FunctionDeclaration::~FunctionDeclaration() { if (_base) delete _base; if (_decl) delete _decl; if (_content) delete _content; _parameters.clear(); }
 
-DST::FunctionLiteral::~FunctionLiteral() { if (_base) delete _base; if (_type) delete _type; if (_content) delete _content; _parameters.clear(); }
+DST::FunctionLiteral::~FunctionLiteral() { if (_base) delete _base; if (_content) delete _content; _parameters.clear(); }
 
 int DST::Literal::getIntValue() 
 {
