@@ -10,6 +10,12 @@ Error ErrorReporter::report(string msg, ErrorType errTy, PositionInfo pos, bool 
     return errors.back();
 }
 
+Error ErrorReporter::reportInternal(string msg, ErrorType errTy, PositionInfo pos)
+{
+    errors.push_back({ msg, errTy, pos });
+    return errors.back();
+}
+
 void ErrorReporter::showAll() 
 {
     for (unsigned int i = 0; i < errors.size(); i++)

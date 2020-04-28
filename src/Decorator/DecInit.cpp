@@ -10,8 +10,6 @@ DST::FunctionDeclaration* Decorator::_main;
 vector<DST::NamespaceDeclaration*> Decorator::_currentNamespace;
 DST::TypeDeclaration *Decorator::_currentTypeDecl;
 DST::Program *Decorator::_currentProgram;
-DST::NullType *Decorator::_nullType;
-DST::UnknownType *Decorator::_unknownType;
 DST::NamespaceDeclaration *Decorator::_universalNs;
 bool Decorator::_isLibrary;
 unsigned Decorator::_loopCount;
@@ -31,8 +29,6 @@ void Decorator::setup(bool isLibrary)
 	_variables[0][unicode_string("type")] = DST::_builtinTypes._type;
 	_variables[0][unicode_string("any")] = DST::_builtinTypes._any;
 
-	_unknownType = new DST::UnknownType();
-	_nullType = new DST::NullType();
 	_currentTypeDecl = NULL;
 	_loopCount = 0;
 }
@@ -40,8 +36,6 @@ void Decorator::setup(bool isLibrary)
 DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 {
 	_currentProgram = new DST::Program();
-
-	// createErrorInterfaceType();
 
 	for (auto i : node->getStatements())
 	{
@@ -83,29 +77,25 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 		{
 			auto decl = (AST::NamespaceDeclaration*)i;
 			auto tempDecl = partA(decl);
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::NamespaceType(tempDecl));
+			shallowDecl->addMember(decl->getName(), tempDecl, DST::getNamespaceTy(tempDecl));
 		}
 		else if (i->getStatementType() == ST_INTERFACE_DECLARATION)
 		{
 			auto decl = (AST::InterfaceDeclaration*)i;
 			auto tempDecl = new DST::InterfaceDeclaration(decl);
-			//shallowDecl->addMember(decl->getName(), tempDecl, new DST::InterfaceSpecifierType(tempDecl));
-			auto specifier = new DST::TypeSpecifierType(tempDecl);
+			auto specifier = DST::TypeSpecifierType::get(tempDecl);
 			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
 			if (isStd)
 			{
 				if (decl->getName() == "Error")
-				{
-					// specifier->getInterfaceDecl()->getBase()->setName(unicode_string("error"));
 					_variables[0][unicode_string("error")] = DST::_builtinTypes._error = specifier;
-				}
 			}
 		}
 		else if (i->getStatementType() == ST_TYPE_DECLARATION)
 		{
 			auto decl = (AST::TypeDeclaration*)i;
 			auto tempDecl = new DST::TypeDeclaration(decl);
-			auto specifier = new DST::TypeSpecifierType(tempDecl);
+			auto specifier = DST::TypeSpecifierType::get(tempDecl);
 			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
 			if (isStd)
 			{
@@ -152,9 +142,8 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getInterfaces()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_SPECIFIER && ((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
+					if (dec->getType()->getExactType() != EXACT_SPECIFIER || ((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
 						throw ErrorReporter::report("Expected an interface specifier", ERR_DECORATOR, dec->getPosition());
-					//decl->addInterface(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
 					decl->addInterface(((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl());
 				}
 			break;
@@ -187,19 +176,14 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 				auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
 				for (auto param : func->getParameters())
 					funcDecl->addParameter(decorate(param));
-				auto type = new DST::FunctionType();
-				type->addReturn(funcDecl->getReturnType());
-				for (auto param : funcDecl->getParameters())
-					type->addParameter(param->getType());
-				decl->addDeclaration(funcDecl, type);
+				decl->addDeclaration(funcDecl, funcDecl->getFuncType());
 				leaveBlock();
 			}
 			for (auto prop : decl->getBase()->getProperties())
 			{
 				auto retType = evalType(prop->getVarDecl()->getVarType());
-				auto type = new DST::PropertyType(retType, prop->hasGet(), prop->hasSet());
+				auto type = retType->getPropertyOf(prop->hasGet(), prop->hasSet());
 				decl->addDeclaration(new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
-				
 			}
 			break;
 		}
@@ -218,17 +202,13 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 				auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
 				for (auto param : func->getParameters())
 					funcDecl->addParameter(decorate(param));
-				auto type = new DST::FunctionType();
-				type->addReturn(funcDecl->getReturnType());	
-				for (auto param : funcDecl->getParameters())
-					type->addParameter(param->getType());
-				decl->addDeclaration(funcDecl, type);
+				decl->addDeclaration(funcDecl, funcDecl->getFuncType());
 				leaveBlock();
 			}
 			for (auto prop : decl->getBase()->getPropertyDeclarations())
 			{
 				auto retType = evalType(prop->getVarDecl()->getVarType());
-				auto type = new DST::PropertyType(retType, prop->getGet(), prop->getSet());
+				auto type = retType->getPropertyOf(prop->getGet(), prop->getSet());
 				decl->addDeclaration(new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
 			}
 			break;
@@ -245,15 +225,10 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			auto func = (AST::FunctionDeclaration*)i;
 			enterBlock();
 			auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
-			
 			for (auto param : func->getParameters())
 				funcDecl->addParameter(decorate(param));
 			leaveBlock();
-			auto type = new DST::FunctionType();
-			type->addReturn(funcDecl->getReturnType());
-			for (auto param : funcDecl->getParameters())
-				type->addParameter(param->getType());
-			node->addMember(func->getVarDecl()->getVarId(), funcDecl, type);
+			node->addMember(func->getVarDecl()->getVarId(), funcDecl, funcDecl->getFuncType());
 			
 			if (func->getVarDecl()->getVarId() == MAIN_FUNC)
 			{
@@ -269,7 +244,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 		{
 			auto prop = (AST::PropertyDeclaration*)i;
 			auto retType = evalType(prop->getVarDecl()->getVarType());
-			auto type = new DST::PropertyType(retType, prop->getGet(), prop->getSet());
+			auto type = DST::PropertyType::get(retType, prop->getGet(), prop->getSet());
 			node->addMember(prop->getVarDecl()->getVarId(), new DST::PropertyDeclaration(prop, NULL, NULL, type), type);
 			break;
 		}

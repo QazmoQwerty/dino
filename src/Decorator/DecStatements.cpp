@@ -11,37 +11,24 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	{
 	case ST_FUNCTION_CALL:
 	{
-		auto n = decorate(dynamic_cast<AST::FunctionCall*>(node));
+		auto n = decorate((AST::FunctionCall*)node);
 		if (!n->isStatement())
 			throw ErrorReporter::report("expected a statement", ERR_DECORATOR, node->getPosition());
 		return dynamic_cast<DST::ExpressionStatement*>(n);
 	}
-	case ST_VARIABLE_DECLARATION:
-		return decorate(dynamic_cast<AST::VariableDeclaration*>(node));
-	case ST_CONST_DECLARATION:
-		return decorate(dynamic_cast<AST::ConstDeclaration*>(node));
-	case ST_ASSIGNMENT:
-		return decorate(dynamic_cast<AST::Assignment*>(node));
-	case ST_STATEMENT_BLOCK:
-		return decorate(dynamic_cast<AST::StatementBlock*>(node));
-	case ST_IF_THEN_ELSE:
-		return decorate(dynamic_cast<AST::IfThenElse*>(node));
-	case ST_SWITCH:
-		return decorate(dynamic_cast<AST::SwitchCase*>(node));
-	case ST_FOR_LOOP:
-		return decorate(dynamic_cast<AST::ForLoop*>(node));
-	case ST_WHILE_LOOP: 
-		return decorate(dynamic_cast<AST::WhileLoop*>(node));
-	case ST_UNARY_OPERATION:
-		return decorate(dynamic_cast<AST::UnaryOperationStatement*>(node));
-	case ST_DO_WHILE_LOOP: 
-		return decorate(dynamic_cast<AST::DoWhileLoop*>(node));
-	case ST_INCREMENT:
-		return decorate(dynamic_cast<AST::Increment*>(node));
-	case ST_TRY_CATCH:
-		return decorate(dynamic_cast<AST::TryCatch*>(node));
-	default: 
-		throw ErrorReporter::report("Unimplemented statement type in the decorator", ERR_DECORATOR, node->getPosition());
+	case ST_VARIABLE_DECLARATION: return decorate((AST::VariableDeclaration*)	  node);
+	case ST_CONST_DECLARATION:    return decorate((AST::ConstDeclaration*)		  node);
+	case ST_ASSIGNMENT:           return decorate((AST::Assignment*)			  node);
+	case ST_STATEMENT_BLOCK:      return decorate((AST::StatementBlock*)		  node);
+	case ST_IF_THEN_ELSE:         return decorate((AST::IfThenElse*)			  node);
+	case ST_SWITCH:               return decorate((AST::SwitchCase*)			  node);
+	case ST_FOR_LOOP:             return decorate((AST::ForLoop*)				  node);
+	case ST_WHILE_LOOP:           return decorate((AST::WhileLoop*)				  node);
+	case ST_UNARY_OPERATION:      return decorate((AST::UnaryOperationStatement*) node);
+	case ST_DO_WHILE_LOOP:        return decorate((AST::DoWhileLoop*)			  node);
+	case ST_INCREMENT:            return decorate((AST::Increment*)				  node);
+	case ST_TRY_CATCH:            return decorate((AST::TryCatch*)				  node);
+	default: throw ErrorReporter::report("Unimplemented statement type in the decorator", ERR_DECORATOR, node->getPosition());
 	}
 }
 
@@ -67,12 +54,10 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 
 DST::StatementBlock * Decorator::decorate(AST::StatementBlock * node)
 {
-	if (!node)
-		return NULL;
-
+	if (!node) return NULL;
 	enterBlock();
 	auto bl = new DST::StatementBlock();
-	for (auto i : dynamic_cast<AST::StatementBlock*>(node)->getStatements())
+	for (auto i : node->getStatements())
 		bl->addStatement(decorate(i));
 	leaveBlock();
 	return bl;
@@ -114,7 +99,7 @@ DST::TryCatch * Decorator::decorate(AST::TryCatch *node)
 	auto tryCatch = new DST::TryCatch(node);
 	tryCatch->setTryBlock(decorate(node->getTryBlock()));
 	enterBlock();
-	_variables[currentScope()][unicode_string("caught")] = getPrimitiveType(ERROR_TYPE_NAME)->getBasicTy();
+	_variables[currentScope()][unicode_string("caught")] = DST::getErrorTy();
 	tryCatch->setCatchBlock(decorate(node->getCatchBlock()));
 	leaveBlock();
 	return tryCatch;
@@ -159,7 +144,6 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	auto decl = new DST::VariableDeclaration(node);
 	unicode_string name = node->getVarId();
 	decl->setType(evalType(node->getVarType()));
-
 	if (_variables[currentScope()].count(name))
 		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
 	_variables[currentScope()][name] = decl->getType();
@@ -168,7 +152,8 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 
 DST::Assignment * Decorator::decorate(AST::Assignment * node)
 {
-	auto assignment = new DST::Assignment(node, decorate(node->getLeft()), decorate(node->getRight()));
+	auto right = decorate(node->getRight());
+	auto assignment = new DST::Assignment(node, decorate(node->getLeft()), right);
 
 	if (!assignment->getLeft()->getType()->writeable())
 		throw ErrorReporter::report("lvalue is read-only", ERR_DECORATOR, node->getPosition());
@@ -182,10 +167,10 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		auto rightTypes = (DST::TypeList*)assignment->getRight()->getType();
 		for (unsigned int i = 0; i < list->size(); i++)
 		{
-			if (list->getExpressions()[i]->getType()->getExactType() == EXACT_UNKNOWN)
+			if (list->getExpressions()[i]->getType()->isUnknownTy())
 			{
 				if (list->getExpressions()[i]->getExpressionType() != ET_VARIABLE_DECLARATION)
-					throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
+					throw ErrorReporter::report("inferred type is invalid in this context", ERR_DECORATOR, node->getPosition());
 				((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
 				leftTypes->getTypes()[i] = rightTypes->getTypes()[i];
 				_variables[currentScope()][((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId()] = rightTypes->getTypes()[i];
@@ -196,7 +181,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	if (assignment->getLeft()->getType()->getExactType() == EXACT_UNKNOWN)
 	{
 		if (assignment->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
-			throw ErrorReporter::report("Unknown type?.", ERR_DECORATOR, node->getPosition());
+			throw ErrorReporter::report("inferred type is invalid in this context", ERR_DECORATOR, node->getPosition());
 		switch (assignment->getRight()->getType()->getExactType())
 		{
 			case EXACT_UNKNOWN: case EXACT_NULL:
@@ -217,7 +202,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		throw ErrorReporter::report("Type \"" + assignment->getRight()->getType()->toShortString() + "\" is not assignable to type \""
 			  						+ assignment->getLeft()->getType()->toShortString() + "\"", ERR_DECORATOR, node->getPosition());
 
-	if (assignment->getRight()->getType()->getExactType() == EXACT_NULL)
+	if (assignment->getRight()->getType()->isNullTy())
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));
 
 	assignment->setType(assignment->getLeft()->getType());

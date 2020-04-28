@@ -53,9 +53,9 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             if (funcPtr->getType() != funcTy)
                 funcPtr = _builder.CreateBitCast(funcPtr, funcTy->getPointerTo());
 
-            if (funcTy->getNumParams() != node->getArguments()->getExpressions().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
+            if (funcTy->getNumParams() != node->getArguments().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
                 throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
-                    std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
+                    std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments().size()) + ")"
                     , ERR_CODEGEN, node->getPosition());
 
             std::vector<Value*> args;
@@ -71,7 +71,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                     args.push_back(retPtrs[i2++]);
                 else 
                 {
-                    auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
+                    auto gen = codeGen(node->getArguments()[i++]);        
                     if (gen->getType() != argTy) {
                         if (argTy == _interfaceType)
                             args.push_back(convertToInterface(gen));
@@ -99,9 +99,9 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     if (!funcTy)
         throw ErrorReporter::report("Internal error while generating IR for function call", ERR_CODEGEN, node->getPosition());
     
-    if (funcTy->getNumParams() != node->getArguments()->getExpressions().size() + retPtrs.size())
+    if (funcTy->getNumParams() != node->getArguments().size() + retPtrs.size())
         throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
-            std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
+            std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments().size()) + ")"
             , ERR_CODEGEN, node->getPosition());
         
     std::vector<Value *> args;
@@ -114,7 +114,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             args.push_back(retPtrs[i2++]);
         else
         {
-            auto gen = codeGen(node->getArguments()->getExpressions()[i++]);       
+            auto gen = codeGen(node->getArguments()[i++]);       
             
             if (gen->getType() != argTy)
             {

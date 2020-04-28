@@ -66,7 +66,7 @@ llvm::Value *CodeGenerator::codeGen(DST::ExpressionList *node)
 llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node) 
 {
     vector<llvm::Type*> types;
-    auto returnType = evalType(node->getType()->getReturns());
+    auto returnType = evalType(node->getType()->getReturn());
     auto params = node->getParameters();
     for (auto i : params) 
         types.push_back(evalType(i->getType()));

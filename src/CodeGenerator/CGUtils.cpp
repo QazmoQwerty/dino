@@ -59,8 +59,8 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         {
             auto ft = (DST::FunctionType*)node;
             vector<llvm::Type*> params;
-            auto retTy = evalType(ft->getReturns());
-            for (auto i : ft->getParameters()->getTypes())
+            auto retTy = evalType(ft->getReturn());
+            for (auto i : ft->getParameters())
                 params.push_back(evalType(i));
             return llvm::FunctionType::get(retTy, params, /*isVarArgs=*/false)->getPointerTo();
         }

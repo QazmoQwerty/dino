@@ -45,4 +45,9 @@ public:
         If isFatal is (true), the function will throw a value.
     */
     static Error report(string msg, ErrorType errTy, PositionInfo pos, bool isFatal = false);
+
+    /*
+        Report an INTERNAL error - these should never be shown to a user of the compiler (in theory at least).
+    */
+    static Error reportInternal(string msg, ErrorType errTy, PositionInfo pos = {0, 0, 0, ""});
 };

@@ -8,8 +8,10 @@
 #include "../Parser/AstNode.h"
 #include <dirent.h>
 #include <stack>
+#include <map>
 
 using std::stack;
+using std::map;
 
 /*
 	Decorated Syntax Tree: Abstract Syntax Tree with type info.
@@ -19,9 +21,8 @@ namespace DST
 	static const size_t UNKNOWN_ARRAY_LENGTH = 0;
 	static int idCount = 0;
 
-	class BasicType;
-	static BasicType *typeidTypePtr;
 
+	class BasicType;
 	class InterfaceDeclaration;
 
 	class TypeSpecifierType;
@@ -39,6 +40,14 @@ namespace DST
 
 	extern PrimitiveTypeSpecifiers _builtinTypes;
 
+	class NamespaceType;
+	class NamespaceDeclaration;
+	extern unordered_map<NamespaceDeclaration*, NamespaceType*> _namespaceTypes;
+
+	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl);
+
+	class NullType;
+
 	BasicType *getIntTy();
 	BasicType *getBoolTy();
 	BasicType *getFloatTy();
@@ -48,6 +57,7 @@ namespace DST
 	BasicType *getTypeidTy();
 	BasicType *getAnyTy();
 	BasicType *getErrorTy();
+	NullType  *getNullTy();
 
 	InterfaceDeclaration *getAnyInterface();
 
@@ -175,14 +185,23 @@ namespace DST
 
 	class PointerType;
 	class ConstType;
+	class ArrayType;
+	class PropertyType;
+	class TypeList;
 
 	class Type : public Expression
 	{
 	protected:
 		PointerType *_ptrTo;
 		ConstType *_constOf;
+		unordered_map<size_t, ArrayType*> _arrayTypes;
+		unordered_map<Expression*, ArrayType*> _dynArrayTypes;
+		unordered_map<Type*, TypeList*> _appends;
+		PropertyType *_getPropTy;
+		PropertyType *_setPropTy;
+		PropertyType *_getSetPropTy;
 	public:
-		Type() : _ptrTo(NULL), _constOf(NULL) {}
+		Type() : _ptrTo(NULL), _constOf(NULL), _getPropTy(NULL), _setPropTy(NULL), _getSetPropTy(NULL) {}
 		virtual ~Type() { }
 		/*
 			The type of the actual type itself is meaningless:
@@ -194,6 +213,7 @@ namespace DST
 		/* get the type of type (pointer, basic, array, etc.) */
 		virtual ExactType getExactType() = 0;
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
+		virtual TypeList *appendType(Type *append);
 
 		/* 
 			In theory, types are equal if they are EXACTLY the same.
@@ -208,15 +228,25 @@ namespace DST
 		virtual bool writeable() { return true; }
 
 		/* types are non-constant by default */
-		virtual bool isConstTy() { return false; }
-
-		virtual bool isPtrTy() { return false; }
-
+		virtual bool isConstTy() 	 { return false; }
+		virtual bool isArrayTy() 	 { return false; }
+		virtual bool isPtrTy() 		 { return false; }
 		virtual bool isInterfaceTy() { return false; }
-		
+		virtual bool isValueTy() 	 { return false; }
+		virtual bool isListTy() 	 { return false; }
+		virtual bool isBasicTy() 	 { return false; }
+		virtual bool isNullTy() 	 { return false; }
+		virtual bool isUnknownTy() 	 { return false; }
+		virtual bool isFuncTy() 	 { return false; }
+		virtual bool isPropertyTy()  { return false; }
+		virtual bool isSpecifierTy() { return false; }
+		virtual bool isNamespaceTy() { return false; }
 
 		ConstType *getConstOf();
 		PointerType *getPtrTo();
+		ArrayType *getArrayOf(size_t size = DST::UNKNOWN_ARRAY_LENGTH);
+		ArrayType *getArrayOf(Expression *exp);
+		PropertyType *getPropertyOf(bool hasGet, bool hasSet);
 
 		/* 
 			Taken from the language specification:
@@ -257,13 +287,17 @@ namespace DST
 	*/
 	class UnknownType : public Type
 	{
+	private:
 	public:
+		static UnknownType *get();
+
 		UnknownType() : Type() {}
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
 			In other words, always returns "var".
 		*/ 
 		virtual string toShortString() { return "var"; };
+		virtual bool isUnknownTy() { return true; }
 		virtual bool assignableTo(Type *type) { return false; /* 'var' type is not assignable to anything */ }
 		virtual ExactType getExactType() { return EXACT_UNKNOWN; };
 		virtual bool equals(Type *other) { return other->getExactType() == getExactType(); }
@@ -283,10 +317,14 @@ namespace DST
 			InterfaceDeclaration *_interfaceDecl;
 			BasicType *_basicTy;
 		public:
+			static TypeSpecifierType *get(InterfaceDeclaration *decl);
+			static TypeSpecifierType *get(TypeDeclaration *decl);
+
 			TypeSpecifierType(DST::TypeDeclaration *decl) : Type(), _typeDecl(decl), _interfaceDecl(NULL), _basicTy(NULL) {}
 			TypeSpecifierType(DST::InterfaceDeclaration *decl) : Type(), _typeDecl(NULL), _interfaceDecl(decl), _basicTy(NULL) {}
 			virtual ~TypeSpecifierType();
 			BasicType *getBasicTy();
+			virtual bool isSpecifierTy() { return true; }
 			virtual ExactType getExactType() { return EXACT_SPECIFIER; }
 			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
@@ -314,8 +352,11 @@ namespace DST
 		private:
 			NamespaceDeclaration *_decl;
 		public:
+			static NamespaceType *get(NamespaceDeclaration *decl);
+
 			NamespaceType(DST::NamespaceDeclaration *decl) : Type(), _decl(decl) {}
 			virtual ~NamespaceType() {}
+			virtual bool isNamespaceTy() { return true; }
 			virtual ExactType getExactType() { return EXACT_NAMESPACE; };
 			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
@@ -340,10 +381,13 @@ namespace DST
 		bool _hasSet;
 
 	public:
+		static PropertyType *get(Type *ret, bool hasSet, bool hasGet);
+
 		PropertyType(Type *ret, bool hasGet, bool hasSet) : Type(), _return(ret), _hasGet(hasGet), _hasSet(hasSet) {}
 		virtual ~PropertyType() { }
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
+		virtual bool isPropertyTy() { return true; }
 
 		/* The actual type the property gets/sets */
 		Type *getReturn() { return _return; }
@@ -372,6 +416,8 @@ namespace DST
 	{
 		Type* _type;
 	public:
+		static PointerType *get(Type *ty);
+
 		PointerType(Type *ptrTo) : Type(), _type(ptrTo) { }
 		virtual ~PointerType() { }
 		virtual bool isPtrTy() { return true; }
@@ -394,6 +440,8 @@ namespace DST
 	{
 		Type* _type;
 	public:
+		static ConstType *get(Type *ty);
+
 		ConstType(Type *type) : Type(), _type(type) { }
 		virtual ~ConstType() { }
 		virtual bool isConstTy() { return true; }
@@ -416,8 +464,11 @@ namespace DST
 	class NullType : public Type 
 	{
 	public:
+		static NullType *get();
+
 		NullType() : Type() {}
 		ExactType getExactType() { return EXACT_NULL; }
+		virtual bool isNullTy() { return true; }
 		virtual bool equals(Type *other) { return other->equals(this); };
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
@@ -434,9 +485,12 @@ namespace DST
 	{
 		vector<Type*> _types;
 	public:
+		static TypeList *get(vector<Type*> tys);
+
+		TypeList(Type *ty1, Type *ty2);
 		TypeList(vector<Type*> types) : _types(types) { }
 		virtual ~TypeList() { _types.clear(); }
-		void addType(Type *type);
+		virtual bool isListTy() { return true; }
 		vector<Type*> &getTypes() { return _types; }
 		size_t size() { return _types.size(); }
 		ExactType getExactType() { return EXACT_TYPELIST; }
@@ -457,9 +511,13 @@ namespace DST
 	{
 		TypeSpecifierType *_typeSpec;
 	public:
+		static BasicType *get(TypeSpecifierType *spec);
 		BasicType(TypeSpecifierType *typeSpec) : Type(), _typeSpec(typeSpec) {}
+
 		virtual ~BasicType() { }
 
+		virtual bool isBasicTy() 	 { return true; }
+		virtual bool isValueTy() 	 { return _typeSpec->getTypeDecl(); }
 		virtual bool isInterfaceTy() { return _typeSpec->getInterfaceDecl(); }
 
 		TypeSpecifierType *getTypeSpecifier() { return _typeSpec; }
@@ -496,11 +554,11 @@ namespace DST
 		Expression *_lenExp;	// for stuff like "new int[a]"
 
 	public:
-		ArrayType() : Type(), _lenExp(NULL) {  }
 		ArrayType(Type *valueType, size_t length) : Type(), _valueType(valueType), _length(length), _lenExp(NULL) { }
 		ArrayType(Type *valueType, Expression *lenExp) : Type(), _valueType(valueType), _length(DST::UNKNOWN_ARRAY_LENGTH), _lenExp(lenExp) { }
-		ArrayType(Type *valueType, size_t length, Expression *lenExp) : Type(), _valueType(valueType), _length(length), _lenExp(lenExp) { }
-		ArrayType(Type *valueType) : Type(), _valueType(valueType), _length(DST::UNKNOWN_ARRAY_LENGTH), _lenExp(NULL) { }
+		static ArrayType *get(Type *elems, size_t len);
+		static ArrayType *get(Type *elems, Expression *lenExp);
+		virtual bool isArrayTy() { return true; }
 		virtual ~ArrayType() {  }
 		ExactType getExactType() { return EXACT_ARRAY; }
 		virtual Type *getType() { return _valueType; }
@@ -539,16 +597,18 @@ namespace DST
 
 	class FunctionType : public Type
 	{
-		TypeList *_returns;
-		TypeList *_parameters;
-
+	private:
+		Type *_return;
+		vector<Type*> _parameters;
 	public:
-		FunctionType() : Type() { _returns = new TypeList({}); _parameters = new TypeList({}); }
+		FunctionType(Type *ret, vector<Type*> params) : Type(), _return(ret), _parameters(params) { }
+		static FunctionType *get(Type* ret, vector<Type*> params);
+
+
 		virtual ~FunctionType() { }
-		void addReturn(Type *returnType) { _returns->addType(returnType); }
-		void addParameter(Type *parameterType) { _parameters->addType(parameterType); }
-		TypeList *getReturns() { return _returns; }
-		TypeList *getParameters() { return _parameters; }
+		virtual bool isFuncTy() { return true; }
+		Type *getReturn() { return _return; }
+		vector<Type*> &getParameters() { return _parameters; }
 
 		ExactType getExactType() { return EXACT_FUNCTION; }
 		virtual bool equals(Type *other);
@@ -557,11 +617,17 @@ namespace DST
 		{
 			if (!type)
 				return false;
-			if (type->getExactType() == EXACT_PROPERTY)
+			if (type->isPropertyTy())
 				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-			return type->getExactType() == EXACT_FUNCTION && 
-				_returns->assignableTo(((DST::FunctionType*)type)->_returns) && 
-				_parameters->assignableTo(((DST::FunctionType*)type)->_parameters);
+			if (!type->isFuncTy())
+				return false;
+			auto other = ((DST::FunctionType*)type);
+			if (!_return->assignableTo(other->_return) || other->_parameters.size() != _parameters.size())
+				return false;
+			for (unsigned int i = 0; i < _parameters.size(); i++)
+				if (!_parameters[i]->assignableTo(other->_parameters[i]))
+					return false;
+			return true;
 		}
 
 		/* 
@@ -720,7 +786,6 @@ namespace DST
 		AST::Literal *getBase() { return _base; }
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
-		void *getValue();
 		int getIntValue();
 		LiteralType getLiteralType() { return _base->getLiteralType(); }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
@@ -785,12 +850,15 @@ namespace DST
 		AST::Expression *_base;
 		vector<Expression*> _expressions;
 	public:
-		ExpressionList(AST::Expression *base) : _base(base) { _type = new TypeList({}); };
+		ExpressionList(AST::Expression *base) : _base(base) { };
 		ExpressionList(AST::Expression *base, vector<Expression*> expressions) : _base(base), _expressions(expressions) 
 		{ 
-			_type = new TypeList({});
-			for (auto i : _expressions) 
-				_type->addType(i->getType());
+			if (expressions.size() < 2)
+				throw ErrorReporter::reportInternal("expression list must be at least 2 expressions long", ERR_DECORATOR);
+			vector<Type*> types;
+			for (auto i : expressions)
+				types.push_back(i->getType());
+			_type = DST::TypeList::get(types);
 		};
 		virtual ~ExpressionList() { if (_base) delete _base;  _expressions.clear(); }
 		TypeList *getType() { return _type; }
@@ -800,7 +868,6 @@ namespace DST
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
 		size_t size() { return _expressions.size(); }
 
-		void addExpression(Expression* expression) { _expressions.push_back(expression); _type->addType(expression->getType()); };
 		vector<Expression*> getExpressions() { return _expressions; }
 	};
 
@@ -810,7 +877,7 @@ namespace DST
 		vector<Expression*> _array;
 		// TODO - add AST::UnaryOperation *_base
 	public:
-		ArrayLiteral(Type *type, vector<Expression*> arr) : _array(arr) { _type = new ArrayType(type, arr.size()); }
+		ArrayLiteral(Type *type, vector<Expression*> arr) : _array(arr) { _type = ArrayType::get(type, arr.size()); }
 		virtual ~ArrayLiteral() { /*if (_base) delete _base; */ _array.clear(); }
 		ArrayType *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_ARRAY; };
@@ -1103,6 +1170,7 @@ namespace DST
 		virtual vector<Node*> getChildren();
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
 
+		FunctionType *getFuncType();
 		AST::FunctionDeclaration *getBase() { return _base; }
 
 		void setVarDecl(VariableDeclaration* decl);
@@ -1218,12 +1286,12 @@ namespace DST
 		Type *_type;
 		AST::FunctionCall *_base;
 		Expression *_funcPtr;
-		ExpressionList *_arguments;
+		vector<Expression*> _arguments;
 
 	public:
 		FunctionCall(AST::FunctionCall *base) : _base(base) {};
-		FunctionCall(AST::FunctionCall *base, Expression *funcPtr, ExpressionList *arguments);
-		virtual ~FunctionCall() { if (_base) delete _base;  if (_funcPtr) delete _funcPtr; if (_arguments) delete _arguments; } 
+		FunctionCall(AST::FunctionCall *base, Expression *funcPtr, vector<Expression*> arguments);
+		virtual ~FunctionCall() { if (_base) delete _base;  if (_funcPtr) delete _funcPtr; } 
 		virtual StatementType getStatementType() { return ST_FUNCTION_CALL; };
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\nType: " + _type->toShortString(); };
@@ -1232,24 +1300,30 @@ namespace DST
 
 		void setFunctionId(Expression* funcId)
 		{
-			if (funcId->getType()->getExactType() != EXACT_FUNCTION)
+			if (!funcId->getType()->isFuncTy())
 				throw ErrorReporter::report("Cannot invoke expression as function", ERR_DECORATOR, funcId->getPosition());
 			_funcPtr = funcId;
-			_type = ((FunctionType*)funcId->getType())->getReturns();
-			if (_type->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)_type)->size() == 1)
-				_type = ((DST::TypeList*)_type)->getTypes()[0];
+			_type = ((FunctionType*)funcId->getType())->getReturn();
 		}
 		
-		void setArguments(ExpressionList* arguments) 
+		void setArguments(vector<Expression*> arguments) 
 		{
-			if (!arguments->getType()->assignableTo(((FunctionType*)_funcPtr->getType())->getParameters()))
-				throw ErrorReporter::report(string("Argument types do not match function parameters.\nArguments are: ") + arguments->getType()->toShortString()
-				 + "\nShould be: " + ((FunctionType*)_funcPtr->getType())->getParameters()->toShortString(), ERR_DECORATOR, getPosition());
+			auto &funcParams = ((FunctionType*)_funcPtr->getType())->getParameters();
+			if (arguments.size() != funcParams.size())
+				throw ErrorReporter::report("expected " + std::to_string(funcParams.size()) + 
+					" arguments in call, got " + std::to_string(arguments.size()), ERR_DECORATOR, getPosition());
+			for (unsigned int i = 0; i < arguments.size(); i++)
+			{
+				if (!arguments[i]->getType()->assignableTo(funcParams[i]))	// TODO - make this error msg better
+					throw ErrorReporter::report("argument types do not match function parameters", ERR_DECORATOR, getPosition());
+				if (!arguments[i]->getType()->readable())
+					throw ErrorReporter::report("argument is read-only", ERR_DECORATOR, arguments[i]->getPosition());
+			}
 			_arguments = arguments; 
 		}
 
 		Type *getType() { return _type; }
 		Expression* getFunctionId() { return _funcPtr; }
-		ExpressionList* getArguments() { return _arguments; }
+		vector<Expression*> getArguments() { return _arguments; }
 	};
 }

@@ -187,7 +187,8 @@ vector<DST::Node*> DST::FunctionCall::getChildren()
 {
 	vector<Node*> v;
 	v.push_back(_funcPtr);
-	v.push_back(_arguments);
+	for (auto i : _arguments)
+		v.push_back(i);
 	return v;
 }
 
