@@ -220,7 +220,7 @@ llvm::Function *CodeGenerator::getNullCheckFunc()
     auto objPtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(0) }, "objPtr");
     auto vtablePtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(1) }, "vtablePtr");
     _builder.CreateStore(errAlloc, objPtr);
-    _builder.CreateStore(getVtable(_nullPtrErrorTy), vtablePtr);
+    _builder.CreateStore(getVtable(DST::getNullPtrErrTy()), vtablePtr);
 
     createThrow(_builder.CreateLoad(alloca), true);
 

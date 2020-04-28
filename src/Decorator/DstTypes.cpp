@@ -21,6 +21,7 @@ namespace DST
 		_builtinTypes._type = createPrimitiveTypeSpec("type");
 		_builtinTypes._any = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
 		_builtinTypes._error = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("error"))));
+		_builtinTypes._nullPtError = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("NullPtrError"))));
 	}
 
 	BasicType *getIntTy() 	 { return _builtinTypes._int    -> getBasicTy(); }
@@ -33,6 +34,7 @@ namespace DST
 	BasicType *getStringTy() { return _builtinTypes._string -> getBasicTy(); }
 	BasicType *getErrorTy()  { return _builtinTypes._error  -> getBasicTy(); }
 	NullType  *getNullTy()   { return NullType::get(); }
+	BasicType *getNullPtrErrTy()  { return _builtinTypes._nullPtError -> getBasicTy(); }
 
 
 	InterfaceDeclaration *getAnyInterface() { return _builtinTypes._any->getInterfaceDecl(); }

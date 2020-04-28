@@ -36,6 +36,7 @@ namespace DST
 		TypeSpecifierType *_type;
 		TypeSpecifierType *_error;
 		TypeSpecifierType *_any;
+		TypeSpecifierType *_nullPtError;
 	} PrimitiveTypeSpecifiers;
 
 	extern PrimitiveTypeSpecifiers _builtinTypes;
@@ -57,6 +58,7 @@ namespace DST
 	BasicType *getTypeidTy();
 	BasicType *getAnyTy();
 	BasicType *getErrorTy();
+	BasicType *getNullPtrErrTy();
 	NullType  *getNullTy();
 
 	InterfaceDeclaration *getAnyInterface();

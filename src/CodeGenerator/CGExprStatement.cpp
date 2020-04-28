@@ -71,10 +71,11 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                     args.push_back(retPtrs[i2++]);
                 else 
                 {
-                    auto gen = codeGen(node->getArguments()[i++]);        
+                    auto currArg = node->getArguments()[i++];
+                    auto gen = codeGen(currArg);        
                     if (gen->getType() != argTy) {
                         if (argTy == _interfaceType)
-                            args.push_back(convertToInterface(gen));
+                            args.push_back(convertToInterface(gen, currArg->getType()));
                         else args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
                     }
                     else args.push_back(gen);
@@ -114,12 +115,13 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             args.push_back(retPtrs[i2++]);
         else
         {
-            auto gen = codeGen(node->getArguments()[i++]);       
+            auto currArg = node->getArguments()[i++];
+            auto gen = codeGen(currArg);       
             
             if (gen->getType() != argTy)
             {
                 if (argTy == _interfaceType)
-                    args.push_back(convertToInterface(gen));
+                    args.push_back(convertToInterface(gen, currArg->getType()));
                 else args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
             }
             else args.push_back(gen);   
@@ -279,7 +281,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             if (left->getType() == _interfaceType->getPointerTo())
             {
                 right = codeGen(node->getRight());
-                _builder.CreateStore(convertToInterface(right), left);
+                _builder.CreateStore(convertToInterface(right, node->getRight()->getType()), left);
                 return right;
             }
             
