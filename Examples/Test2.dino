@@ -46,9 +46,8 @@ namespace Test {
         // PrintD(n2[0])
         // PrintD(n2[1])
 
-        void(int, int) f := (int a, int b) { PrintD(a * b) }
-        f(200, 300)
-        12 := 14
+        (int@@@, int@)(bool, int) a
+        PrintB(a is (int@@@, int@)(bool, int@))
 
 
         // var f := Foo(100, true, false)
