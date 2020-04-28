@@ -74,7 +74,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             if (val->getType() != returnTy)
             {
                 if (returnTy == _interfaceType)
-                    return _builder.CreateRet(convertToInterface(val));
+                    return _builder.CreateRet(convertToInterface(val, node->getExpression()->getType()));
                 return _builder.CreateRet(_builder.CreateBitCast(val, returnTy));
             }
             return _builder.CreateRet(val);

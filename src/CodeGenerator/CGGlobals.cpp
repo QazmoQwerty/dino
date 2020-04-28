@@ -56,7 +56,7 @@ namespace CodeGenerator
     llvm::StructType *_interfaceVtableType;
 
     /* Maps all types to their vtables */
-    unordered_map<llvm::Type*, llvm::Value*> _vtables;
+    unordered_map<DST::Type*, llvm::Value*> _vtables;
 
     /* The global variable in we store a pointer to an exception we are throwing */
     llvm::GlobalVariable *_globCaughtErr;

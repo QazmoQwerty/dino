@@ -1,5 +1,5 @@
 // import "std"
-import "Examples/std"
+import "std"
 
 namespace NS {
     type Vector {
@@ -74,11 +74,11 @@ namespace NS {
 
     void Print(any a) {
         if a is int:
-            Std.PrintD(@(a as int))
+            Std.PrintD(a as int)
         else if a is bool:
-            Std.PrintS("true" if @(a as bool) else "false")
+            Std.PrintS(if a as bool then "true" else "false")
         else if a is string:
-            Std.PrintS(@(a as string))
+            Std.PrintS(a as string)
         else if a = null:
             Std.PrintS("null")
         else: Std.PrintS("Unprintable type")

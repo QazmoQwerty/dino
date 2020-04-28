@@ -66,7 +66,7 @@ llvm::Value *CodeGenerator::codeGen(DST::ExpressionList *node)
 llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node) 
 {
     vector<llvm::Type*> types;
-    auto returnType = evalType(node->getType()->getReturns());
+    auto returnType = evalType(node->getType()->getReturn());
     auto params = node->getParameters();
     for (auto i : params) 
         types.push_back(evalType(i->getType()));
@@ -117,15 +117,15 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node)
 
 Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
 {
+    if (!node->getLeft()->getType()->isInterfaceTy()) // known at compile time
+        return _builder.getInt1(node->getLeft()->getType() == node->getRight());
+    
     auto right = evalType((DST::Type*)node->getRight());
     auto left = codeGenLval(node->getLeft());
     if (right == _interfaceType)
     {
         if (left->getType() != _interfaceType)
-        {
-            // should be known at compile-time
-            throw "TODO";
-        }
+            throw "unreachable";
 
         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
         auto vtableLoad = _builder.CreateLoad(vtablePtr);
@@ -137,10 +137,11 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
     else if (((DST::Type*)node->getRight())->getExactType() == EXACT_BASIC)
     {
         if (left->getType()->getPointerElementType() != _interfaceType)
-            return _builder.getInt1(false);
+            throw "unreachable";
+        
         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
         auto vtableLoad = _builder.CreateLoad(vtablePtr);
-        auto vtable = getVtable(evalType(((DST::Type*)node->getRight())));
+        auto vtable = getVtable(((DST::Type*)node->getRight())->getPtrTo());    // ptrTo since all types stored in interfaces are pointers currently
         auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
         return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
     }
@@ -416,7 +417,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 leftTy->toShortString() + std::to_string(leftTy->getExactType()), ERR_CODEGEN, node->getPosition());   // TODO
         }
     }
-    if (node->getType()->isConst())
+    if (node->getType()->isConstTy())
         return codeGenLval(node);
     auto val = codeGenLval(node);
     assertNotNull(val);
@@ -449,7 +450,7 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
         return createCallOrInvoke(func, {});
     }
     auto t = codeGenLval(node);
-    if (node->getType()->isConst())
+    if (node->getType()->isConstTy())
         return t;
     if (t->getType()->getPointerElementType()->isFunctionTy())
         return t;
