@@ -406,7 +406,7 @@ namespace DST
 			Example: "int { get | set }"
 		*/ 
 		virtual string toShortString();
-		virtual string toString() { return "<FunctionType>" + toShortString(); };
+		virtual string toString() { return "<PropertyType>" + toShortString(); };
 		virtual vector<Node*> getChildren() { return vector<Node*>(); };
 
 		virtual bool assignableTo(DST::Type *type) { return readable() && _return->assignableTo(type); }
@@ -501,7 +501,7 @@ namespace DST
 			Example: "(int, bool)"
 		*/ 
 		virtual string toShortString();
-		virtual string toString() { return "<FunctionType>" + toShortString(); };
+		virtual string toString() { return "<TypeList>" + toShortString(); };
 		virtual vector<Node*> getChildren();
 
 		virtual bool assignableTo(DST::Type *type);

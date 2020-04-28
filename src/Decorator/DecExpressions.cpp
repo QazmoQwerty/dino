@@ -130,7 +130,20 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 	auto funcId = decorate(node->getFunctionId());
 	vector<DST::Expression*> arguments;
 	auto args = decorate(node->getArguments());
-	if (args && args->getExpressionType() == ET_LIST)
+	if (args && args->getExpressionType() == ET_TYPE)
+	{
+		vector<DST::Type*> vec;
+		if (((DST::Type*)args)->isListTy())
+			for (auto i : ((DST::TypeList*)args)->getTypes())
+				vec.push_back(i);
+		else vec.push_back(((DST::Type*)args));
+
+		if (funcId->getExpressionType() != ET_TYPE)
+			throw ErrorReporter::report("expected a type", ERR_DECORATOR, funcId->getPosition());
+			
+		return DST::FunctionType::get((DST::Type*)funcId, vec);
+	}
+	else if (args && args->getExpressionType() == ET_LIST)
 		for (auto i : ((DST::ExpressionList*)args)->getExpressions())
 			arguments.push_back(i);
 	else if (args) arguments.push_back(args);

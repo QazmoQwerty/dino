@@ -708,7 +708,7 @@ namespace AST
 		Expression* _returnType;
 
 	public:
-		Function() : Literal(LT_FUNCTION) { }
+		Function() : Literal(LT_FUNCTION), _content(NULL), _returnType(NULL) { }
 		virtual ~Function() { if (_content) delete _content; _parameters.clear(); }
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
 		virtual vector<Node*> getChildren();

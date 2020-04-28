@@ -60,6 +60,8 @@ namespace DST
 			rets[getAnyInterface()] = _builtinTypes._any;
 			rets[getErrorInterface()] = _builtinTypes._error;
 		}
+		if (decl == _builtinTypes._error->getInterfaceDecl())	// TODO - clean this up
+			return rets[decl] = _builtinTypes._error;
 		if (auto ret = rets[decl])
 			return ret;
 		return rets[decl] = new TypeSpecifierType(decl);
