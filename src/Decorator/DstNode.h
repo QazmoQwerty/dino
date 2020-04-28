@@ -381,7 +381,7 @@ namespace DST
 		bool _hasSet;
 
 	public:
-		static PropertyType *get(Type *ret, bool hasSet, bool hasGet);
+		static PropertyType *get(Type *ret, bool hasGet, bool hasSet);
 
 		PropertyType(Type *ret, bool hasGet, bool hasSet) : Type(), _return(ret), _hasGet(hasGet), _hasSet(hasSet) {}
 		virtual ~PropertyType() { }

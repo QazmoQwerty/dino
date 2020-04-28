@@ -20,6 +20,7 @@ namespace DST
 		_builtinTypes._void = createPrimitiveTypeSpec("void");
 		_builtinTypes._type = createPrimitiveTypeSpec("type");
 		_builtinTypes._any = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
+		_builtinTypes._error = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("error"))));
 	}
 
 	BasicType *getIntTy() 	 { return _builtinTypes._int    -> getBasicTy(); }
@@ -28,11 +29,11 @@ namespace DST
 	BasicType *getVoidTy()   { return _builtinTypes._void	-> getBasicTy(); }
 	BasicType *getFloatTy()  { return _builtinTypes._float  -> getBasicTy(); }
 	BasicType *getTypeidTy() { return _builtinTypes._type   -> getBasicTy(); }
-	BasicType *getStringTy() { return _builtinTypes._string -> getBasicTy(); }
 	BasicType *getAnyTy() 	 { return _builtinTypes._any    -> getBasicTy(); }
+	BasicType *getStringTy() { return _builtinTypes._string -> getBasicTy(); }
 	BasicType *getErrorTy()  { return _builtinTypes._error  -> getBasicTy(); }
-
 	NullType  *getNullTy()   { return NullType::get(); }
+
 
 	InterfaceDeclaration *getAnyInterface() { return _builtinTypes._any->getInterfaceDecl(); }
 	InterfaceDeclaration *getErrorInterface() { return _builtinTypes._error->getInterfaceDecl(); }
@@ -121,7 +122,7 @@ namespace DST
 		else return _namespaceTypes[decl] = new NamespaceType(decl);
 	}
 
-	PropertyType *PropertyType::get(Type *ret, bool hasSet, bool hasGet)
+	PropertyType *PropertyType::get(Type *ret, bool hasGet, bool hasSet)
 	{
 		return ret->getPropertyOf(hasGet, hasSet);
 	}

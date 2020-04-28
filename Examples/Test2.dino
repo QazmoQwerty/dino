@@ -1,5 +1,5 @@
 // import "Examples/std"
-// import "Examples/std2"
+import "std2"
 
 // import "std2"
 
@@ -31,9 +31,15 @@ namespace Test {
         arr[0] := b
         arr[1] := c
         return a, arr
-    }    
+    }
+
+    int Boo: get: return 100
 
     void Main() {
+        Std.PrintDLn(300)
+        // int a := Boo
+        PrintD(Boo)
+        putchar('a')
         // var a := new int[10]
 
         // (bool, int) n := false, 10
@@ -46,8 +52,8 @@ namespace Test {
         // PrintD(n2[0])
         // PrintD(n2[1])
 
-        (int@@@, int@)(bool, int) a
-        PrintB(a is (int@@@, int@)(bool, int@))
+        // int[] a
+        // PrintB(a is int[a[0]])
 
 
         // var f := Foo(100, true, false)
