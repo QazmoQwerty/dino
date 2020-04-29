@@ -202,8 +202,14 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_IS:
             return createIsOperation(node);
         case OT_SQUARE_BRACKETS_OPEN:
-            // codeGen(node->getLeft())
-            // _builder.CreateExtractValue(codeGen(node->getLeft()), { codeGen(node->getRight()) });
+            if (node->getLeft()->getType()->isConstTy())
+            {
+                auto arrVal = codeGen(node->getLeft());
+                auto idx = codeGen(node->getRight());
+                auto alloca = _builder.CreateAlloca(arrVal->getType());
+                _builder.CreateStore(arrVal, alloca);
+                return _builder.CreateLoad(_builder.CreateGEP(alloca, {_builder.getInt32(0), idx}));
+            }
             return _builder.CreateLoad(codeGenLval(node));
         case OT_LOGICAL_OR:
             return createLogicalOr(node);   

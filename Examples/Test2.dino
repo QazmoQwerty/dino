@@ -1,7 +1,7 @@
 // import "Examples/std"
 // import "std2"
 
-// import "std2"
+import "std2"
 
 namespace Test {
 
@@ -37,13 +37,19 @@ namespace Test {
 
     // int[3] Foo() { return [1, 2, 3] }
 
-    int F(): return 10
+    // int F(): return 10
+    const arr := [1, 2, 3]
 
     void Main() {
-        // Std.PrintDLn(300)
-        var a := F()
+        Std.PrintDLn(arr[2])
+        // Std.PrintDLn([1, 2, 3][2])
+        // [1, 2, 3][2] := 10
+        // Foo()[2] := 10
+        // Std.PrintDLn(Foo()[2])
+        // Std.PrintDLn(Foo()[2])
+        // var a := F()
 
-        a := 20
+        // a := 20
         // int[3] a := Foo()
         // PrintD(a[2])
         // PrintD(Foo()[2])
