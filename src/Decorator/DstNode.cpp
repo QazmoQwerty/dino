@@ -49,7 +49,7 @@ namespace DST
 		/*if (this == nullptr)
 			return false;*/
 		bool isVoid = false;
-		if (returnType->getExactType() == EXACT_TYPELIST && ((TypeList*)returnType)->getTypes().size() == 1)
+		if (returnType->isListTy() && ((TypeList*)returnType)->getTypes().size() == 1)
 			throw "unreachable, leaving this to make sure";
 		if (returnType == getVoidTy())
 			isVoid = true;
@@ -236,21 +236,21 @@ namespace DST
 
 	void FunctionDeclaration::setVarDecl(VariableDeclaration *decl)
 	{ 
-		if (decl->getType()->getExactType() == EXACT_UNKNOWN)
+		if (decl->getType()->isUnknownTy())
 			throw ErrorReporter::report("function return types may not be inferred", ERR_DECORATOR, decl->getPosition());
 		_decl = decl; 
 	}
 
 	void FunctionDeclaration::addParameter(VariableDeclaration *parameter)
 	{ 
-		if (parameter->getType()->getExactType() == EXACT_UNKNOWN)
+		if (parameter->getType()->isUnknownTy())
 			throw ErrorReporter::report("function parameter types may not be inferred", ERR_DECORATOR, parameter->getPosition());
 		_parameters.push_back(parameter); 
 	}
 
 	void FunctionDeclaration::addParameterToStart(VariableDeclaration *parameter)
 	{
-		if (parameter->getType()->getExactType() == EXACT_UNKNOWN)
+		if (parameter->getType()->isUnknownTy())
 			throw ErrorReporter::report("function parameter types may not be inferred", ERR_DECORATOR, parameter->getPosition());
 		_parameters.insert(_parameters.begin(), parameter); 
 	}

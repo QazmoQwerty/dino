@@ -119,7 +119,7 @@ void LibFileWriter::Write(ofstream &stream, DST::VariableDeclaration *node)
 
 void LibFileWriter::Write(ofstream &stream, int indentCount, DST::PropertyDeclaration *node) 
 {
-    if (node->getReturnType()->getExactType() == EXACT_PROPERTY)
+    if (node->getReturnType()->isPropertyTy())
         stream << node->getReturnType()->as<DST::PropertyType>()->getReturn()->toShortString() << " " << node->getName().to_string();
     
     if (!node->getGet() && !node->getSet())

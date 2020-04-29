@@ -598,16 +598,7 @@ namespace DST
 		virtual string toString() { return "<ArrayType>\\n" + toShortString(); };
 		virtual vector<Node*> getChildren();
 
-		virtual bool assignableTo(DST::Type *type) 
-		{
-			if (!type)
-				return false;
-			if (type->getExactType() == EXACT_PROPERTY)
-				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-			return type->getExactType() == EXACT_ARRAY && 
-				((DST::ArrayType*)type)->_length == _length && 
-				_valueType->assignableTo(((DST::ArrayType*)type)->_valueType);
-		}
+		virtual bool assignableTo(DST::Type *type);
 	};
 
 	class FunctionType : public Type
@@ -629,13 +620,9 @@ namespace DST
 
 		virtual bool assignableTo(DST::Type *type)
 		{
-			if (!type)
+			if (!type || !type->writeable() || !type->isFuncTy())
 				return false;
-			if (type->isPropertyTy())
-				return ((DST::PropertyType*)type)->writeable() && assignableTo(((DST::PropertyType*)type)->getReturn());
-			if (!type->isFuncTy())
-				return false;
-			auto other = ((DST::FunctionType*)type);
+			auto other = type->as<DST::FunctionType>();
 			if (!_return->assignableTo(other->_return) || other->_parameters.size() != _parameters.size())
 				return false;
 			for (unsigned int i = 0; i < _parameters.size(); i++)

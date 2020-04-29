@@ -40,6 +40,25 @@ namespace DST
 	InterfaceDeclaration *getAnyInterface() { return _builtinTypes._any->getInterfaceDecl(); }
 	InterfaceDeclaration *getErrorInterface() { return _builtinTypes._error->getInterfaceDecl(); }
 
+	template <class T>
+	T* Type::as() { return (T*)getNonConstOf()->getNonPropertyOf(); }
+
+	template<> PropertyType		 *Type::as<PropertyType>()  	{ return (PropertyType*)	 getNonConstOf(); 	 }
+	template<> ConstType 		 *Type::as<ConstType>() 		{ return (ConstType*)		 getNonPropertyOf(); }
+	template<> TypeList 		 *Type::as<TypeList>() 			{ return (TypeList*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> NamespaceType 	 *Type::as<NamespaceType>() 	{ return (NamespaceType*)	 getNonConstOf()->getNonPropertyOf(); }
+	template<> TypeSpecifierType *Type::as<TypeSpecifierType>() { return (TypeSpecifierType*)getNonConstOf()->getNonPropertyOf(); }
+	template<> ArrayType 		 *Type::as<ArrayType>() 		{ return (ArrayType*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> BasicType		 *Type::as<BasicType>() 		{ return (BasicType*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> PointerType		 *Type::as<PointerType>() 		{ return (PointerType*)		 getNonConstOf()->getNonPropertyOf(); }
+
+	bool ArrayType::assignableTo(Type* type)
+	{
+		return type && type->writeable() && type->isArrayTy() && 
+			   type->as<ArrayType>()->_length == _length && 
+			   _valueType->assignableTo(type->as<ArrayType>()->_valueType);
+	}
+
 	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl)
 	{
 		if (auto ret = _namespaceTypes[decl])
@@ -307,13 +326,9 @@ namespace DST
 
 	bool BasicType::assignableTo(Type *type)
 	{
-		if (!type)
+		if (!type || !type->writeable() || !type->isBasicTy())
 			return false;
-		if (type->getExactType() == EXACT_PROPERTY)
-			return ((PropertyType*)type)->writeable() && assignableTo(((PropertyType*)type)->getReturn());
-		if (type->getExactType() != EXACT_BASIC) 
-			return false;
-		auto other = (BasicType*)type;
+		auto other = type->as<BasicType>();
 		if (!other->_typeSpec) return false;
 		if (_typeSpec->getTypeDecl())
 			return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
@@ -324,13 +339,9 @@ namespace DST
 
 	bool TypeList::assignableTo(Type *type) 
 	{
-		if (!type) 
+		if (!type || !type->writeable() || !type->isListTy()) 
 			return false;
-		if (type->getExactType() == EXACT_PROPERTY)
-			return ((PropertyType*)type)->writeable() && assignableTo(((PropertyType*)type)->getReturn());
-		if (type->getExactType() != EXACT_TYPELIST) 
-			return size() == 1 && _types[0]->assignableTo(type);
-		auto other = ((TypeList*)type);
+		auto other = type->as<TypeList>();
 		if (other->_types.size() != _types.size())
 			return false;
 		for (unsigned int i = 0; i < _types.size(); i++)
@@ -341,29 +352,19 @@ namespace DST
 
 	bool NullType::assignableTo(Type *type) 
 	{
-		if (!type)
-			return false;
-		switch (type->getExactType()) 
-		{
-			case EXACT_PROPERTY:
-				return ((PropertyType*)type)->writeable() && assignableTo(((PropertyType*)type)->getReturn());
-			case EXACT_BASIC:
-				return ((BasicType*)type)->getTypeSpecifier()->getInterfaceDecl();
-			case EXACT_POINTER: case EXACT_FUNCTION: case EXACT_ARRAY:
-				return true;
-			default: return false;
-		}
+		return type && type->writeable() && (
+			type->isInterfaceTy() || type->isPtrTy() || 
+			type->isFuncTy() 	  || type->isArrayTy()
+		);
 	}
 
 	bool PointerType::assignableTo(Type *type)
 	{
-		if (!type)
+		if (!type || !type->writeable())
 			return false;
-		if (type->isPropertyTy())
-			return ((PropertyType*)type)->writeable() && assignableTo(((PropertyType*)type)->getReturn());
-		if (type->isBasicTy() && _type->isBasicTy() && _type->isValueTy() && type->isInterfaceTy())
-			return ((BasicType*)_type)->getTypeSpecifier()->getTypeDecl()->implements(((BasicType*)type)->getTypeSpecifier()->getInterfaceDecl());
-		return type->isPtrTy() && _type->assignableTo(((PointerType*)type)->_type);
+		if (_type->isValueTy() && type->isInterfaceTy())
+			return _type->as<BasicType>()->getTypeSpecifier()->getTypeDecl()->implements(type->as<BasicType>()->getTypeSpecifier()->getInterfaceDecl());
+		return type->isPtrTy() && _type->assignableTo(type->as<PointerType>()->_type);
 	}
 
 	string FunctionType::toShortString()
@@ -404,16 +405,4 @@ namespace DST
 	}
 
 	unicode_string BasicType::getTypeId() { return _typeSpec->getTypeName(); }
-
-	template <class T>
-	T* Type::as() { return (T*)getNonConstOf()->getNonPropertyOf(); }
-
-	template<> PropertyType		 *Type::as<PropertyType>()  	{ return (PropertyType*)	 getNonConstOf(); 	 }
-	template<> ConstType 		 *Type::as<ConstType>() 		{ return (ConstType*)		 getNonPropertyOf(); }
-	template<> TypeList 		 *Type::as<TypeList>() 			{ return (TypeList*)		 getNonConstOf()->getNonPropertyOf(); }
-	template<> NamespaceType 	 *Type::as<NamespaceType>() 	{ return (NamespaceType*)	 getNonConstOf()->getNonPropertyOf(); }
-	template<> TypeSpecifierType *Type::as<TypeSpecifierType>() { return (TypeSpecifierType*)getNonConstOf()->getNonPropertyOf(); }
-	template<> ArrayType 		 *Type::as<ArrayType>() 		{ return (ArrayType*)		 getNonConstOf()->getNonPropertyOf(); }
-	template<> BasicType		 *Type::as<BasicType>() 		{ return (BasicType*)		 getNonConstOf()->getNonPropertyOf(); }
-	template<> PointerType		 *Type::as<PointerType>() 		{ return (PointerType*)		 getNonConstOf()->getNonPropertyOf(); }
 }

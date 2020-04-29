@@ -49,7 +49,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         case EXACT_PROPERTY:
             return evalType(((DST::PropertyType*)node)->getReturn());
         case EXACT_POINTER:
-            if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC)
+            if (((DST::PointerType*)node)->getPtrType()->isBasicTy())
             {
                 if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))   // void* is invalid in llvm IR
                     return llvm::Type::getInt8Ty(_context)->getPointerTo();

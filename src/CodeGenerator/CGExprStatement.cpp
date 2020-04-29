@@ -8,7 +8,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     if (node->getFunctionId()->getExpressionType() == ET_MEMBER_ACCESS)
     {
         auto ty = ((DST::MemberAccess*)node->getFunctionId())->getLeft()->getType();
-        if (ty->getExactType() == EXACT_BASIC || ty->getExactType() == EXACT_POINTER)
+        if (ty->isBasicTy() || ty->isPtrTy())
         {
             auto &funcId = ((DST::MemberAccess*)node->getFunctionId())->getRight();
             TypeDefinition *typeDef = NULL;
@@ -16,7 +16,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             llvm::Value *thisPtr = NULL;
             llvm::FunctionType *funcTy = NULL;
 
-            if (ty->getExactType() == EXACT_POINTER)
+            if (ty->isPtrTy())
                 thisPtr = codeGen(((DST::MemberAccess*)node->getFunctionId())->getLeft());
             else thisPtr = codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft());
 
@@ -133,7 +133,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
     Value *left = NULL;
     Value *right = NULL;
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_PROPERTY)
+    if (node->getLeft()->getType()->isPropertyTy())
     {
         if (node->getLeft()->getExpressionType() == ET_IDENTIFIER)
             ((DST::Variable*)node->getLeft())->getVarId() += ".set";
@@ -216,7 +216,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         return right;
     }
 
-    /*if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
+    /*if (node->getLeft()->getType()->isListTy()) 
     {
         // if (node->getRight()->getExpressionType() == ET_FUNCTION_CALL)
         // {
@@ -239,7 +239,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         // return lastStore;   // Temporary fix.
     }*/
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && 
+    if (node->getLeft()->getType()->isArrayTy() && 
         node->getLeft()->getType()->as<DST::ArrayType>()->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
     {
         left = codeGenLval(node->getLeft());
@@ -250,7 +250,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "arrPtrTmp");
             _builder.CreateStore(_builder.CreateBitOrPointerCast(right, arrPtr->getType()->getPointerElementType()), arrPtr);
 
-            if (node->getRight()->getType()->getExactType() == EXACT_ARRAY && node->getRight()->getType()->as<DST::ArrayType>()->getLenExp()) 
+            if (node->getRight()->getType()->isArrayTy() && node->getRight()->getType()->as<DST::ArrayType>()->getLenExp()) 
                 _builder.CreateStore(codeGen(node->getRight()->getType()->as<DST::ArrayType>()->getLenExp()), sizePtr);
             else _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
             return right;

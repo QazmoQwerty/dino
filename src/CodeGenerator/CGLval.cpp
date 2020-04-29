@@ -66,7 +66,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
     switch (node->getOperator()._type)
     {
         case OT_SQUARE_BRACKETS_OPEN:
-            if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY)
+            if (node->getLeft()->getType()->isArrayTy())
             {
                 if (node->getLeft()->getType()->as<DST::ArrayType>()->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
                 {
@@ -76,7 +76,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
                 else // TODO - array literal access
                     return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } ); 
             }
-            if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST)
+            if (node->getLeft()->getType()->isListTy())
             {
                 int idx = ((DST::Literal*)node->getRight())->getIntValue();
                 return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(idx) });
@@ -101,14 +101,14 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 {
     auto leftType = node->getLeft()->getType();
 
-    if (leftType->getExactType() == EXACT_NAMESPACE)
+    if (leftType->isNamespaceTy())
     {
         auto members = getNamespaceMembers(node->getLeft());
         if (!members)
             throw "TODO - Error message";
         return members->values[node->getRight()];
     }
-    else if (leftType->getExactType() == EXACT_BASIC)
+    else if (leftType->isBasicTy())
     {
         if (auto interfaceDecl = leftType->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl())
         {
@@ -137,8 +137,8 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else if (leftType->getExactType() == EXACT_POINTER && 
-            leftType->as<DST::PointerType>()->getPtrType()->getExactType() == EXACT_BASIC)
+    else if (leftType->isPtrTy() && 
+            leftType->as<DST::PointerType>()->getPtrType()->isBasicTy())
     {
         auto bt = leftType->as<DST::PointerType>()->getPtrType()->as<DST::BasicType>();
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
@@ -155,7 +155,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     {
         std::cout << leftType->toShortString() << '\n';
         std::cout << (leftType->getExactType()) << '\n';
-        std::cout << (leftType->as<DST::PointerType>()->getPtrType()->getExactType() == EXACT_BASIC) << '\n';
+        std::cout << (leftType->as<DST::PointerType>()->getPtrType()->isBasicTy()) << '\n';
         throw ErrorReporter::report("Expression must be of class or namespace type", ERR_CODEGEN, node->getPosition());
     }
 }

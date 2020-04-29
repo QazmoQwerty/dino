@@ -134,7 +134,7 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
         auto diff = _builder.CreatePtrDiff(interfaceVtable, llvm::ConstantPointerNull::get(_interfaceVtableType->getPointerTo()));
         return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
     }
-    else if (((DST::Type*)node->getRight())->getExactType() == EXACT_BASIC)
+    else if (((DST::Type*)node->getRight())->isBasicTy())
     {
         if (left->getType()->getPointerElementType() != _interfaceType)
             throw "unreachable";
@@ -352,7 +352,7 @@ Value *CodeGenerator::codeGen(DST::Conversion* node)
 
 Value *CodeGenerator::codeGen(DST::MemberAccess *node)
 {
-    if (node->getType()->getExactType() == EXACT_PROPERTY)
+    if (node->getType()->isPropertyTy())
     {
         node->getRight() += ".get";
         auto leftTy = node->getLeft()->getType();
@@ -439,7 +439,7 @@ Value *CodeGenerator::codeGen(DST::ArrayLiteral *node)
 
 Value *CodeGenerator::codeGen(DST::Variable *node)
 {
-    if (node->getType()->getExactType() == EXACT_PROPERTY)
+    if (node->getType()->isPropertyTy())
     {
         node->getVarId() += ".get";
         auto lval = codeGenLval(node);
