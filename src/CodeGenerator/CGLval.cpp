@@ -42,7 +42,7 @@ Value *CodeGenerator::codeGenLval(DST::Conversion* node)
         auto ptr = _builder.CreateGEP(exp, {_builder.getInt32(0), _builder.getInt32(0)}, "accessTmp");
         return _builder.CreateBitCast(ptr, type->getPointerTo(), "cnvrttmp");
     }
-    throw "TODO";
+    throw "unreachable";
 }
 
 Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
@@ -68,7 +68,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
         case OT_SQUARE_BRACKETS_OPEN:
             if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY)
             {
-                if (((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+                if (node->getLeft()->getType()->as<DST::ArrayType>()->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
                 {
                     auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
                     return _builder.CreateGEP(_builder.CreateLoad(arrPtr), codeGen(node->getRight()) );
@@ -100,8 +100,6 @@ Value *CodeGenerator::codeGenLval(DST::Variable *node)
 Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 {
     auto leftType = node->getLeft()->getType();
-    if (leftType->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)leftType)->size() == 1)
-        leftType = ((DST::TypeList*)leftType)->getTypes()[0];
 
     if (leftType->getExactType() == EXACT_NAMESPACE)
     {
@@ -112,7 +110,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     }
     else if (leftType->getExactType() == EXACT_BASIC)
     {
-        if (auto interfaceDecl = ((DST::BasicType*)leftType)->getTypeSpecifier()->getInterfaceDecl())
+        if (auto interfaceDecl = leftType->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl())
         {
             auto lval = codeGenLval(node->getLeft());
             auto vtablePtr = _builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(1) });
@@ -140,9 +138,9 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
         );
     }
     else if (leftType->getExactType() == EXACT_POINTER && 
-            ((DST::PointerType*)leftType)->getPtrType()->getExactType() == EXACT_BASIC)
+            leftType->as<DST::PointerType>()->getPtrType()->getExactType() == EXACT_BASIC)
     {
-        auto bt = (DST::BasicType*)((DST::PointerType*)leftType)->getPtrType();
+        auto bt = leftType->as<DST::PointerType>()->getPtrType()->as<DST::BasicType>();
         auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
         auto lval = _builder.CreateLoad(codeGenLval(node->getLeft()));
         assertNotNull(lval);
@@ -157,7 +155,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     {
         std::cout << leftType->toShortString() << '\n';
         std::cout << (leftType->getExactType()) << '\n';
-        std::cout << (((DST::PointerType*)leftType)->getPtrType()->getExactType() == EXACT_BASIC) << '\n';
+        std::cout << (leftType->as<DST::PointerType>()->getPtrType()->getExactType() == EXACT_BASIC) << '\n';
         throw ErrorReporter::report("Expression must be of class or namespace type", ERR_CODEGEN, node->getPosition());
     }
 }

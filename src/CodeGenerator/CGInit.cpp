@@ -215,14 +215,14 @@ void CodeGenerator::declareInterfaceMembers(DST::InterfaceDeclaration *node)
         {
             auto decl = (DST::PropertyDeclaration*)stmnt;
             
-            if (((DST::PropertyType*)decl->getReturnType())->hasGet())
+            if (decl->getReturnType()->as<DST::PropertyType>()->hasGet())
             {
                 auto funcId = name;
                 funcId += ".get";
                 vtableIndexes[funcId].index = idx++;
                 vtableIndexes[funcId].type = llvm::FunctionType::get(evalType(decl->getReturnType()), _builder.getInt8PtrTy(), false);
             }
-            if (((DST::PropertyType*)decl->getReturnType())->hasSet())
+            if (decl->getReturnType()->as<DST::PropertyType>()->hasSet())
             {
                 auto funcId = name;
                 funcId += ".set";

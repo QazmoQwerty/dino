@@ -20,7 +20,7 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 
 bool Decorator::isCondition(DST::Expression * node)
 {
-	return node && node->getType() == DST::getBoolTy();
+	return node && node->getType()->equals(DST::getBoolTy());
 }
 
 void Decorator::leaveBlock()

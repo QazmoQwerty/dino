@@ -1,5 +1,5 @@
 // import "Examples/std"
-import "std2"
+// import "std2"
 
 // import "std2"
 
@@ -17,29 +17,38 @@ namespace Test {
         putchar('\n')
     }
 
-    void PrintB(bool b) {
-        if b {
-            putchar('t') | putchar('r') | putchar('u') | putchar('e') | putchar('\n')
-        }
-        else {
-            putchar('f') | putchar('a') | putchar('l') | putchar('s') | putchar('e') | putchar('\n')
-        }
-    }
+    // void PrintB(bool b) {
+    //     if b {
+    //         putchar('t') | putchar('r') | putchar('u') | putchar('e') | putchar('\n')
+    //     }
+    //     else {
+    //         putchar('f') | putchar('a') | putchar('l') | putchar('s') | putchar('e') | putchar('\n')
+    //     }
+    // }
 
-    (int, bool[2]) Foo(int a, bool b, bool c) {
-        bool[2] arr
-        arr[0] := b
-        arr[1] := c
-        return a, arr
-    }
+    // (int, bool[2]) Foo(int a, bool b, bool c) {
+    //     bool[2] arr
+    //     arr[0] := b
+    //     arr[1] := c
+    //     return a, arr
+    // }
 
-    int Boo: get: return 100
+    // int Boo: get: return 100
+
+    // int[3] Foo() { return [1, 2, 3] }
+
+    int F(): return 10
 
     void Main() {
-        Std.PrintDLn(300)
-        // int a := Boo
-        PrintD(Boo)
-        putchar('a')
+        // Std.PrintDLn(300)
+        var a := F()
+
+        a := 20
+        // int[3] a := Foo()
+        // PrintD(a[2])
+        // PrintD(Foo()[2])
+        // PrintD([1, 2, 3][2])
+        // putchar('a')
         // var a := new int[10]
 
         // (bool, int) n := false, 10

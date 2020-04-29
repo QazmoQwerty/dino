@@ -125,10 +125,9 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getImplements()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_SPECIFIER || !((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
+					if (dec->getType()->getExactType() != EXACT_SPECIFIER || !dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl())
 						throw ErrorReporter::report("Expected an interface specifier", ERR_DECORATOR, dec->getPosition());
-					//decl->addImplements(((DST::InterfaceSpecifierType*)dec->getType())->getInterfaceDecl());
-					decl->addImplements(((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl());
+					decl->addImplements(dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl());
 				}
 			break;
 		}
@@ -139,9 +138,9 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getInterfaces()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_SPECIFIER || !((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl())
+					if (dec->getType()->getExactType() != EXACT_SPECIFIER || !dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl())
 						throw ErrorReporter::report("Expected an interface specifier", ERR_DECORATOR, dec->getPosition());
-					decl->addInterface(((DST::TypeSpecifierType*)dec->getType())->getInterfaceDecl());
+					decl->addInterface(dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl());
 				}
 			break;
 		}
@@ -326,7 +325,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				{
 					auto decl = (DST::FunctionDeclaration*)member.second.first;
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = (((DST::TypeSpecifierType*)i.second.second)->getBasicTy())->getPtrTo();
+					_variables[currentScope()][unicode_string("this")] = i.second.second->as<DST::TypeSpecifierType>()->getBasicTy()->getPtrTo();
 					
 					for (auto param : decl->getParameters())	// Add function parameters to variables map
 						_variables[currentScope()][param->getVarId()] = param->getType();
@@ -340,9 +339,9 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				else if (member.second.first->getStatementType() == ST_PROPERTY_DECLARATION)
 				{
 					auto decl = (DST::PropertyDeclaration*)member.second.first;
-					auto retType = ((DST::PropertyType*)member.second.second)->getReturn();
+					auto retType = member.second.second->as<DST::PropertyType>()->getReturn();
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = ((DST::TypeSpecifierType*)i.second.second)->getBasicTy()->getPtrTo();
+					_variables[currentScope()][unicode_string("this")] = i.second.second->as<DST::TypeSpecifierType>()->getBasicTy()->getPtrTo();
 					if (decl->getBase()->getGet())
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
@@ -375,7 +374,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 		case ST_PROPERTY_DECLARATION:
 		{
 			auto decl = (DST::PropertyDeclaration*)i.second.first;
-			auto retType = ((DST::PropertyType*)i.second.second)->getReturn();
+			auto retType = i.second.second->as<DST::PropertyType>()->getReturn();
 			if (decl->getBase()->getGet())
 			{
 				decl->setGet(decorate(decl->getBase()->getGet()));

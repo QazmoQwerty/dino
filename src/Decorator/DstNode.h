@@ -217,24 +217,27 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_TYPE; }
 		virtual TypeList *appendType(Type *append);
 
-		/* 
-			In theory, types are equal if they are EXACTLY the same.
-			FIXME - remove this, change the type structure so that each type has a single, unique pointer.
-		*/
-		virtual bool equals(Type *other) = 0;
-
 		/* types are readable by default */
 		virtual bool readable() { return true; }
 
 		/* types are writable by default */
 		virtual bool writeable() { return true; }
 
+
+		ConstType *getConstOf();
+		virtual Type *getNonConstOf() { return this; };
+		virtual Type *getNonPropertyOf() { return this; };
+		PointerType *getPtrTo();
+		ArrayType *getArrayOf(size_t size = DST::UNKNOWN_ARRAY_LENGTH);
+		ArrayType *getArrayOf(Expression *exp);
+		PropertyType *getPropertyOf(bool hasGet, bool hasSet);
+
 		/* types are non-constant by default */
 		virtual bool isConstTy() 	 { return false; }
 		virtual bool isArrayTy() 	 { return false; }
 		virtual bool isPtrTy() 		 { return false; }
-		virtual bool isInterfaceTy() { return false; }
 		virtual bool isValueTy() 	 { return false; }
+		virtual bool isInterfaceTy() { return false; }
 		virtual bool isListTy() 	 { return false; }
 		virtual bool isBasicTy() 	 { return false; }
 		virtual bool isNullTy() 	 { return false; }
@@ -244,11 +247,11 @@ namespace DST
 		virtual bool isSpecifierTy() { return false; }
 		virtual bool isNamespaceTy() { return false; }
 
-		ConstType *getConstOf();
-		PointerType *getPtrTo();
-		ArrayType *getArrayOf(size_t size = DST::UNKNOWN_ARRAY_LENGTH);
-		ArrayType *getArrayOf(Expression *exp);
-		PropertyType *getPropertyOf(bool hasGet, bool hasSet);
+		virtual bool equals(Type *other) { return this->getNonConstOf()->getNonPropertyOf() == other->getNonConstOf()->getNonPropertyOf(); };
+
+		
+		template <class T>
+		T* as();
 
 		/* 
 			Taken from the language specification:
@@ -302,7 +305,6 @@ namespace DST
 		virtual bool isUnknownTy() { return true; }
 		virtual bool assignableTo(Type *type) { return false; /* 'var' type is not assignable to anything */ }
 		virtual ExactType getExactType() { return EXACT_UNKNOWN; };
-		virtual bool equals(Type *other) { return other->getExactType() == getExactType(); }
 		virtual vector<Node*> getChildren() { return {}; }
 	};
 
@@ -328,7 +330,6 @@ namespace DST
 			BasicType *getBasicTy();
 			virtual bool isSpecifierTy() { return true; }
 			virtual ExactType getExactType() { return EXACT_SPECIFIER; }
-			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
 			TypeDeclaration *getTypeDecl() { return _typeDecl; }
 			InterfaceDeclaration *getInterfaceDecl() { return _interfaceDecl; }
@@ -360,7 +361,6 @@ namespace DST
 			virtual ~NamespaceType() {}
 			virtual bool isNamespaceTy() { return true; }
 			virtual ExactType getExactType() { return EXACT_NAMESPACE; };
-			virtual bool equals(Type *other) { return other->getExactType() == getExactType(); };
 			virtual bool writeable() { return false; }
 			NamespaceDeclaration *getNamespaceDecl() { return _decl; }
 
@@ -389,13 +389,27 @@ namespace DST
 		virtual ~PropertyType() { }
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
-		virtual bool isPropertyTy() { return true; }
 
 		/* The actual type the property gets/sets */
 		Type *getReturn() { return _return; }
 
+		virtual Type *getNonPropertyOf() { return getReturn(); };
+
+		virtual bool isPropertyTy()  { return true; }
+		virtual bool isConstTy() 	 { return getNonPropertyOf()->isConstTy(); 	   }
+		virtual bool isArrayTy() 	 { return getNonPropertyOf()->isArrayTy(); 	   }
+		virtual bool isPtrTy() 		 { return getNonPropertyOf()->isPtrTy(); 	   }
+		virtual bool isValueTy() 	 { return getNonPropertyOf()->isValueTy(); 	   }
+		virtual bool isInterfaceTy() { return getNonPropertyOf()->isInterfaceTy(); }
+		virtual bool isListTy() 	 { return getNonPropertyOf()->isListTy(); 	   }
+		virtual bool isBasicTy() 	 { return getNonPropertyOf()->isBasicTy(); 	   }
+		virtual bool isNullTy() 	 { return getNonPropertyOf()->isNullTy(); 	   }
+		virtual bool isUnknownTy() 	 { return getNonPropertyOf()->isUnknownTy();   }
+		virtual bool isFuncTy() 	 { return getNonPropertyOf()->isFuncTy(); 	   }
+		virtual bool isSpecifierTy() { return getNonPropertyOf()->isSpecifierTy(); }
+		virtual bool isNamespaceTy() { return getNonPropertyOf()->isNamespaceTy(); }
+
 		ExactType getExactType() { return EXACT_PROPERTY; }
-		virtual bool equals(Type *other);
 
 		/* property is readable if it has a getter */
 		virtual bool readable() { return hasGet(); }
@@ -425,7 +439,6 @@ namespace DST
 		virtual bool isPtrTy() { return true; }
 		Type *getPtrType() { return _type; } // returns what type the pointer points to
 		ExactType getExactType() { return EXACT_POINTER; }
-		virtual bool equals(Type *other);
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
@@ -446,11 +459,9 @@ namespace DST
 
 		ConstType(Type *type) : Type(), _type(type) { }
 		virtual ~ConstType() { }
-		virtual bool isConstTy() { return true; }
-		Type *getNonConstTy() { return _type; } // returns what type base type of this constant is
+		virtual Type *getNonConstOf() { return _type; }; // returns what type base type of this constant is
 		ExactType getExactType() { return EXACT_POINTER; }
 		virtual bool writeable() { return false; }
-		virtual bool equals(Type *other) { throw "DST::ConstType::equals() is unimplemented!"; }
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
@@ -461,6 +472,20 @@ namespace DST
 		virtual string toString() { return "<ConstType>" + toShortString(); };
 
 		virtual bool assignableTo(DST::Type *type) { return _type->assignableTo(type); };
+
+		virtual bool isConstTy() 	 { return true; }
+		virtual bool isArrayTy() 	 { return getNonConstOf()->isArrayTy(); 	}
+		virtual bool isPtrTy() 		 { return getNonConstOf()->isPtrTy(); 		}
+		virtual bool isValueTy() 	 { return getNonConstOf()->isValueTy(); 	}
+		virtual bool isInterfaceTy() { return getNonConstOf()->isInterfaceTy(); }
+		virtual bool isListTy() 	 { return getNonConstOf()->isListTy(); 		}
+		virtual bool isBasicTy() 	 { return getNonConstOf()->isBasicTy(); 	}
+		virtual bool isNullTy() 	 { return getNonConstOf()->isNullTy(); 		}
+		virtual bool isUnknownTy() 	 { return getNonConstOf()->isUnknownTy(); 	}
+		virtual bool isFuncTy() 	 { return getNonConstOf()->isFuncTy(); 		}
+		virtual bool isPropertyTy()  { return getNonConstOf()->isPropertyTy(); 	}
+		virtual bool isSpecifierTy() { return getNonConstOf()->isSpecifierTy(); }
+		virtual bool isNamespaceTy() { return getNonConstOf()->isNamespaceTy(); }
 	};
 
 	class NullType : public Type 
@@ -471,7 +496,6 @@ namespace DST
 		NullType() : Type() {}
 		ExactType getExactType() { return EXACT_NULL; }
 		virtual bool isNullTy() { return true; }
-		virtual bool equals(Type *other) { return other->equals(this); };
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
 			Always returns "<NullType>"
@@ -496,7 +520,6 @@ namespace DST
 		vector<Type*> &getTypes() { return _types; }
 		size_t size() { return _types.size(); }
 		ExactType getExactType() { return EXACT_TYPELIST; }
-		virtual bool equals(Type *other);
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
@@ -525,13 +548,6 @@ namespace DST
 		TypeSpecifierType *getTypeSpecifier() { return _typeSpec; }
 		unicode_string getTypeId();
 		ExactType getExactType() { return EXACT_BASIC; }
-		virtual bool equals(Type *other)
-		{
-			return 
-				(other->getExactType() == EXACT_PROPERTY && equals(((PropertyType*)other)->getReturn())) ||
-				(other->getExactType() == EXACT_BASIC && ((BasicType*)other)->_typeSpec == _typeSpec) ||
-				(other->getExactType() == EXACT_TYPELIST && ((TypeList*)other)->size() == 1 && equals(((TypeList*)other)->getTypes()[0]));
-		}
 		Type *getMember(unicode_string id);
 
 		// TODO - someone somewhere is calling this instead of getTypeSpecifier(): find it and remove this
@@ -568,11 +584,8 @@ namespace DST
 
 		virtual bool equals(Type *other)
 		{
-			if (other->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)other)->size() == 1)
-				return equals(((DST::TypeList*)other)->getTypes()[0]);
-			return other->getExactType() == EXACT_ARRAY &&
-				((ArrayType*)other)->_length == _length &&
-				((ArrayType*)other)->_valueType->equals(_valueType);
+			other = other->getNonConstOf();
+			return other->isArrayTy() && ((ArrayType*)other)->_length == _length && _valueType->equals(((ArrayType*)other)->_valueType);
 		}
 		size_t getLength() { return _length; }
 		Type *getElementType() { return _valueType; }
@@ -613,7 +626,6 @@ namespace DST
 		vector<Type*> &getParameters() { return _parameters; }
 
 		ExactType getExactType() { return EXACT_FUNCTION; }
-		virtual bool equals(Type *other);
 
 		virtual bool assignableTo(DST::Type *type)
 		{
@@ -881,7 +893,7 @@ namespace DST
 	public:
 		ArrayLiteral(Type *type, vector<Expression*> arr) : _array(arr) { _type = ArrayType::get(type, arr.size()); }
 		virtual ~ArrayLiteral() { /*if (_base) delete _base; */ _array.clear(); }
-		ArrayType *getType() { return _type; }
+		Type *getType() { return _type->getConstOf(); }
 		virtual ExpressionType getExpressionType() { return ET_ARRAY; };
 		virtual string toString() { return "<ArrayLiteral>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();

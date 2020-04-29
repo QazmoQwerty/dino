@@ -2,8 +2,6 @@
 namespace LL {
 	ListNode@ CreateNode(int data, ListNode@ next) {
 		ListNode@ node ≡ new ListNode
-		// node.Data ≡ data
-		// node.Next ≡ next
 		node.Init(data, next)
 		return node
 	}
@@ -41,9 +39,9 @@ namespace LL {
 			return this
 		}
 
-		int Size() {
+		int Size: get {
 			if next = null: return 1
-			return 1 + next.Size()
+			return 1 + next.Size
 		}
 
 		void InsertAtEnd(int data) {
@@ -62,18 +60,9 @@ namespace LL {
 		void Remove(int index) {
 			if next = null or index < 1:
 				return // index out of bounds
-			else: if index = 1 {
-				ListNode@ temp ≡ next 
+			else if index = 1:
 				next ≡ next.next
-				delete temp
-			}
 			else: next.Remove(index - 1)
-		}
-
-		void DeleteChildren() {
-			unless next = null:
-				next.DeleteChildren()
-			delete next
 		}
 	}
 
@@ -85,10 +74,10 @@ namespace LL {
 		int GetValue(int index): 
 			return first.GetNext(index).Data
 
-		int Size() {
+		int Size: get {
 			if first = null:
 				return 0
-			return first.Size()
+			return first.Size
 		}
 
 		void Insert(int index, int data) {
@@ -106,23 +95,14 @@ namespace LL {
 		}
 
 		void Remove(int index) {
-			if index = 0 {
-				ListNode@ temp ≡ first
-				//first ≡ first.GetNext(1)
+			if index = 0:
 				first ≡ first.Next
-				delete temp
-			}
 			else: first.Remove(index)
 		}
 
 		void Show() {
 			unless first = null:
 				first.Show()
-		}
-
-		void Clear() {
-			first.DeleteChildren()
-			delete first
 		}
 	}
 }

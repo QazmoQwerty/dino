@@ -33,7 +33,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 	for (int scope = currentScope(); scope >= 0; scope--)
 		if (auto ty = _variables[scope][name]) {
 			if (ty->isSpecifierTy())
-				return ((DST::TypeSpecifierType*)ty)->getBasicTy();
+				return ty->as<DST::TypeSpecifierType>()->getBasicTy();
 			return new DST::Variable(node, ty);
 		}
 
@@ -53,7 +53,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 	{
 		if (auto ty = _currentNamespace[i]->getMemberType(name)) {
 			if (ty->isSpecifierTy())
-				return ((DST::TypeSpecifierType*)ty)->getBasicTy();
+				return ty->as<DST::TypeSpecifierType>()->getBasicTy();
 			return new DST::Variable(node, ty);
 		}
 	}
@@ -88,7 +88,7 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 			}
 			if (!prevType)
 				throw ErrorReporter::report("array literal can't be empty", ERR_DECORATOR, node->getPosition());
-			return new DST::ArrayLiteral(prevType, ((DST::ExpressionList*)val)->getExpressions());
+			return new DST::ArrayLiteral(prevType->getConstOf(), ((DST::ExpressionList*)val)->getExpressions());
 		}
 		else
 		{
@@ -134,7 +134,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 	{
 		vector<DST::Type*> vec;
 		if (((DST::Type*)args)->isListTy())
-			for (auto i : ((DST::TypeList*)args)->getTypes())
+			for (auto i : ((DST::Type*)args)->as<DST::TypeList>()->getTypes())
 				vec.push_back(i);
 		else vec.push_back(((DST::Type*)args));
 
@@ -205,41 +205,36 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw ErrorReporter::report("Expected an identifier", ERR_DECORATOR, node->getPosition());
 
-		if (type->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)type)->getTypes().size() == 1)
-			throw "unreachable, leaving for now just to make sure.";
-
-		if (type->isPropertyTy() && ((DST::PropertyType*)type)->hasGet())
-			type = ((DST::PropertyType*)type)->getReturn();
+		if (type->isPropertyTy() && type->as<DST::PropertyType>()->hasGet())
+			type = type->as<DST::PropertyType>()->getReturn();
 
 		if (type->isPtrTy())
-			type = ((DST::PointerType*)type)->getPtrType();
+			type = type->as<DST::PointerType>()->getPtrType();
 			
 		DST::Type *memberType = NULL;
 		unicode_string varId = ((AST::Identifier*)node->getRight())->getVarId();
-		switch (type->getExactType())
+		if (type->isBasicTy())
 		{
-			case EXACT_BASIC:
-				if (_currentTypeDecl != ((DST::BasicType*)type)->getTypeSpecifier()->getTypeDecl() && !varId[0].isUpper())
-					throw ErrorReporter::report("Cannot access private member \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getPosition());
-				memberType = ((DST::BasicType*)type)->getTypeSpecifier()->getMemberType(varId);	
-				break;
-			case EXACT_NAMESPACE:
-				memberType = ((DST::NamespaceType*)type)->getNamespaceDecl()->getMemberType(varId);
-				break;
-			case EXACT_ARRAY:
-				if (varId == unicode_string("Size"))
-				{
-					memberType = DST::getIntTy()->getPropertyOf(true, false);
-					break;
-				}
-			default: throw ErrorReporter::report("Expression must have class or namespace type", ERR_DECORATOR, left->getPosition());
+			auto bt = type->as<DST::BasicType>();
+			if (_currentTypeDecl != bt->getTypeSpecifier()->getTypeDecl() && !varId[0].isUpper())
+				throw ErrorReporter::report("Cannot access private member \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getPosition());
+			memberType = bt->getTypeSpecifier()->getMemberType(varId);	
+		}
+		else if (type->isNamespaceTy())
+			memberType = type->as<DST::NamespaceType>()->getNamespaceDecl()->getMemberType(varId);
+		else if (type->isArrayTy() && varId == unicode_string("Size"))
+			memberType = DST::getIntTy()->getPropertyOf(true, false);
+		else 
+		{
+			std::cout << memberType->toShortString() << "\n";
+			throw ErrorReporter::report("Expression must have class or namespace type", ERR_DECORATOR, left->getPosition());
 		}
 
 		if (memberType == nullptr)
 			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getRight()->getPosition());
 		
 		if (memberType->isSpecifierTy())	// TODO - why is this line here??
-			return ((DST::TypeSpecifierType*)memberType)->getBasicTy();
+			return memberType->as<DST::TypeSpecifierType>()->getBasicTy();
 
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
@@ -288,7 +283,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				// array access
 				if (bo->getRight()->getType() != DST::getIntTy() || (bo->getRight()->getType()->isConstTy() && bo->getRight()->getType() == DST::getIntTy()->getConstOf()))
 					throw ErrorReporter::report("array index must be an integer value", ERR_DECORATOR, bo->getRight()->getPosition());
-				bo->setType(((DST::ArrayType*)bo->getLeft()->getType())->getElementType());
+				bo->setType(bo->getLeft()->getType()->as<DST::ArrayType>()->getElementType());
 			}
 			else if (bo->getLeft()->getType()->isListTy()) 
 			{
@@ -296,7 +291,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				if (bo->getRight()->getExpressionType() != ET_LITERAL || ((DST::Literal*)bo->getRight())->getLiteralType() != LT_INTEGER)
 					throw ErrorReporter::report("aggregate index must be a constant integer value", ERR_DECORATOR, bo->getRight()->getPosition());
 				int idx = ((DST::Literal*)bo->getRight())->getIntValue();
-				auto list = ((DST::TypeList*)bo->getLeft()->getType());
+				auto list = bo->getLeft()->getType()->as<DST::TypeList>();
 				if (idx < 0 || size_t(idx) >= list->size())
 					throw ErrorReporter::report("aggregate index [" + std::to_string(idx) + "] out of range [" + 
 							std::to_string(list->size()) + "]", ERR_DECORATOR, bo->getRight()->getPosition());

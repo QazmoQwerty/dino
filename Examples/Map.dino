@@ -1,4 +1,4 @@
-// import "std2"
+// import "Examples/std2"
 import "std2"
 namespace Prog {
     type Pair {

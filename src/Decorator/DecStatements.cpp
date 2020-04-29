@@ -86,7 +86,7 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 			clause = { ((DST::ExpressionList*)expr)->getExpressions(), decorate(c._statement) };
 		else clause = { { expr }, decorate(c._statement) };
 		for (auto i : clause._expressions) 
-			if (!i->getType()->assignableTo(sc->getExpression()->getType()))
+			if (!i->getType()->assignableTo(sc->getExpression()->getType()->getNonConstOf()))
 				throw ErrorReporter::report("case clause has type \"" + i->getType()->toShortString() + "\" instead of the required \"" 
 					+ sc->getExpression()->getType()->toShortString() + "\" type", ERR_DECORATOR, i->getPosition());
 		sc->addCase(clause);
@@ -163,8 +163,8 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	if (assignment->getLeft()->getExpressionType() == ET_LIST)
 	{
 		auto list = (DST::ExpressionList*)assignment->getLeft();
-		auto leftTypes = (DST::TypeList*)assignment->getLeft()->getType();
-		auto rightTypes = (DST::TypeList*)assignment->getRight()->getType();
+		auto leftTypes = ((DST::ExpressionList*)assignment->getLeft())->getType();
+		auto rightTypes = ((DST::ExpressionList*)assignment->getRight())->getType();
 		for (unsigned int i = 0; i < list->size(); i++)
 		{
 			if (list->getExpressions()[i]->getType()->isUnknownTy())
@@ -178,24 +178,24 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		}
 	}
 	
-	if (assignment->getLeft()->getType()->getExactType() == EXACT_UNKNOWN)
+	if (assignment->getLeft()->getType()->isUnknownTy())
 	{
 		if (assignment->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
 			throw ErrorReporter::report("inferred type is invalid in this context", ERR_DECORATOR, node->getPosition());
-		switch (assignment->getRight()->getType()->getExactType())
+		switch (assignment->getRight()->getType()->getNonConstOf()->getExactType())
 		{
 			case EXACT_UNKNOWN: case EXACT_NULL:
 				throw ErrorReporter::report("Could not infer type of left value", ERR_DECORATOR, assignment->getLeft()->getPosition());
 			case EXACT_PROPERTY:
 				((DST::VariableDeclaration*)assignment->getLeft())->setType(
-					((DST::PropertyType*)assignment->getRight()->getType())->getReturn()
+					assignment->getRight()->getType()->as<DST::PropertyType>()->getReturn()->getNonConstOf()
 				); break;
 			default:
 				((DST::VariableDeclaration*)assignment->getLeft())->setType(
-					assignment->getRight()->getType()
+					assignment->getRight()->getType()->getNonConstOf()
 				); break;
 		}
-		_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType();
+		_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType()->getNonConstOf();
 	}
 
 	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))

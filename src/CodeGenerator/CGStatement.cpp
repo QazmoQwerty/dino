@@ -91,7 +91,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             }
             Value *ptr = codeGenLval(node->getExpression());
             if (node->getExpression()->getType()->getExactType() == EXACT_ARRAY && 
-                ((DST::ArrayType*)node->getExpression()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+                node->getExpression()->getType()->as<DST::ArrayType>()->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             {
                 auto sizePtr = _builder.CreateInBoundsGEP(ptr, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
                 _builder.CreateStore(_builder.getInt32(0), sizePtr);

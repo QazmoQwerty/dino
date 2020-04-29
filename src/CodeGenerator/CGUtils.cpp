@@ -64,10 +64,10 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 params.push_back(evalType(i));
             return llvm::FunctionType::get(retTy, params, /*isVarArgs=*/false)->getPointerTo();
         }
-        case EXACT_CONST: return evalType(((DST::ConstType*)node)->getNonConstTy());
+        case EXACT_CONST: return evalType(((DST::ConstType*)node)->getNonConstOf());
         case EXACT_TYPELIST:
         {
-            auto tl = (DST::TypeList*)node;
+            auto tl = node->as<DST::TypeList>();
             if (tl->size() == 1)
                 return evalType(tl->getTypes()[0]);
             else 

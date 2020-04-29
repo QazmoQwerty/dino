@@ -174,6 +174,7 @@ namespace DST
 	FunctionType *FunctionType::get(Type* ret, vector<Type*> params)
 	{
 		static unordered_map<Type*, map<vector<Type*>, FunctionType*>> rets;
+		ret = ret->getConstOf();
 		if (rets.count(ret))
 		{
 			if (rets[ret].count(params))
@@ -219,23 +220,24 @@ namespace DST
 
 	PropertyType *Type::getPropertyOf(bool hasGet, bool hasSet)
 	{
+		auto constRet = getConstOf();
 		if (hasGet && hasSet)
 		{
-			if (_getSetPropTy == NULL)
-				_getSetPropTy = new PropertyType(this, hasGet, hasSet);
-			return _getSetPropTy;
+			if (constRet->_getSetPropTy == NULL)
+				constRet->_getSetPropTy = new PropertyType(this, hasGet, hasSet);
+			return constRet->_getSetPropTy;
 		}
 		if (hasGet)
 		{
-			if (_getPropTy == NULL)
-				_getPropTy = new PropertyType(this, hasGet, hasSet);
-			return _getPropTy;
+			if (constRet->_getPropTy == NULL)
+				constRet->_getPropTy = new PropertyType(this, hasGet, hasSet);
+			return constRet->_getPropTy;
 		}
 		if (hasSet)
 		{
-			if (_setPropTy == NULL)
-				_setPropTy = new PropertyType(this, hasGet, hasSet);
-			return _setPropTy;
+			if (constRet->_setPropTy == NULL)
+				constRet->_setPropTy = new PropertyType(this, hasGet, hasSet);
+			return constRet->_setPropTy;
 		}
 		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, {0, 0, 0, ""});
 	}
@@ -261,40 +263,6 @@ namespace DST
 		if (_basicTy == NULL)
 			_basicTy = new BasicType(this);
 		return _basicTy;
-	}
-
-	bool PointerType::equals(Type * other)
-	{
-		if (other == nullptr) 
-			return false;
-
-		switch (other->getExactType())
-		{
-			case EXACT_NULL:
-				return true;
-
-			case EXACT_TYPELIST:
-				return equals(((TypeList*)other)->getTypes()[0]);
-			
-			case EXACT_PROPERTY:
-				return equals(((PropertyType*)other)->getReturn());
-			
-			case EXACT_POINTER:
-				if (_type->getExactType() != EXACT_SPECIFIER)
-					return ((PointerType*)other)->_type->equals(_type);
-				else if (auto inter = ((TypeSpecifierType*)(_type))->getInterfaceDecl())
-				{
-					auto otype = ((TypeSpecifierType*)((PointerType*)other)->_type)->getTypeDecl();
-					auto ointer = ((TypeSpecifierType*)((PointerType*)other)->_type)->getInterfaceDecl();
-					if (otype)
-						return otype->implements(inter);
-					else if (ointer)
-						return inter->implements(ointer) || ointer->implements(inter);
-					else return false;
-				}
-			default:
-				return false;
-		}
 	}
 
 	string BasicType::toShortString() 
@@ -398,11 +366,6 @@ namespace DST
 		return type->isPtrTy() && _type->assignableTo(((PointerType*)type)->_type);
 	}
 
-	bool FunctionType::equals(Type * other)
-	{
-		return this == other;
-	}
-
 	string FunctionType::toShortString()
 	{
 		string ret = _return->toShortString() + "(";
@@ -415,21 +378,6 @@ namespace DST
 			ret += i->toShortString();
 		}
 		return  ret + ")";
-	}
-
-	bool TypeList::equals(Type * other)
-	{
-		if (_types.size() == 1)
-			return _types[0]->equals(other);
-		if (other->getExactType() != EXACT_TYPELIST)
-			return false;
-		auto othr = (TypeList*)other;
-		if (_types.size() != othr->_types.size())
-			return false;
-		for (unsigned int i = 0; i < _types.size(); i++)
-			if (!_types[i]->equals(othr->_types[i]))
-				return false;
-		return true;
 	}
 
 	string TypeList::toShortString()
@@ -445,11 +393,6 @@ namespace DST
 		return str;
 	}
 
-	bool PropertyType::equals(Type * other)
-	{
-		return _return->equals(other);
-	}
-
 	string PropertyType::toShortString()
 	{
 		return _return->toShortString() + ((_hasGet && _hasSet) ? "{get|set}" : _hasGet ? "{get}" : "{set}");
@@ -461,4 +404,16 @@ namespace DST
 	}
 
 	unicode_string BasicType::getTypeId() { return _typeSpec->getTypeName(); }
+
+	template <class T>
+	T* Type::as() { return (T*)getNonConstOf()->getNonPropertyOf(); }
+
+	template<> PropertyType		 *Type::as<PropertyType>()  	{ return (PropertyType*)	 getNonConstOf(); 	 }
+	template<> ConstType 		 *Type::as<ConstType>() 		{ return (ConstType*)		 getNonPropertyOf(); }
+	template<> TypeList 		 *Type::as<TypeList>() 			{ return (TypeList*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> NamespaceType 	 *Type::as<NamespaceType>() 	{ return (NamespaceType*)	 getNonConstOf()->getNonPropertyOf(); }
+	template<> TypeSpecifierType *Type::as<TypeSpecifierType>() { return (TypeSpecifierType*)getNonConstOf()->getNonPropertyOf(); }
+	template<> ArrayType 		 *Type::as<ArrayType>() 		{ return (ArrayType*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> BasicType		 *Type::as<BasicType>() 		{ return (BasicType*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> PointerType		 *Type::as<PointerType>() 		{ return (PointerType*)		 getNonConstOf()->getNonPropertyOf(); }
 }

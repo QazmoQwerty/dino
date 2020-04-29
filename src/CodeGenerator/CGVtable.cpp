@@ -12,6 +12,7 @@ llvm::Value* CodeGenerator::createEmptyVtable(DST::Type *type)
 
 llvm::Value* CodeGenerator::getVtable(DST::Type *type) {
     // llvm::errs() << "getting vtable for: " << type->toShortString() << "\n";
+    type = type->getNonConstOf();
     if (auto vtable = _vtables[type])
         return vtable;
     else return createEmptyVtable(type);
