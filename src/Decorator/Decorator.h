@@ -24,7 +24,6 @@ class Decorator
 {
 public:
 	static void setup(bool isLibrary = false);
-	static void createErrorInterfaceType();
 	static DST::Node *decorate(AST::Node *node);
 	static void clear();
 	static DST::Program *decorateProgram(AST::StatementBlock* node);
@@ -64,7 +63,6 @@ private:
 	// ExpressionStatements
 	static DST::VariableDeclaration *decorate(AST::VariableDeclaration *node);
 	static DST::Assignment *decorate(AST::Assignment *node);
-	static DST::TypeSpecifierType *getPrimitiveType(std::string name);
 	static DST::Type *evalType(AST::Expression *node);
 
 	static bool isCondition(DST::Expression *node);
@@ -74,8 +72,6 @@ private:
 	static DST::TypeDeclaration *_currentTypeDecl;
 	static DST::Program *_currentProgram;
 	static DST::FunctionDeclaration* _main;
-	static DST::NullType *_nullType;
-	static DST::UnknownType *_unknownType;
 	static DST::NamespaceDeclaration *_universalNs;
 	static vector<DST::Node*> _toDelete;
 	static bool _isLibrary;

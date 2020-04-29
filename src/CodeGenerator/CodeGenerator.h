@@ -111,7 +111,7 @@ namespace CodeGenerator
     ************************************************************************/
 
     /* Boxes a pointer value into an interface value */
-    llvm::Value* convertToInterface(llvm::Value *ptr);
+    llvm::Value* convertToInterface(llvm::Value *ptr, DST::Type *ty);
 
     /* Finds which interface a property belongs to. */
     DST::InterfaceDeclaration *getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl);
@@ -133,10 +133,10 @@ namespace CodeGenerator
         Create an empty vtable for a type that doesn't have one.
         Needed for type checks which are basen on vtable pointers.
     */
-    llvm::Value* createEmptyVtable(llvm::Type *type);
+    llvm::Value* createEmptyVtable(DST::Type *type);
 
     /* Gets a vtable for a type. If one doesn't exists creates an empty vtable. */
-    llvm::Value* getVtable(llvm::Type *type);
+    llvm::Value* getVtable(DST::Type *type);
 
     /* 
         Gets a pointer to a vtable, a function name, and the interface where the function is declared 

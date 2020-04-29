@@ -8,9 +8,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     if (node->getFunctionId()->getExpressionType() == ET_MEMBER_ACCESS)
     {
         auto ty = ((DST::MemberAccess*)node->getFunctionId())->getLeft()->getType();
-        if (ty->getExactType() == EXACT_TYPELIST && ((DST::TypeList*)ty)->size() == 1)
-            ty = ((DST::TypeList*)ty)->getTypes()[0];
-        if (ty->getExactType() == EXACT_BASIC || ty->getExactType() == EXACT_POINTER)
+        if (ty->isBasicTy() || ty->isPtrTy())
         {
             auto &funcId = ((DST::MemberAccess*)node->getFunctionId())->getRight();
             TypeDefinition *typeDef = NULL;
@@ -18,13 +16,13 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             llvm::Value *thisPtr = NULL;
             llvm::FunctionType *funcTy = NULL;
 
-            if (ty->getExactType() == EXACT_POINTER)
+            if (ty->isPtrTy())
                 thisPtr = codeGen(((DST::MemberAccess*)node->getFunctionId())->getLeft());
             else thisPtr = codeGenLval(((DST::MemberAccess*)node->getFunctionId())->getLeft());
 
-            if (ty->getExactType() == EXACT_BASIC)
+            if (ty->isBasicTy())
             {
-                auto bt = ((DST::BasicType*)ty);
+                auto bt = ty->as<DST::BasicType>();
                 if (auto interfaceDecl = bt->getTypeSpecifier()->getInterfaceDecl())
                 {
                     auto vtablePtr = _builder.CreateInBoundsGEP(thisPtr, { _builder.getInt32(0), _builder.getInt32(1) });
@@ -33,14 +31,14 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                     funcTy = _interfaceVtableFuncInfo[interfaceDecl][funcId].type;
                     thisPtr = _builder.CreateLoad(_builder.CreateInBoundsGEP(thisPtr, { _builder.getInt32(0), _builder.getInt32(0) }));
                 }
-                else typeDef = _types[((DST::BasicType*)ty)->getTypeSpecifier()->getTypeDecl()];
+                else typeDef = _types[ty->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
             }
                 
             else 
             {
-                if (((DST::PointerType*)ty)->getPtrType()->getExactType() != EXACT_BASIC)
-                    throw ErrorReporter::report("Internal decorator error?", ERR_CODEGEN, node->getPosition());
-                typeDef = _types[((DST::BasicType*)((DST::PointerType*)ty)->getPtrType())->getTypeSpecifier()->getTypeDecl()];
+                if (!ty->as<DST::PointerType>()->getPtrType()->isBasicTy())
+                    throw ErrorReporter::reportInternal("Internal decorator error?", ERR_CODEGEN, node->getPosition());
+                typeDef = _types[ty->as<DST::PointerType>()->getPtrType()->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
             }
 
             if (typeDef && !funcPtr)
@@ -53,9 +51,9 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             if (funcPtr->getType() != funcTy)
                 funcPtr = _builder.CreateBitCast(funcPtr, funcTy->getPointerTo());
 
-            if (funcTy->getNumParams() != node->getArguments()->getExpressions().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
+            if (funcTy->getNumParams() != node->getArguments().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
                 throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
-                    std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
+                    std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments().size()) + ")"
                     , ERR_CODEGEN, node->getPosition());
 
             std::vector<Value*> args;
@@ -71,10 +69,11 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                     args.push_back(retPtrs[i2++]);
                 else 
                 {
-                    auto gen = codeGen(node->getArguments()->getExpressions()[i++]);        
+                    auto currArg = node->getArguments()[i++];
+                    auto gen = codeGen(currArg);        
                     if (gen->getType() != argTy) {
                         if (argTy == _interfaceType)
-                            args.push_back(convertToInterface(gen));
+                            args.push_back(convertToInterface(gen, currArg->getType()));
                         else args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
                     }
                     else args.push_back(gen);
@@ -99,9 +98,9 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     if (!funcTy)
         throw ErrorReporter::report("Internal error while generating IR for function call", ERR_CODEGEN, node->getPosition());
     
-    if (funcTy->getNumParams() != node->getArguments()->getExpressions().size() + retPtrs.size())
+    if (funcTy->getNumParams() != node->getArguments().size() + retPtrs.size())
         throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
-            std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments()->getExpressions().size()) + ")"
+            std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments().size()) + ")"
             , ERR_CODEGEN, node->getPosition());
         
     std::vector<Value *> args;
@@ -114,12 +113,13 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             args.push_back(retPtrs[i2++]);
         else
         {
-            auto gen = codeGen(node->getArguments()->getExpressions()[i++]);       
+            auto currArg = node->getArguments()[i++];
+            auto gen = codeGen(currArg);       
             
             if (gen->getType() != argTy)
             {
                 if (argTy == _interfaceType)
-                    args.push_back(convertToInterface(gen));
+                    args.push_back(convertToInterface(gen, currArg->getType()));
                 else args.push_back(_builder.CreateBitCast(gen, argTy, "castTmp"));
             }
             else args.push_back(gen);   
@@ -133,7 +133,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
     Value *left = NULL;
     Value *right = NULL;
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_PROPERTY)
+    if (node->getLeft()->getType()->isPropertyTy())
     {
         if (node->getLeft()->getExpressionType() == ET_IDENTIFIER)
             ((DST::Variable*)node->getLeft())->getVarId() += ".set";
@@ -143,7 +143,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         if (node->getLeft()->getExpressionType() == ET_MEMBER_ACCESS) 
         {
             auto ac = (DST::MemberAccess*)node->getLeft();
-            switch (ac->getLeft()->getType()->getExactType())
+            switch (ac->getLeft()->getType()->getNonConstOf()->getNonPropertyOf()->getExactType())
             {
                 case EXACT_NAMESPACE:   // Static setter property
                 {
@@ -159,7 +159,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     left = codeGenLval(ac->getLeft());
                     right = codeGen(node->getRight());
 
-                    if (auto interfaceDecl = ((DST::BasicType*)ac->getLeft()->getType())->getTypeSpecifier()->getInterfaceDecl())
+                    if (auto interfaceDecl = ac->getLeft()->getType()->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl())
                     {
                         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
                         auto vtable = _builder.CreateLoad(vtablePtr);
@@ -171,7 +171,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     }
                     else 
                     {
-                        auto typeDef = _types[((DST::BasicType*)ac->getLeft()->getType())->getTypeSpecifier()->getTypeDecl()];
+                        auto typeDef = _types[ac->getLeft()->getType()->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
                         auto func = typeDef->functions[ac->getRight()];
                         if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
                             throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());
@@ -181,20 +181,18 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 }
                 case EXACT_POINTER:     // Member setter property of pointer to basic type
                 {
-                    auto ptrTy = ((DST::PointerType*)ac->getLeft()->getType())->getPtrType();
-                    if (ptrTy->getExactType() != EXACT_BASIC)
-                        throw "TODO";
+                    auto ptrTy = ac->getLeft()->getType()->as<DST::PointerType>()->getPtrType();
+                    if (!ptrTy->isBasicTy())
+                        throw ErrorReporter::report("only pointers and basic types have setter properties", ERR_CODEGEN, node->getPosition());
                     auto thisPtr = codeGen(ac->getLeft());
-                    auto typeDef = _types[((DST::BasicType*)ptrTy)->getTypeSpecifier()->getTypeDecl()];
+                    auto typeDef = _types[ptrTy->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
                     auto func = typeDef->functions[ac->getRight()];
                     if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
                         throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());
                     return createCallOrInvoke((llvm::Function*)func, { thisPtr, codeGen(node->getRight()) });
                 }
-                case EXACT_ARRAY:       // Member property of array
-                    throw ErrorReporter::report("Unimplemented Error no.2", ERR_CODEGEN, node->getPosition());   // TODO
                 default:
-                    throw ErrorReporter::report("Unimplemented Error no.3 | " + ac->getLeft()->getType()->toShortString(), ERR_CODEGEN, node->getPosition());   // TODO
+                    throw ErrorReporter::report("only pointers and basic types have setter properties", ERR_CODEGEN, node->getPosition());
             }
         }
 
@@ -218,7 +216,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         return right;
     }
 
-    /*if (node->getLeft()->getType()->getExactType() == EXACT_TYPELIST) 
+    /*if (node->getLeft()->getType()->isListTy()) 
     {
         // if (node->getRight()->getExpressionType() == ET_FUNCTION_CALL)
         // {
@@ -241,8 +239,8 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         // return lastStore;   // Temporary fix.
     }*/
 
-    if (node->getLeft()->getType()->getExactType() == EXACT_ARRAY && 
-        ((DST::ArrayType*)node->getLeft()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+    if (node->getLeft()->getType()->isArrayTy() && 
+        node->getLeft()->getType()->as<DST::ArrayType>()->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
     {
         left = codeGenLval(node->getLeft());
         right = codeGen(node->getRight());
@@ -252,8 +250,8 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) }, "arrPtrTmp");
             _builder.CreateStore(_builder.CreateBitOrPointerCast(right, arrPtr->getType()->getPointerElementType()), arrPtr);
 
-            if (node->getRight()->getType()->getExactType() == EXACT_ARRAY && ((DST::ArrayType*)node->getRight()->getType())->getLenExp()) 
-                _builder.CreateStore(codeGen(((DST::ArrayType*)node->getRight()->getType())->getLenExp()), sizePtr);
+            if (node->getRight()->getType()->isArrayTy() && node->getRight()->getType()->as<DST::ArrayType>()->getLenExp()) 
+                _builder.CreateStore(codeGen(node->getRight()->getType()->as<DST::ArrayType>()->getLenExp()), sizePtr);
             else _builder.CreateStore(_builder.getInt32(right->getType()->getPointerElementType()->getArrayNumElements()), sizePtr);
             return right;
         }
@@ -279,7 +277,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             if (left->getType() == _interfaceType->getPointerTo())
             {
                 right = codeGen(node->getRight());
-                _builder.CreateStore(convertToInterface(right), left);
+                _builder.CreateStore(convertToInterface(right, node->getRight()->getType()), left);
                 return right;
             }
             

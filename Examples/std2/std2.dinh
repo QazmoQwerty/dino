@@ -5,15 +5,15 @@ namespace Std {
 	char@ gets(char@ s, int maxSize): extern "gets_s"
 	int puts(char@ s): extern "puts"
 	type ArrayIndexOutOfBoundsError is Error {
-		String Msg: get: extern "Std.type.Std.ArrayIndexOutOfBoundsError.Msg.get"
+		string Msg: get: extern "Std.type.Std.ArrayIndexOutOfBoundsError.Msg.get"
 	}
 	void PrintD(int n): extern "Std.PrintD"
 	char putchar(char c): extern "putchar"
 	type NullPointerError is Error {
-		String Msg: get: extern "Std.type.Std.NullPointerError.Msg.get"
+		string Msg: get: extern "Std.type.Std.NullPointerError.Msg.get"
 	}
 	interface Error {
-		String Msg: get
+		string Msg: get
 	}
 	void PrintS(String s): extern "Std.PrintS"
 	type String {

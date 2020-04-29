@@ -74,7 +74,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             if (val->getType() != returnTy)
             {
                 if (returnTy == _interfaceType)
-                    return _builder.CreateRet(convertToInterface(val));
+                    return _builder.CreateRet(convertToInterface(val, node->getExpression()->getType()));
                 return _builder.CreateRet(_builder.CreateBitCast(val, returnTy));
             }
             return _builder.CreateRet(val);
@@ -90,8 +90,8 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
                 else free = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "GC_free", _module.get());
             }
             Value *ptr = codeGenLval(node->getExpression());
-            if (node->getExpression()->getType()->getExactType() == EXACT_ARRAY && 
-                ((DST::ArrayType*)node->getExpression()->getType())->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
+            if (node->getExpression()->getType()->isArrayTy() && 
+                node->getExpression()->getType()->as<DST::ArrayType>()->getLength() == DST::UNKNOWN_ARRAY_LENGTH)
             {
                 auto sizePtr = _builder.CreateInBoundsGEP(ptr, { _builder.getInt32(0), _builder.getInt32(0) }, "sizePtrTmp");
                 _builder.CreateStore(_builder.getInt32(0), sizePtr);

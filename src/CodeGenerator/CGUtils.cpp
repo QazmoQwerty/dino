@@ -49,34 +49,25 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         case EXACT_PROPERTY:
             return evalType(((DST::PropertyType*)node)->getReturn());
         case EXACT_POINTER:
-            if (((DST::PointerType*)node)->getPtrType()->getExactType() == EXACT_BASIC)
+            if (((DST::PointerType*)node)->getPtrType()->isBasicTy())
             {
-                if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeSpecifier()->getInterfaceDecl())
-                    return _interfaceType;
                 if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))   // void* is invalid in llvm IR
                     return llvm::Type::getInt8Ty(_context)->getPointerTo();
             }
             return evalType(((DST::PointerType*)node)->getPtrType())->getPointerTo();
-        case EXACT_FUNCTION:
+        case EXACT_FUNCTION: 
         {
             auto ft = (DST::FunctionType*)node;
             vector<llvm::Type*> params;
-            // llvm::Type *retTy = NULL;
-            // if (ft->getReturns()->size() > 1)
-            // {   // multi-return functions return their values through references passed as arguments
-            //     for (auto i : ft->getReturns()->getTypes())
-            //         params.push_back(evalType(i)->getPointerTo());    
-            //     retTy = _builder.getVoidTy();
-            // }
-            // else 
-            auto retTy = evalType(ft->getReturns());
-            for (auto i : ft->getParameters()->getTypes())
+            auto retTy = evalType(ft->getReturn());
+            for (auto i : ft->getParameters())
                 params.push_back(evalType(i));
             return llvm::FunctionType::get(retTy, params, /*isVarArgs=*/false)->getPointerTo();
         }
+        case EXACT_CONST: return evalType(((DST::ConstType*)node)->getNonConstOf());
         case EXACT_TYPELIST:
         {
-            auto tl = (DST::TypeList*)node;
+            auto tl = node->as<DST::TypeList>();
             if (tl->size() == 1)
                 return evalType(tl->getTypes()[0]);
             else 
@@ -229,7 +220,7 @@ llvm::Function *CodeGenerator::getNullCheckFunc()
     auto objPtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(0) }, "objPtr");
     auto vtablePtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(1) }, "vtablePtr");
     _builder.CreateStore(errAlloc, objPtr);
-    _builder.CreateStore(getVtable(_nullPtrErrorTy), vtablePtr);
+    _builder.CreateStore(getVtable(DST::getNullPtrErrTy()), vtablePtr);
 
     createThrow(_builder.CreateLoad(alloca), true);
 

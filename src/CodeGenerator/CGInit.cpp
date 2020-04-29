@@ -215,14 +215,14 @@ void CodeGenerator::declareInterfaceMembers(DST::InterfaceDeclaration *node)
         {
             auto decl = (DST::PropertyDeclaration*)stmnt;
             
-            if (((DST::PropertyType*)decl->getReturnType())->hasGet())
+            if (decl->getReturnType()->as<DST::PropertyType>()->hasGet())
             {
                 auto funcId = name;
                 funcId += ".get";
                 vtableIndexes[funcId].index = idx++;
                 vtableIndexes[funcId].type = llvm::FunctionType::get(evalType(decl->getReturnType()), _builder.getInt8PtrTy(), false);
             }
-            if (((DST::PropertyType*)decl->getReturnType())->hasSet())
+            if (decl->getReturnType()->as<DST::PropertyType>()->hasSet())
             {
                 auto funcId = name;
                 funcId += ".set";
@@ -362,7 +362,7 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     }
     def->vtable = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, 
                                             llvmVtable, node->getName().to_string() + ".vtable");
-    _vtables[def->structType] = def->vtable;
+    _vtables[DST::BasicType::get(DST::TypeSpecifierType::get(node))] = def->vtable;
 }
 
 void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
