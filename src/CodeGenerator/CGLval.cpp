@@ -151,11 +151,5 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else 
-    {
-        std::cout << leftType->toShortString() << '\n';
-        std::cout << (leftType->getExactType()) << '\n';
-        std::cout << (leftType->as<DST::PointerType>()->getPtrType()->isBasicTy()) << '\n';
-        throw ErrorReporter::report("Expression must be of class or namespace type", ERR_CODEGEN, node->getPosition());
-    }
+    else throw ErrorReporter::report("Expression must be of class or namespace type", ERR_CODEGEN, node->getPosition());
 }

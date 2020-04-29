@@ -182,17 +182,13 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	{
 		if (assignment->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
 			throw ErrorReporter::report("inferred type is invalid in this context", ERR_DECORATOR, node->getPosition());
-		switch (assignment->getRight()->getType()->getNonConstOf()->getExactType())
+		switch (assignment->getRight()->getType()->getNonConstOf()->getNonPropertyOf()->getExactType())
 		{
 			case EXACT_UNKNOWN: case EXACT_NULL:
-				throw ErrorReporter::report("Could not infer type of left value", ERR_DECORATOR, assignment->getLeft()->getPosition());
-			case EXACT_PROPERTY:
-				((DST::VariableDeclaration*)assignment->getLeft())->setType(
-					assignment->getRight()->getType()->as<DST::PropertyType>()->getReturn()->getNonConstOf()
-				); break;
+				throw ErrorReporter::report("Could not infer type", ERR_DECORATOR, assignment->getLeft()->getPosition());
 			default:
 				((DST::VariableDeclaration*)assignment->getLeft())->setType(
-					assignment->getRight()->getType()->getNonConstOf()
+					assignment->getRight()->getType()->getNonConstOf()->getNonPropertyOf()
 				); break;
 		}
 		_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType()->getNonConstOf();

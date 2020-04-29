@@ -125,7 +125,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getImplements()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_SPECIFIER || !dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl())
+					if (!dec->getType()->isSpecifierTy() || !dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl())
 						throw ErrorReporter::report("Expected an interface specifier", ERR_DECORATOR, dec->getPosition());
 					decl->addImplements(dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl());
 				}
@@ -138,7 +138,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getInterfaces()->getExpressions())
 				{
 					auto dec = decorate(i);
-					if (dec->getType()->getExactType() != EXACT_SPECIFIER || !dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl())
+					if (!dec->getType()->isSpecifierTy() || !dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl())
 						throw ErrorReporter::report("Expected an interface specifier", ERR_DECORATOR, dec->getPosition());
 					decl->addInterface(dec->getType()->as<DST::TypeSpecifierType>()->getInterfaceDecl());
 				}

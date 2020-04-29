@@ -36,8 +36,8 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
                 
             else 
             {
-                if (ty->as<DST::PointerType>()->getPtrType()->getExactType() != EXACT_BASIC)
-                    throw ErrorReporter::report("Internal decorator error?", ERR_CODEGEN, node->getPosition());
+                if (!ty->as<DST::PointerType>()->getPtrType()->isBasicTy())
+                    throw ErrorReporter::reportInternal("Internal decorator error?", ERR_CODEGEN, node->getPosition());
                 typeDef = _types[ty->as<DST::PointerType>()->getPtrType()->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
             }
 
@@ -143,7 +143,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         if (node->getLeft()->getExpressionType() == ET_MEMBER_ACCESS) 
         {
             auto ac = (DST::MemberAccess*)node->getLeft();
-            switch (ac->getLeft()->getType()->getExactType())
+            switch (ac->getLeft()->getType()->getNonConstOf()->getNonPropertyOf()->getExactType())
             {
                 case EXACT_NAMESPACE:   // Static setter property
                 {
@@ -182,7 +182,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 case EXACT_POINTER:     // Member setter property of pointer to basic type
                 {
                     auto ptrTy = ac->getLeft()->getType()->as<DST::PointerType>()->getPtrType();
-                    if (ptrTy->getExactType() != EXACT_BASIC)
+                    if (!ptrTy->isBasicTy())
                         throw ErrorReporter::report("only pointers and basic types have setter properties", ERR_CODEGEN, node->getPosition());
                     auto thisPtr = codeGen(ac->getLeft());
                     auto typeDef = _types[ptrTy->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];

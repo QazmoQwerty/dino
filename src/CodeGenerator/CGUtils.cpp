@@ -55,7 +55,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                     return llvm::Type::getInt8Ty(_context)->getPointerTo();
             }
             return evalType(((DST::PointerType*)node)->getPtrType())->getPointerTo();
-        case EXACT_FUNCTION:
+        case EXACT_FUNCTION: 
         {
             auto ft = (DST::FunctionType*)node;
             vector<llvm::Type*> params;
