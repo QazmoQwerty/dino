@@ -160,8 +160,8 @@ void OperatorsMap::setup()
 
 	//																							/-----precedences-----\
 	//							type						str				associativity		binary	prefix	postfix
-	_map[UTF8("++")]		= { OT_INCREMENT,				UTF8("++"),		LEFT_TO_RIGHT,		NONE,	140,	150	 };
-	_map[UTF8("--")]		= { OT_DECREMENT,				UTF8("--"),		LEFT_TO_RIGHT,		NONE,	140,	150  };
+	_map[UTF8("++")]		= { OT_INCREMENT,				UTF8("++"),		LEFT_TO_RIGHT,		NONE,	NONE,	150	 };
+	_map[UTF8("--")]		= { OT_DECREMENT,				UTF8("--"),		LEFT_TO_RIGHT,		NONE,	NONE,	150  };
 	_map[UTF8(".")]			= { OT_PERIOD,					UTF8("."),		LEFT_TO_RIGHT,		150,	NONE,	NONE };
 	_map[UTF8("@")]			= { OT_AT,						UTF8("@"),		RIGHT_TO_LEFT,		NONE,	140,	140  };
 	_wordsMap[UTF8("as")]	= { OT_AS,						UTF8("as"),		LEFT_TO_RIGHT,		135,	NONE,	NONE };
@@ -188,11 +188,14 @@ void OperatorsMap::setup()
 	_map[UTF8("=")]			= { OT_EQUAL,					UTF8("="),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8("!=")]		= { OT_NOT_EQUAL,				UTF8("!="),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8(u8"≠")]		= { OT_NOT_EQUAL,				UTF8(u8"≠"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	
 	_map[UTF8("&")]			= { OT_BITWISE_AND,				UTF8("&"),		LEFT_TO_RIGHT,		70,		140,	NONE };
 	_map[UTF8("^")]			= { OT_BITWISE_XOR,				UTF8("^"),		LEFT_TO_RIGHT,		60,		NONE,	NONE };
 	_map[UTF8("?")]			= { OT_BITWISE_OR,				UTF8("?"),		LEFT_TO_RIGHT,		50,		NONE,	NONE };
 	_wordsMap[UTF8("and")]	= { OT_LOGICAL_AND,				UTF8(u8"∧"),	LEFT_TO_RIGHT,		40,		NONE,	NONE };
+	_map[UTF8("&&")]		= { OT_LOGICAL_AND,				UTF8("&&"),		LEFT_TO_RIGHT,		40,		NONE,	NONE };
 	_map[UTF8(u8"∧")]		= { OT_LOGICAL_AND,				UTF8("and"),	LEFT_TO_RIGHT,		40,		NONE,	NONE };
+	_map[UTF8("??")]		= { OT_LOGICAL_OR,				UTF8("??"),		LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_wordsMap[UTF8("or")]	= { OT_LOGICAL_OR,				UTF8("or"),		LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[UTF8(u8"∨")]		= { OT_LOGICAL_OR,				UTF8(u8"∨"),	LEFT_TO_RIGHT,		30,		NONE,	NONE };
 	_map[UTF8(",")]			= { OT_COMMA,					UTF8(","),		LEFT_TO_RIGHT,		20,		NONE,	NONE };

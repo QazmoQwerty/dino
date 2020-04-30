@@ -5,6 +5,11 @@ dino AnyTest.dino -o test
 ./test
 echo "--------------------------------------------------------------"
 
+echo "MultRetTest.dino:"
+dino MultRetTest.dino -o test
+./test
+echo "--------------------------------------------------------------"
+
 echo "BrainF.dino:"
 dino BrainF.dino -o test
 ./test
