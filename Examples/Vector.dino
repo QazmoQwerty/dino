@@ -1,5 +1,5 @@
 // import "std"
-import "std"
+import "std2"
 
 namespace NS {
     type Vector {
@@ -95,7 +95,13 @@ namespace NS {
         v.Add(NewString("it"))
         v.Add(NewString("works!"))
         
-        for int i := 0 | i < v.Size | i++:
+        Std.PrintS("[")
+        for int i := 0 | i < v.Size | i++ {
+            unless i = 0: 
+                Std.PrintS(", ")
             Print(v.Get(i))
+        }
+        Std.PrintS("]")
+        Std.PrintC('\n')
     }
 }

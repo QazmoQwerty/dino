@@ -249,7 +249,8 @@ namespace DST
 
 		virtual bool equals(Type *other) { return this->getNonConstOf()->getNonPropertyOf() == other->getNonConstOf()->getNonPropertyOf(); };
 
-		
+		bool comparableTo(Type *other);
+
 		template <class T>
 		T* as();
 
@@ -679,6 +680,31 @@ namespace DST
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+	};
+
+	class Comparison : public Expression
+	{
+		AST::Comparison *_base;
+		vector<Expression*> _expressions;
+
+	public:
+		Comparison(AST::Comparison *base) : _base(base) {};
+		virtual ~Comparison() { if (_base) delete _base; }
+		vector<Operator> getOperators() { return _base->getOperators(); }
+		virtual Type *getType() { return getBoolTy()->getConstOf(); }
+		virtual ExpressionType getExpressionType() { return ET_COMPARISON; }
+		vector<Expression*> getExpressions() { return _expressions; }
+		void addExpression(Expression *exp) { _expressions.push_back(exp); }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+
+		virtual string toString() { return _base->toString() + "\nType: " + getType()->toShortString(); };
+		virtual vector<Node*> getChildren()
+		{
+			vector<Node*> vec;
+			for (auto i : _expressions)
+				vec.push_back(i);
+			return vec;
+		}
 	};
 
 	class UnaryOperation : public Expression

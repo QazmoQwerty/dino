@@ -17,14 +17,14 @@ namespace Test {
         putchar('\n')
     }
 
-    // void PrintB(bool b) {
-    //     if b {
-    //         putchar('t') | putchar('r') | putchar('u') | putchar('e') | putchar('\n')
-    //     }
-    //     else {
-    //         putchar('f') | putchar('a') | putchar('l') | putchar('s') | putchar('e') | putchar('\n')
-    //     }
-    // }
+    void PrintB(bool b) {
+        if b {
+            putchar('t') | putchar('r') | putchar('u') | putchar('e') | putchar('\n')
+        }
+        else {
+            putchar('f') | putchar('a') | putchar('l') | putchar('s') | putchar('e') | putchar('\n')
+        }
+    }
 
     // (int, bool[2]) Foo(int a, bool b, bool c) {
     //     bool[2] arr
@@ -41,7 +41,17 @@ namespace Test {
     const arr := [1, 2, 3]
 
     void Main() {
-        Std.PrintDLn(arr[2])
+        // Std.PrintDLn(arr[2])
+
+        int@ a := null
+        int@ b := null
+        any c := a
+
+        PrintB(c = a = c = b = null)
+        
+        int n := 19
+        PrintB(10 < n <= 19)
+        
         // Std.PrintDLn([1, 2, 3][2])
         // [1, 2, 3][2] := 10
         // Foo()[2] := 10

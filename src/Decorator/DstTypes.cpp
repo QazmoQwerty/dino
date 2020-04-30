@@ -405,4 +405,12 @@ namespace DST
 	}
 
 	unicode_string BasicType::getTypeId() { return _typeSpec->getTypeName(); }
+
+	bool Type::comparableTo(Type *other)
+	{
+		return this->readable() && other->readable() && (
+			   this->getNonPropertyOf()->getNonConstOf()->assignableTo(other->getNonPropertyOf()->getNonConstOf()) ||
+			   other->getNonPropertyOf()->getNonConstOf()->assignableTo(this->getNonPropertyOf()->getNonConstOf())
+		);
+	}
 }
