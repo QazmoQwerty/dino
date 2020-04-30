@@ -42,6 +42,16 @@ bool OperatorsMap::isBinary(OperatorType type)
 	}
 }
 
+bool OperatorsMap::isComparison(OperatorType type)
+{
+	switch (type)
+	{
+		case OT_EQUAL: case OT_NOT_EQUAL: case OT_SMALLER: case OT_SMALLER_EQUAL: case OT_GREATER: case OT_GREATER_EQUAL:
+			return true;
+		default: return false;
+	}
+}
+
 bool OperatorsMap::isKeyword(Operator op)
 {
 	switch (op._type) 
@@ -97,14 +107,13 @@ ReturnType OperatorsMap::getReturnType(OperatorType type)
 		case OT_ASSIGN_BITWISE_XOR:			//	^=
 			return RT_LEFT;
 
+		case OT_IS:							//	is
 		case OT_EQUAL:						//	=
 		case OT_NOT_EQUAL:					//	!=
 		case OT_GREATER:					//	>
 		case OT_SMALLER:					//	<
 		case OT_GREATER_EQUAL:				//	>=
 		case OT_SMALLER_EQUAL:				//	<=
-		case OT_IS:							//	is
-		case OT_AS:							// 	as
 		case OT_LOGICAL_AND:				//	and
 		case OT_LOGICAL_OR:					//	or
 		case OT_LOGICAL_NOT:				//	not
@@ -176,9 +185,9 @@ void OperatorsMap::setup()
 	_map[UTF8(">")]			= { OT_GREATER,					UTF8(">"),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8(">=")]		= { OT_GREATER_EQUAL,			UTF8(">="),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8(u8"≥")]		= { OT_GREATER_EQUAL,			UTF8(u8"≥"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
-	_map[UTF8("=")]			= { OT_EQUAL,					UTF8("="),		LEFT_TO_RIGHT,		80,		NONE,	NONE };
-	_map[UTF8("!=")]		= { OT_NOT_EQUAL,				UTF8("!="),		LEFT_TO_RIGHT,		80,		NONE,	NONE };
-	_map[UTF8(u8"≠")]		= { OT_NOT_EQUAL,				UTF8(u8"≠"),	LEFT_TO_RIGHT,		80,		NONE,	NONE };
+	_map[UTF8("=")]			= { OT_EQUAL,					UTF8("="),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8("!=")]		= { OT_NOT_EQUAL,				UTF8("!="),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_map[UTF8(u8"≠")]		= { OT_NOT_EQUAL,				UTF8(u8"≠"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8("&")]			= { OT_BITWISE_AND,				UTF8("&"),		LEFT_TO_RIGHT,		70,		140,	NONE };
 	_map[UTF8("^")]			= { OT_BITWISE_XOR,				UTF8("^"),		LEFT_TO_RIGHT,		60,		NONE,	NONE };
 	_map[UTF8("?")]			= { OT_BITWISE_OR,				UTF8("?"),		LEFT_TO_RIGHT,		50,		NONE,	NONE };

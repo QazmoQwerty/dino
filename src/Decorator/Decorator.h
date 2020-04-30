@@ -47,6 +47,7 @@ private:
 	static DST::FunctionLiteral *decorate(AST::Function *node);
 	static DST::Expression *decorate(AST::UnaryOperation * node);
 	static DST::Expression *decorate(AST::ConditionalExpression * node);
+	static DST::Comparison *decorate(AST::Comparison * node);
 	static DST::Increment *decorate(AST::Increment *node);
 
 	// Statements

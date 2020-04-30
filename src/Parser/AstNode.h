@@ -577,6 +577,31 @@ namespace AST
 		Operator getOperator() { return _operator; }
 	};
 
+	class Comparison : public Expression
+	{
+		vector<Operator> _operators;
+		vector<Expression*> _expressions;
+
+	public:
+		Comparison() : Expression() {};
+		virtual ~Comparison() {  }
+		virtual ExpressionType getExpressionType() { return ET_COMPARISON; };
+		virtual string toString() { return string() + "<Comparison>\\nTODO"; };
+		virtual vector<Node*> getChildren() 
+		{
+			vector<Node*> ret;
+			for (auto i : _expressions)
+				ret.push_back(i);
+			return ret;
+		}
+
+		void addOperator(Operator op) { _operators.push_back(op); }
+		void addExpression(Expression *exp) { _expressions.push_back(exp); }
+
+		vector<Operator> getOperators() { return _operators; }
+		vector<Expression*> getExpressions() { return _expressions; }
+	};
+
 	class UnaryOperation : public Expression
 	{
 		Operator _operator;

@@ -9,16 +9,17 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		return NULL;
 	switch (dynamic_cast<AST::Expression*>(node)->getExpressionType())
 	{
-		case ET_IDENTIFIER: 			return decorate((AST::Identifier*)node);
-		case ET_BINARY_OPERATION: 		return decorate((AST::BinaryOperation*)node);
-		case ET_LITERAL: 				return decorate((AST::Literal*)node);
-		case ET_UNARY_OPERATION:  		return decorate((AST::UnaryOperation*)node);
-		case ET_VARIABLE_DECLARATION: 	return decorate((AST::VariableDeclaration*)node);
-		case ET_ASSIGNMENT: 			return decorate((AST::Assignment*)node);
-		case ET_LIST: 					return decorate((AST::ExpressionList*)node);
-		case ET_FUNCTION_CALL: 			return decorate((AST::FunctionCall*)node);
+		case ET_IDENTIFIER: 			return decorate((AST::Identifier*)			 node);
+		case ET_BINARY_OPERATION: 		return decorate((AST::BinaryOperation*)		 node);
+		case ET_LITERAL: 				return decorate((AST::Literal*)				 node);
+		case ET_UNARY_OPERATION:  		return decorate((AST::UnaryOperation*)		 node);
+		case ET_VARIABLE_DECLARATION: 	return decorate((AST::VariableDeclaration*)	 node);
+		case ET_ASSIGNMENT: 			return decorate((AST::Assignment*)			 node);
+		case ET_LIST: 					return decorate((AST::ExpressionList*)		 node);
+		case ET_FUNCTION_CALL: 			return decorate((AST::FunctionCall*)		 node);
 		case ET_CONDITIONAL_EXPRESSION: return decorate((AST::ConditionalExpression*)node);
-		case ET_INCREMENT: 				return decorate((AST::Increment*)node);
+		case ET_INCREMENT: 				return decorate((AST::Increment*)			 node);
+		case ET_COMPARISON: 			return decorate((AST::Comparison*)			 node);
 		default: throw ErrorReporter::report("Unimplemented expression type in the decorator", ERR_DECORATOR, node->getPosition());
 	}
 }
@@ -63,6 +64,21 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 			return new DST::Variable(node, DST::getNamespaceTy(var));
 
 	throw ErrorReporter::report("Identifier '" + name.to_string() + "' is undefined", ERR_DECORATOR, node->getPosition());
+}
+
+DST::Comparison *Decorator::decorate(AST::Comparison *node)
+{
+	auto comp = new DST::Comparison(node);
+	for (auto i : node->getExpressions())
+		comp->addExpression(decorate(i));
+	DST::Type *ty = NULL;
+	for (auto i : comp->getExpressions())
+		if (!ty)
+			ty = i->getType();
+		else if (!i->getType()->comparableTo(ty))
+			throw ErrorReporter::report("cannot compare types \"" + ty->toShortString() 
+				+ "\" and \"" + i->getType()->toShortString() + "\"", ERR_DECORATOR, i->getPosition());
+	return comp;
 }
 
 DST::Increment *Decorator::decorate(AST::Increment *node)
@@ -274,7 +290,23 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 
 	switch (OperatorsMap::getReturnType(node->getOperator()._type))
 	{
+		default: 
+			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
+				throw ErrorReporter::report("left-type != right-type", ERR_DECORATOR, node->getPosition());
+			bo->setType(bo->getLeft()->getType());
+			break;
 		case RT_BOOLEAN: 
+			switch (node->getOperator()._type)
+			{
+				case OT_IS:
+					if (bo->getRight()->getExpressionType() != ET_TYPE)
+						throw ErrorReporter::report("expected a type", ERR_DECORATOR, node->getRight()->getPosition());
+					break;
+				default:
+					if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
+						throw ErrorReporter::report("left-type != right-type", ERR_DECORATOR, node->getPosition());
+					break;
+			}			
 			bo->setType(DST::getBoolTy());
 			break;
 		case RT_ARRAY:
@@ -302,14 +334,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			break;
 		case RT_VOID: 
 			throw ErrorReporter::report("Could not decorate, unimplemented operator.", ERR_DECORATOR, node->getPosition());
-
-		default: 
-			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
-				throw ErrorReporter::report("left-type != right-type", ERR_DECORATOR, node->getPosition());
-			bo->setType(bo->getLeft()->getType());
-			break;
 	}
-
 	return bo;
 }
 

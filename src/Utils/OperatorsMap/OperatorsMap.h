@@ -41,6 +41,9 @@ public:
 	/* Is the operator a binary operator? */
 	static bool isBinary(OperatorType type);
 
+	/* Is the operator a comparison operator? */
+	static bool isComparison(OperatorType type);
+
 	/* Is the operator a keyword? */
 	static bool isKeyword(Operator op);
 

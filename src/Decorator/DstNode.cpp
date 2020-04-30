@@ -278,7 +278,5 @@ namespace DST
 	}
 
 	void Program::addNamespace(NamespaceDeclaration * decl ) { _namespaces[decl->getName()] = decl; }
-
-
 }
 
