@@ -22,6 +22,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_INCREMENT: return codeGen((DST::Increment*)node);
         case ET_CONDITIONAL_EXPRESSION: return codeGen((DST::ConditionalExpression*)node);
         case ET_FUNCTION_LITERAL: return codeGen((DST::FunctionLiteral*)node);
+        case ET_COMPARISON: return codeGen((DST::Comparison*)node);
         case ET_LIST: return codeGen((DST::ExpressionList*)node);
         default: throw ErrorReporter::report("Unimplemented codegen for expression", ERR_CODEGEN, node->getPosition());
     }
@@ -194,6 +195,50 @@ Value *CodeGenerator::createLogicalAnd(DST::BinaryOperation *node)
     return phi;
 }
 
+Value *CodeGenerator::codeGen(DST::Comparison* node)
+{
+    Value *ret = NULL;
+    Value *left = codeGen(node->getExpressions()[0]);
+
+    for (unsigned int i = 0; i < node->getOperators().size(); i++)
+    {
+        auto right = codeGen(node->getExpressions()[i + 1]);
+
+        Value *newComp = NULL;
+        switch (node->getOperators()[i]._type)
+        {
+            case OT_SMALLER: newComp = _builder.CreateICmpSLT(left, right, "cmptmp"); break;
+            case OT_SMALLER_EQUAL: newComp = _builder.CreateICmpSLE(left, right, "cmptmp"); break;
+            case OT_GREATER: newComp = _builder.CreateICmpSGT(left, right, "cmptmp"); break;
+            case OT_GREATER_EQUAL: newComp = _builder.CreateICmpSGE(left, right, "cmptmp"); break;
+            case OT_EQUAL: case OT_NOT_EQUAL:
+            {
+                if (node->getExpressions()[i]->getType()->isNullTy())
+                    left = _builder.CreateBitCast(left, right->getType());
+                if (node->getExpressions()[i + 1]->getType()->isNullTy())
+                    right = _builder.CreateBitCast(right, left->getType());
+
+                if (left->getType() == _interfaceType)
+                    left = _builder.CreateExtractValue(left, 0);
+                if (right->getType() == _interfaceType)
+                    right = _builder.CreateExtractValue(right, 0);
+                    
+                if (left->getType() != right->getType())
+                    left = _builder.CreateBitCast(left, right->getType());
+
+                if (node->getOperators()[i]._type == OT_EQUAL)
+                    newComp = _builder.CreateICmpEQ(left, right, "cmptmp");
+                else newComp = _builder.CreateICmpNE(left, right, "cmptmp");
+                break;
+            }
+            default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ERR_CODEGEN, node->getPosition());
+        }
+        ret = ret != NULL ? _builder.CreateAnd(ret, newComp) : newComp;
+        left = right;
+    }
+    return ret;
+}
+
 Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
 {
     /* special cases that might not eval both sides of the operation */
@@ -233,39 +278,6 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateSDiv(left, right, "divtmp");
         case OT_MODULUS:
             return _builder.CreateSRem(left, right, "divtmp");
-        case OT_SMALLER:
-            return _builder.CreateICmpSLT(left, right, "cmptmp");
-        case OT_SMALLER_EQUAL:
-            return _builder.CreateICmpSLE(left, right, "cmptmp");
-        case OT_GREATER:
-            return _builder.CreateICmpSGT(left, right, "cmptmp");
-        case OT_GREATER_EQUAL:
-            return _builder.CreateICmpSGE(left, right, "cmptmp");
-        case OT_EQUAL:
-        {
-            if (left->getType() == _interfaceType)
-                left = _builder.CreateExtractValue(left, 0);
-
-            if (right->getType() == _interfaceType)
-                right = _builder.CreateExtractValue(right, 0);
-
-            if (left->getType() != right->getType())
-                return _builder.CreateICmpEQ(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
-            return _builder.CreateICmpEQ(left, right, "cmptmp");
-        }
-        case OT_NOT_EQUAL:
-        {
-            if (left->getType() == _interfaceType)
-                left = _builder.CreateExtractValue(left, 0);
-
-            if (right->getType() == _interfaceType)
-                right = _builder.CreateExtractValue(right, 0);
-
-            if (left->getType() != right->getType())
-                return _builder.CreateICmpNE(_builder.CreateBitCast(left, right->getType()), right, "cmptmp");
-            return _builder.CreateICmpNE(left, right, "cmptmp");
-        }
-
         default:
             throw ErrorReporter::report("Unimplemented Binary operation!", ERR_CODEGEN, node->getPosition());
     }

@@ -519,7 +519,20 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			op->setPosition(token->_pos);
 			return op;
 		}
-
+		if (OperatorsMap::isComparison(ot->_operator._type))
+		{
+			auto comp = new AST::Comparison();
+			comp->setPosition(token->_pos);
+			comp->addExpression(convertToExpression(left));
+			comp->addOperator(ot->_operator);
+			comp->addExpression(parseExpression(leftPrecedence(ot, BINARY)));
+			while (peekToken()->_type == TT_OPERATOR && OperatorsMap::isComparison(((OperatorToken*)peekToken())->_operator._type))
+			{
+				comp->addOperator(((OperatorToken*)nextToken())->_operator);
+				comp->addExpression(parseExpression(leftPrecedence(ot, BINARY)));
+			}
+			return comp;
+		}
 		auto op = new AST::BinaryOperation();
 		op->setPosition(token->_pos);
 		op->setOperator(ot->_operator);
