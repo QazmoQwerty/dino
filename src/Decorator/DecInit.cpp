@@ -20,14 +20,35 @@ void Decorator::setup(bool isLibrary)
 	_isLibrary = isLibrary;
 	enterBlock();
 
-	_variables[0][unicode_string("bool")] = DST::_builtinTypes._bool;
-	_variables[0][unicode_string("int")] = DST::_builtinTypes._int;
-	_variables[0][unicode_string("string")] = DST::_builtinTypes._string;
-	_variables[0][unicode_string("char")] = DST::_builtinTypes._char;
-	_variables[0][unicode_string("float")] = DST::_builtinTypes._float;
-	_variables[0][unicode_string("void")] = DST::_builtinTypes._void;
-	_variables[0][unicode_string("type")] = DST::_builtinTypes._type;
-	_variables[0][unicode_string("any")] = DST::_builtinTypes._any;
+	_variables[0][unicode_string("bool")] 	= DST::getBoolTy()	     ->getTypeSpecifier();
+	_variables[0][unicode_string("int")] 	= DST::getIntTy()	     ->getTypeSpecifier();
+	_variables[0][unicode_string("uint")] 	= DST::getUnsignedIntTy()->getTypeSpecifier();
+	_variables[0][unicode_string("string")] = DST::getStringTy()     ->getTypeSpecifier();
+	_variables[0][unicode_string("char")] 	= DST::getCharTy()	     ->getTypeSpecifier();
+	_variables[0][unicode_string("float")] 	= DST::getFloatTy()	     ->getTypeSpecifier();
+	_variables[0][unicode_string("void")] 	= DST::getVoidTy()	     ->getTypeSpecifier();
+	_variables[0][unicode_string("type")] 	= DST::getTypeidTy()     ->getTypeSpecifier();
+	_variables[0][unicode_string("any")] 	= DST::getAnyTy()	     ->getTypeSpecifier();
+
+	_variables[0][unicode_string("i8")] 	= DST::geti8Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("i16")] 	= DST::geti16Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("i32")] 	= DST::geti32Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("i64")] 	= DST::geti64Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("i128")] 	= DST::geti128Ty()	->getTypeSpecifier();
+
+	_variables[0][unicode_string("u8")] 	= DST::getu8Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("u16")] 	= DST::getu16Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("u32")] 	= DST::getu32Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("u64")] 	= DST::getu64Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("u128")] 	= DST::getu128Ty()	->getTypeSpecifier();
+
+	_variables[0][unicode_string("c8")] 	= DST::getc8Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("c32")] 	= DST::getc32Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("uchar")] 	= DST::getc32Ty()	->getTypeSpecifier();
+
+	_variables[0][unicode_string("f32")] 	= DST::getf32Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("f64")] 	= DST::getf64Ty()	->getTypeSpecifier();
+	_variables[0][unicode_string("f128")] 	= DST::getf128Ty()	->getTypeSpecifier();
 
 	_currentTypeDecl = NULL;
 	_loopCount = 0;

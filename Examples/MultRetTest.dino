@@ -1,0 +1,13 @@
+import "std2"
+
+namespace Test {
+
+    (int, bool) Bar() {
+        return 10, true
+    }
+
+    void Main() {
+        Std.PrintSLn(if Bar()[1] then "true" else "false")
+        Std.PrintDLn(Bar()[0])
+    }
+}

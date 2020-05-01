@@ -27,11 +27,31 @@ namespace DST
 
 	class TypeSpecifierType;
 	typedef struct PrimitiveTypeSpecifiers {
-		TypeSpecifierType *_int;
-		TypeSpecifierType *_bool;
-		TypeSpecifierType *_float;
-		TypeSpecifierType *_char;
+
+		TypeSpecifierType *_bool;	// boolean
+
+		TypeSpecifierType *_i8; 	// 8 bit integer
+		TypeSpecifierType *_i16;	// 16 bit integer
+		TypeSpecifierType *_i32;	// 32 bit integer
+		TypeSpecifierType *_i64;	// 64 bit integer
+		TypeSpecifierType *_i128;	// 128 bit integer
+
+		TypeSpecifierType *_u8; 	// 8 bit unsigned integer
+		TypeSpecifierType *_u16;	// 16 bit unsigned integer
+		TypeSpecifierType *_u32;	// 32 bit unsigned integer
+		TypeSpecifierType *_u64;	// 64 bit unsigned integer
+		TypeSpecifierType *_u128;	// 128 bit unsigned integer
+	
+		TypeSpecifierType *_f16;	// 16 bit float
+		TypeSpecifierType *_f32;	// 32 bit float
+		TypeSpecifierType *_f64;	// 64 bit float
+		TypeSpecifierType *_f128;	// 128 bit float
+
+		TypeSpecifierType *_c8;		// ascii char
+		TypeSpecifierType *_c32;	// unicode char
+
 		TypeSpecifierType *_string;
+
 		TypeSpecifierType *_void;
 		TypeSpecifierType *_type;
 		TypeSpecifierType *_error;
@@ -49,7 +69,33 @@ namespace DST
 
 	class NullType;
 
+	// int types
+	BasicType *geti8Ty();
+	BasicType *geti16Ty();
+	BasicType *geti32Ty();
+	BasicType *geti64Ty();
+	BasicType *geti128Ty();
+
+	// unsigned int types
+	BasicType *getu8Ty();
+	BasicType *getu16Ty();
+	BasicType *getu32Ty();
+	BasicType *getu64Ty();
+	BasicType *getu128Ty();
+
+	// float types
+	BasicType *getf16Ty();
+	BasicType *getf32Ty();
+	BasicType *getf64Ty();
+	BasicType *getf128Ty();
+
+	// char types
+	BasicType *getc8Ty();
+	BasicType *getc32Ty();
+
+	// other types/aliases
 	BasicType *getIntTy();
+	BasicType *getUnsignedIntTy();
 	BasicType *getBoolTy();
 	BasicType *getFloatTy();
 	BasicType *getCharTy();
@@ -61,6 +107,7 @@ namespace DST
 	BasicType *getNullPtrErrTy();
 	NullType  *getNullTy();
 
+	InterfaceDeclaration *getErrorInterface();
 	InterfaceDeclaration *getAnyInterface();
 
 	/*
@@ -222,6 +269,10 @@ namespace DST
 
 		/* types are writable by default */
 		virtual bool writeable() { return true; }
+
+		bool isSigned();
+		bool isIntTy();
+		bool isFloatTy();
 
 
 		ConstType *getConstOf();

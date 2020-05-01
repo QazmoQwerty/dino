@@ -195,45 +195,72 @@ Value *CodeGenerator::createLogicalAnd(DST::BinaryOperation *node)
     return phi;
 }
 
+llvm::Value *CodeGenerator::createCompare(Value *left, Value *right, OperatorType op, DST::Type *leftTy, DST::Type *rightTy, PositionInfo pos)
+{
+    if (op == OT_EQUAL || op == OT_NOT_EQUAL)
+    {
+        if (leftTy->isNullTy())
+            left = _builder.CreateBitCast(left, right->getType());
+        if (rightTy->isNullTy())
+            right = _builder.CreateBitCast(right, left->getType());
+
+        if (left->getType() == _interfaceType)
+            left = _builder.CreateExtractValue(left, 0);
+        if (right->getType() == _interfaceType)
+            right = _builder.CreateExtractValue(right, 0);
+            
+        if (left->getType() != right->getType())
+            left = _builder.CreateBitCast(left, right->getType());
+
+        if (op == OT_EQUAL)
+            return _builder.CreateICmpEQ(left, right, "cmptmp");
+        else return _builder.CreateICmpNE(left, right, "cmptmp");
+    }
+    if (leftTy->isFloatTy())
+        switch (op) // TODO - shoud these be "ordered" or "unordered" comparisons?
+        {
+            case OT_SMALLER: return _builder.CreateFCmpOLT(left, right, "cmptmp");
+            case OT_SMALLER_EQUAL: return _builder.CreateFCmpOLE(left, right, "cmptmp");
+            case OT_GREATER: return _builder.CreateFCmpOGT(left, right, "cmptmp");
+            case OT_GREATER_EQUAL: return _builder.CreateFCmpOGE(left, right, "cmptmp");
+            default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ERR_CODEGEN, pos);
+        }
+    if (leftTy->isSigned())
+        switch (op)
+        {
+            case OT_SMALLER: return _builder.CreateICmpSLT(left, right, "cmptmp");
+            case OT_SMALLER_EQUAL: return _builder.CreateICmpSLE(left, right, "cmptmp");
+            case OT_GREATER: return _builder.CreateICmpSGT(left, right, "cmptmp");
+            case OT_GREATER_EQUAL: return _builder.CreateICmpSGE(left, right, "cmptmp");
+            default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ERR_CODEGEN, pos);
+        }
+    switch (op)
+    {
+        case OT_SMALLER: return _builder.CreateICmpULT(left, right, "cmptmp");
+        case OT_SMALLER_EQUAL: return _builder.CreateICmpULE(left, right, "cmptmp");
+        case OT_GREATER: return _builder.CreateICmpUGT(left, right, "cmptmp");
+        case OT_GREATER_EQUAL: return _builder.CreateICmpUGE(left, right, "cmptmp");
+        default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ERR_CODEGEN, pos);
+    }
+}
+
 Value *CodeGenerator::codeGen(DST::Comparison* node)
 {
     Value *ret = NULL;
     Value *left = codeGen(node->getExpressions()[0]);
-
     for (unsigned int i = 0; i < node->getOperators().size(); i++)
     {
         auto right = codeGen(node->getExpressions()[i + 1]);
-
-        Value *newComp = NULL;
-        switch (node->getOperators()[i]._type)
-        {
-            case OT_SMALLER: newComp = _builder.CreateICmpSLT(left, right, "cmptmp"); break;
-            case OT_SMALLER_EQUAL: newComp = _builder.CreateICmpSLE(left, right, "cmptmp"); break;
-            case OT_GREATER: newComp = _builder.CreateICmpSGT(left, right, "cmptmp"); break;
-            case OT_GREATER_EQUAL: newComp = _builder.CreateICmpSGE(left, right, "cmptmp"); break;
-            case OT_EQUAL: case OT_NOT_EQUAL:
-            {
-                if (node->getExpressions()[i]->getType()->isNullTy())
-                    left = _builder.CreateBitCast(left, right->getType());
-                if (node->getExpressions()[i + 1]->getType()->isNullTy())
-                    right = _builder.CreateBitCast(right, left->getType());
-
-                if (left->getType() == _interfaceType)
-                    left = _builder.CreateExtractValue(left, 0);
-                if (right->getType() == _interfaceType)
-                    right = _builder.CreateExtractValue(right, 0);
-                    
-                if (left->getType() != right->getType())
-                    left = _builder.CreateBitCast(left, right->getType());
-
-                if (node->getOperators()[i]._type == OT_EQUAL)
-                    newComp = _builder.CreateICmpEQ(left, right, "cmptmp");
-                else newComp = _builder.CreateICmpNE(left, right, "cmptmp");
-                break;
-            }
-            default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ERR_CODEGEN, node->getPosition());
-        }
-        ret = ret != NULL ? _builder.CreateAnd(ret, newComp) : newComp;
+        Value *newComp = createCompare(
+            left, right, 
+            node->getOperators()[i]._type, 
+            node->getExpressions()[i]->getType(), 
+            node->getExpressions()[i+1]->getType(), 
+            node->getPosition()
+        );
+        if (ret) 
+            ret = _builder.CreateAnd(ret, newComp);
+        else ret = newComp;
         left = right;
     }
     return ret;
@@ -269,15 +296,35 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
     switch (node->getOperator()._type)
     {
         case OT_ADD:
+            if (node->getType()->isFloatTy())
+                return _builder.CreateFAdd(left, right, "addtmp");    
             return _builder.CreateAdd(left, right, "addtmp");
         case OT_SUBTRACT:
+            if (node->getType()->isFloatTy())
+                return _builder.CreateFSub(left, right, "subtmp");
             return _builder.CreateSub(left, right, "subtmp");
         case OT_MULTIPLY:
+            if (node->getType()->isFloatTy())
+                return _builder.CreateFMul(left, right, "multmp");
             return _builder.CreateMul(left, right, "multmp");
         case OT_DIVIDE:
-            return _builder.CreateSDiv(left, right, "divtmp");
+            if (node->getType()->isFloatTy())
+                return _builder.CreateFDiv(left, right, "divtmp");    
+            if (node->getType()->isSigned())
+                return _builder.CreateSDiv(left, right, "divtmp");
+            return _builder.CreateUDiv(left, right, "divtmp");
         case OT_MODULUS:
-            return _builder.CreateSRem(left, right, "divtmp");
+            if (node->getType()->isFloatTy())
+                return _builder.CreateFRem(left, right, "remtmp");    
+            if (node->getType()->isSigned())
+                return _builder.CreateSRem(left, right, "dremtmp");
+            return _builder.CreateURem(left, right, "remtmp");
+        case OT_BITWISE_AND:
+            return _builder.CreateAnd(left, right, "bAndtmp");
+        case OT_BITWISE_OR:
+            return _builder.CreateOr(left, right, "bOrtmp");
+        case OT_BITWISE_XOR:
+            return _builder.CreateOr(left, right, "bXortmp");
         default:
             throw ErrorReporter::report("Unimplemented Binary operation!", ERR_CODEGEN, node->getPosition());
     }
@@ -330,7 +377,18 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         case OT_ADD:
             return codeGen(node->getExpression());
         case OT_SUBTRACT:
+        {
+            if (node->getType()->isFloatTy())
+            {
+                auto val = codeGen(node->getExpression());
+                auto zero = llvm::ConstantFP::get(val->getType(),  0);
+                return _builder.CreateSub(zero, val);    
+            }
+            auto val = codeGen(node->getExpression());
+            auto zero = llvm::ConstantInt::get(val->getType(),  0);
+            return _builder.CreateSub(zero, val);
             throw ErrorReporter::report("Unimplemented literal type", ERR_CODEGEN, node->getPosition());
+        }
         case OT_AT:
         {
             auto val = codeGen(node->getExpression());
@@ -339,7 +397,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
         }
         case OT_BITWISE_AND:
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
-        case OT_LOGICAL_NOT:
+        case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
             return _builder.CreateNot(codeGen(node->getExpression()), "nottmp");
         default:
             throw ErrorReporter::report("Unimplemented unary operation", ERR_CODEGEN, node->getPosition());
@@ -359,12 +417,31 @@ Value *CodeGenerator::codeGen(DST::Conversion* node)
         auto ptr = _builder.CreateExtractValue(exp, 0, "accessTmp");
         return _builder.CreateBitCast(ptr, type, "cnvrttmp");
     }
+    if (node->getExpression()->getType()->isFloatTy() && node->getType()->isIntTy())
+    {
+        // float to int
+        if (node->getType()->isSigned())
+            return _builder.CreateFPToSI(exp, type);
+        return _builder.CreateFPToUI(exp, type);
+    }
+
+    if (node->getExpression()->getType()->isFloatTy() && node->getType()->isIntTy())
+    {   
+        // int to float
+        if (node->getType()->isSigned())
+            return _builder.CreateSIToFP(exp, type);
+        return _builder.CreateUIToFP(exp, type);
+    }
     unsigned int targetSz = type->getPrimitiveSizeInBits();
     unsigned int currSz = exp->getType()->getPrimitiveSizeInBits();
     if (targetSz < currSz)
         return _builder.CreateTrunc(exp, type, "cnvrttmp");
-    else if (targetSz > currSz)
-        return _builder.CreateZExt(exp, type, "cnvrttmp");  // TODO - exending cast for unsigned intergers
+    else if (targetSz > currSz) 
+    {
+        if (node->getType()->isSigned())
+            return _builder.CreateSExt(exp, type, "cnvrttmp");    
+        return _builder.CreateZExt(exp, type, "cnvrttmp");
+    }
     else return _builder.CreateBitCast(exp, type, "cnvrttmp");
 }
 
