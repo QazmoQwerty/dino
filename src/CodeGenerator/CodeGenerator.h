@@ -221,6 +221,8 @@ namespace CodeGenerator
     /* Gets and returns the IR ptr to the "malloc" function for dynamic allocation */
     llvm::Function *getMallocFunc();
 
+    llvm::Value *createCompare(Value *left, Value *right, OperatorType op, DST::Type *leftTy, DST::Type *rightTy, PositionInfo pos);
+
     /************************************************************************
     *                       codeGen() + codeGenLval()                       *
     ************************************************************************/

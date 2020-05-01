@@ -12,11 +12,28 @@ namespace DST
 	unordered_map<NamespaceDeclaration*, NamespaceType*> _namespaceTypes;
 
 	void setup() {
+		_builtinTypes._i8 = createPrimitiveTypeSpec("i8");
+		_builtinTypes._i16 = createPrimitiveTypeSpec("i16");
+		_builtinTypes._i32 = createPrimitiveTypeSpec("int");
+		_builtinTypes._i64 = createPrimitiveTypeSpec("i64");
+		_builtinTypes._i128 = createPrimitiveTypeSpec("i128");
+
+		_builtinTypes._u8 = createPrimitiveTypeSpec("u8");
+		_builtinTypes._u16 = createPrimitiveTypeSpec("u16");
+		_builtinTypes._u32 = createPrimitiveTypeSpec("uint");
+		_builtinTypes._u64 = createPrimitiveTypeSpec("u64");
+		_builtinTypes._u128 = createPrimitiveTypeSpec("u128");
+
+		_builtinTypes._c8 = createPrimitiveTypeSpec("char");
+		_builtinTypes._c32 = createPrimitiveTypeSpec("uchar");
+
+		_builtinTypes._f16 = createPrimitiveTypeSpec("f16");
+		_builtinTypes._f32 = createPrimitiveTypeSpec("float");
+		_builtinTypes._f64 = createPrimitiveTypeSpec("f64");
+		_builtinTypes._f128 = createPrimitiveTypeSpec("f128");
+
 		_builtinTypes._bool = createPrimitiveTypeSpec("bool");
-		_builtinTypes._int = createPrimitiveTypeSpec("int");
 		_builtinTypes._string = createPrimitiveTypeSpec("string");
-		_builtinTypes._char = createPrimitiveTypeSpec("char");
-		_builtinTypes._float = createPrimitiveTypeSpec("float");
 		_builtinTypes._void = createPrimitiveTypeSpec("void");
 		_builtinTypes._type = createPrimitiveTypeSpec("type");
 		_builtinTypes._any = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
@@ -24,16 +41,40 @@ namespace DST
 		_builtinTypes._nullPtError = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("NullPtrError"))));
 	}
 
-	BasicType *getIntTy() 	 { return _builtinTypes._int    -> getBasicTy(); }
-	BasicType *getBoolTy() 	 { return _builtinTypes._bool   -> getBasicTy(); }
-	BasicType *getCharTy() 	 { return _builtinTypes._char   -> getBasicTy(); }
-	BasicType *getVoidTy()   { return _builtinTypes._void	-> getBasicTy(); }
-	BasicType *getFloatTy()  { return _builtinTypes._float  -> getBasicTy(); }
-	BasicType *getTypeidTy() { return _builtinTypes._type   -> getBasicTy(); }
-	BasicType *getAnyTy() 	 { return _builtinTypes._any    -> getBasicTy(); }
-	BasicType *getStringTy() { return _builtinTypes._string -> getBasicTy(); }
-	BasicType *getErrorTy()  { return _builtinTypes._error  -> getBasicTy(); }
-	NullType  *getNullTy()   { return NullType::get(); }
+	// int types
+	BasicType *geti8Ty()   { return _builtinTypes._i8->getBasicTy(); };
+	BasicType *geti16Ty()  { return _builtinTypes._i16->getBasicTy(); };
+	BasicType *geti32Ty()  { return _builtinTypes._i32->getBasicTy(); };
+	BasicType *geti64Ty()  { return _builtinTypes._i64->getBasicTy(); };
+	BasicType *geti128Ty() { return _builtinTypes._i128->getBasicTy(); };
+
+	BasicType *getu8Ty()   { return _builtinTypes._u8->getBasicTy(); };
+	BasicType *getu16Ty()  { return _builtinTypes._u16->getBasicTy(); };
+	BasicType *getu32Ty()  { return _builtinTypes._u32->getBasicTy(); };
+	BasicType *getu64Ty()  { return _builtinTypes._u64->getBasicTy(); };
+	BasicType *getu128Ty() { return _builtinTypes._u128->getBasicTy(); };
+
+	BasicType *getf16Ty()  { return _builtinTypes._f16->getBasicTy(); };
+	BasicType *getf32Ty()  { return _builtinTypes._f32->getBasicTy(); };
+	BasicType *getf64Ty()  { return _builtinTypes._f64->getBasicTy(); };
+	BasicType *getf128Ty() { return _builtinTypes._f128->getBasicTy(); };
+
+	// char types
+	BasicType *getc8Ty()	{ return _builtinTypes._c8->getBasicTy(); };
+	BasicType *getc32Ty()	{ return _builtinTypes._c32->getBasicTy(); };
+
+	// other types/aliases
+	BasicType *getIntTy() 	      { return geti32Ty(); }
+	BasicType *getUnsignedIntTy() { return getu32Ty(); }
+	BasicType *getCharTy() 	      { return getc8Ty(); }
+	BasicType *getFloatTy()       { return getf32Ty(); }
+	BasicType *getBoolTy() 	      { return _builtinTypes._bool   -> getBasicTy(); }
+	BasicType *getVoidTy()        { return _builtinTypes._void	-> getBasicTy(); }
+	BasicType *getTypeidTy()      { return _builtinTypes._type   -> getBasicTy(); }
+	BasicType *getAnyTy() 	      { return _builtinTypes._any    -> getBasicTy(); }
+	BasicType *getStringTy()      { return _builtinTypes._string -> getBasicTy(); }
+	BasicType *getErrorTy()       { return _builtinTypes._error  -> getBasicTy(); }
+	NullType  *getNullTy()        { return NullType::get(); }
 	BasicType *getNullPtrErrTy()  { return _builtinTypes._nullPtError -> getBasicTy(); }
 
 
@@ -51,6 +92,25 @@ namespace DST
 	template<> ArrayType 		 *Type::as<ArrayType>() 		{ return (ArrayType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> BasicType		 *Type::as<BasicType>() 		{ return (BasicType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> PointerType		 *Type::as<PointerType>() 		{ return (PointerType*)		 getNonConstOf()->getNonPropertyOf(); }
+
+	bool Type::isFloatTy()
+	{
+		auto t = getNonPropertyOf()->getNonConstOf();
+		return t == getf16Ty() || t == getf32Ty() || t == getf64Ty() || t == getf128Ty();
+	}
+
+	bool Type::isIntTy()
+	{
+		auto t = getNonPropertyOf()->getNonConstOf();
+		return t == geti8Ty() || t == geti16Ty() || t == geti32Ty() || t == geti64Ty() || t == geti128Ty() || 
+			   t == getu8Ty() || t == getu16Ty() || t == getu32Ty() || t == getu64Ty() || t == getu128Ty();
+	}
+
+	bool Type::isSigned()
+	{
+		auto t = getNonPropertyOf()->getNonConstOf();
+		return t == geti8Ty() || t == geti16Ty() || t == geti32Ty() || t == geti64Ty() || t == geti128Ty();
+	}
 
 	bool ArrayType::assignableTo(Type* type)
 	{
@@ -89,18 +149,28 @@ namespace DST
 		return rets[decl] = new TypeSpecifierType(decl);
 	}
 
+	
+
 	TypeSpecifierType *TypeSpecifierType::get(TypeDeclaration *decl)
 	{
+		#define ADD_TO_MAP(ty) rets[_builtinTypes.ty   -> getTypeDecl()] = _builtinTypes.ty;
 		static unordered_map<TypeDeclaration*, TypeSpecifierType*> rets;
 		if (rets.size() == 0)
 		{
-			rets[_builtinTypes._bool   -> getTypeDecl()] = _builtinTypes._bool;
-			rets[_builtinTypes._char   -> getTypeDecl()] = _builtinTypes._char;
-			rets[_builtinTypes._float  -> getTypeDecl()] = _builtinTypes._float;
-			rets[_builtinTypes._int    -> getTypeDecl()] = _builtinTypes._int;
-			rets[_builtinTypes._string -> getTypeDecl()] = _builtinTypes._string;
-			rets[_builtinTypes._type   -> getTypeDecl()] = _builtinTypes._type;
-			rets[_builtinTypes._void   -> getTypeDecl()] = _builtinTypes._void;
+			ADD_TO_MAP(_i8);
+			ADD_TO_MAP(_i16);
+			ADD_TO_MAP(_i32);
+			ADD_TO_MAP(_i64);
+			ADD_TO_MAP(_i128);
+			ADD_TO_MAP(_f32);
+			ADD_TO_MAP(_f64);
+			ADD_TO_MAP(_f128);
+			ADD_TO_MAP(_c8);
+			ADD_TO_MAP(_c32);
+			ADD_TO_MAP(_bool);
+			ADD_TO_MAP(_string);
+			ADD_TO_MAP(_type);
+			ADD_TO_MAP(_void);
 		}
 		if (auto ret = rets[decl])
 			return ret;

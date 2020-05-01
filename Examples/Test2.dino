@@ -8,6 +8,10 @@ namespace Test {
     char putchar(char c): extern "putchar"
 
     void PrintD(int n) {
+        if n < 0 {
+            putchar('-')
+            n := -n
+        }
         int a ≡ 1
         while a ≤ n / 10: a *= 10
         while a > 0 {
@@ -43,9 +47,16 @@ namespace Test {
     void Main() {
         // Std.PrintDLn(arr[2])
 
+        PrintB(-1 < 10)
+
+        int aa := 20
+        u32 x := aa as uint
+
         int@ a := null
         int@ b := null
         any c := a
+
+        PrintD(n2 as int)
 
         PrintB(c = a = c = b = null)
         

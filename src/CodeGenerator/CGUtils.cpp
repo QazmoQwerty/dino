@@ -8,21 +8,30 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
     switch (node->getExactType())
     {
         case EXACT_BASIC:
-            if (((DST::BasicType*)node)->getTypeSpecifier()->getInterfaceDecl())
-                return _interfaceType;
-            else if (((DST::BasicType*)node)->getTypeId() == CONDITION_TYPE)
-                return llvm::Type::getInt1Ty(_context);
-            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("char"))
-                return llvm::Type::getInt8Ty(_context);
-            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("int"))
-                return llvm::Type::getInt32Ty(_context);
-            // else if (((DST::BasicType*)node)->getTypeId() == unicode_string("float"))
-            //     return _builder.getFloatTy();
-            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("void"))
-                return llvm::Type::getVoidTy(_context);
-            else if (((DST::BasicType*)node)->getTypeId() == unicode_string("string"))
-                return _stringTy;
-            //     return llvm::Type::getVoidTy(_context);
+            if (node->isInterfaceTy())      return _interfaceType;
+            if (node == DST::getBoolTy())   return llvm::Type::getInt1Ty(_context);
+            if (node == DST::getc8Ty())     return llvm::Type::getInt8Ty(_context);
+            if (node == DST::getc32Ty())    return llvm::Type::getInt32Ty(_context);
+
+            if (node == DST::geti8Ty())     return llvm::Type::getInt8Ty(_context);
+            if (node == DST::geti16Ty())    return llvm::Type::getInt16Ty(_context);
+            if (node == DST::geti32Ty())    return llvm::Type::getInt32Ty(_context);
+            if (node == DST::geti64Ty())    return llvm::Type::getInt64Ty(_context);
+            if (node == DST::geti128Ty())   return llvm::Type::getInt128Ty(_context);
+
+            if (node == DST::getu8Ty())     return llvm::Type::getInt8Ty(_context);
+            if (node == DST::getu16Ty())    return llvm::Type::getInt16Ty(_context);
+            if (node == DST::getu32Ty())    return llvm::Type::getInt32Ty(_context);
+            if (node == DST::getu64Ty())    return llvm::Type::getInt64Ty(_context);
+            if (node == DST::getu128Ty())   return llvm::Type::getInt128Ty(_context);
+
+            if (node == DST::getf16Ty())    return llvm::Type::getHalfTy(_context);
+            if (node == DST::getf32Ty())    return llvm::Type::getFloatTy(_context);
+            if (node == DST::getf64Ty())    return llvm::Type::getDoubleTy(_context);
+            if (node == DST::getf128Ty())   return llvm::Type::getFP128Ty(_context);
+
+            if (node == DST::getVoidTy())   return llvm::Type::getVoidTy(_context);
+            if (node == DST::getStringTy()) return _stringTy;
             else 
             {
                 auto bt = (DST::BasicType*)node;
