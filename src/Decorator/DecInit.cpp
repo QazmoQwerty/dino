@@ -269,7 +269,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			{
 				auto gen = createGenericTy(generic);
 				funcDecl->addGeneric(gen);
-				_variables[currentScope()][gen->getName()] = gen;
+				_variables[currentScope()][gen->getTypeName()] = gen;
 			}
 			funcDecl->setVarDecl(decorate(func->getVarDecl()));
 			for (auto param : func->getParameters())
@@ -416,7 +416,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 			auto decl = (DST::FunctionDeclaration*)i.second.first;
 			enterBlock();
 			for (auto ty : decl->getGenerics())		// Add generics to variabes map
-				_variables[currentScope()][ty->getName()] = ty;
+				_variables[currentScope()][ty->getTypeName()] = ty;
 			for (auto param : decl->getParameters())	// Add function parameters to variabes map
 				_variables[currentScope()][param->getVarId()] = new DST::Variable(param->getVarId(), param->getType());
 			decl->setContent(decorate(decl->getBase()->getContent()));

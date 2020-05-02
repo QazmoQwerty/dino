@@ -120,17 +120,29 @@ namespace DST
 			   _valueType->assignableTo(type->as<ArrayType>()->_valueType);
 	}
 
+	bool InterfaceType::implements(InterfaceType* type)
+	{
+		return this->_decl->implements(type->getInterfaceDecl());
+	}
+
+	bool ValueType::implements(InterfaceType* type)
+	{
+		return this->_decl->implements(type->getInterfaceDecl());
+	}
+
+	bool UnsetGenericType::implements(InterfaceType* type)
+	{
+		if (type->getInterfaceDecl() == getAnyInterface())
+			return true;
+		for (auto i : _implements)	
+			if (i->implements(type->getInterfaceDecl()))
+				return true;
+		return false;
+	}
+
 	bool UnsetGenericType::assignableTo(Type* type)
 	{
-		if (type && type->isInterfaceTy())
-		{
-			auto decl = type->as<InterfaceType>()->getInterfaceDecl();
-			for (auto i : _implements)	
-				if (i == decl)
-					return true;
-			return false;
-		}
-		return type == this;
+		return equals(type);
 	}
 
 	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl)
@@ -412,9 +424,19 @@ namespace DST
 	{
 		if (!type || !type->writeable())
 			return false;
-		if (_type->isValueTy() && type->isInterfaceTy())
-			return _type->as<ValueType>()->getTypeDecl()->implements(type->as<InterfaceType>()->getInterfaceDecl());
+		// if (_type->isValueTy() && type->isInterfaceTy())
+		// 	return _type->as<ValueType>()->getTypeDecl()->implements(type->as<InterfaceType>()->getInterfaceDecl());
+		if (type->isInterfaceTy())
+			return _type->implements(type->as<InterfaceType>());
 		return type->isPtrTy() && _type->assignableTo(type->as<PointerType>()->_type);
+	}
+
+	Type *UnsetGenericType::getMember(unicode_string name)
+	{
+		for (auto i : _implements)
+			if (auto ret = i->getMemberType(name))
+				return ret;
+		return NULL;
 	}
 
 	string FunctionType::toShortString()

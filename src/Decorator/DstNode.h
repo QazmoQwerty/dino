@@ -294,6 +294,8 @@ namespace DST
 		virtual bool isNamespaceTy() { return false; }
 		virtual bool isUnsetGenericTy() { return false; }
 
+		virtual bool implements(InterfaceType *ty) { return false; };
+
 		virtual bool equals(Type *other) { return this->getNonConstOf()->getNonPropertyOf() == other->getNonConstOf()->getNonPropertyOf(); };
 
 		bool comparableTo(Type *other);
@@ -355,54 +357,7 @@ namespace DST
 		virtual vector<Node*> getChildren() { return {}; }
 	};
 
-	/*
-		A generic type which was declared but not set.
-	*/
-	class UnsetGenericType : public Type
-	{
-	private:
-		unicode_string _id;
-		vector<InterfaceDeclaration*> _implements;
-	public:
-		UnsetGenericType(unicode_string id) : _id(id) {}
-
-		void addImplements(InterfaceDeclaration *decl) { _implements.push_back(decl); }
-		unicode_string& getName() { return _id; }
-		virtual string toShortString() { return _id.to_string(); };
-		virtual bool isUnsetGenericTy() { return true; }
-		virtual bool assignableTo(Type *type);
-		virtual ExactType getExactType() { return EXACT_GENERIC_UNSET; };
-		virtual vector<Node*> getChildren() { return {}; }
-	};
-
 	class TypeDeclaration;
-
-	// /*
-	// 	Type for identifiers bound to regular types and interfaces.
-	// */
-	// class TypeSpecifierType : public Type
-	// {
-	// 	private:
-	// 		BasicType *_basicTy;
-	// 	public:
-	// 		static TypeSpecifierType *get(InterfaceDeclaration *decl);
-	// 		static TypeSpecifierType *get(TypeDeclaration *decl);
-
-	// 		TypeSpecifierType() : Type(),  _basicTy(NULL) {}
-	// 		virtual ~TypeSpecifierType() {}
-	// 		BasicType *getBasicTy();
-	// 		virtual bool isSpecifierTy() { return true; }
-	// 		virtual ExactType getExactType() { return EXACT_SPECIFIER; }
-	// 		virtual bool writeable() { return false; }
-
-	// 		virtual bool assignableTo(Type *type) { return false; /* type specifiers are not assignable */ }
-
-	// 		/* 
-	// 			Short string representation of the type, ready to be pretty-printed. 
-	// 			In other words, always returns "typeid".
-	// 		*/ 
-	// 		virtual string toShortString() { return "typeid"; };
-	// };
 
 	class NamespaceDeclaration;
 
@@ -448,6 +403,7 @@ namespace DST
 		virtual ~PropertyType() { }
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
+		virtual bool implements(InterfaceType *ty) { return _return->implements(ty); };
 
 		/* The actual type the property gets/sets */
 		Type *getReturn() { return _return; }
@@ -518,6 +474,7 @@ namespace DST
 
 		ConstType(Type *type) : Type(), _type(type) { }
 		virtual ~ConstType() { }
+		virtual bool implements(InterfaceType *ty) { return _type->implements(ty); };
 		virtual Type *getNonConstOf() { return _type; }; // returns what type base type of this constant is
 		ExactType getExactType() { return EXACT_POINTER; }
 		virtual bool writeable() { return false; }
@@ -624,6 +581,7 @@ namespace DST
 		public:
 			static InterfaceType *get(InterfaceDeclaration *decl);
 			virtual bool isInterfaceTy() { return true; }
+			virtual bool implements(InterfaceType *ty);
 
 			virtual InterfaceDeclaration *getInterfaceDecl() { return _decl; }
 			unicode_string getTypeName();
@@ -638,6 +596,7 @@ namespace DST
 			TypeDeclaration *_decl;
 		public:
 			static ValueType *get(TypeDeclaration *decl);
+			virtual bool implements(InterfaceType *ty);
 
 			virtual bool isValueTy() 	 { return true; }
 			unicode_string getTypeName();
@@ -645,6 +604,25 @@ namespace DST
 			virtual TypeDeclaration *getTypeDecl() { return _decl; }
 			virtual Type *getMember(unicode_string name);
 			virtual bool assignableTo(Type *type);
+	};
+
+	/*
+		A generic type which was declared but not set.
+	*/
+	class UnsetGenericType : public BasicType
+	{
+	private:
+		unicode_string _id;
+		vector<InterfaceDeclaration*> _implements;
+	public:
+		UnsetGenericType(unicode_string id) : _id(id) {}
+		unicode_string getTypeName() { return _id; }
+		virtual bool implements(InterfaceType *ty);
+		void addImplements(InterfaceDeclaration *decl) { _implements.push_back(decl); }
+		virtual bool isUnsetGenericTy() { return true; }
+		virtual bool assignableTo(Type *type);
+		virtual Type *getMember(unicode_string name);
+		virtual vector<Node*> getChildren() { return {}; }
 	};
 
 	#define UNKNOWN_ARR_SIZE 0
