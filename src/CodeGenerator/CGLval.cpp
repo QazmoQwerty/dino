@@ -115,8 +115,9 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     }
     else if (leftType->isBasicTy())
     {
-        if (auto interfaceDecl = leftType->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl())
+        if (leftType->isInterfaceTy())
         {
+            auto interfaceDecl = leftType->as<DST::InterfaceType>()->getInterfaceDecl();
             auto lval = codeGenLval(node->getLeft());
             auto vtablePtr = _builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(1) });
             auto vtable = _builder.CreateLoad(vtablePtr);
@@ -131,8 +132,8 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             return alloca;
         }
 
-        auto bt = (DST::BasicType*)leftType;
-        auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        auto bt = leftType->as<DST::ValueType>();
+        auto typeDef = _types[bt->getTypeDecl()];
         auto lval = codeGenLval(node->getLeft());
         assertNotNull(lval);
         return _builder.CreateInBoundsGEP(
@@ -145,8 +146,8 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     else if (leftType->isPtrTy() && 
             leftType->as<DST::PointerType>()->getPtrType()->isBasicTy())
     {
-        auto bt = leftType->as<DST::PointerType>()->getPtrType()->as<DST::BasicType>();
-        auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        auto bt = leftType->as<DST::PointerType>()->getPtrType()->as<DST::ValueType>();
+        auto typeDef = _types[bt->getTypeDecl()];
         auto lval = _builder.CreateLoad(codeGenLval(node->getLeft()));
         assertNotNull(lval);
         return _builder.CreateInBoundsGEP(

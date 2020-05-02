@@ -32,11 +32,8 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 		return DST::UnknownType::get();
 
 	for (int scope = currentScope(); scope >= 0; scope--)
-		if (auto ty = _variables[scope][name]) {
-			if (ty->isSpecifierTy())
-				return ty->as<DST::TypeSpecifierType>()->getBasicTy();
-			return new DST::Variable(node, ty);
-		}
+		if (auto exp = _variables[scope][name])
+			return exp;
 
 	if (_currentTypeDecl) if (auto ty = _currentTypeDecl->getMemberType(name))
 	{
@@ -51,13 +48,8 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 	}
 
 	for (int i = _currentNamespace.size() - 1; i >= 0; i--)
-	{
-		if (auto ty = _currentNamespace[i]->getMemberType(name)) {
-			if (ty->isSpecifierTy())
-				return ty->as<DST::TypeSpecifierType>()->getBasicTy();
-			return new DST::Variable(node, ty);
-		}
-	}
+		if (auto member = _currentNamespace[i]->getMemberExp(name))
+			return member;
 
 	if (_currentProgram) 
 		if (auto var = _currentProgram->getNamespace(name))
@@ -232,14 +224,19 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		if (type->isBasicTy())
 		{
 			auto bt = type->as<DST::BasicType>();
-			if (_currentTypeDecl != bt->getTypeSpecifier()->getTypeDecl() && !varId[0].isUpper())
+			if (!(bt->isValueTy() && _currentTypeDecl == bt->getTypeDecl()) && !varId[0].isUpper())
 				throw ErrorReporter::report("Cannot access private member \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getPosition());
-			memberType = bt->getTypeSpecifier()->getMemberType(varId);	
+			memberType = bt->getMember(varId);	
 		}
-		else if (type->isNamespaceTy())
-			memberType = type->as<DST::NamespaceType>()->getNamespaceDecl()->getMemberType(varId);
 		else if (type->isArrayTy() && varId == unicode_string("Size"))
 			memberType = DST::getIntTy()->getPropertyOf(true, false);
+		else if (type->isNamespaceTy())
+		{
+			auto member = type->as<DST::NamespaceType>()->getNamespaceDecl()->getMemberExp(varId);
+			if (member->getExpressionType() == ET_TYPE)
+				return member;
+			memberType = member->getType();
+		}
 		else 
 		{
 			std::cout << memberType->toShortString() << "\n";
@@ -248,9 +245,6 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 
 		if (memberType == nullptr)
 			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ERR_DECORATOR, node->getRight()->getPosition());
-		
-		if (memberType->isSpecifierTy())	// TODO - why is this line here??
-			return memberType->as<DST::TypeSpecifierType>()->getBasicTy();
 
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);

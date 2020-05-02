@@ -22,23 +22,23 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
 
             if (ty->isBasicTy())
             {
-                auto bt = ty->as<DST::BasicType>();
-                if (auto interfaceDecl = bt->getTypeSpecifier()->getInterfaceDecl())
+                if (ty->isInterfaceTy())
                 {
+                    auto interfaceDecl = ty->as<DST::InterfaceType>()->getInterfaceDecl();
                     auto vtablePtr = _builder.CreateInBoundsGEP(thisPtr, { _builder.getInt32(0), _builder.getInt32(1) });
                     auto vtable = _builder.CreateLoad(vtablePtr);
                     funcPtr = getFuncFromVtable(vtable, interfaceDecl, funcId);
                     funcTy = _interfaceVtableFuncInfo[interfaceDecl][funcId].type;
                     thisPtr = _builder.CreateLoad(_builder.CreateInBoundsGEP(thisPtr, { _builder.getInt32(0), _builder.getInt32(0) }));
                 }
-                else typeDef = _types[ty->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
+                else typeDef = _types[ty->as<DST::ValueType>()->getTypeDecl()];
             }
                 
             else 
             {
                 if (!ty->as<DST::PointerType>()->getPtrType()->isBasicTy())
                     throw ErrorReporter::reportInternal("Internal decorator error?", ERR_CODEGEN, node->getPosition());
-                typeDef = _types[ty->as<DST::PointerType>()->getPtrType()->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
+                typeDef = _types[ty->as<DST::PointerType>()->getPtrType()->as<DST::ValueType>()->getTypeDecl()];
             }
 
             if (typeDef && !funcPtr)
@@ -159,8 +159,9 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     left = codeGenLval(ac->getLeft());
                     right = codeGen(node->getRight());
 
-                    if (auto interfaceDecl = ac->getLeft()->getType()->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl())
+                    if (ac->getLeft()->getType()->isInterfaceTy())
                     {
+                        auto interfaceDecl = ac->getLeft()->getType()->as<DST::InterfaceType>()->getInterfaceDecl();
                         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
                         auto vtable = _builder.CreateLoad(vtablePtr);
                         auto funcPtr = getFuncFromVtable(vtable, interfaceDecl, ac->getRight());
@@ -171,7 +172,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     }
                     else 
                     {
-                        auto typeDef = _types[ac->getLeft()->getType()->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
+                        auto typeDef = _types[ac->getLeft()->getType()->as<DST::ValueType>()->getTypeDecl()];
                         auto func = typeDef->functions[ac->getRight()];
                         if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
                             throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());
@@ -185,7 +186,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                     if (!ptrTy->isBasicTy())
                         throw ErrorReporter::report("only pointers and basic types have setter properties", ERR_CODEGEN, node->getPosition());
                     auto thisPtr = codeGen(ac->getLeft());
-                    auto typeDef = _types[ptrTy->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
+                    auto typeDef = _types[ptrTy->as<DST::ValueType>()->getTypeDecl()];
                     auto func = typeDef->functions[ac->getRight()];
                     if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
                         throw ErrorReporter::report("expression is not a setter property", ERR_CODEGEN, node->getPosition());

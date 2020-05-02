@@ -10,7 +10,7 @@ namespace DST
 	{
 		if (_left && _left->getType() && !_left->getType()->readable())
 			throw ErrorReporter::report("left value is write-only", ERR_DECORATOR, _left->getPosition());
-		if (_right && _right->getType() && !_right->getType()->readable())
+		if (_right && _right->getExpressionType() != ET_TYPE && _right->getType() && !_right->getType()->readable())
 			throw ErrorReporter::report("right value is write-only", ERR_DECORATOR, _left->getPosition());
 	};
 
@@ -155,9 +155,9 @@ namespace DST
 		return false;
 	}
 
-	void NamespaceDeclaration::addMember(unicode_string name, Statement * decl, Type * type)
+	void NamespaceDeclaration::addMember(unicode_string name, Statement * decl, Expression * exp)
 	{
-		_decls[name] = std::make_pair(decl, type);
+		_decls[name] = std::make_pair(decl, exp);
 	}
 
 	void InterfaceDeclaration::addDeclaration(Statement * decl, Type * type)

@@ -1,133 +1,39 @@
 // import "Examples/std"
-// import "std2"
-
-import "std2"
+// import "std"
+import "Examples/std"
 
 namespace Test {
+    void Print(any a) {
+        if a is int:
+            Std.PrintD(a as int)
+        else if a is Foo:
+            (a as Foo).Show()
+        else if a is bool:
+            Std.PrintS(if a as bool then "true" else "false")
+        else if a = null:
+            Std.PrintS("null")
+        // FIXME: "is null"
+        else: Std.PrintS("??")
+    }
 
-    // char putchar(char c): extern "putchar"
+    type Foo {
+        void Show(): Std.PrintS("FOO!")
+    }
 
-    // void PrintD(int n) {
-    //     if n < 0 {
-    //         putchar('-')
-    //         n := -n
-    //     }
-    //     int a ≡ 1
-    //     while a ≤ n / 10: a *= 10
-    //     while a > 0 {
-    //         putchar((n % (a * 10) / a + 48) as char)
-    //         a /= 10
-    //     }
-    //     putchar('\n')
-    // }
-
-    // void PrintB(bool b) {
-    //     if b {
-    //         putchar('t') | putchar('r') | putchar('u') | putchar('e') | putchar('\n')
-    //     }
-    //     else {
-    //         putchar('f') | putchar('a') | putchar('l') | putchar('s') | putchar('e') | putchar('\n')
-    //     }
-    // }
-
-    // (int, bool[2]) Foo(int a, bool b, bool c) {
-    //     bool[2] arr
-    //     arr[0] := b
-    //     arr[1] := c
-    //     return a, arr
-    // }
-
-    // int Boo: get: return 100
-
-    // int[3] Foo() { return [1, 2, 3] }
-
-    // int F(): return 10
-    // const arr := [1, 2, 3]
-
-    // void MyFoo[K, V is any]() {
-    //     K x
-    // }
+    any AA(): return null
 
     void Main() {
-        // Std.PrintSLn("hi")
-        // int@ a := null
-        // a as int := 20
-        // @a := 10
-        error err := new Std.NullPointerError
-        Std.NullPointerError err2
-        Std.PrintSLn(err2.Msg)
-        Std.PrintSLn(err.Msg)
-        // try {
-        //     throw err
-        // } catch {
-        //     if err = caught {
-        //         Std.PrintCLn('a')
-        //     } else: Std.PrintCLn('b')
-        //     // Std.PrintSLn(caught.Msg)
-        // }
-        // int b := a as int
-        // PrintB(-1 < 10)
-
-        // int aa := 20
-        // u32 x := aa as uint
-
-        // int@ a := null
-        // int@ b := null
-        // any c := a
-
-        // float f := 0.7 * 2.7
-
-        // // PrintD(n2 as int)
-
-        // PrintD(f as int)
-
-        // PrintB(c = a = c = b = null)
-        
-        // int n := 19
-        // PrintB(10 < n <= 19)
-        
-        // Std.PrintDLn([1, 2, 3][2])
-        // [1, 2, 3][2] := 10
-        // Foo()[2] := 10
-        // Std.PrintDLn(Foo()[2])
-        // Std.PrintDLn(Foo()[2])
-        // var a := F()
-
-        // a := 20
-        // int[3] a := Foo()
-        // PrintD(a[2])
-        // PrintD(Foo()[2])
-        // PrintD([1, 2, 3][2])
-        // putchar('a')
-        // var a := new int[10]
-
-        // (bool, int) n := false, 10
-
-        // PrintB(n[0])
-        // PrintD(n[1])
-
-        // var f := (int a, int b) int, int { return a + b, a * b}
-        // var n2 := f(2, 4)
-        // PrintD(n2[0])
-        // PrintD(n2[1])
-
-        // int[] a
-        // PrintB(a is int[a[0]])
-
-
-        // var f := Foo(100, true, false)
-        // (int, bool[2]) a12
-        // PrintD(f[0])
-        // PrintB(f[1][0])
-        // PrintB(f[1][1])
-
-
-        // for int i := 0 | i < a.Size | i++ {
-        //     PrintD(a[i])
-        // }
-        // var b := [1, 2, 3, 4, 5]
-        // for int i := 0 | i < b.Size | i++ {
-        //     PrintD(b[i])
-        // }
+        int i := 10
+        Foo f
+        bool c
+        Print(&c)
+        any a := null
+        any b := new int
+        if a = b:
+            Std.PrintS("aa")
+        if a = null:
+            Std.PrintS("bb")
+        Print(a)
     }
+
 }

@@ -70,7 +70,7 @@ private:
 
 	static bool isCondition(DST::Expression *node);
 
-	static vector<unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>> _variables;
+	static vector<unordered_map<unicode_string, DST::Expression*, UnicodeHasherFunction>> _variables;
 	static vector<DST::NamespaceDeclaration*> _currentNamespace;
 	static DST::TypeDeclaration *_currentTypeDecl;
 	static DST::Program *_currentProgram;
@@ -82,7 +82,7 @@ private:
 
 	// Scope
 	static unsigned int currentScope() { return (int)_variables.size() - 1; }
-	static void enterBlock() { _variables.push_back(unordered_map<unicode_string, DST::Type*, UnicodeHasherFunction>()); }
+	static void enterBlock() { _variables.push_back(unordered_map<unicode_string, DST::Expression*, UnicodeHasherFunction>()); }
 	static void leaveBlock();
 };
 

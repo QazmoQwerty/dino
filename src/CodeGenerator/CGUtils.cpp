@@ -35,8 +35,8 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
             else 
             {
                 auto bt = (DST::BasicType*)node;
-                if (bt->getTypeSpecifier() && bt->getTypeSpecifier()->getTypeDecl())
-                    return _types[bt->getTypeSpecifier()->getTypeDecl()]->structType;
+                if (bt->isValueTy())
+                    return _types[bt->getTypeDecl()]->structType;
                 throw ErrorReporter::report("Type " + node->toShortString() + " does not exist", ERR_CODEGEN, node->getPosition());
             }
         case EXACT_ARRAY:
@@ -60,7 +60,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
         case EXACT_POINTER:
             if (((DST::PointerType*)node)->getPtrType()->isBasicTy())
             {
-                if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeId() == unicode_string("void"))   // void* is invalid in llvm IR
+                if (((DST::BasicType*)(((DST::PointerType*)node)->getPtrType()))->getTypeName() == unicode_string("void"))   // void* is invalid in llvm IR
                     return llvm::Type::getInt8Ty(_context)->getPointerTo();
             }
             return evalType(((DST::PointerType*)node)->getPtrType())->getPointerTo();

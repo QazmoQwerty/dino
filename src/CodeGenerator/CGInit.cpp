@@ -362,7 +362,7 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     }
     def->vtable = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, 
                                             llvmVtable, node->getName().to_string() + ".vtable");
-    _vtables[DST::BasicType::get(DST::TypeSpecifierType::get(node))] = def->vtable;
+    _vtables[DST::BasicType::get(node)] = def->vtable;
 }
 
 void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
