@@ -46,6 +46,17 @@ void AST::InterfaceDeclaration::addFunction(FunctionDeclaration * function)
 	_functions.push_back(function);
 }
 
+void AST::FunctionDeclaration::setGenerics(AST::Expression* generics)
+{
+	if (generics)
+	{
+		if (generics->getExpressionType() == ET_LIST)
+			for (auto i : ((AST::ExpressionList*)generics)->getExpressions())
+				_generics.push_back(i);
+		else _generics.push_back(generics);
+	}
+}
+
 AST::TypeDeclaration::~TypeDeclaration() 
 { 
 	delete _interfaces; _variableDeclarations.clear(); _functionDeclarations.clear(); _propertyDeclarations.clear();

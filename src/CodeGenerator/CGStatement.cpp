@@ -60,7 +60,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
         case OT_CONTINUE:
             return _builder.CreateBr(_currContinueJmp);
         case OT_THROW: 
-            return createThrow(codeGen(node->getExpression()));
+            return createThrow(convertToInterface(codeGen(node->getExpression()), node->getExpression()->getType()));
         case OT_RETURN:
         {
             if (node->getExpression() == NULL) 
@@ -71,6 +71,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             }
             auto val = codeGen(node->getExpression());
             auto returnTy = getParentFunction()->getReturnType();
+            
             if (val->getType() != returnTy)
             {
                 if (returnTy == _interfaceType)

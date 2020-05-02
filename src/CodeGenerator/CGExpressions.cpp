@@ -142,7 +142,7 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
         
         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
         auto vtableLoad = _builder.CreateLoad(vtablePtr);
-        auto vtable = getVtable(((DST::Type*)node->getRight())->getPtrTo());    // ptrTo since all types stored in interfaces are pointers currently
+        auto vtable = getVtable(((DST::Type*)node->getRight()));    // ptrTo since all types stored in interfaces are pointers currently
         auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
         return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
     }

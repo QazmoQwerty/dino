@@ -414,10 +414,14 @@ namespace AST
 		VariableDeclaration* _decl;
 		vector<VariableDeclaration*> _parameters;
 		StatementBlock* _content;
+		vector<Expression*> _generics;
+		
 
 	public:
-		FunctionDeclaration(VariableDeclaration* decl) { _decl = decl; };
+		FunctionDeclaration(VariableDeclaration* decl) : _content(NULL) { _decl = decl; };
 		virtual ~FunctionDeclaration() { if (_decl) delete _decl; if (_content) delete _content; _parameters.clear(); }
+		void setGenerics(Expression* generics);
+		vector<Expression*> getGenerics() { return _generics; }
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>\\n"; };
@@ -731,13 +735,16 @@ namespace AST
 		vector<VariableDeclaration*> _parameters;
 		StatementBlock* _content;
 		Expression* _returnType;
+		ExpressionList* _generics;
 
 	public:
-		Function() : Literal(LT_FUNCTION), _content(NULL), _returnType(NULL) { }
+		Function() : Literal(LT_FUNCTION), _content(NULL), _returnType(NULL), _generics(NULL) { }
 		virtual ~Function() { if (_content) delete _content; _parameters.clear(); }
 		virtual string toString() { return string() + "<FunctionLiteral>"; };
 		virtual vector<Node*> getChildren();
 
+		void setGenerics(ExpressionList* generics) { _generics = generics; }
+		ExpressionList* getGenerics() { return _generics; }
 		void addParameters(Expression* parameters);
 		void addParameterToStart(VariableDeclaration* parameter) { _parameters.insert(_parameters.begin(), parameter); }
 		void setContent(StatementBlock* content) { _content = content; }

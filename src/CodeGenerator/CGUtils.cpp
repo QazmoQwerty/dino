@@ -225,13 +225,17 @@ llvm::Function *CodeGenerator::getNullCheckFunc()
     _builder.SetInsertPoint(thenBB);
 
     auto errAlloc = _builder.CreateCall(getMallocFunc(), { _builder.getInt32(_dataLayout->getTypeAllocSize(_nullPtrErrorTy)) });
-    auto alloca = CreateEntryBlockAlloca(func, _interfaceType, "errAlloc");
-    auto objPtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(0) }, "objPtr");
-    auto vtablePtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(1) }, "vtablePtr");
-    _builder.CreateStore(errAlloc, objPtr);
-    _builder.CreateStore(getVtable(DST::getNullPtrErrTy()), vtablePtr);
+    // auto alloca = CreateEntryBlockAlloca(func, _interfaceType, "errAlloc");
+    // auto objPtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(0) }, "objPtr");
+    // auto vtablePtr = _builder.CreateGEP(alloca, {_builder.getInt32(0), _builder.getInt32(1) }, "vtablePtr");
+    // _builder.CreateStore(errAlloc, objPtr);
+    // _builder.CreateStore(getVtable(DST::getNullPtrErrTy()), vtablePtr);
+    // createThrow(_builder.CreateLoad(alloca), true);
 
-    createThrow(_builder.CreateLoad(alloca), true);
+    auto undef = llvm::UndefValue::get(_interfaceType);
+    auto withErr = _builder.CreateInsertValue(undef, errAlloc, 0);
+    auto withVtable = _builder.CreateInsertValue(withErr, getVtable(DST::getNullPtrErrTy()), 1);
+    createThrow(withVtable, true);
 
     _builder.CreateBr(elseBB);
 

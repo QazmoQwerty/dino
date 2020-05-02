@@ -4,7 +4,7 @@
 */
 #include "DstNode.h"
 
-#define createPrimitiveTypeSpec(name) (new TypeSpecifierType(new TypeDeclaration(unicode_string(name))))
+#define createPrimitiveTypeSpec(name) (new ValueTypeSpecifier(new TypeDeclaration(unicode_string(name))))
 
 namespace DST 
 {
@@ -36,9 +36,9 @@ namespace DST
 		_builtinTypes._string = createPrimitiveTypeSpec("string");
 		_builtinTypes._void = createPrimitiveTypeSpec("void");
 		_builtinTypes._type = createPrimitiveTypeSpec("type");
-		_builtinTypes._any = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
-		_builtinTypes._error = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("error"))));
-		_builtinTypes._nullPtError = new TypeSpecifierType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("NullPtrError"))));
+		_builtinTypes._any = new InterfaceSpecifier(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
+		_builtinTypes._error = new InterfaceSpecifier(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("error"))));
+		_builtinTypes._nullPtrError = createPrimitiveTypeSpec("NullPointerError");
 	}
 
 	// int types
@@ -75,7 +75,7 @@ namespace DST
 	BasicType *getStringTy()      { return _builtinTypes._string -> getBasicTy(); }
 	BasicType *getErrorTy()       { return _builtinTypes._error  -> getBasicTy(); }
 	NullType  *getNullTy()        { return NullType::get(); }
-	BasicType *getNullPtrErrTy()  { return _builtinTypes._nullPtError -> getBasicTy(); }
+	BasicType *getNullPtrErrTy()  { return _builtinTypes._nullPtrError -> getBasicTy(); }
 
 
 	InterfaceDeclaration *getAnyInterface() { return _builtinTypes._any->getInterfaceDecl(); }
@@ -119,6 +119,19 @@ namespace DST
 			   _valueType->assignableTo(type->as<ArrayType>()->_valueType);
 	}
 
+	bool UnsetGenericType::assignableTo(Type* type)
+	{
+		if (type && type->isInterfaceTy())
+		{
+			auto decl = type->as<BasicType>()->getTypeSpecifier()->getInterfaceDecl();
+			for (auto i : _implements)	
+				if (i == decl)
+					return true;
+			return false;
+		}
+		return type == this;
+	}
+
 	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl)
 	{
 		if (auto ret = _namespaceTypes[decl])
@@ -136,25 +149,36 @@ namespace DST
 
 	TypeSpecifierType *TypeSpecifierType::get(InterfaceDeclaration *decl)
 	{
-		static unordered_map<InterfaceDeclaration*, TypeSpecifierType*> rets;
-		if (rets.size() == 0)
-		{
-			rets[getAnyInterface()] = _builtinTypes._any;
-			rets[getErrorInterface()] = _builtinTypes._error;
-		}
-		if (decl == _builtinTypes._error->getInterfaceDecl())	// TODO - clean this up
-			return rets[decl] = _builtinTypes._error;
-		if (auto ret = rets[decl])
-			return ret;
-		return rets[decl] = new TypeSpecifierType(decl);
+		return InterfaceSpecifier::get(decl);
 	}
-
-	
 
 	TypeSpecifierType *TypeSpecifierType::get(TypeDeclaration *decl)
 	{
-		#define ADD_TO_MAP(ty) rets[_builtinTypes.ty   -> getTypeDecl()] = _builtinTypes.ty;
-		static unordered_map<TypeDeclaration*, TypeSpecifierType*> rets;
+		return ValueTypeSpecifier::get(decl);
+	}
+
+	Type *InterfaceSpecifier::getMemberType(unicode_string name) { return _decl->getMemberType(name); }
+	Type *ValueTypeSpecifier::getMemberType(unicode_string name) { return _decl->getMemberType(name); }
+
+	InterfaceSpecifier *InterfaceSpecifier::get(InterfaceDeclaration *decl)
+	{
+		static unordered_map<InterfaceDeclaration*, InterfaceSpecifier*> rets;
+		if (rets.size() == 0)
+		{
+			rets[getAnyInterface()] = (InterfaceSpecifier*)_builtinTypes._any;
+			rets[getErrorInterface()] = (InterfaceSpecifier*)_builtinTypes._error;
+		}
+		if (decl == _builtinTypes._error->getInterfaceDecl())	// TODO - clean this up
+			return rets[decl] = (InterfaceSpecifier*)_builtinTypes._error;
+		if (auto ret = rets[decl])
+			return ret;
+		return rets[decl] = new InterfaceSpecifier(decl);
+	}
+
+	ValueTypeSpecifier *ValueTypeSpecifier::get(TypeDeclaration *decl)
+	{
+		#define ADD_TO_MAP(ty) rets[_builtinTypes.ty   -> getTypeDecl()] = (ValueTypeSpecifier*)_builtinTypes.ty;
+		static unordered_map<TypeDeclaration*, ValueTypeSpecifier*> rets;
 		if (rets.size() == 0)
 		{
 			ADD_TO_MAP(_i8);
@@ -171,10 +195,11 @@ namespace DST
 			ADD_TO_MAP(_string);
 			ADD_TO_MAP(_type);
 			ADD_TO_MAP(_void);
+			ADD_TO_MAP(_nullPtrError);
 		}
 		if (auto ret = rets[decl])
 			return ret;
-		return rets[decl] = new TypeSpecifierType(decl);
+		return rets[decl] = new ValueTypeSpecifier(decl);
 	}
 
 	TypeList::TypeList(Type *ty, Type *append)  
@@ -276,20 +301,14 @@ namespace DST
 
 	/////////////////////////////////////////////////////////////////////////////////
 
-	TypeSpecifierType::~TypeSpecifierType() { }
-
-	unicode_string TypeSpecifierType::getTypeName()
+	unicode_string InterfaceSpecifier::getTypeName()
 	{
-		if (_typeDecl) return _typeDecl->getName();
-		if (_interfaceDecl) return _interfaceDecl->getName();
-		return unicode_string();
+		return _decl->getName();
 	}
 
-	Type * TypeSpecifierType::getMemberType(unicode_string name)
+	unicode_string ValueTypeSpecifier::getTypeName()
 	{
-		if (_typeDecl) return _typeDecl->getMemberType(name);
-		if (_interfaceDecl) return _interfaceDecl->getMemberType(name);
-		return NULL;
+		return _decl->getName();
 	}
 
 	ArrayType *Type::getArrayOf(size_t size)

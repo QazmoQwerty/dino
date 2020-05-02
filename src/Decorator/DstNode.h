@@ -24,39 +24,33 @@ namespace DST
 
 	class BasicType;
 	class InterfaceDeclaration;
-
+	class ValueTypeSpecifier;
+	class InterfaceSpecifier;
 	class TypeSpecifierType;
 	typedef struct PrimitiveTypeSpecifiers {
-
 		TypeSpecifierType *_bool;	// boolean
-
 		TypeSpecifierType *_i8; 	// 8 bit integer
 		TypeSpecifierType *_i16;	// 16 bit integer
 		TypeSpecifierType *_i32;	// 32 bit integer
 		TypeSpecifierType *_i64;	// 64 bit integer
 		TypeSpecifierType *_i128;	// 128 bit integer
-
 		TypeSpecifierType *_u8; 	// 8 bit unsigned integer
 		TypeSpecifierType *_u16;	// 16 bit unsigned integer
 		TypeSpecifierType *_u32;	// 32 bit unsigned integer
 		TypeSpecifierType *_u64;	// 64 bit unsigned integer
 		TypeSpecifierType *_u128;	// 128 bit unsigned integer
-	
 		TypeSpecifierType *_f16;	// 16 bit float
 		TypeSpecifierType *_f32;	// 32 bit float
 		TypeSpecifierType *_f64;	// 64 bit float
 		TypeSpecifierType *_f128;	// 128 bit float
-
 		TypeSpecifierType *_c8;		// ascii char
 		TypeSpecifierType *_c32;	// unicode char
-
 		TypeSpecifierType *_string;
-
 		TypeSpecifierType *_void;
 		TypeSpecifierType *_type;
 		TypeSpecifierType *_error;
 		TypeSpecifierType *_any;
-		TypeSpecifierType *_nullPtError;
+		TypeSpecifierType *_nullPtrError;
 	} PrimitiveTypeSpecifiers;
 
 	extern PrimitiveTypeSpecifiers _builtinTypes;
@@ -230,13 +224,14 @@ namespace DST
 		unordered_map<unicode_string, NamespaceDeclaration*, UnicodeHasherFunction> getNamespaces() { return _namespaces; }
 	};
 
-	/********************** Expressions **********************/
+	/********************** Types **********************/
 
 	class PointerType;
 	class ConstType;
 	class ArrayType;
 	class PropertyType;
 	class TypeList;
+	class InterfaceDeclaration;
 
 	class Type : public Expression
 	{
@@ -297,6 +292,7 @@ namespace DST
 		virtual bool isPropertyTy()  { return false; }
 		virtual bool isSpecifierTy() { return false; }
 		virtual bool isNamespaceTy() { return false; }
+		virtual bool isUnsetGenericTy() { return false; }
 
 		virtual bool equals(Type *other) { return this->getNonConstOf()->getNonPropertyOf() == other->getNonConstOf()->getNonPropertyOf(); };
 
@@ -344,7 +340,6 @@ namespace DST
 	*/
 	class UnknownType : public Type
 	{
-	private:
 	public:
 		static UnknownType *get();
 
@@ -360,8 +355,27 @@ namespace DST
 		virtual vector<Node*> getChildren() { return {}; }
 	};
 
+	/*
+		A generic type which was declared but not set.
+	*/
+	class UnsetGenericType : public Type
+	{
+	private:
+		unicode_string _id;
+		vector<InterfaceDeclaration*> _implements;
+	public:
+		UnsetGenericType(unicode_string id) : _id(id) {}
+
+		void addImplements(InterfaceDeclaration *decl) { _implements.push_back(decl); }
+		unicode_string& getName() { return _id; }
+		virtual string toShortString() { return _id.to_string(); };
+		virtual bool isUnsetGenericTy() { return true; }
+		virtual bool assignableTo(Type *type);
+		virtual ExactType getExactType() { return EXACT_GENERIC_UNSET; };
+		virtual vector<Node*> getChildren() { return {}; }
+	};
+
 	class TypeDeclaration;
-	class InterfaceDeclaration;
 
 	/*
 		Type for identifiers bound to regular types and interfaces.
@@ -369,32 +383,56 @@ namespace DST
 	class TypeSpecifierType : public Type
 	{
 		private:
-			TypeDeclaration *_typeDecl;
-			InterfaceDeclaration *_interfaceDecl;
 			BasicType *_basicTy;
 		public:
 			static TypeSpecifierType *get(InterfaceDeclaration *decl);
 			static TypeSpecifierType *get(TypeDeclaration *decl);
 
-			TypeSpecifierType(DST::TypeDeclaration *decl) : Type(), _typeDecl(decl), _interfaceDecl(NULL), _basicTy(NULL) {}
-			TypeSpecifierType(DST::InterfaceDeclaration *decl) : Type(), _typeDecl(NULL), _interfaceDecl(decl), _basicTy(NULL) {}
-			virtual ~TypeSpecifierType();
+			TypeSpecifierType() : Type(),  _basicTy(NULL) {}
+			virtual ~TypeSpecifierType() {}
 			BasicType *getBasicTy();
 			virtual bool isSpecifierTy() { return true; }
 			virtual ExactType getExactType() { return EXACT_SPECIFIER; }
 			virtual bool writeable() { return false; }
-			TypeDeclaration *getTypeDecl() { return _typeDecl; }
-			InterfaceDeclaration *getInterfaceDecl() { return _interfaceDecl; }
+
+			virtual TypeDeclaration *getTypeDecl() { return NULL; }
+			virtual InterfaceDeclaration *getInterfaceDecl() { return NULL; }
+			virtual unicode_string getTypeName() = 0;
+
 			virtual bool assignableTo(Type *type) { return false; /* type specifiers are not assignable */ }
 
-			unicode_string getTypeName();
-			Type *getMemberType(unicode_string name);
-
+			virtual Type *getMemberType(unicode_string name) = 0;
 			/* 
 				Short string representation of the type, ready to be pretty-printed. 
 				In other words, always returns "typeid".
 			*/ 
 			virtual string toShortString() { return "typeid"; };
+	};
+
+	class InterfaceSpecifier : public TypeSpecifierType
+	{
+		private:
+			InterfaceDeclaration *_decl;
+		public:
+			static InterfaceSpecifier *get(InterfaceDeclaration *decl);
+
+			virtual InterfaceDeclaration *getInterfaceDecl() { return _decl; }
+			unicode_string getTypeName();
+			InterfaceSpecifier(InterfaceDeclaration *decl) : _decl(decl) {}
+			virtual Type *getMemberType(unicode_string name);
+	};
+
+	class ValueTypeSpecifier : public TypeSpecifierType
+	{
+		private:
+			TypeDeclaration *_decl;
+		public:
+			static ValueTypeSpecifier *get(TypeDeclaration *decl);
+
+			unicode_string getTypeName();
+			ValueTypeSpecifier(TypeDeclaration *decl) : _decl(decl) {}
+			virtual TypeDeclaration *getTypeDecl() { return _decl; }
+			virtual Type *getMemberType(unicode_string name);
 	};
 
 	class NamespaceDeclaration;
@@ -691,6 +729,8 @@ namespace DST
 		virtual string toString() { return "<FunctionType>" + toShortString(); };
 		virtual vector<Node*> getChildren();
 	};
+
+	/********************** Expressions **********************/
 
 	class Variable : public Expression
 	{
@@ -1236,11 +1276,15 @@ namespace DST
 		VariableDeclaration *_decl;
 		vector<VariableDeclaration*> _parameters;
 		StatementBlock *_content;
+		vector<UnsetGenericType*> _generics;
 
 	public:
 		string _llvmFuncId;
 
+		FunctionDeclaration(AST::FunctionDeclaration *base) : _base(base), _content(NULL) { };
 		FunctionDeclaration(AST::FunctionDeclaration *base, VariableDeclaration *decl) : _base(base), _content(NULL) { setVarDecl(decl); };
+		void addGeneric(UnsetGenericType* ty) { _generics.push_back(ty); }
+		vector<UnsetGenericType*> getGenerics() { return _generics; }
 		virtual ~FunctionDeclaration();
 		virtual bool isDeclaration() { return true; }
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };

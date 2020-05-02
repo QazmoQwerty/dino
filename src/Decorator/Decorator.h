@@ -35,6 +35,8 @@ private:
 	static void partD(DST::NamespaceDeclaration *node);
 	static void partE(DST::NamespaceDeclaration *node);
 
+	static DST::UnsetGenericType *createGenericTy(AST::Expression *exp);
+
 	static DST::Expression *decorate(AST::Expression *node);
 	static DST::Statement *decorate(AST::Statement *node);
 

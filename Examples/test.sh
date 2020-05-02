@@ -5,6 +5,11 @@ dino AnyTest.dino -o test
 ./test
 echo "--------------------------------------------------------------"
 
+echo "ErrorTest.dino:"
+dino ErrorTest.dino -o test
+./test
+echo "--------------------------------------------------------------"
+
 echo "MultRetTest.dino:"
 dino MultRetTest.dino -o test
 ./test
