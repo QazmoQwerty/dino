@@ -2,54 +2,32 @@ import "std2"
 
 namespace Prog {
 
-	// type MyErr is error {
-	// 	int a
-	// 	string Msg: get: return "MyErr"
-	// }
+	type MyErr is error {
+		int a
+		string Msg: get: return "MyErr"
+	}
 
 	void Foo() {
-		// try {
-		// 	error err := new MyErr
-		// 	throw err
-		// 	Std.PrintDLn(123)
-		// } catch {
-		// 	Std.PrintS("caught: ")
-		// 	Std.PrintSLn(caught.Msg)
-		// }
+		try {
+			error err := new MyErr
+			throw err
+			Std.PrintDLn(123)
+		} catch {
+			Std.PrintS("caught #1: ")
+			Std.PrintC('"')
+			Std.PrintS(caught.Msg)
+			Std.PrintCLn('"')
+		}
 
-		// error err := new Std.NullPointerError
-		// if err = null:
-		// 	Std.PrintDLn(1)
-		// else: Std.PrintDLn(2)
-		// if err is Std.NullPointerError:
-		// 	Std.PrintDLn(11)
-		// else: Std.PrintDLn(22)
 		try {
 			int@ a := null
 			@a := 10
-			// throw new Std.NullPointerError
 		} catch {
-			Std.PrintDLn(123)
-			if caught = null:
-				Std.PrintDLn(1)
-			else: Std.PrintDLn(2)
-			if caught is Std.NullPointerError:
-				Std.PrintDLn(11)
-			else: Std.PrintDLn(22)
-			// if caught is error:	// TODO - throws 'unreachable'
-			// 	Std.PrintDLn(111)
-			// else: Std.PrintDLn(222)
-			Std.PrintSLn(caught.Msg)
+			Std.PrintS("caught #2: ")
+			Std.PrintC('"')
+			Std.PrintS(caught.Msg)
+			Std.PrintCLn('"')
 		}
-
-		// try {
-		// 	int@ a := null
-		// 	// @a := 10
-		// 	int b := @a
-		// } catch {
-		// 	Std.PrintS("caught2: ")
-		// 	Std.PrintSLn(caught.Msg)
-		// }
 	}
 
 	void Main() {
