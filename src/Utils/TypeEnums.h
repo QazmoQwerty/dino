@@ -241,11 +241,13 @@ enum ExactType
 	EXACT_ARRAY,		// Example: int[] a
 	EXACT_TYPELIST, 	// Example: (int, int) a
 	EXACT_NULL,			// Example: null
+	EXACT_GENERIC_UNSET,// Example: T a
+	EXACT_GENERIC_SET,	// Example: Map[int, bool]
 	EXACT_FUNCTION,		// Example: bool(int) a
 	EXACT_POINTER,		// Example: int@ a
 	EXACT_PROPERTY,		// Example: int a { get | set }
 	EXACT_SPECIFIER,	// The type of a specifier (int, bool, etc)
 	EXACT_NAMESPACE,	// Example: namespace a {}
 	EXACT_UNKNOWN,		// Example: var a
-	EXACT_CONST,		// Examples: const a := 10
+	EXACT_CONST,		// Example: const a := 10
 };

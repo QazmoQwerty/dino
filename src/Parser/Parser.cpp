@@ -446,6 +446,22 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			else decl->setContent(parseInnerBlock());
 			return decl;
 		}
+
+		// Generic function declaration
+		if (eatOperator(OT_SQUARE_BRACKETS_OPEN))
+		{
+			auto decl = new AST::FunctionDeclaration(varDecl);
+			decl->setGenerics(parseOptionalExpression());
+			expectOperator(OT_SQUARE_BRACKETS_CLOSE);
+			expectOperator(OT_PARENTHESIS_OPEN);
+			decl->setPosition(token->_pos);
+			decl->addParameter(parse());
+			expectOperator(OT_PARENTHESIS_CLOSE);
+			if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE)) 
+				decl->setContent(NULL);
+			else decl->setContent(parseInnerBlock());
+			return decl;
+		}
 		return varDecl;
 	}
 	if (isOperator(token, OT_COMMA))

@@ -49,7 +49,8 @@ namespace NS {
             if idx >= count {
                 // TODO - throw
                 Std.PrintS("vector out of range")
-                return null  
+                any a := null
+                return null
             }
             return data[idx]
         }

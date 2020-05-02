@@ -1,188 +1,59 @@
-// namespace Prog {
-// 	int putchar(int a): extern
-// 	char Print(char c): return putchar(c as int) as char
-// 	void Newline(): Print('\n')
- 
-// void PrintNum(int num) {
-// 	int a ≡ 1
-// 	while a ≤ num / 10: a *= 10
-// 	while a > 0 {
-// 		putchar(num % (a * 10) / a + 48)
-// 		a /= 10
-// 	}
-// }
-
-// 	(int, char[]) Foo(int a, char b) {
-// 		char[] arr := new char[20]
-// 		for int i := 0 | i < arr.Size | i+=1:
-// 			arr[i] := b + i as char
-// 		return a, arr
-// 	}
-// 	// (int, char) Foo(): return 1, '0'
-
-// 	int Main() {
-// 		int a, var c := Foo(1, 'b')
-// 		// int a, char[] c := Foo(1, 'a')
-// 		for int i := 0 | i < c.Size | i+=1 {
-// 			Print(c[i]) | Newline()
-// 		}
-// 		// int a, char c := Foo()
-// 		return 10
-// 		// int a := 10
-// 	}
-// }
-
-// include "DinoCodeExamples/IncludeTest.dino"
-// include "lib.dinoh"
-
-// namespace Prog {
-// 	void Main() {
-// 		Foo.PrintNum(1234)
-// 	}
-// }
-
-// include "lib2.dinoh"
-
-import "DinoStd/std"
+import "std2"
 
 namespace Prog {
-	char Print(char c): extern "putchar"
 
-	void PrintNum(int num) {
-		int a ≡ 1
-		while a ≤ num / 10: a *= 10
-		while a > 0 {
-			Print((num % (a * 10) / a + 48) as char)
-			a /= 10
-		}
-		Print('\n')
-	}
-
-	// interface Foo1 { void Show() | void Set(char c) | char C { get | set } }
-
-	// interface Foo2: void Show2()
-
-	// type Bar1 is Foo1, Foo2 {
-	// 	char c
-	// 	char C {
-	// 		get: return c
-	// 		set: c := value
-	// 	}
-	// 	void Set(char c): this.c := c
-	// 	void Show() { Print('B') |  Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-	// 	void Show2() { Print('B') |  Print('1')}
+	// type MyErr is error {
+	// 	int a
+	// 	string Msg: get: return "MyErr"
 	// }
-
-	// type Bar2 is Foo1, Foo2 {
-	// 	char c
-	// 	char C {
-	// 		get: return c
-	// 		set: c := value
-	// 	}
-	// 	void Set(char c): this.c := c
-	// 	void Show() { Print('B') |  Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-	// 	void Show2() { Print('B') |  Print('2')}
-	// }
-
-	// type Bar3 is Foo1, Foo2 {
-	// 	char c
-	// 	char C {
-	// 		get: return c
-	// 		set: c := value
-	// 	}
-	// 	void Set(char c): this.c := c
-	// 	void Show() { Print('B') |  Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-	// 	void Show2() { Print('B') |  Print('3') }
-	// }
-
-
-	// // interface MyInter {
-	// // 	char Msg2: get
-	// // }
-
-	type MyErr is error {
-		int a
-		int Msg: get: return 100
-	}
-
-	// void Foo() {
-		// error e := (new MyErr) as error
-	// 	PrintNum(11)
-	// 	throw e
-	// 	// throw new MyErr
-	// 	PrintNum(22)
-	// }
-
-	// int Foo1234(int a) {
-	// 	if a * 10 = 20:
-	// 		return 10
-	// 	else if a = 40:
-	// 		return 20
-	// 	return 30
-	// }
-
-	void Foo2() {
-		return 
-		// error err := (new MyErr) as error
-		// throw err
-	}
 
 	void Foo() {
-		error err123
+		// try {
+		// 	error err := new MyErr
+		// 	throw err
+		// 	Std.PrintDLn(123)
+		// } catch {
+		// 	Std.PrintS("caught: ")
+		// 	Std.PrintSLn(caught.Msg)
+		// }
+
+		// error err := new Std.NullPointerError
+		// if err = null:
+		// 	Std.PrintDLn(1)
+		// else: Std.PrintDLn(2)
+		// if err is Std.NullPointerError:
+		// 	Std.PrintDLn(11)
+		// else: Std.PrintDLn(22)
 		try {
-			// error err := null //as error
-			error err := (new MyErr) as error
-			// PrintNum(err.Msg)
-			throw err
-			PrintNum(123)
+			int@ a := null
+			@a := 10
+			// throw new Std.NullPointerError
 		} catch {
-			PrintNum(321)
-			// PrintNum(err123.Msg)
-			// PrintNum(caught.Msg)
-			PrintNum(54321)
+			Std.PrintDLn(123)
+			if caught = null:
+				Std.PrintDLn(1)
+			else: Std.PrintDLn(2)
+			if caught is Std.NullPointerError:
+				Std.PrintDLn(11)
+			else: Std.PrintDLn(22)
+			// if caught is error:	// TODO - throws 'unreachable'
+			// 	Std.PrintDLn(111)
+			// else: Std.PrintDLn(222)
+			Std.PrintSLn(caught.Msg)
 		}
 
-
-		try {
-			Foo2()
-		} catch {
-			PrintNum(90909090)	
-		}
-		PrintNum(12345)
+		// try {
+		// 	int@ a := null
+		// 	// @a := 10
+		// 	int b := @a
+		// } catch {
+		// 	Std.PrintS("caught2: ")
+		// 	Std.PrintSLn(caught.Msg)
+		// }
 	}
 
 	void Main() {
 		Foo()
-		PrintNum(100100)
-		// Foo.PrintNum(1234)
-		
-		// error e := (new MyErr) as error
-		// throw e
-		// PrintNum(0)
-		// try {	
-		// 	PrintNum(1)
-		// 	Foo()
-		// 	PrintNum(2)
-		// } catch {
-		// 	PrintNum(3)
-		// 	// Print(caught.Msg)
-
-		// 	// Print(caught.Msg)
-		// }
-		// PrintNum(4)
-		// Foo1[] arr := new Foo1[3]
-		// arr[0] := (new Bar1) as Foo1
-		// arr[1] := (new Bar2) as Foo1
-		// arr[2] := (new Bar1) as Foo1
-
-		// for int i := 0 | i < arr.Size | i+=1 {
-		// 	arr[i].C := '0' + i as char
-		// }
-
-		// for int i := 0 | i < arr.Size | i+=1 {
-		// 	arr[i].Show()
-		// 	Print(arr[i].C)
-		// 	Print('\n')
-		// }
+		Std.PrintSLn("success!")
 	}
 }

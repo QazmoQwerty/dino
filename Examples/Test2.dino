@@ -5,30 +5,30 @@ import "std2"
 
 namespace Test {
 
-    char putchar(char c): extern "putchar"
+    // char putchar(char c): extern "putchar"
 
-    void PrintD(int n) {
-        if n < 0 {
-            putchar('-')
-            n := -n
-        }
-        int a ≡ 1
-        while a ≤ n / 10: a *= 10
-        while a > 0 {
-            putchar((n % (a * 10) / a + 48) as char)
-            a /= 10
-        }
-        putchar('\n')
-    }
+    // void PrintD(int n) {
+    //     if n < 0 {
+    //         putchar('-')
+    //         n := -n
+    //     }
+    //     int a ≡ 1
+    //     while a ≤ n / 10: a *= 10
+    //     while a > 0 {
+    //         putchar((n % (a * 10) / a + 48) as char)
+    //         a /= 10
+    //     }
+    //     putchar('\n')
+    // }
 
-    void PrintB(bool b) {
-        if b {
-            putchar('t') | putchar('r') | putchar('u') | putchar('e') | putchar('\n')
-        }
-        else {
-            putchar('f') | putchar('a') | putchar('l') | putchar('s') | putchar('e') | putchar('\n')
-        }
-    }
+    // void PrintB(bool b) {
+    //     if b {
+    //         putchar('t') | putchar('r') | putchar('u') | putchar('e') | putchar('\n')
+    //     }
+    //     else {
+    //         putchar('f') | putchar('a') | putchar('l') | putchar('s') | putchar('e') | putchar('\n')
+    //     }
+    // }
 
     // (int, bool[2]) Foo(int a, bool b, bool c) {
     //     bool[2] arr
@@ -42,26 +42,49 @@ namespace Test {
     // int[3] Foo() { return [1, 2, 3] }
 
     // int F(): return 10
-    const arr := [1, 2, 3]
+    // const arr := [1, 2, 3]
+
+    // void MyFoo[K, V is any]() {
+    //     K x
+    // }
 
     void Main() {
-        // Std.PrintDLn(arr[2])
+        // Std.PrintSLn("hi")
+        // int@ a := null
+        // a as int := 20
+        // @a := 10
+        error err := new Std.NullPointerError
+        Std.NullPointerError err2
+        Std.PrintSLn(err2.Msg)
+        Std.PrintSLn(err.Msg)
+        // try {
+        //     throw err
+        // } catch {
+        //     if err = caught {
+        //         Std.PrintCLn('a')
+        //     } else: Std.PrintCLn('b')
+        //     // Std.PrintSLn(caught.Msg)
+        // }
+        // int b := a as int
+        // PrintB(-1 < 10)
 
-        PrintB(-1 < 10)
+        // int aa := 20
+        // u32 x := aa as uint
 
-        int aa := 20
-        u32 x := aa as uint
+        // int@ a := null
+        // int@ b := null
+        // any c := a
 
-        int@ a := null
-        int@ b := null
-        any c := a
+        // float f := 0.7 * 2.7
 
-        PrintD(n2 as int)
+        // // PrintD(n2 as int)
 
-        PrintB(c = a = c = b = null)
+        // PrintD(f as int)
+
+        // PrintB(c = a = c = b = null)
         
-        int n := 19
-        PrintB(10 < n <= 19)
+        // int n := 19
+        // PrintB(10 < n <= 19)
         
         // Std.PrintDLn([1, 2, 3][2])
         // [1, 2, 3][2] := 10

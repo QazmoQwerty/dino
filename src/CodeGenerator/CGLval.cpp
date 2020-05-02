@@ -40,6 +40,7 @@ Value *CodeGenerator::codeGenLval(DST::Conversion* node)
     {
         // TODO - throw exception incase of invalid conversion
         auto ptr = _builder.CreateGEP(exp, {_builder.getInt32(0), _builder.getInt32(0)}, "accessTmp");
+        assertNotNull(ptr);
         return _builder.CreateBitCast(ptr, type->getPointerTo(), "cnvrttmp");
     }
     throw "unreachable";
@@ -51,8 +52,12 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
     switch (node->getOperator()._type)
     {
         case OT_AT:
+        {
             assertNotNull(val);
-            return _builder.CreateLoad(val);
+            auto ret = _builder.CreateLoad(val);
+            assertNotNull(ret);
+            return ret;
+        }
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
         default:

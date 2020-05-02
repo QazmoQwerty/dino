@@ -5,7 +5,7 @@
 
 Value *CodeGenerator::convertToInterface(Value* node, DST::Type *ty) 
 {
-    if (node == NULL) 
+    if (node == NULL || ty->isNullTy()) 
         return llvm::ConstantStruct::get(_interfaceType, { 
             llvm::ConstantPointerNull::get(_builder.getInt8PtrTy()), 
             llvm::ConstantPointerNull::get(_objVtableType->getPointerTo())
@@ -18,7 +18,7 @@ Value *CodeGenerator::convertToInterface(Value* node, DST::Type *ty)
 
     auto undef = llvm ::UndefValue::get(_interfaceType);
     auto val = _builder.CreateInsertValue(undef, _builder.CreateBitCast(node, _builder.getInt8PtrTy()), 0);
-    return _builder.CreateInsertValue(val, getVtable(ty), 1);
+    return _builder.CreateInsertValue(val, getVtable(ty->as<DST::PointerType>()->getPtrType()), 1);
 }
 
 DST::InterfaceDeclaration *CodeGenerator::getPropertyInterface(DST::TypeDeclaration *typeDecl, DST::PropertyDeclaration *propDecl) 

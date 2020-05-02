@@ -7,12 +7,11 @@ llvm::Value* CodeGenerator::createEmptyVtable(DST::Type *type)
 {
     auto llvmVtable = llvm::ConstantStruct::get(_objVtableType, { _builder.getInt32(0), _builder.getInt32(0) });
     return _vtables[type] = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, 
-                                            llvmVtable, "empty.vtable");
+                                            llvmVtable, type->toShortString() + ".vtable");
 }
 
 llvm::Value* CodeGenerator::getVtable(DST::Type *type) {
-    // llvm::errs() << "getting vtable for: " << type->toShortString() << "\n";
-    type = type->getNonConstOf();
+    type = type->getNonPropertyOf()->getNonConstOf();
     if (auto vtable = _vtables[type])
         return vtable;
     else return createEmptyVtable(type);

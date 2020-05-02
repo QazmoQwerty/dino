@@ -118,9 +118,12 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 			auto tempDecl = new DST::TypeDeclaration(decl);
 			auto specifier = DST::TypeSpecifierType::get(tempDecl);
 			shallowDecl->addMember(decl->getName(), tempDecl, specifier);
-			if (isStd && decl->getName() == "String")
+			if (isStd)
 			{
-				_variables[0][unicode_string("string")]	= DST::_builtinTypes._string = specifier;
+				if (decl->getName() == "String")
+					_variables[0][unicode_string("string")]	= DST::_builtinTypes._string = specifier;
+				else if (decl->getName() == "NullPointerError")
+					DST::_builtinTypes._nullPtrError = specifier;
 			}
 		}
 	}
@@ -170,6 +173,29 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 		}
 	}
 	_currentNamespace.pop_back();
+}
+
+DST::UnsetGenericType *Decorator::createGenericTy(AST::Expression *exp)
+{
+	switch (exp->getExpressionType())
+	{
+		case ET_BINARY_OPERATION:
+		{
+			auto bo = (AST::BinaryOperation*)exp;
+			if (bo->getOperator()._type != OT_IS || bo->getLeft()->getExpressionType() != ET_IDENTIFIER)
+				throw ErrorReporter::report("invalid generic type declaration (2)", ERR_DECORATOR, exp->getPosition());
+			auto ret = new DST::UnsetGenericType(((AST::Identifier*)bo->getLeft())->getVarId());
+			auto right = decorate(bo->getRight());
+			if (right->getExpressionType() != ET_TYPE || !((DST::Type*)right)->isInterfaceTy())
+				throw ErrorReporter::report("invalid generic type declaration (3)", ERR_DECORATOR, exp->getPosition());
+			ret->addImplements(((DST::Type*)right)->as<DST::TypeSpecifierType>()->getInterfaceDecl());
+			return ret;
+		}
+		case ET_IDENTIFIER:
+			return new DST::UnsetGenericType(((AST::Identifier*)exp)->getVarId());
+		default:
+			throw ErrorReporter::report("invalid generic type declaration (1)", ERR_DECORATOR, exp->getPosition());
+	}
 }
 
 void Decorator::partC(DST::NamespaceDeclaration *node)
@@ -241,7 +267,14 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 		{
 			auto func = (AST::FunctionDeclaration*)i;
 			enterBlock();
-			auto funcDecl = new DST::FunctionDeclaration(func, decorate(func->getVarDecl()));
+			auto funcDecl = new DST::FunctionDeclaration(func);
+			for (auto generic : func->getGenerics())
+			{
+				auto gen = createGenericTy(generic);
+				funcDecl->addGeneric(gen);
+				_variables[currentScope()][gen->getName()] = gen;
+			}
+			funcDecl->setVarDecl(decorate(func->getVarDecl()));
 			for (auto param : func->getParameters())
 				funcDecl->addParameter(decorate(param));
 			leaveBlock();
@@ -384,6 +417,8 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 		{
 			auto decl = (DST::FunctionDeclaration*)i.second.first;
 			enterBlock();
+			for (auto i : decl->getGenerics())		// Add generics to variabes map
+				_variables[currentScope()][i->getName()] = i;
 			for (auto i : decl->getParameters())	// Add function parameters to variabes map
 				_variables[currentScope()][i->getVarId()] = i->getType();
 			decl->setContent(decorate(decl->getBase()->getContent()));
