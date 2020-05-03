@@ -3,7 +3,7 @@
 */
 #include "Parser.h"
 
-Token * Parser::getToken(unsigned int index)
+Token * Parser::getToken(uint index)
 {
 	if (index >= _tokens.size())
 		return NULL;

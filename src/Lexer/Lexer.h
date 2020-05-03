@@ -38,7 +38,7 @@ public:
 	
 private:
 	static unordered_map<unicode_char, CharType, UnicodeHasherFunction> _map;
-	static Token * getToken(unicode_string &str, unsigned int & index, unsigned int & line, unsigned int & pos, SourceFile* file, vector<Token*>& tokens);
+	static Token * getToken(unicode_string &str, uint & index, uint & line, uint & pos, SourceFile* file, vector<Token*>& tokens);
 
 	static CharType getCharType(unicode_char c);
 };

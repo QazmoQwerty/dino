@@ -18,7 +18,7 @@ Error ErrorReporter::reportInternal(string msg, ErrorType errTy, PositionInfo po
 
 void ErrorReporter::showAll() 
 {
-    for (unsigned int i = 0; i < errors.size(); i++)
+    for (uint i = 0; i < errors.size(); i++)
     {
         if (i) llvm::errs() << "\n";
         show(errors[i]);

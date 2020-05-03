@@ -98,7 +98,7 @@ unicode_char& unicode_string::operator[](std::size_t idx) {
 
 const unicode_char unicode_string::operator[](std::size_t idx) const {
 	string::const_iterator iter = _str.begin();
-	for (unsigned int i = 0; iter != _str.end(); i++) {
+	for (uint i = 0; iter != _str.end(); i++) {
 		utf8::uint32_t tok = utf8::next(iter, _str.end());
 		if (i == idx) 
 			return unicode_char(tok);

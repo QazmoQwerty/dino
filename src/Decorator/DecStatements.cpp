@@ -165,7 +165,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 		auto list = (DST::ExpressionList*)assignment->getLeft();
 		auto leftTypes = ((DST::ExpressionList*)assignment->getLeft())->getType();
 		auto rightTypes = ((DST::ExpressionList*)assignment->getRight())->getType();
-		for (unsigned int i = 0; i < list->size(); i++)
+		for (uint i = 0; i < list->size(); i++)
 		{
 			if (list->getExpressions()[i]->getType()->isUnknownTy())
 			{

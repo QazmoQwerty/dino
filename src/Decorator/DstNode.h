@@ -35,11 +35,11 @@ namespace DST
 		BasicType *_i32;	// 32 bit integer
 		BasicType *_i64;	// 64 bit integer
 		BasicType *_i128;	// 128 bit integer
-		BasicType *_u8; 	// 8 bit unsigned integer
-		BasicType *_u16;	// 16 bit unsigned integer
-		BasicType *_u32;	// 32 bit unsigned integer
-		BasicType *_u64;	// 64 bit unsigned integer
-		BasicType *_u128;	// 128 bit unsigned integer
+		BasicType *_u8; 	// 8 bit uinteger
+		BasicType *_u16;	// 16 bit uinteger
+		BasicType *_u32;	// 32 bit uinteger
+		BasicType *_u64;	// 64 bit uinteger
+		BasicType *_u128;	// 128 bit uinteger
 		BasicType *_f16;	// 16 bit float
 		BasicType *_f32;	// 32 bit float
 		BasicType *_f64;	// 64 bit float
@@ -71,7 +71,7 @@ namespace DST
 	BasicType *geti64Ty();
 	BasicType *geti128Ty();
 
-	// unsigned int types
+	// uint types
 	BasicType *getu8Ty();
 	BasicType *getu16Ty();
 	BasicType *getu32Ty();
@@ -113,7 +113,7 @@ namespace DST
 
 	class Node
 	{
-		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
+		uint _nodeId;	// defined for purpose of the graphic view of the AST.
 		int _line;
 	public:
 		/* Default constructor, does NOT set line.*/
@@ -139,8 +139,8 @@ namespace DST
 			Returns node's unique id number
 			Function defined for AST visual representation - see AstToFile.h
 		*/
-		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		unsigned int getNodeId() const { return _nodeId; };
+		//const uint getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		uint getNodeId() const { return _nodeId; };
 
 		/*
 			Returns a string representation of the node (excluding children info)
@@ -1400,7 +1400,7 @@ namespace DST
 			if (arguments.size() != funcParams.size())
 				throw ErrorReporter::report("expected " + std::to_string(funcParams.size()) + 
 					" arguments in call, got " + std::to_string(arguments.size()), ERR_DECORATOR, getPosition());
-			for (unsigned int i = 0; i < arguments.size(); i++)
+			for (uint i = 0; i < arguments.size(); i++)
 			{
 				if (!arguments[i]->getType()->assignableTo(funcParams[i]))	// TODO - make this error msg better
 					throw ErrorReporter::report("argument types do not match function parameters", ERR_DECORATOR, getPosition());

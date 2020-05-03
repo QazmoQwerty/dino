@@ -35,7 +35,7 @@ private:
 	AST::StatementBlock * importFile(PositionInfo currPos);
 
 	Parser(vector<Token*> tokens) : _tokens(tokens) {_index = 0; }
-	Token* getToken(unsigned int index);
+	Token* getToken(uint index);
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
 	
@@ -74,5 +74,5 @@ private:
 
 	vector<Token*> _tokens;
 	unordered_map<unicode_string, AST::NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
-	unsigned int _index;
+	uint _index;
 };

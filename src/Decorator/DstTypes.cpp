@@ -128,7 +128,7 @@ namespace DST
 		auto other = type->as<DST::FunctionType>();
 		if (!_return->assignableTo(other->_return) || other->_parameters.size() != _parameters.size())
 			return false;
-		for (unsigned int i = 0; i < _parameters.size(); i++)
+		for (uint i = 0; i < _parameters.size(); i++)
 			if (!_parameters[i]->assignableTo(other->_parameters[i]))
 				return false;
 		return true;
@@ -292,7 +292,7 @@ namespace DST
 		if (tys.size() < 2)
 			throw ErrorReporter::reportInternal("type list must have at least 2 types", ERR_DECORATOR);
 		auto ret = tys[0]->appendType(tys[1]);
-		for (unsigned int i = 2; i < tys.size(); i++)
+		for (uint i = 2; i < tys.size(); i++)
 			ret = ret->appendType(tys[i]);
 		return ret;
 	}
@@ -420,7 +420,7 @@ namespace DST
 		auto other = type->as<TypeList>();
 		if (other->_types.size() != _types.size())
 			return false;
-		for (unsigned int i = 0; i < _types.size(); i++)
+		for (uint i = 0; i < _types.size(); i++)
 			if (!_types[i]->assignableTo(other->_types[i]))
 				return false;
 		return true;
@@ -470,7 +470,7 @@ namespace DST
 	string TypeList::toShortString()
 	{
 		string str = "(";
-		for (unsigned int i = 0; i < _types.size(); i++)
+		for (uint i = 0; i < _types.size(); i++)
 		{
 			if (i > 0)
 				str += ", ";

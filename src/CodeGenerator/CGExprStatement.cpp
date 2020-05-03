@@ -60,7 +60,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             args.push_back(thisPtr);
         
             int i = -1;
-            unsigned int i2 = 0;
+            uint i2 = 0;
             for (auto &argTy : funcTy->params())
             {
                 if (i == -1) { i++; continue; }
@@ -106,7 +106,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     std::vector<Value *> args;
 
     int i = 0;
-    unsigned int i2 = 0;
+    uint i2 = 0;
     for (auto &argTy : funcTy->params())
     {
         if (i2 < retPtrs.size())
@@ -209,7 +209,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
     {
         right = codeGen(node->getRight());
         auto list = (DST::ExpressionList*)node->getLeft();
-        for (unsigned int i = 0; i < list->size(); i++) 
+        for (uint i = 0; i < list->size(); i++) 
             _builder.CreateStore(
                 _builder.CreateExtractValue(right, i), 
                 codeGenLval(list->getExpressions()[i])
@@ -235,7 +235,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         // for (auto i : ((DST::ExpressionList*)node->getRight())->getExpressions())
         //     rights.push_back(codeGen(i));
         // Value *lastStore = NULL;
-        // for (unsigned int i = 0; i < lefts.size(); i++)
+        // for (uint i = 0; i < lefts.size(); i++)
         //     lastStore = _builder.CreateStore(rights[i], lefts[i]);
         // return lastStore;   // Temporary fix.
     }*/

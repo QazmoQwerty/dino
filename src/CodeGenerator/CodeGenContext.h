@@ -19,7 +19,7 @@ using std::fstream;
 namespace CodeGenerator 
 {
     typedef struct InterfaceFuncInfo {
-        unsigned int index;
+        uint index;
         llvm::FunctionType *type;
     } InterfaceFuncInfo;
 
@@ -28,9 +28,9 @@ namespace CodeGenerator
     
     typedef struct TypeDefinition {
         llvm::StructType *structType;
-        unordered_map<unicode_string, unsigned int, UnicodeHasherFunction> variableIndexes;
+        unordered_map<unicode_string, uint, UnicodeHasherFunction> variableIndexes;
         unordered_map<unicode_string, llvm::Function*, UnicodeHasherFunction> functions;
-        unordered_map<llvm::Function*, unsigned int> vtableFuncIndexes;
+        unordered_map<llvm::Function*, uint> vtableFuncIndexes;
         llvm::Value *vtable;
     } TypeDefinition;
 

@@ -197,7 +197,7 @@ llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node)
     auto defBB = codeGen(node->getDefault(), "default");
     if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
         _builder.CreateBr(mergeBB);
-    unsigned int count = 0;
+    uint count = 0;
     for (auto i : node->getCases())
         count += i._expressions.size();
     _builder.SetInsertPoint(startBlock);

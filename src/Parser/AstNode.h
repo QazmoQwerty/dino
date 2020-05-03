@@ -22,7 +22,7 @@ namespace AST
 
 	class Node
 	{
-		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
+		uint _nodeId;	// defined for purpose of the graphic view of the AST.
 		// int _line;
 		PositionInfo _pos;
 	public:
@@ -52,8 +52,8 @@ namespace AST
 			Returns node's unique id number 
 			Function defined for AST visual representation - see AstToFile.h 
 		*/
-		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		unsigned int getNodeId() const { return _nodeId; };
+		//const uint getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		uint getNodeId() const { return _nodeId; };
 
 		/* 
 			Returns a string representation of the node (excluding children info)

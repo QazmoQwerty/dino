@@ -11,7 +11,7 @@ unordered_map<unicode_char, CharType, UnicodeHasherFunction> Lexer::_map;
 void Lexer::setup()
 {
 	for (auto c : OperatorsMap::getOperators())
-		for (unsigned int i = 0; i < c.first.length(); i++)
+		for (uint i = 0; i < c.first.length(); i++)
 			_map[c.first[i]] = CT_OPERATOR;
 }
 
@@ -53,7 +53,7 @@ CharType Lexer::getCharType(unicode_char c)
 vector<Token*> Lexer::lex(unicode_string &str, SourceFile* file)
 {
 	vector<Token*> tokens;
-	unsigned int index = 0, line = 1, pos = 0;
+	uint index = 0, line = 1, pos = 0;
 	while (index < str.length()) 
 		if (auto tok = getToken(str, index, line, pos, file, tokens))
 			tokens.push_back(tok);
@@ -75,7 +75,7 @@ vector<Token*> Lexer::lex(unicode_string &str, SourceFile* file)
 	NOTE: "index" and "line" parameters are passed by reference, and are 
 		  changed internally, no need to increment them outside of this function.
 */
-Token * Lexer::getToken(unicode_string &str, unsigned int & index, unsigned int & line, unsigned int & pos, SourceFile* file, vector<Token*>& tokens)
+Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & pos, SourceFile* file, vector<Token*>& tokens)
 {
 	static bool ignoreLineBreak = false;
 
@@ -207,7 +207,7 @@ Token * Lexer::getToken(unicode_string &str, unsigned int & index, unsigned int 
 				{
 					if (str[index] == c)
 					{
-						unsigned int count = 0;
+						uint count = 0;
 						while (count < index && str[index - count - 1] == ESCAPE_CHAR)
 							count++;
 						if (count % 2 == 0)	// Check if number of escape characters before string/char closer is even.

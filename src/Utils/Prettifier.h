@@ -34,7 +34,7 @@ namespace Prettifier {
         string str = buffer.str();
 
         string out = "";
-        unsigned int idx = 0;
+        uint idx = 0;
         while (idx < str.size()) {
             char curr = str[idx++];
 
@@ -90,7 +90,7 @@ namespace Prettifier {
                 } break;
                 case '"': case '\'':
                 {
-                    unsigned int escCount = 0;
+                    uint escCount = 0;
                     out += curr;
 
                     while (idx < str.size())
