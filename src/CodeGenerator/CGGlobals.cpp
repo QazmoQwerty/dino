@@ -20,6 +20,9 @@ namespace CodeGenerator
     /* Turn off garbage collection */
     bool _noGC = false;
 
+    /* turn on emission of debug information */
+    bool _emitDebugInfo = false;
+
     /* Needed for any codeGen */
     llvm::LLVMContext _context;
     

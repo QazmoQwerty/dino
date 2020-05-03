@@ -1,6 +1,8 @@
 #include "Token.h"
 #include "../Utils//ErrorReporter/ErrorReporter.h"
 
+#define GET_PATH(f) (f ? f->getFullPath() : "")
+
 /*
 	Function gets a Token and prints it based on its type.
 	Tokens values are printed based on _data.
@@ -10,31 +12,31 @@ void printToken(Token * token)
 	switch (token->_type)
 	{
 		case (TT_WHITESPACE):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [WHITESPACE]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [WHITESPACE]" << std::endl;
 			break;
 		case (TT_NEWLINE):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NEWLINE]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NEWLINE]" << std::endl;
 			break;
 		case (TT_OPERATOR):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [OPERATOR: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [OPERATOR: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_LINE_BREAK):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [LINE_BREAK: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [LINE_BREAK: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_IDENTIFIER):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [IDENTIFIER: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [IDENTIFIER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (TT_LITERAL):
 			printLiteralToken(token);
 			break;
 		case (TT_SINGLE_LINE_COMMENT):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [SINGLE_LINE_COMMENT]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [SINGLE_LINE_COMMENT]" << std::endl;
 			break;
 		case (TT_MULTI_LINE_COMMENT):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [MULTI_LINE_COMMENT]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [MULTI_LINE_COMMENT]" << std::endl;
 			break;
 		case (TT_UNKNOWN):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [UNKNOWN]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [UNKNOWN]" << std::endl;
 			break;
 	}
 }
@@ -48,22 +50,22 @@ void printLiteralToken(Token * token)
 	switch (((LiteralToken<int>*)token)->_literalType)
 	{
 		case (LT_BOOLEAN):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [BOOLEAN: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [BOOLEAN: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_INTEGER):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [INTEGER: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [INTEGER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_STRING):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [STRING: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [STRING: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_CHARACTER):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [CHARACTER: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [CHARACTER: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_FRACTION):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [FRACTION: " << token->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [FRACTION: " << token->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_NULL):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NULL]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NULL]" << std::endl;
 			break;
 		default: break;
 	}
@@ -79,22 +81,22 @@ void printLiteralTokenByValue(Token * token)
 	switch (((LiteralToken<int>*)token)->_literalType)
 	{
 		case (LT_BOOLEAN):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [BOOLEAN: " << ((LiteralToken<bool>*)token)->_value << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [BOOLEAN: " << ((LiteralToken<bool>*)token)->_value << "]" << std::endl;
 			break;
 		case (LT_INTEGER):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [INTEGER: " << ((LiteralToken<int>*)token)->_value << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [INTEGER: " << ((LiteralToken<int>*)token)->_value << "]" << std::endl;
 			break;
 		case (LT_STRING):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [STRING: \"" << ((LiteralToken<string>*)token)->_value << "\"]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [STRING: \"" << ((LiteralToken<string>*)token)->_value << "\"]" << std::endl;
 			break;
 		case (LT_CHARACTER):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [CHARACTER: " << ((LiteralToken<unicode_char>*)token)->_data.to_string() << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [CHARACTER: " << ((LiteralToken<unicode_char>*)token)->_data.to_string() << "]" << std::endl;
 			break;
 		case (LT_FRACTION):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [FRACTION: " << ((LiteralToken<float>*)token)->_value << "]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [FRACTION: " << ((LiteralToken<float>*)token)->_value << "]" << std::endl;
 			break;
 		case (LT_NULL):
-			std::cout << token->_pos.file << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NULL]" << std::endl;
+			std::cout << GET_PATH(token->_pos.file) << ":" << token->_pos.line << ":" << token->_pos.startPos << ":" << token->_pos.endPos << " - [NULL]" << std::endl;
 			break;
 		default: break;
 	}

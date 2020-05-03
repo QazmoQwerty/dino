@@ -58,3 +58,10 @@ llvm::DIType* CodeGenerator::evalDIType(DST::Type *node)
         default: UNREACHABLE
     }
 }
+
+llvm::DIFile *CodeGenerator::getDIFile(SourceFile *file)
+{
+    if (!file->_backendDIFile)
+        file->_backendDIFile = _dbuilder->createFile(file->getName(), file->getPath());
+    return file->_backendDIFile;
+}

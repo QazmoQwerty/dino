@@ -125,7 +125,7 @@ namespace DST
 		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		virtual PositionInfo getPosition() const { return PositionInfo{-1, -1, -1, ""}; }
+		virtual PositionInfo getPosition() const { return POSITION_INFO_NONE; }
 
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;

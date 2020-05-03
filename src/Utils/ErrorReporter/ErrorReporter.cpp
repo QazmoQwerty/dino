@@ -27,10 +27,10 @@ void ErrorReporter::showAll()
 
 void ErrorReporter::show(Error &err) 
 {
-    if (err.pos.file != "")
+    if (err.pos.file != NULL)
     {   
         llvm::errs() << BOLD(FRED(" --> ")) << BOLD("\"" << err.pos.file << "\": line " << err.pos.line) << BOLD(FRED("\n  | \n"));
-        string line = getLine(err.pos.file, err.pos.line);
+        string line = getLine(err.pos.file->getFullPath(), err.pos.line);
         llvm::errs() << BOLD(FRED("  | ")) << line << BOLD(FRED("\n  | "));
         for (int i = 0; i < err.pos.startPos; i++)
         {

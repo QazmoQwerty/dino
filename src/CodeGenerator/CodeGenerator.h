@@ -15,7 +15,7 @@ namespace CodeGenerator
         If the optional flag isLib is activated the code generator will output a library directory.
         IMPORTANT: Function MUST be called once before using any other functions of this namespace.
 	*/
-    void setup(bool isLib = false, bool noGC = false);
+    void setup(bool isLib = false, bool emitDebugInfo = false, bool noGC = false);
 
     /* 
         Main entry point to the Code Generator, invokes the entire code generation process.
@@ -160,8 +160,10 @@ namespace CodeGenerator
     *                               Debug Info                              *
     ************************************************************************/
 
-   /* Gets a DST::Type and returns its corresponding DebugInfo type */
+    /* Gets a DST::Type and returns its corresponding DebugInfo type */
     llvm::DIType *evalDIType(DST::Type *node);
+
+    llvm::DIFile *getDIFile(SourceFile *file);
 
     /************************************************************************
     *                                Utility                                *

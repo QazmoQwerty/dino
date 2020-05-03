@@ -11,7 +11,7 @@
 #include "../../Lexer/Token.h"
 #include "llvm/Support/raw_ostream.h"
 
-#define POSITION_INFO_NONE PositionInfo{0, 0, 0, ""}
+#define POSITION_INFO_NONE PositionInfo{0, 0, 0, NULL}
 
 using std::string;
 using std::exception;

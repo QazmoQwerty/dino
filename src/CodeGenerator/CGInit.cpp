@@ -4,20 +4,19 @@
 */
 #include "CodeGenerator.h"
 
-void CodeGenerator::setup(bool isLib, bool noGC)
+void CodeGenerator::setup(bool isLib, bool emitDebugInfo, bool noGC)
 {
     _isLib = isLib;
     _noGC = noGC;
-
+    _emitDebugInfo = emitDebugInfo;
     _namedValues.push({});
 
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    _dbuilder = new llvm::DIBuilder(*_module);
-    // TODO!
-    _compileUnit = _dbuilder->createCompileUnit(llvm::dwarf::DW_LANG_C, _dbuilder->createFile("fib.ks", "."),"Kaleidoscope Compiler", 0, "", 0);
+    if (emitDebugInfo)
+        _dbuilder = new llvm::DIBuilder(*_module);
 
     // @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
@@ -64,7 +63,7 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
         defineNamespaceMembers(i.second);
         _currentNamespace.pop_back();
     }
-    if (_dbuilder)
+    if (_emitDebugInfo)
         _dbuilder->finalize();
     return ret;
 }
@@ -667,6 +666,18 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     if (node->getContent() == NULL)
         throw ErrorReporter::report("Undefined function", ERR_CODEGEN, node->getPosition());
 
+    if (_emitDebugInfo)
+    {
+        auto unit = getDIFile(node->getPosition().file);
+        llvm::DIScope *scope = unit;
+        llvm::DISubprogram *subProg = _dbuilder->createFunction(
+            scope, node->getVarDecl()->getVarId().to_string(), llvm::StringRef(), unit, node->getPosition().line,
+            (llvm::DISubroutineType*)evalDIType(node->getFuncType()),
+            false /* internal linkage */, true /* definition */, node->getPosition().startPos
+        );
+        func->setSubprogram(subProg);
+    }
+
     if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
         && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN)
     {
@@ -674,7 +685,6 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         llvm::verifyFunction(*func, &llvm::errs());
         return;
     }
-
 
     auto params = node->getParameters();
 
@@ -702,7 +712,7 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
 
     if (!_builder.GetInsertBlock()->getTerminator())
         _builder.CreateRetVoid();
-    
+
     llvm::verifyFunction(*func, &llvm::errs());
     _namedValues.pop(); // leave block
 }

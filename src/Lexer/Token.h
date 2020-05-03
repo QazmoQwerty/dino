@@ -4,6 +4,7 @@
 #include <string>
 #include "../Utils/TypeEnums.h"
 #include "../Utils/Unicode/Utf8Handler.h"
+#include "../Utils/SourceFile/SourceFile.h"
 
 #define ESCAPE_CHAR '\\'
 #define LEFT_TO_RIGHT 1
@@ -19,7 +20,7 @@ typedef struct PositionInfo
 	int line;
 	int startPos;
 	int endPos;
-	string file;
+	SourceFile* file;
 } PositionInfo;
 
 /*

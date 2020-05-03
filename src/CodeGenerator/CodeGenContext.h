@@ -53,6 +53,9 @@ namespace CodeGenerator
     /* Turn off garbage collection */
     extern bool _noGC;
 
+    /* turn on emission of debug information */
+    extern bool _emitDebugInfo;
+
     /* Needed for any codeGen */
     extern llvm::LLVMContext _context;
     

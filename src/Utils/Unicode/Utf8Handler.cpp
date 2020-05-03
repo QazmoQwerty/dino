@@ -91,7 +91,8 @@ unicode_string & unicode_string::operator+=(string other) {
 }
 
 unicode_char& unicode_string::operator[](std::size_t idx) {
-	recalculate();
+	if (_chars.size() == 0)
+		recalculate();
 	return _chars[idx];
 }
 
@@ -106,7 +107,8 @@ const unicode_char unicode_string::operator[](std::size_t idx) const {
 }
 
 size_t unicode_string::length() {
-	recalculate();
+	if (_chars.size() == 0)
+		recalculate();
 	return _chars.size();
 }
 
