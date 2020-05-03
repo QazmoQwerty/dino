@@ -126,11 +126,11 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
     if (right == _interfaceType)
     {
         if (left->getType() != _interfaceType)
-            throw "unreachable";
+            UNREACHABLE
 
         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
         auto vtableLoad = _builder.CreateLoad(vtablePtr);
-        auto interface = ((DST::Type*)node->getRight())->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl();
+        auto interface = ((DST::Type*)node->getRight())->as<DST::InterfaceType>()->getInterfaceDecl();
         auto interfaceVtable = _builder.CreateCall(getVtableInterfaceLookupFunction(), { vtableLoad, _builder.getInt32((unsigned long)interface) }); 
         auto diff = _builder.CreatePtrDiff(interfaceVtable, llvm::ConstantPointerNull::get(_interfaceVtableType->getPointerTo()));
         return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
@@ -138,7 +138,7 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
     else if (((DST::Type*)node->getRight())->isBasicTy())
     {
         if (left->getType()->getPointerElementType() != _interfaceType)
-            throw "unreachable";
+            UNREACHABLE
         
         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
         auto vtableLoad = _builder.CreateLoad(vtablePtr);
@@ -409,8 +409,10 @@ Value *CodeGenerator::codeGen(DST::Conversion* node)
 {
     auto type = evalType(node->getType());
     auto exp = codeGen(node->getExpression());
-    if (type == exp->getType() || type == _interfaceType)
+    if (type == exp->getType())
         return exp;
+    if (type == _interfaceType)
+        return convertToInterface(exp, node->getExpression()->getType());
     if (type != _interfaceType && exp->getType() == _interfaceType) // Interface to non-interface
     {
         // TODO - throw exception incase of invalid conversion
@@ -466,8 +468,9 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
             {
                 auto lval = codeGenLval(node->getLeft());
 
-                if (auto interfaceDecl = leftTy->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl())
+                if (leftTy->isInterfaceTy())
                 {
+                    auto interfaceDecl = leftTy->as<DST::InterfaceType>()->getInterfaceDecl();
                     auto vtablePtr = _builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(1) });
                     auto vtable = _builder.CreateLoad(vtablePtr);
                     auto funcPtr = getFuncFromVtable(vtable, interfaceDecl, node->getRight());
@@ -477,7 +480,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                     return createCallOrInvoke(func, thisPtr);
                 }
 
-                auto typeDef = _types[leftTy->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
+                auto typeDef = _types[leftTy->as<DST::ValueType>()->getTypeDecl()];
                 auto func = typeDef->functions[node->getRight()];
                 if (func->arg_size() != 1)
                     throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());
@@ -492,7 +495,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                     throw ErrorReporter::reportInternal("cannot call getter of ptr to ptr", ERR_CODEGEN, node->getPosition());
                 }
                 auto lval = codeGen(node->getLeft());
-                auto typeDef = _types[ptrTy->as<DST::BasicType>()->getTypeSpecifier()->getTypeDecl()];
+                auto typeDef = _types[ptrTy->as<DST::ValueType>()->getTypeDecl()];
                 auto func = typeDef->functions[node->getRight()];
                 if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 1)
                     throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());

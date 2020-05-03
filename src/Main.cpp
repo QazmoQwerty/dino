@@ -34,6 +34,7 @@ typedef struct cmdOptions
 	char *optLevel = NULL;
 	bool prettify = false;
 	bool noGC = false;
+	bool emitDebugInfo = false;
 } cmdOptions;
 
 void showHelp() 
@@ -101,6 +102,7 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 				else if (!strcmp(argv[i], "-lineAst")) 	options->showLineAST 		= true;
 				else if (!strcmp(argv[i], "-showIR")) 	options->showIR 			= true;
 				else if (!strcmp(argv[i], "-noGC")) 	options->noGC 				= true;
+				else if (!strcmp(argv[i], "-g")) 		options->emitDebugInfo 		= true;
 				else if (!strcmp(argv[i], "-O0") || !strcmp(argv[i], "-O1") || !strcmp(argv[i], "-O2") 
 						|| !strcmp(argv[i], "-O3") || !strcmp(argv[i], "-Os") || !strcmp(argv[i], "-Oz") || !strcmp(argv[i], "-Od"))	
 					options->optLevel = argv[i];
@@ -150,13 +152,13 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 	{
 		llvm::errs() << FRED(BOLD("Error: ")) << c << "\n";
 		delete options;
-		exit(0);
+		exit(1);
 	}
 	catch (string s) 
 	{
 		llvm::errs() << FRED(BOLD("Error: ")) << s << "\n";
 		delete options;
-		exit(0);
+		exit(1);
 	}
 	return options;
 }
@@ -173,7 +175,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	CodeGenerator::setup(cmd->outputLib, cmd->noGC);
+	CodeGenerator::setup(cmd->outputLib, cmd->emitDebugInfo, cmd->noGC);
 	OperatorsMap::setup();
 	Lexer::setup();
 	DST::setup();
@@ -263,10 +265,10 @@ int main(int argc, char *argv[])
 		// TODO - clear memory!
 		// Decorator::clear();	
 	} 
-	catch (exception e) { llvm::errs() << e.what() << "\n"; }
-	catch (const char *err) { llvm::errs() << err << "\n"; }
-	catch (string err) { llvm::errs() << err << "\n"; }
-	catch (Error err) { ErrorReporter::showAll(); }
+	catch (exception e) { llvm::errs() << e.what() << "\n"; exit(1); }
+	catch (const char *err) { llvm::errs() << err << "\n"; exit(1); }
+	catch (string err) { llvm::errs() << err << "\n"; exit(1); }
+	catch (Error err) { ErrorReporter::showAll(); exit(1); }
 
 	llvm::llvm_shutdown();
 	return 0;

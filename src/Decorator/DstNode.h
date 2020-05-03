@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../Parser/AstNode.h"
+#include "llvm/IR/DIBuilder.h"
 #include <dirent.h>
 #include <stack>
 #include <map>
@@ -24,36 +25,36 @@ namespace DST
 
 	class BasicType;
 	class InterfaceDeclaration;
-	class ValueTypeSpecifier;
-	class InterfaceSpecifier;
+	class ValueType;
+	class InterfaceType;
 	class TypeSpecifierType;
-	typedef struct PrimitiveTypeSpecifiers {
-		TypeSpecifierType *_bool;	// boolean
-		TypeSpecifierType *_i8; 	// 8 bit integer
-		TypeSpecifierType *_i16;	// 16 bit integer
-		TypeSpecifierType *_i32;	// 32 bit integer
-		TypeSpecifierType *_i64;	// 64 bit integer
-		TypeSpecifierType *_i128;	// 128 bit integer
-		TypeSpecifierType *_u8; 	// 8 bit unsigned integer
-		TypeSpecifierType *_u16;	// 16 bit unsigned integer
-		TypeSpecifierType *_u32;	// 32 bit unsigned integer
-		TypeSpecifierType *_u64;	// 64 bit unsigned integer
-		TypeSpecifierType *_u128;	// 128 bit unsigned integer
-		TypeSpecifierType *_f16;	// 16 bit float
-		TypeSpecifierType *_f32;	// 32 bit float
-		TypeSpecifierType *_f64;	// 64 bit float
-		TypeSpecifierType *_f128;	// 128 bit float
-		TypeSpecifierType *_c8;		// ascii char
-		TypeSpecifierType *_c32;	// unicode char
-		TypeSpecifierType *_string;
-		TypeSpecifierType *_void;
-		TypeSpecifierType *_type;
-		TypeSpecifierType *_error;
-		TypeSpecifierType *_any;
-		TypeSpecifierType *_nullPtrError;
-	} PrimitiveTypeSpecifiers;
+	typedef struct PrimitiveTypes {
+		BasicType *_bool;	// boolean
+		BasicType *_i8; 	// 8 bit integer
+		BasicType *_i16;	// 16 bit integer
+		BasicType *_i32;	// 32 bit integer
+		BasicType *_i64;	// 64 bit integer
+		BasicType *_i128;	// 128 bit integer
+		BasicType *_u8; 	// 8 bit unsigned integer
+		BasicType *_u16;	// 16 bit unsigned integer
+		BasicType *_u32;	// 32 bit unsigned integer
+		BasicType *_u64;	// 64 bit unsigned integer
+		BasicType *_u128;	// 128 bit unsigned integer
+		BasicType *_f16;	// 16 bit float
+		BasicType *_f32;	// 32 bit float
+		BasicType *_f64;	// 64 bit float
+		BasicType *_f128;	// 128 bit float
+		BasicType *_c8;		// ascii char
+		BasicType *_c32;	// unicode char
+		BasicType *_string;
+		BasicType *_void;
+		BasicType *_type;
+		BasicType *_error;
+		BasicType *_any;
+		BasicType *_nullPtrError;
+	} PrimitiveTypes;
 
-	extern PrimitiveTypeSpecifiers _builtinTypes;
+	extern PrimitiveTypes _builtinTypes;
 
 	class NamespaceType;
 	class NamespaceDeclaration;
@@ -124,7 +125,7 @@ namespace DST
 		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		virtual PositionInfo getPosition() const { return PositionInfo{-1, -1, -1, ""}; }
+		virtual PositionInfo getPosition() const { return POSITION_INFO_NONE; }
 
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -245,7 +246,8 @@ namespace DST
 		PropertyType *_setPropTy;
 		PropertyType *_getSetPropTy;
 	public:
-		Type() : _ptrTo(NULL), _constOf(NULL), _getPropTy(NULL), _setPropTy(NULL), _getSetPropTy(NULL) {}
+		llvm::DIType *_backendDIType;
+		Type() : _ptrTo(NULL), _constOf(NULL), _getPropTy(NULL), _setPropTy(NULL), _getSetPropTy(NULL), _backendDIType(NULL) {}
 		virtual ~Type() { }
 		/*
 			The type of the actual type itself is meaningless:
@@ -294,6 +296,8 @@ namespace DST
 		virtual bool isNamespaceTy() { return false; }
 		virtual bool isUnsetGenericTy() { return false; }
 
+		virtual bool implements(InterfaceType *ty) { return false; };
+
 		virtual bool equals(Type *other) { return this->getNonConstOf()->getNonPropertyOf() == other->getNonConstOf()->getNonPropertyOf(); };
 
 		bool comparableTo(Type *other);
@@ -313,7 +317,7 @@ namespace DST
 		virtual bool assignableTo(Type *type) = 0;
 
 		/* types are expressions, but they don't have positions */
-		virtual PositionInfo getPosition() const { return PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return POSITION_INFO_NONE; }
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
@@ -355,85 +359,7 @@ namespace DST
 		virtual vector<Node*> getChildren() { return {}; }
 	};
 
-	/*
-		A generic type which was declared but not set.
-	*/
-	class UnsetGenericType : public Type
-	{
-	private:
-		unicode_string _id;
-		vector<InterfaceDeclaration*> _implements;
-	public:
-		UnsetGenericType(unicode_string id) : _id(id) {}
-
-		void addImplements(InterfaceDeclaration *decl) { _implements.push_back(decl); }
-		unicode_string& getName() { return _id; }
-		virtual string toShortString() { return _id.to_string(); };
-		virtual bool isUnsetGenericTy() { return true; }
-		virtual bool assignableTo(Type *type);
-		virtual ExactType getExactType() { return EXACT_GENERIC_UNSET; };
-		virtual vector<Node*> getChildren() { return {}; }
-	};
-
 	class TypeDeclaration;
-
-	/*
-		Type for identifiers bound to regular types and interfaces.
-	*/
-	class TypeSpecifierType : public Type
-	{
-		private:
-			BasicType *_basicTy;
-		public:
-			static TypeSpecifierType *get(InterfaceDeclaration *decl);
-			static TypeSpecifierType *get(TypeDeclaration *decl);
-
-			TypeSpecifierType() : Type(),  _basicTy(NULL) {}
-			virtual ~TypeSpecifierType() {}
-			BasicType *getBasicTy();
-			virtual bool isSpecifierTy() { return true; }
-			virtual ExactType getExactType() { return EXACT_SPECIFIER; }
-			virtual bool writeable() { return false; }
-
-			virtual TypeDeclaration *getTypeDecl() { return NULL; }
-			virtual InterfaceDeclaration *getInterfaceDecl() { return NULL; }
-			virtual unicode_string getTypeName() = 0;
-
-			virtual bool assignableTo(Type *type) { return false; /* type specifiers are not assignable */ }
-
-			virtual Type *getMemberType(unicode_string name) = 0;
-			/* 
-				Short string representation of the type, ready to be pretty-printed. 
-				In other words, always returns "typeid".
-			*/ 
-			virtual string toShortString() { return "typeid"; };
-	};
-
-	class InterfaceSpecifier : public TypeSpecifierType
-	{
-		private:
-			InterfaceDeclaration *_decl;
-		public:
-			static InterfaceSpecifier *get(InterfaceDeclaration *decl);
-
-			virtual InterfaceDeclaration *getInterfaceDecl() { return _decl; }
-			unicode_string getTypeName();
-			InterfaceSpecifier(InterfaceDeclaration *decl) : _decl(decl) {}
-			virtual Type *getMemberType(unicode_string name);
-	};
-
-	class ValueTypeSpecifier : public TypeSpecifierType
-	{
-		private:
-			TypeDeclaration *_decl;
-		public:
-			static ValueTypeSpecifier *get(TypeDeclaration *decl);
-
-			unicode_string getTypeName();
-			ValueTypeSpecifier(TypeDeclaration *decl) : _decl(decl) {}
-			virtual TypeDeclaration *getTypeDecl() { return _decl; }
-			virtual Type *getMemberType(unicode_string name);
-	};
 
 	class NamespaceDeclaration;
 
@@ -479,6 +405,7 @@ namespace DST
 		virtual ~PropertyType() { }
 		bool hasGet() { return _hasGet; }
 		bool hasSet() { return _hasSet; }
+		virtual bool implements(InterfaceType *ty) { return _return->implements(ty); };
 
 		/* The actual type the property gets/sets */
 		Type *getReturn() { return _return; }
@@ -549,6 +476,7 @@ namespace DST
 
 		ConstType(Type *type) : Type(), _type(type) { }
 		virtual ~ConstType() { }
+		virtual bool implements(InterfaceType *ty) { return _type->implements(ty); };
 		virtual Type *getNonConstOf() { return _type; }; // returns what type base type of this constant is
 		ExactType getExactType() { return EXACT_POINTER; }
 		virtual bool writeable() { return false; }
@@ -624,33 +552,79 @@ namespace DST
 
 	class BasicType : public Type
 	{
-		TypeSpecifierType *_typeSpec;
 	public:
-		static BasicType *get(TypeSpecifierType *spec);
-		BasicType(TypeSpecifierType *typeSpec) : Type(), _typeSpec(typeSpec) {}
+		static BasicType *get(InterfaceDeclaration *decl);
+		static BasicType *get(TypeDeclaration *decl);
 
 		virtual ~BasicType() { }
 
 		virtual bool isBasicTy() 	 { return true; }
-		virtual bool isValueTy() 	 { return _typeSpec->getTypeDecl(); }
-		virtual bool isInterfaceTy() { return _typeSpec->getInterfaceDecl(); }
+	
+		virtual TypeDeclaration *getTypeDecl() { return NULL; }
+		virtual InterfaceDeclaration *getInterfaceDecl() { return NULL; }
+		virtual unicode_string getTypeName() = 0;
+		virtual Type *getMember(unicode_string name) = 0;
 
-		TypeSpecifierType *getTypeSpecifier() { return _typeSpec; }
-		unicode_string getTypeId();
 		ExactType getExactType() { return EXACT_BASIC; }
-		Type *getMember(unicode_string id);
-
-		// TODO - someone somewhere is calling this instead of getTypeSpecifier(): find it and remove this
-		virtual Type *getType() { return _typeSpec; }
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
 			Example: "int"
 		*/ 
-		virtual string toShortString();
+		virtual string toShortString() { return getTypeName().to_string(); };
 		virtual string toString() { return "<BasicType>\\n" + toShortString(); };
-		virtual vector<Node*> getChildren();
+		virtual vector<Node*> getChildren() { return {}; };
+	};
+
+	class InterfaceType : public BasicType
+	{
+		private:
+			InterfaceDeclaration *_decl;
+		public:
+			static InterfaceType *get(InterfaceDeclaration *decl);
+			virtual bool isInterfaceTy() { return true; }
+			virtual bool implements(InterfaceType *ty);
+
+			virtual InterfaceDeclaration *getInterfaceDecl() { return _decl; }
+			unicode_string getTypeName();
+			InterfaceType(InterfaceDeclaration *decl) : _decl(decl) {}
+			virtual Type *getMember(unicode_string name);
+			virtual bool assignableTo(Type *type);
+	};
+
+	class ValueType : public BasicType
+	{
+		private:
+			TypeDeclaration *_decl;
+		public:
+			static ValueType *get(TypeDeclaration *decl);
+			virtual bool implements(InterfaceType *ty);
+
+			virtual bool isValueTy() 	 { return true; }
+			unicode_string getTypeName();
+			ValueType(TypeDeclaration *decl) : _decl(decl) {}
+			virtual TypeDeclaration *getTypeDecl() { return _decl; }
+			virtual Type *getMember(unicode_string name);
+			virtual bool assignableTo(Type *type);
+	};
+
+	/*
+		A generic type which was declared but not set.
+	*/
+	class UnsetGenericType : public BasicType
+	{
+	private:
+		unicode_string _id;
+		vector<InterfaceDeclaration*> _implements;
+	public:
+		UnsetGenericType(unicode_string id) : _id(id) {}
+		unicode_string getTypeName() { return _id; }
+		virtual bool implements(InterfaceType *ty);
+		void addImplements(InterfaceDeclaration *decl) { _implements.push_back(decl); }
+		virtual bool isUnsetGenericTy() { return true; }
 		virtual bool assignableTo(Type *type);
+		virtual Type *getMember(unicode_string name);
+		virtual vector<Node*> getChildren() { return {}; }
 	};
 
 	#define UNKNOWN_ARR_SIZE 0
@@ -708,18 +682,7 @@ namespace DST
 
 		ExactType getExactType() { return EXACT_FUNCTION; }
 
-		virtual bool assignableTo(DST::Type *type)
-		{
-			if (!type || !type->writeable() || !type->isFuncTy())
-				return false;
-			auto other = type->as<DST::FunctionType>();
-			if (!_return->assignableTo(other->_return) || other->_parameters.size() != _parameters.size())
-				return false;
-			for (unsigned int i = 0; i < _parameters.size(); i++)
-				if (!_parameters[i]->assignableTo(other->_parameters[i]))
-					return false;
-			return true;
-		}
+		virtual bool assignableTo(DST::Type *type);
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
@@ -735,19 +698,22 @@ namespace DST
 	class Variable : public Expression
 	{
 		AST::Identifier *_base;
+		unicode_string _name;
 		Type *_type;
 
 	public:
 		Variable(AST::Identifier *base, Type *type) : _base(base), _type(type) {};
+		Variable(unicode_string name, Type *type) : _base(NULL), _name(name), _type(type) {};
 		virtual ~Variable() { if (_base) delete _base; }
 		void setType(Type *type) { _type = type; };
+		void setName(unicode_string name) { if (!_base) _name = name; }
 		virtual Type *getType() { return _type; };
 		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		unicode_string &getVarId() { return _base->getVarId(); }
+		unicode_string &getVarId() { if(_base) return _base->getVarId(); else return _name; }
 	};
 
 	class BinaryOperation : public Expression
@@ -767,7 +733,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -786,7 +752,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_COMPARISON; }
 		vector<Expression*> getExpressions() { return _expressions; }
 		void addExpression(Expression *exp) { _expressions.push_back(exp); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + getType()->toShortString(); };
 		virtual vector<Node*> getChildren()
@@ -813,7 +779,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 		virtual Type *getType() { return _type; }
 		void setType(Type *type) { _type = type; }
 		void setExpression(Expression* expression) { _expression = expression; }
@@ -836,7 +802,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\\nType: " + getType()->toShortString(); };
 		virtual vector<Node*> getChildren();
 		virtual Type *getType() { return _thenBranch->getType(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(Expression* thenBranch) { _thenBranch = thenBranch; }
@@ -863,7 +829,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\\nType: " + getType()->toShortString(); };
 		virtual vector<Node*> getChildren() { return {}; };
 		virtual Type *getType() { return _expr->getType(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 		Expression *getExpression() { return _expr; };
 		bool isIncrement() const { return _increment; }
 	};
@@ -888,7 +854,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_MEMBER_ACCESS; }
 		Expression *getLeft() { return _left; }
 		unicode_string &getRight() { return ((AST::Identifier*)_base->getRight())->getVarId(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual string toString() { return "<MemberAccess>\n." + getRight().to_string() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -906,7 +872,7 @@ namespace DST
 		Type *getType() { return _type; }
 		int getIntValue();
 		LiteralType getLiteralType() { return _base->getLiteralType(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
 		string toShortString() { return _base->toShortString(); }
@@ -927,7 +893,7 @@ namespace DST
 		}
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 		Expression *getExpression() { return _expression; }
 		virtual string toString() { return "<Conversion>\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -949,7 +915,7 @@ namespace DST
 		void setType(FunctionType *type) { _type = type; }
 		FunctionType *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -983,7 +949,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_LIST; };
 		virtual string toString() { return "<ExpressionList>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 		size_t size() { return _expressions.size(); }
 
 		vector<Expression*> getExpressions() { return _expressions; }
@@ -1001,7 +967,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_ARRAY; };
 		virtual string toString() { return "<ArrayLiteral>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		//virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		//virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void addValue(Expression* value) { _array.push_back(value); };
 		vector<Expression*> getArray() { return _array; }
@@ -1018,7 +984,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		StatementBlock() : _hasReturn(false) {}
 		virtual ~StatementBlock() { _statements.clear(); }
-		//virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		//virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		bool hasReturnType(Type *returnType);
 		bool hasReturn() { return _hasReturn; }
@@ -1064,7 +1030,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
 		virtual string toString() { return "<IfThenElse>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(StatementBlock* thenBranch) { _thenBranch = thenBranch; }
@@ -1093,7 +1059,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_SWITCH; };
 		virtual string toString() { return "<Switch>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void setExpression(Expression* expression) { _expression = expression; }
 		void addCase(vector<Expression*> expressions, StatementBlock* statement) { CaseClause c = { expressions, statement }; _cases.push_back(c); }
@@ -1122,7 +1088,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setStatement(StatementBlock* statement) { _statement = statement; }
@@ -1146,7 +1112,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_FOR_LOOP; };
 		virtual string toString() { return "<For>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setStatement(StatementBlock* statement) { _statement = statement; }
@@ -1179,7 +1145,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
 		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void setExpression(Expression* expression) { _expression = expression; }
 
@@ -1226,7 +1192,7 @@ namespace DST
 		Statement* getDeclaration(unicode_string id);
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getDeclarations() { return _decls; }
 		Type* getMemberType(unicode_string id);
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual bool isDeclaration() { return true; }
@@ -1253,7 +1219,7 @@ namespace DST
 		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		vector<InterfaceDeclaration*> getInterfaces() { return _interfaces; }
 		void addInterface(InterfaceDeclaration *interface) { _interfaces.push_back(interface); }
@@ -1290,7 +1256,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		FunctionType *getFuncType();
 		AST::FunctionDeclaration *getBase() { return _base; }
@@ -1323,7 +1289,7 @@ namespace DST
 		virtual string toString() { return "<PropertyDeclaration>\\n" + _type->toShortString() + " " + _base->getVarDecl()->getVarId().to_string(); };
 		virtual vector<Node*> getChildren();
 		unicode_string getName() { return _base->getVarDecl()->getVarId(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 		Type *getReturnType() { return _type; }
 		void setGet(StatementBlock* get) { _get = get; }
 		void setSet(StatementBlock* set) { _set = set; }
@@ -1336,7 +1302,7 @@ namespace DST
 	{
 	private:
 		AST::NamespaceDeclaration *_base;
-		unordered_map<unicode_string, std::pair<Statement*, Type*>, UnicodeHasherFunction> _decls;
+		unordered_map<unicode_string, std::pair<Statement*, Expression*>, UnicodeHasherFunction> _decls;
 	public:
 		NamespaceDeclaration(AST::NamespaceDeclaration *base) : _base(base) {}
 		virtual ~NamespaceDeclaration() { if (_base) delete _base; _decls.clear(); } 
@@ -1344,15 +1310,15 @@ namespace DST
 		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
 		unicode_string getName() { return _base->getName(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 		virtual bool isDeclaration() { return true; }
 
 		AST::NamespaceDeclaration *getBase() { return _base; }
-		unordered_map<unicode_string, std::pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
+		unordered_map<unicode_string, std::pair<Statement*, Expression*>, UnicodeHasherFunction> getMembers() { return _decls; }
 
 		Statement *getMember(unicode_string id) { return _decls[id].first; }
-		Type *getMemberType(unicode_string id) { if (_decls.count(id) == 0) return NULL; return _decls[id].second; }
-		void addMember(unicode_string name, Statement * decl, Type * type);
+		Expression *getMemberExp(unicode_string id) { if (_decls.count(id) == 0) return NULL; return _decls[id].second; }
+		void addMember(unicode_string name, Statement * decl, Expression * exp);
 	};
 
 	/***************** ExpressionStatements *****************/
@@ -1368,7 +1334,7 @@ namespace DST
 
 		void setType(Type *type) { _type = type; }
 		virtual Type *getType() { return _type; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; }
@@ -1393,7 +1359,7 @@ namespace DST
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
@@ -1418,7 +1384,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : PositionInfo{ 0, 0, 0, ""}; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		void setFunctionId(Expression* funcId)
 		{

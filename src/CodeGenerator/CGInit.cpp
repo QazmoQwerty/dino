@@ -4,16 +4,19 @@
 */
 #include "CodeGenerator.h"
 
-void CodeGenerator::setup(bool isLib, bool noGC)
+void CodeGenerator::setup(bool isLib, bool emitDebugInfo, bool noGC)
 {
     _isLib = isLib;
     _noGC = noGC;
-
+    _emitDebugInfo = emitDebugInfo;
     _namedValues.push({});
 
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
+
+    if (emitDebugInfo)
+        _dbuilder = new llvm::DIBuilder(*_module);
 
     // @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
@@ -60,6 +63,8 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
         defineNamespaceMembers(i.second);
         _currentNamespace.pop_back();
     }
+    if (_emitDebugInfo)
+        _dbuilder->finalize();
     return ret;
 }
 
@@ -230,7 +235,7 @@ void CodeGenerator::declareInterfaceMembers(DST::InterfaceDeclaration *node)
                 vtableIndexes[funcId].type = llvm::FunctionType::get(_builder.getVoidTy(), { _builder.getInt8PtrTy(), evalType(decl->getReturnType()) }, false);
             }
         }
-        else throw "Getting here should not be possible!";
+        else UNREACHABLE
     }
 }
 
@@ -362,7 +367,7 @@ void CodeGenerator::declareTypeContent(DST::TypeDeclaration *node)
     }
     def->vtable = new llvm::GlobalVariable(*_module, llvmVtable->getType(), true, llvm::GlobalVariable::PrivateLinkage, 
                                             llvmVtable, node->getName().to_string() + ".vtable");
-    _vtables[DST::BasicType::get(DST::TypeSpecifierType::get(node))] = def->vtable;
+    _vtables[DST::BasicType::get(node)] = def->vtable;
 }
 
 void CodeGenerator::codegenTypeMembers(DST::TypeDeclaration *node)
@@ -411,9 +416,9 @@ std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::
             // externally defined function with a func name argument
             auto opStmnt = ((DST::UnaryOperationStatement*)node->getSet()->getStatements()[0]);
             if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
-                throw "umm";
+                UNREACHABLE
             if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
-                throw "umm2";
+                UNREACHABLE
             auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
             llvmFuncId = strlit->getValue();
         }
@@ -462,9 +467,9 @@ std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::
             // externally defined function with a func name argument
             auto opStmnt = ((DST::UnaryOperationStatement*)node->getGet()->getStatements()[0]);
             if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
-                throw "umm";
+                UNREACHABLE
             if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
-                throw "umm2";
+                UNREACHABLE
             auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
             llvmFuncId = strlit->getValue();
         }
@@ -607,10 +612,10 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
     {
         // externally defined function with a func name argument
         auto opStmnt = ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0]);
-        if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
-            throw "umm";
-        if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
-            throw "umm2";
+
+        ASSERT(opStmnt->getExpression()->getExpressionType() == ET_LITERAL);
+        ASSERT(((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() == LT_STRING);
+
         auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
         funcId = strlit->getValue();
     }
@@ -661,6 +666,18 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     if (node->getContent() == NULL)
         throw ErrorReporter::report("Undefined function", ERR_CODEGEN, node->getPosition());
 
+    if (_emitDebugInfo)
+    {
+        auto unit = getDIFile(node->getPosition().file);
+        llvm::DIScope *scope = unit;
+        llvm::DISubprogram *subProg = _dbuilder->createFunction(
+            scope, node->getVarDecl()->getVarId().to_string(), llvm::StringRef(), unit, node->getPosition().line,
+            (llvm::DISubroutineType*)evalDIType(node->getFuncType()),
+            false /* internal linkage */, true /* definition */, node->getPosition().startPos
+        );
+        func->setSubprogram(subProg);
+    }
+
     if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
         && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN)
     {
@@ -668,7 +685,6 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         llvm::verifyFunction(*func, &llvm::errs());
         return;
     }
-
 
     auto params = node->getParameters();
 
@@ -696,7 +712,7 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
 
     if (!_builder.GetInsertBlock()->getTerminator())
         _builder.CreateRetVoid();
-    
+
     llvm::verifyFunction(*func, &llvm::errs());
     _namedValues.pop(); // leave block
 }

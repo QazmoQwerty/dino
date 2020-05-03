@@ -4,11 +4,11 @@
 */
 #include "DstNode.h"
 
-#define createPrimitiveTypeSpec(name) (new ValueTypeSpecifier(new TypeDeclaration(unicode_string(name))))
+#define createPrimitiveTypeSpec(name) (new ValueType(new TypeDeclaration(unicode_string(name))))
 
 namespace DST 
 {
-	PrimitiveTypeSpecifiers _builtinTypes;
+	PrimitiveTypes _builtinTypes;
 	unordered_map<NamespaceDeclaration*, NamespaceType*> _namespaceTypes;
 
 	void setup() {
@@ -36,46 +36,46 @@ namespace DST
 		_builtinTypes._string = createPrimitiveTypeSpec("string");
 		_builtinTypes._void = createPrimitiveTypeSpec("void");
 		_builtinTypes._type = createPrimitiveTypeSpec("type");
-		_builtinTypes._any = new InterfaceSpecifier(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
-		_builtinTypes._error = new InterfaceSpecifier(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("error"))));
+		_builtinTypes._any = new InterfaceType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("any"))));
+		_builtinTypes._error = new InterfaceType(new InterfaceDeclaration(new AST::InterfaceDeclaration(unicode_string("error"))));
 		_builtinTypes._nullPtrError = createPrimitiveTypeSpec("NullPointerError");
 	}
 
 	// int types
-	BasicType *geti8Ty()   { return _builtinTypes._i8->getBasicTy(); };
-	BasicType *geti16Ty()  { return _builtinTypes._i16->getBasicTy(); };
-	BasicType *geti32Ty()  { return _builtinTypes._i32->getBasicTy(); };
-	BasicType *geti64Ty()  { return _builtinTypes._i64->getBasicTy(); };
-	BasicType *geti128Ty() { return _builtinTypes._i128->getBasicTy(); };
+	BasicType *geti8Ty()   { return _builtinTypes._i8; };
+	BasicType *geti16Ty()  { return _builtinTypes._i16; };
+	BasicType *geti32Ty()  { return _builtinTypes._i32; };
+	BasicType *geti64Ty()  { return _builtinTypes._i64; };
+	BasicType *geti128Ty() { return _builtinTypes._i128; };
 
-	BasicType *getu8Ty()   { return _builtinTypes._u8->getBasicTy(); };
-	BasicType *getu16Ty()  { return _builtinTypes._u16->getBasicTy(); };
-	BasicType *getu32Ty()  { return _builtinTypes._u32->getBasicTy(); };
-	BasicType *getu64Ty()  { return _builtinTypes._u64->getBasicTy(); };
-	BasicType *getu128Ty() { return _builtinTypes._u128->getBasicTy(); };
+	BasicType *getu8Ty()   { return _builtinTypes._u8  ; };
+	BasicType *getu16Ty()  { return _builtinTypes._u16 ; };
+	BasicType *getu32Ty()  { return _builtinTypes._u32 ; };
+	BasicType *getu64Ty()  { return _builtinTypes._u64 ; };
+	BasicType *getu128Ty() { return _builtinTypes._u128; };
 
-	BasicType *getf16Ty()  { return _builtinTypes._f16->getBasicTy(); };
-	BasicType *getf32Ty()  { return _builtinTypes._f32->getBasicTy(); };
-	BasicType *getf64Ty()  { return _builtinTypes._f64->getBasicTy(); };
-	BasicType *getf128Ty() { return _builtinTypes._f128->getBasicTy(); };
+	BasicType *getf16Ty()  { return _builtinTypes._f16; };
+	BasicType *getf32Ty()  { return _builtinTypes._f32; };
+	BasicType *getf64Ty()  { return _builtinTypes._f64; };
+	BasicType *getf128Ty() { return _builtinTypes._f128; };
 
 	// char types
-	BasicType *getc8Ty()	{ return _builtinTypes._c8->getBasicTy(); };
-	BasicType *getc32Ty()	{ return _builtinTypes._c32->getBasicTy(); };
+	BasicType *getc8Ty()	{ return _builtinTypes._c8; };
+	BasicType *getc32Ty()	{ return _builtinTypes._c32; };
 
 	// other types/aliases
 	BasicType *getIntTy() 	      { return geti32Ty(); }
 	BasicType *getUnsignedIntTy() { return getu32Ty(); }
 	BasicType *getCharTy() 	      { return getc8Ty(); }
 	BasicType *getFloatTy()       { return getf32Ty(); }
-	BasicType *getBoolTy() 	      { return _builtinTypes._bool   -> getBasicTy(); }
-	BasicType *getVoidTy()        { return _builtinTypes._void	-> getBasicTy(); }
-	BasicType *getTypeidTy()      { return _builtinTypes._type   -> getBasicTy(); }
-	BasicType *getAnyTy() 	      { return _builtinTypes._any    -> getBasicTy(); }
-	BasicType *getStringTy()      { return _builtinTypes._string -> getBasicTy(); }
-	BasicType *getErrorTy()       { return _builtinTypes._error  -> getBasicTy(); }
+	BasicType *getBoolTy() 	      { return _builtinTypes._bool; }
+	BasicType *getVoidTy()        { return _builtinTypes._void; }
+	BasicType *getTypeidTy()      { return _builtinTypes._type; }
+	BasicType *getAnyTy() 	      { return _builtinTypes._any ; }
+	BasicType *getStringTy()      { return _builtinTypes._string; }
+	BasicType *getErrorTy()       { return _builtinTypes._error; }
 	NullType  *getNullTy()        { return NullType::get(); }
-	BasicType *getNullPtrErrTy()  { return _builtinTypes._nullPtrError -> getBasicTy(); }
+	BasicType *getNullPtrErrTy()  { return _builtinTypes._nullPtrError; }
 
 
 	InterfaceDeclaration *getAnyInterface() { return _builtinTypes._any->getInterfaceDecl(); }
@@ -88,10 +88,12 @@ namespace DST
 	template<> ConstType 		 *Type::as<ConstType>() 		{ return (ConstType*)		 getNonPropertyOf(); }
 	template<> TypeList 		 *Type::as<TypeList>() 			{ return (TypeList*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> NamespaceType 	 *Type::as<NamespaceType>() 	{ return (NamespaceType*)	 getNonConstOf()->getNonPropertyOf(); }
-	template<> TypeSpecifierType *Type::as<TypeSpecifierType>() { return (TypeSpecifierType*)getNonConstOf()->getNonPropertyOf(); }
 	template<> ArrayType 		 *Type::as<ArrayType>() 		{ return (ArrayType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> BasicType		 *Type::as<BasicType>() 		{ return (BasicType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> PointerType		 *Type::as<PointerType>() 		{ return (PointerType*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> ValueType 		 *Type::as<ValueType>() 		{ return (ValueType*)		 getNonConstOf()->getNonPropertyOf(); }
+	template<> InterfaceType 	 *Type::as<InterfaceType>() 	{ return (InterfaceType*)	 getNonConstOf()->getNonPropertyOf(); }
+	template<> FunctionType 	 *Type::as<FunctionType>() 		{ return (FunctionType*)	 getNonConstOf()->getNonPropertyOf(); }
 
 	bool Type::isFloatTy()
 	{
@@ -119,17 +121,42 @@ namespace DST
 			   _valueType->assignableTo(type->as<ArrayType>()->_valueType);
 	}
 
+	bool FunctionType::assignableTo(DST::Type *type)
+	{
+		if (!type || !type->writeable() || !type->isFuncTy())
+			return false;
+		auto other = type->as<DST::FunctionType>();
+		if (!_return->assignableTo(other->_return) || other->_parameters.size() != _parameters.size())
+			return false;
+		for (unsigned int i = 0; i < _parameters.size(); i++)
+			if (!_parameters[i]->assignableTo(other->_parameters[i]))
+				return false;
+		return true;
+	}
+
+	bool InterfaceType::implements(InterfaceType* type)
+	{
+		return this->_decl->implements(type->getInterfaceDecl());
+	}
+
+	bool ValueType::implements(InterfaceType* type)
+	{
+		return this->_decl->implements(type->getInterfaceDecl());
+	}
+
+	bool UnsetGenericType::implements(InterfaceType* type)
+	{
+		if (type->getInterfaceDecl() == getAnyInterface())
+			return true;
+		for (auto i : _implements)	
+			if (i->implements(type->getInterfaceDecl()))
+				return true;
+		return false;
+	}
+
 	bool UnsetGenericType::assignableTo(Type* type)
 	{
-		if (type && type->isInterfaceTy())
-		{
-			auto decl = type->as<BasicType>()->getTypeSpecifier()->getInterfaceDecl();
-			for (auto i : _implements)	
-				if (i == decl)
-					return true;
-			return false;
-		}
-		return type == this;
+		return equals(type);
 	}
 
 	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl)
@@ -147,38 +174,38 @@ namespace DST
 		return ret;
 	}
 
-	TypeSpecifierType *TypeSpecifierType::get(InterfaceDeclaration *decl)
+	BasicType *BasicType::get(InterfaceDeclaration *decl)
 	{
-		return InterfaceSpecifier::get(decl);
+		return InterfaceType::get(decl);
 	}
 
-	TypeSpecifierType *TypeSpecifierType::get(TypeDeclaration *decl)
+	BasicType *BasicType::get(TypeDeclaration *decl)
 	{
-		return ValueTypeSpecifier::get(decl);
+		return ValueType::get(decl);
 	}
 
-	Type *InterfaceSpecifier::getMemberType(unicode_string name) { return _decl->getMemberType(name); }
-	Type *ValueTypeSpecifier::getMemberType(unicode_string name) { return _decl->getMemberType(name); }
+	Type *InterfaceType::getMember(unicode_string name) { return _decl->getMemberType(name); }
+	Type *ValueType::getMember(unicode_string name) { return _decl->getMemberType(name); }
 
-	InterfaceSpecifier *InterfaceSpecifier::get(InterfaceDeclaration *decl)
+	InterfaceType *InterfaceType::get(InterfaceDeclaration *decl)
 	{
-		static unordered_map<InterfaceDeclaration*, InterfaceSpecifier*> rets;
+		static unordered_map<InterfaceDeclaration*, InterfaceType*> rets;
 		if (rets.size() == 0)
 		{
-			rets[getAnyInterface()] = (InterfaceSpecifier*)_builtinTypes._any;
-			rets[getErrorInterface()] = (InterfaceSpecifier*)_builtinTypes._error;
+			rets[getAnyInterface()] = (InterfaceType*)_builtinTypes._any;
+			rets[getErrorInterface()] = (InterfaceType*)_builtinTypes._error;
 		}
 		if (decl == _builtinTypes._error->getInterfaceDecl())	// TODO - clean this up
-			return rets[decl] = (InterfaceSpecifier*)_builtinTypes._error;
+			return rets[decl] = (InterfaceType*)_builtinTypes._error;
 		if (auto ret = rets[decl])
 			return ret;
-		return rets[decl] = new InterfaceSpecifier(decl);
+		return rets[decl] = new InterfaceType(decl);
 	}
 
-	ValueTypeSpecifier *ValueTypeSpecifier::get(TypeDeclaration *decl)
+	ValueType *ValueType::get(TypeDeclaration *decl)
 	{
-		#define ADD_TO_MAP(ty) rets[_builtinTypes.ty   -> getTypeDecl()] = (ValueTypeSpecifier*)_builtinTypes.ty;
-		static unordered_map<TypeDeclaration*, ValueTypeSpecifier*> rets;
+		#define ADD_TO_MAP(ty) rets[_builtinTypes.ty   -> getTypeDecl()] = (ValueType*)_builtinTypes.ty;
+		static unordered_map<TypeDeclaration*, ValueType*> rets;
 		if (rets.size() == 0)
 		{
 			ADD_TO_MAP(_i8);
@@ -199,7 +226,7 @@ namespace DST
 		}
 		if (auto ret = rets[decl])
 			return ret;
-		return rets[decl] = new ValueTypeSpecifier(decl);
+		return rets[decl] = new ValueType(decl);
 	}
 
 	TypeList::TypeList(Type *ty, Type *append)  
@@ -270,11 +297,6 @@ namespace DST
 		return ret;
 	}
 
-	BasicType *BasicType::get(TypeSpecifierType *spec) 
-	{
-		return spec->getBasicTy();
-	}
-
 	ArrayType *ArrayType::get(Type *elems, size_t len)
 	{
 		return elems->getArrayOf(len);
@@ -301,12 +323,12 @@ namespace DST
 
 	/////////////////////////////////////////////////////////////////////////////////
 
-	unicode_string InterfaceSpecifier::getTypeName()
+	unicode_string InterfaceType::getTypeName()
 	{
 		return _decl->getName();
 	}
 
-	unicode_string ValueTypeSpecifier::getTypeName()
+	unicode_string ValueType::getTypeName()
 	{
 		return _decl->getName();
 	}
@@ -320,7 +342,7 @@ namespace DST
 
 	ArrayType *Type::getArrayOf(Expression *exp)
 	{
-		// TODO - Dumb temporarty hack that will need to be replaced pretty soon
+		// TODO - Dumb temporary hack that will need to be replaced pretty soon
 		if (auto ret = _dynArrayTypes[exp])
 			return ret;
 		return _dynArrayTypes[exp] = new ArrayType(this, exp);
@@ -347,7 +369,7 @@ namespace DST
 				constRet->_setPropTy = new PropertyType(this, hasGet, hasSet);
 			return constRet->_setPropTy;
 		}
-		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, {0, 0, 0, ""});
+		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, POSITION_INFO_NONE);
 	}
 
 	ConstType *Type::getConstOf()
@@ -366,42 +388,6 @@ namespace DST
 		return _ptrTo;
 	}
 
-	BasicType *TypeSpecifierType::getBasicTy()
-	{
-		if (_basicTy == NULL)
-			_basicTy = new BasicType(this);
-		return _basicTy;
-	}
-
-	string BasicType::toShortString() 
-	{ 
-		// TODO - add scope!
-		return getTypeId().to_string(); 
-		// else if (_base->getExpressionType() != ET_BINARY_OPERATION || ((AST::BinaryOperation*)_base)->getOperator()._type != OT_PERIOD)
-		// 	throw "internal error in BasicType::toShortString()";
-		// stack<AST::Identifier*> ids;
-		// auto bo = ((AST::BinaryOperation*)_base);
-		// while (bo)
-		// {
-		// 	if (auto id = dynamic_cast<AST::Identifier*>(bo->getRight()))
-		// 		ids.push(id);
-		// 	else throw "internal error in BasicType::toShortString()";
-		// 	if (bo->getLeft()->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)_base)->getOperator()._type == OT_PERIOD)
-		// 		bo = (AST::BinaryOperation*)bo->getLeft();
-		// 	else if (auto id = dynamic_cast<AST::Identifier*>(bo->getLeft()))
-		// 		ids.push(id);
-		// 	else throw "internal error in BasicType::toShortString()";
-		// }
-		// string ret = ids.top()->getVarId().to_string();
-		// ids.pop();
-		// while (!ids.empty()) 
-		// {
-		// 	ret += "." + ids.top()->getVarId().to_string();
-		// 	ids.pop();
-		// }
-		// return ret;
-	}
-
 	string PointerType::toShortString()
 	{
 		return _type->toShortString() + "@";
@@ -413,17 +399,18 @@ namespace DST
 		return getTypeidTy();
 	}
 
-	bool BasicType::assignableTo(Type *type)
+	bool InterfaceType::assignableTo(Type *type)
 	{
-		if (!type || !type->writeable() || !type->isBasicTy())
+		if (!type || !type->writeable() || !type->isInterfaceTy())
 			return false;
-		auto other = type->as<BasicType>();
-		if (!other->_typeSpec) return false;
-		if (_typeSpec->getTypeDecl())
-			return other->_typeSpec->getTypeDecl() == _typeSpec->getTypeDecl();
-		if (_typeSpec->getInterfaceDecl() && other->_typeSpec->getInterfaceDecl()) 
-			return _typeSpec->getInterfaceDecl()->implements(other->_typeSpec->getInterfaceDecl());
-		return false;
+		return _decl->implements(type->as<InterfaceType>()->_decl);
+	}
+
+	bool ValueType::assignableTo(Type *type)
+	{
+		if (!type || !type->writeable() || !type->isValueTy())
+			return false;
+		return this == type->as<ValueType>();
 	}
 
 	bool TypeList::assignableTo(Type *type) 
@@ -451,9 +438,19 @@ namespace DST
 	{
 		if (!type || !type->writeable())
 			return false;
-		if (_type->isValueTy() && type->isInterfaceTy())
-			return _type->as<BasicType>()->getTypeSpecifier()->getTypeDecl()->implements(type->as<BasicType>()->getTypeSpecifier()->getInterfaceDecl());
+		// if (_type->isValueTy() && type->isInterfaceTy())
+		// 	return _type->as<ValueType>()->getTypeDecl()->implements(type->as<InterfaceType>()->getInterfaceDecl());
+		if (type->isInterfaceTy())
+			return _type->implements(type->as<InterfaceType>());
 		return type->isPtrTy() && _type->assignableTo(type->as<PointerType>()->_type);
+	}
+
+	Type *UnsetGenericType::getMember(unicode_string name)
+	{
+		for (auto i : _implements)
+			if (auto ret = i->getMemberType(name))
+				return ret;
+		return NULL;
 	}
 
 	string FunctionType::toShortString()
@@ -487,13 +484,6 @@ namespace DST
 	{
 		return _return->toShortString() + ((_hasGet && _hasSet) ? "{get|set}" : _hasGet ? "{get}" : "{set}");
 	}
-
-	Type *BasicType::getMember(unicode_string id) 
-	{ 
-		return _typeSpec->getMemberType(id); 
-	}
-
-	unicode_string BasicType::getTypeId() { return _typeSpec->getTypeName(); }
 
 	bool Type::comparableTo(Type *other)
 	{

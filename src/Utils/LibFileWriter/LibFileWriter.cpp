@@ -31,7 +31,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::NamespaceDecla
             case ST_VARIABLE_DECLARATION:   Write(stream, (DST::VariableDeclaration*)i.second.first);   stream << "\n"; break;
             case ST_PROPERTY_DECLARATION:   Write(stream, indentCount + 1, (DST::PropertyDeclaration*)i.second.first);  break;
             case ST_TYPE_DECLARATION:       Write(stream, indentCount + 1, (DST::TypeDeclaration*)i.second.first);      break;
-            default: throw "this shouldn't be possible...";
+            default: UNREACHABLE
         }
     }
     WriteIndentCount(stream, indentCount);
@@ -72,7 +72,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::TypeDeclaratio
             case ST_VARIABLE_DECLARATION:   Write(stream, (DST::VariableDeclaration*)i.second.first);   stream << "\n"; break;
             case ST_FUNCTION_DECLARATION:   Write(stream, (DST::FunctionDeclaration*)i.second.first);                   break;
             case ST_PROPERTY_DECLARATION:   Write(stream, indentCount + 1, (DST::PropertyDeclaration*)i.second.first);  break;
-            default: throw "this shouldn't be possible...";
+            default: UNREACHABLE;
         }
     }
     WriteIndentCount(stream, indentCount);
@@ -105,7 +105,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::InterfaceDecla
             case ST_CONST_DECLARATION:      Write(stream, (DST::ConstDeclaration*)i.second.first);      break;
             case ST_FUNCTION_DECLARATION:   Write(stream, (DST::FunctionDeclaration*)i.second.first);   break;
             case ST_PROPERTY_DECLARATION:   Write(stream, indentCount + 1, (DST::PropertyDeclaration*)i.second.first);   break;
-            default: throw "this shouldn't be possible...";
+            default: UNREACHABLE;
         }
     }
     WriteIndentCount(stream, indentCount);

@@ -50,19 +50,19 @@ CharType Lexer::getCharType(unicode_char c)
 	NOTE: Token could be of type "OperatorToken" or "LiteralToken<T>" as well as regular "Token",
 			so make sure to check the _type variable of each token.
 */
-vector<Token*> Lexer::lex(unicode_string str, string fileName)
+vector<Token*> Lexer::lex(unicode_string &str, SourceFile* file)
 {
 	vector<Token*> tokens;
 	unsigned int index = 0, line = 1, pos = 0;
 	while (index < str.length()) 
-		if (auto tok = getToken(str, index, line, pos, fileName, tokens))
+		if (auto tok = getToken(str, index, line, pos, file, tokens))
 			tokens.push_back(tok);
 
 	auto eof = new OperatorToken;
 	eof->_data = "EOF";
 	eof->_type = TT_OPERATOR;
 	if (tokens.size() == 0)
-		throw ErrorReporter::report("empty program", ERR_LEXER, {0, 0, 0, ""});
+		throw ErrorReporter::report("empty program", ERR_LEXER, POSITION_INFO_NONE);
 	eof->_pos = tokens.back()->_pos;
 	eof->_operator = { OT_EOF, unicode_string("EOF"), NON_ASSCOCIATIVE, 0 };
 	tokens.push_back(eof);
@@ -75,7 +75,7 @@ vector<Token*> Lexer::lex(unicode_string str, string fileName)
 	NOTE: "index" and "line" parameters are passed by reference, and are 
 		  changed internally, no need to increment them outside of this function.
 */
-Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int & line, unsigned int & pos, const string fileName, vector<Token*>& tokens)
+Token * Lexer::getToken(unicode_string &str, unsigned int & index, unsigned int & line, unsigned int & pos, SourceFile* file, vector<Token*>& tokens)
 {
 	static bool ignoreLineBreak = false;
 
@@ -83,7 +83,7 @@ Token * Lexer::getToken(unicode_string str, unsigned int & index, unsigned int &
 	unicode_char curr = str[index++];
 	token->_data = curr;
 	token->_pos.line = line;
-	token->_pos.file = fileName;
+	token->_pos.file = file;
 	token->_pos.startPos = pos++;
 	token->_pos.endPos = pos;
 	switch (getCharType(curr))

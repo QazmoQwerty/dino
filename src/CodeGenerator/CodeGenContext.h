@@ -53,6 +53,9 @@ namespace CodeGenerator
     /* Turn off garbage collection */
     extern bool _noGC;
 
+    /* turn on emission of debug information */
+    extern bool _emitDebugInfo;
+
     /* Needed for any codeGen */
     extern llvm::LLVMContext _context;
     
@@ -61,6 +64,12 @@ namespace CodeGenerator
 
     /* Makes IR generation much simpler */
     extern llvm::IRBuilder<> _builder;
+
+    /* Helper for debug info generation */
+    extern llvm::DIBuilder *_dbuilder;
+
+    /* IDK what this does yet D:' */
+    extern llvm::DICompileUnit *_compileUnit;
 
     /* Used to find allocation sizes of types */
     extern llvm::DataLayout *_dataLayout;

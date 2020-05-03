@@ -11,7 +11,7 @@
 #include "../../Lexer/Token.h"
 #include "llvm/Support/raw_ostream.h"
 
-#define POSITION_INFO_NONE {0, 0, 0, "" }
+#define POSITION_INFO_NONE PositionInfo{0, 0, 0, NULL}
 
 using std::string;
 using std::exception;
@@ -49,5 +49,11 @@ public:
     /*
         Report an INTERNAL error - these should never be shown to a user of the compiler (in theory at least).
     */
-    static Error reportInternal(string msg, ErrorType errTy, PositionInfo pos = {0, 0, 0, ""});
+    static Error reportInternal(string msg, ErrorType errTy, PositionInfo pos = POSITION_INFO_NONE);
 };
+
+#define FATAL_ERROR(_string) throw ErrorReporter::reportInternal(std::string(_string) + " at " + __func__ + ":" + std::to_string(__LINE__) + " in " + __FILE__ , ERR_INTERNAL)
+
+#define TODO FATAL_ERROR("TODO reached");
+#define UNREACHABLE FATAL_ERROR("unreachable reached");
+#define ASSERT(cond) if(!(cond)) FATAL_ERROR("assertion failed")

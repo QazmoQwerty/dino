@@ -20,6 +20,9 @@ namespace CodeGenerator
     /* Turn off garbage collection */
     bool _noGC = false;
 
+    /* turn on emission of debug information */
+    bool _emitDebugInfo = false;
+
     /* Needed for any codeGen */
     llvm::LLVMContext _context;
     
@@ -77,4 +80,10 @@ namespace CodeGenerator
 
     /* The namespaces we are currently in */
     std::vector<NamespaceMembers*> _currentNamespace;
+
+    /* Helper for debug info generation */
+    llvm::DIBuilder *_dbuilder = NULL;
+
+    /* IDK what this does yet D:' */
+    llvm::DICompileUnit *_compileUnit = NULL;
 }

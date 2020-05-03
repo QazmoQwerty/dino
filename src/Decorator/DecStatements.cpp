@@ -48,7 +48,7 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 	unicode_string name = node->getName();
 	if (_variables[currentScope()].count(name))
 		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
-	_variables[currentScope()][name] = decl->getExpression()->getType()->getConstOf();
+	_variables[currentScope()][name] = decl->getExpression();
 	return decl;
 }
 
@@ -99,7 +99,7 @@ DST::TryCatch * Decorator::decorate(AST::TryCatch *node)
 	auto tryCatch = new DST::TryCatch(node);
 	tryCatch->setTryBlock(decorate(node->getTryBlock()));
 	enterBlock();
-	_variables[currentScope()][unicode_string("caught")] = DST::getErrorTy();
+	_variables[currentScope()][unicode_string("caught")] = new DST::Variable(unicode_string("caught"), DST::getErrorTy());
 	tryCatch->setCatchBlock(decorate(node->getCatchBlock()));
 	leaveBlock();
 	return tryCatch;
@@ -146,7 +146,7 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	decl->setType(evalType(node->getVarType()));
 	if (_variables[currentScope()].count(name))
 		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ERR_DECORATOR, node->getPosition());
-	_variables[currentScope()][name] = decl->getType();
+	_variables[currentScope()][name] = new DST::Variable(name, decl->getType());
 	return decl;
 }
 
@@ -173,7 +173,8 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 					throw ErrorReporter::report("inferred type is invalid in this context", ERR_DECORATOR, node->getPosition());
 				((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
 				leftTypes->getTypes()[i] = rightTypes->getTypes()[i];
-				_variables[currentScope()][((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId()] = rightTypes->getTypes()[i];
+				auto name = ((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId();
+				_variables[currentScope()][name] = new DST::Variable(name, rightTypes->getTypes()[i]);
 			}
 		}
 	}
@@ -191,7 +192,8 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 					assignment->getRight()->getType()->getNonConstOf()->getNonPropertyOf()
 				); break;
 		}
-		_variables[currentScope()][((DST::VariableDeclaration*)assignment->getLeft())->getVarId()] = assignment->getRight()->getType()->getNonConstOf();
+		auto name = ((DST::VariableDeclaration*)assignment->getLeft())->getVarId();
+		_variables[currentScope()][name] = new DST::Variable(name, assignment->getRight()->getType()->getNonConstOf());
 	}
 
 	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))

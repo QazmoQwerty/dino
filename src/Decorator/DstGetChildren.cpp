@@ -228,11 +228,6 @@ vector<DST::Node*> DST::PointerType::getChildren()
 	return v;
 }
 
-vector<DST::Node*> DST::BasicType::getChildren()
-{
-	return vector<Node*>();
-}
-
 vector<DST::Node*> DST::FunctionType::getChildren()
 {
 	return vector<Node*>();

@@ -43,7 +43,7 @@ Value *CodeGenerator::codeGenLval(DST::Conversion* node)
         assertNotNull(ptr);
         return _builder.CreateBitCast(ptr, type->getPointerTo(), "cnvrttmp");
     }
-    throw "unreachable";
+    UNREACHABLE
 }
 
 Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
@@ -78,15 +78,14 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
                     auto arrPtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) } );
                     return _builder.CreateGEP(_builder.CreateLoad(arrPtr), codeGen(node->getRight()) );
                 }
-                else // TODO - array literal access
-                    return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } ); 
+                return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), codeGen(node->getRight()) } ); 
             }
             if (node->getLeft()->getType()->isListTy())
             {
                 int idx = ((DST::Literal*)node->getRight())->getIntValue();
                 return _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(idx) });
             }
-            else throw "unreachable";
+            UNREACHABLE
         default:
             throw ErrorReporter::report("Unimplemented lval Binary operation", ERR_CODEGEN, node->getPosition());
     }
@@ -99,7 +98,7 @@ Value *CodeGenerator::codeGenLval(DST::Variable *node)
     else for (int i = _currentNamespace.size() - 1; i >= 0; i--)
         if (auto var = _currentNamespace[i]->values[node->getVarId().to_string()])
             return var;
-    throw "could not find variable";
+    FATAL_ERROR("could not find variable \"" + node->getVarId().to_string() + "\"");
 }
 
 Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
@@ -109,14 +108,14 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     if (leftType->isNamespaceTy())
     {
         auto members = getNamespaceMembers(node->getLeft());
-        if (!members)
-            throw "TODO - Error message";
+        ASSERT(members != NULL);
         return members->values[node->getRight()];
     }
     else if (leftType->isBasicTy())
     {
-        if (auto interfaceDecl = leftType->as<DST::BasicType>()->getTypeSpecifier()->getInterfaceDecl())
+        if (leftType->isInterfaceTy())
         {
+            auto interfaceDecl = leftType->as<DST::InterfaceType>()->getInterfaceDecl();
             auto lval = codeGenLval(node->getLeft());
             auto vtablePtr = _builder.CreateInBoundsGEP(lval, { _builder.getInt32(0), _builder.getInt32(1) });
             auto vtable = _builder.CreateLoad(vtablePtr);
@@ -131,8 +130,8 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             return alloca;
         }
 
-        auto bt = (DST::BasicType*)leftType;
-        auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        auto bt = leftType->as<DST::ValueType>();
+        auto typeDef = _types[bt->getTypeDecl()];
         auto lval = codeGenLval(node->getLeft());
         assertNotNull(lval);
         return _builder.CreateInBoundsGEP(
@@ -145,8 +144,8 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
     else if (leftType->isPtrTy() && 
             leftType->as<DST::PointerType>()->getPtrType()->isBasicTy())
     {
-        auto bt = leftType->as<DST::PointerType>()->getPtrType()->as<DST::BasicType>();
-        auto typeDef = _types[bt->getTypeSpecifier()->getTypeDecl()];
+        auto bt = leftType->as<DST::PointerType>()->getPtrType()->as<DST::ValueType>();
+        auto typeDef = _types[bt->getTypeDecl()];
         auto lval = _builder.CreateLoad(codeGenLval(node->getLeft()));
         assertNotNull(lval);
         return _builder.CreateInBoundsGEP(
