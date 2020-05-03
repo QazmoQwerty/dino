@@ -148,7 +148,7 @@ CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Express
                 return ns;
         return _namespaces[((DST::Variable*)node)->getVarId()];
     }
-    else throw "TODO - write a proper error";
+    UNREACHABLE
 }
 
 llvm::Value *CodeGenerator::createCallOrInvoke(llvm::Value *callee, llvm::ArrayRef<llvm::Value*> args)

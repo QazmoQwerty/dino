@@ -53,6 +53,7 @@ string ErrorReporter::toString(ErrorType type)
         // case ERR_PARSER: return "ParseError";
         // case ERR_DECORATOR: return "DecorateError";
         // case ERR_CODEGEN: return "CodeGenError";
+        case ERR_INTERNAL: return "Internal Error";
         default: return "Error";
     }
 }

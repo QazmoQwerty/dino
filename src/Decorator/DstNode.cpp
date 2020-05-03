@@ -50,7 +50,7 @@ namespace DST
 			return false;*/
 		bool isVoid = false;
 		if (returnType->isListTy() && ((TypeList*)returnType)->getTypes().size() == 1)
-			throw "unreachable, leaving this to make sure";
+			UNREACHABLE
 		if (returnType == getVoidTy())
 			isVoid = true;
 		for (auto i : _statements) 
@@ -230,7 +230,7 @@ namespace DST
 	int Literal::getIntValue() 
 	{
 		if (getLiteralType() != LT_INTEGER)
-			throw "literal is not an integer";
+			FATAL_ERROR("literal is not an integer");
 		return ((AST::Integer*)_base)->getValue();
 	}
 

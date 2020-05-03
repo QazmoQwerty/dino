@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include "utf8.h"
+// #include "../ErrorReporter/ErrorReporter.h"
 
 using std::string;
 using std::vector;

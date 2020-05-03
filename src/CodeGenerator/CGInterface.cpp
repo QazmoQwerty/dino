@@ -14,7 +14,7 @@ Value *CodeGenerator::convertToInterface(Value* node, DST::Type *ty)
         return node;
 
     if (!node->getType()->isPointerTy())
-        throw "cannot convert non pointer to interface";
+        FATAL_ERROR("cannot convert non pointer to interface");
 
     auto undef = llvm ::UndefValue::get(_interfaceType);
     auto val = _builder.CreateInsertValue(undef, _builder.CreateBitCast(node, _builder.getInt8PtrTy()), 0);

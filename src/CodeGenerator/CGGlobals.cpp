@@ -77,4 +77,10 @@ namespace CodeGenerator
 
     /* The namespaces we are currently in */
     std::vector<NamespaceMembers*> _currentNamespace;
+
+    /* Helper for debug info generation */
+    llvm::DIBuilder *_dbuilder = NULL;
+
+    /* IDK what this does yet D:' */
+    llvm::DICompileUnit *_compileUnit = NULL;
 }

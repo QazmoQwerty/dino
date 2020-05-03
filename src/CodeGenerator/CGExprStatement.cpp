@@ -350,7 +350,7 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
 
     auto name = node->getVarId().to_string();
     if (!_builder.GetInsertBlock())
-        throw "will this ever happen? idk...";
+        UNREACHABLE
     auto func = _builder.GetInsertBlock()->getParent();
 
     // Create an alloca for the variable in the entry block.

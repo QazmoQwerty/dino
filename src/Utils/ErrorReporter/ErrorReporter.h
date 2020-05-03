@@ -51,3 +51,9 @@ public:
     */
     static Error reportInternal(string msg, ErrorType errTy, PositionInfo pos = {0, 0, 0, ""});
 };
+
+#define FATAL_ERROR(_string) throw ErrorReporter::reportInternal(std::string(_string) + " at " + __func__ + ":" + std::to_string(__LINE__) + " in " + __FILE__ , ERR_INTERNAL)
+
+#define TODO FATAL_ERROR("TODO reached");
+#define UNREACHABLE FATAL_ERROR("unreachable reached");
+#define ASSERT(cond) if(!(cond)) FATAL_ERROR("assertion failed")

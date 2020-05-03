@@ -15,6 +15,10 @@ void CodeGenerator::setup(bool isLib, bool noGC)
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
+    // _dbuilder = new llvm::DIBuilder(*_module);
+    // TODO!
+    // _compileUnit = _dbuilder->createCompileUnit(llvm::dwarf::DW_LANG_C, _dbuilder->createFile("fib.ks", "."),"Kaleidoscope Compiler", 0, "", 0);
+
     // @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
 
@@ -230,7 +234,7 @@ void CodeGenerator::declareInterfaceMembers(DST::InterfaceDeclaration *node)
                 vtableIndexes[funcId].type = llvm::FunctionType::get(_builder.getVoidTy(), { _builder.getInt8PtrTy(), evalType(decl->getReturnType()) }, false);
             }
         }
-        else throw "Getting here should not be possible!";
+        else UNREACHABLE
     }
 }
 
@@ -411,9 +415,9 @@ std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::
             // externally defined function with a func name argument
             auto opStmnt = ((DST::UnaryOperationStatement*)node->getSet()->getStatements()[0]);
             if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
-                throw "umm";
+                UNREACHABLE
             if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
-                throw "umm2";
+                UNREACHABLE
             auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
             llvmFuncId = strlit->getValue();
         }
@@ -462,9 +466,9 @@ std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::
             // externally defined function with a func name argument
             auto opStmnt = ((DST::UnaryOperationStatement*)node->getGet()->getStatements()[0]);
             if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
-                throw "umm";
+                UNREACHABLE
             if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
-                throw "umm2";
+                UNREACHABLE
             auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
             llvmFuncId = strlit->getValue();
         }
@@ -607,10 +611,10 @@ llvm::Function * CodeGenerator::declareFunction(DST::FunctionDeclaration *node, 
     {
         // externally defined function with a func name argument
         auto opStmnt = ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0]);
-        if (opStmnt->getExpression()->getExpressionType() != ET_LITERAL)
-            throw "umm";
-        if (((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() != LT_STRING)
-            throw "umm2";
+
+        ASSERT(opStmnt->getExpression()->getExpressionType() == ET_LITERAL);
+        ASSERT(((DST::Literal*)opStmnt->getExpression())->getBase()->getLiteralType() == LT_STRING);
+
         auto strlit = (AST::String*)((DST::Literal*)opStmnt->getExpression())->getBase();
         funcId = strlit->getValue();
     }

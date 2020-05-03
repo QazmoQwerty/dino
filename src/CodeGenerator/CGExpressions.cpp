@@ -126,7 +126,7 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
     if (right == _interfaceType)
     {
         if (left->getType() != _interfaceType)
-            throw "unreachable";
+            UNREACHABLE
 
         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
         auto vtableLoad = _builder.CreateLoad(vtablePtr);
@@ -138,7 +138,7 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
     else if (((DST::Type*)node->getRight())->isBasicTy())
     {
         if (left->getType()->getPointerElementType() != _interfaceType)
-            throw "unreachable";
+            UNREACHABLE
         
         auto vtablePtr = _builder.CreateInBoundsGEP(left, { _builder.getInt32(0), _builder.getInt32(1) });
         auto vtableLoad = _builder.CreateLoad(vtablePtr);

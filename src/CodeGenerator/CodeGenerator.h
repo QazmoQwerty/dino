@@ -157,6 +157,13 @@ namespace CodeGenerator
     llvm::Function *getVtableInterfaceLookupFunction();
 
     /************************************************************************
+    *                               Debug Info                              *
+    ************************************************************************/
+
+   /* Gets a DST::Type and returns its corresponding DebugInfo type */
+    llvm::DIType *evalDIType(DST::Type *node);
+
+    /************************************************************************
     *                                Utility                                *
     ************************************************************************/
 

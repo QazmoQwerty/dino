@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../Parser/AstNode.h"
+#include "llvm/IR/DIBuilder.h"
 #include <dirent.h>
 #include <stack>
 #include <map>
@@ -245,7 +246,8 @@ namespace DST
 		PropertyType *_setPropTy;
 		PropertyType *_getSetPropTy;
 	public:
-		Type() : _ptrTo(NULL), _constOf(NULL), _getPropTy(NULL), _setPropTy(NULL), _getSetPropTy(NULL) {}
+		llvm::DIType *_backendDIType;
+		Type() : _ptrTo(NULL), _constOf(NULL), _getPropTy(NULL), _setPropTy(NULL), _getSetPropTy(NULL), _backendDIType(NULL) {}
 		virtual ~Type() { }
 		/*
 			The type of the actual type itself is meaningless:

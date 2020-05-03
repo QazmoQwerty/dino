@@ -1,12 +1,15 @@
 #include "Utf8Handler.h"
 
+// class ErrorReporter;
+
 /* ---------- unicode_char ---------- */
 
 unicode_char::unicode_char(string str)
 {
 	unicode_string s = unicode_string(str);
 	if (s.length() > sizeof(_val))
-		throw "error in unicode_char(string)";
+		throw "unicode char is too long";
+		// FATAL_ERROR("unicode char is too long");
 	_val = s[0]._val;
 }
 
