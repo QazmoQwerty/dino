@@ -15,9 +15,9 @@ void CodeGenerator::setup(bool isLib, bool noGC)
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    // _dbuilder = new llvm::DIBuilder(*_module);
+    _dbuilder = new llvm::DIBuilder(*_module);
     // TODO!
-    // _compileUnit = _dbuilder->createCompileUnit(llvm::dwarf::DW_LANG_C, _dbuilder->createFile("fib.ks", "."),"Kaleidoscope Compiler", 0, "", 0);
+    _compileUnit = _dbuilder->createCompileUnit(llvm::dwarf::DW_LANG_C, _dbuilder->createFile("fib.ks", "."),"Kaleidoscope Compiler", 0, "", 0);
 
     // @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
@@ -64,6 +64,8 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
         defineNamespaceMembers(i.second);
         _currentNamespace.pop_back();
     }
+    if (_dbuilder)
+        _dbuilder->finalize();
     return ret;
 }
 

@@ -267,7 +267,7 @@ namespace DST
 
 		auto dir = opendir(bcFileName.c_str());
 		if (!dir)
-			throw ErrorReporter::report("Could not open directory \"" + bcFileName + '\"', ERR_DECORATOR, PositionInfo{0, 0, 0, ""});
+			throw ErrorReporter::report("Could not open directory \"" + bcFileName + '\"', ERR_DECORATOR, POSITION_INFO_NONE);
 		while (auto ent = readdir(dir))
 		{
 			string fileName(ent->d_name);

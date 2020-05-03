@@ -150,13 +150,13 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 	{
 		llvm::errs() << FRED(BOLD("Error: ")) << c << "\n";
 		delete options;
-		exit(0);
+		exit(1);
 	}
 	catch (string s) 
 	{
 		llvm::errs() << FRED(BOLD("Error: ")) << s << "\n";
 		delete options;
-		exit(0);
+		exit(1);
 	}
 	return options;
 }
@@ -263,10 +263,10 @@ int main(int argc, char *argv[])
 		// TODO - clear memory!
 		// Decorator::clear();	
 	} 
-	catch (exception e) { llvm::errs() << e.what() << "\n"; }
-	catch (const char *err) { llvm::errs() << err << "\n"; }
-	catch (string err) { llvm::errs() << err << "\n"; }
-	catch (Error err) { ErrorReporter::showAll(); }
+	catch (exception e) { llvm::errs() << e.what() << "\n"; exit(1); }
+	catch (const char *err) { llvm::errs() << err << "\n"; exit(1); }
+	catch (string err) { llvm::errs() << err << "\n"; exit(1); }
+	catch (Error err) { ErrorReporter::showAll(); exit(1); }
 
 	llvm::llvm_shutdown();
 	return 0;

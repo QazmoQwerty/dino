@@ -93,6 +93,7 @@ namespace DST
 	template<> PointerType		 *Type::as<PointerType>() 		{ return (PointerType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> ValueType 		 *Type::as<ValueType>() 		{ return (ValueType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> InterfaceType 	 *Type::as<InterfaceType>() 	{ return (InterfaceType*)	 getNonConstOf()->getNonPropertyOf(); }
+	template<> FunctionType 	 *Type::as<FunctionType>() 		{ return (FunctionType*)	 getNonConstOf()->getNonPropertyOf(); }
 
 	bool Type::isFloatTy()
 	{
@@ -118,6 +119,19 @@ namespace DST
 		return type && type->writeable() && type->isArrayTy() && 
 			   type->as<ArrayType>()->_length == _length && 
 			   _valueType->assignableTo(type->as<ArrayType>()->_valueType);
+	}
+
+	bool FunctionType::assignableTo(DST::Type *type)
+	{
+		if (!type || !type->writeable() || !type->isFuncTy())
+			return false;
+		auto other = type->as<DST::FunctionType>();
+		if (!_return->assignableTo(other->_return) || other->_parameters.size() != _parameters.size())
+			return false;
+		for (unsigned int i = 0; i < _parameters.size(); i++)
+			if (!_parameters[i]->assignableTo(other->_parameters[i]))
+				return false;
+		return true;
 	}
 
 	bool InterfaceType::implements(InterfaceType* type)
@@ -355,7 +369,7 @@ namespace DST
 				constRet->_setPropTy = new PropertyType(this, hasGet, hasSet);
 			return constRet->_setPropTy;
 		}
-		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, {0, 0, 0, ""});
+		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, POSITION_INFO_NONE);
 	}
 
 	ConstType *Type::getConstOf()
