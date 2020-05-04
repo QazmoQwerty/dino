@@ -1,7 +1,7 @@
 #include "Token.h"
 #include "../Utils//ErrorReporter/ErrorReporter.h"
 
-#define GET_PATH(f) (f ? f->getFullPath() : "")
+#define GET_PATH(f) (f ? f->getOriginalPath() : "")
 
 /*
 	Function gets a Token and prints it based on its type.
