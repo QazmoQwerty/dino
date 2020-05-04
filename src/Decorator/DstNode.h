@@ -478,7 +478,7 @@ namespace DST
 		virtual ~ConstType() { }
 		virtual bool implements(InterfaceType *ty) { return _type->implements(ty); };
 		virtual Type *getNonConstOf() { return _type; }; // returns what type base type of this constant is
-		ExactType getExactType() { return EXACT_POINTER; }
+		ExactType getExactType() { return EXACT_CONST; }
 		virtual bool writeable() { return false; }
 
 		/* 

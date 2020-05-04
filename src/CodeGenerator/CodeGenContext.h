@@ -41,6 +41,7 @@ namespace CodeGenerator
         unordered_map<unicode_string, llvm::Value*, UnicodeHasherFunction> values;
         unordered_map<unicode_string, TypeDefinition*, UnicodeHasherFunction> types;
         unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> namespaces;
+        llvm::DINamespace *diScope = NULL;
         DST::NamespaceDeclaration *decl = NULL;
     } NamespaceMembers;
 

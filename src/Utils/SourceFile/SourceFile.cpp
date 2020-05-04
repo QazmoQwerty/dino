@@ -8,5 +8,5 @@ string SourceFile::getFullPath()
     return _str; 
 }
 
-string SourceFile::getName() { return _str; }
-string SourceFile::getPath() { return "."; }
+string SourceFile::getName() { return "Test2.dino"; }
+string SourceFile::getPath() { return "/home/magshimim/Desktop/dino/Examples"; }

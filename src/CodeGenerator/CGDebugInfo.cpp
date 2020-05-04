@@ -1,4 +1,8 @@
 #include "CodeGenerator.h"
+#include "DebugInfo.h"
+
+vector<llvm::DIScope*> CodeGenerator::_currDIScope;
+llvm::DISubprogram *CodeGenerator::_currDISubProgram;
 
 llvm::DIType* CodeGenerator::evalDIType(DST::Type *node)
 {
@@ -41,7 +45,7 @@ llvm::DIType* CodeGenerator::evalDIType(DST::Type *node)
         {
             vector<llvm::Metadata*> types;
             auto funcTy = node->as<DST::FunctionType>();
-            types.push_back(evalDIType(funcTy));
+            types.push_back(evalDIType(funcTy->getReturn()));
             for (auto ty : funcTy->getParameters())
                 types.push_back(evalDIType(ty));
             return node->_backendDIType = _dbuilder->createSubroutineType(_dbuilder->getOrCreateTypeArray(types));
@@ -64,4 +68,108 @@ llvm::DIFile *CodeGenerator::getDIFile(SourceFile *file)
     if (!file->_backendDIFile)
         file->_backendDIFile = _dbuilder->createFile(file->getName(), file->getPath());
     return file->_backendDIFile;
+}
+
+void CodeGenerator::diGenSetup()
+{
+    if (!_emitDebugInfo) return;
+
+    _dbuilder = new llvm::DIBuilder(*_module);
+}
+
+void CodeGenerator::diGenFinalize()
+{
+    if (!_emitDebugInfo) return;
+    _module.get()->addModuleFlag(llvm::Module::ModFlagBehavior::Warning, "Debug Info Version", 3);
+    _dbuilder->finalize();
+}
+
+void CodeGenerator::diEnterNamespace(NamespaceMembers *ns)
+{
+    if (!_emitDebugInfo) return;
+    _currDIScope.push_back(ns->diScope);
+}
+
+void CodeGenerator::diLeaveNamespace()
+{
+    if (!_emitDebugInfo) return;
+    _currDIScope.pop_back();
+}
+
+void CodeGenerator::diGenNamespace(NamespaceMembers *node)
+{
+    if (!_emitDebugInfo) return;
+
+    node->diScope = _dbuilder->createNameSpace(getCurrDIScope(node->decl), node->decl->getName().to_string(), false);
+}
+
+void CodeGenerator::diGenVarDecl(DST::VariableDeclaration *decl, llvm::Value *val)
+{
+    if (!_emitDebugInfo) return;
+}
+
+void CodeGenerator::diGenFuncStart(DST::FunctionDeclaration* decl, llvm::Function *func)
+{
+    if (!_emitDebugInfo) return;
+
+    auto unit = getDIFile(decl->getPosition().file);
+    // DINode::FlagPrototyped, DISubprogram::SPFlagDefinition
+    _currDISubProgram = _dbuilder->createFunction(
+        getCurrDIScope(decl), decl->getVarDecl()->getVarId().to_string(), llvm::StringRef(), unit, decl->getPosition().line,
+        (llvm::DISubroutineType*)evalDIType(decl->getFuncType()),
+        false /* internal linkage */, true /* definition */, decl->getPosition().startPos, llvm::DINode::FlagPrototyped
+    );
+    func->setSubprogram(_currDISubProgram);
+    _currDIScope.push_back(_currDISubProgram);
+    diEmitLocation(NULL);
+}
+
+void CodeGenerator::diGenFuncParam(DST::FunctionDeclaration* decl, llvm::Function *func, uint idx, llvm::AllocaInst *alloca)
+{
+    if (!_emitDebugInfo) return;
+
+    _dbuilder->createParameterVariable(
+        getCurrDIScope(decl), 
+        decl->getVarDecl()->getVarId().to_string(), 
+        idx+1, 
+        getDIFile(decl->getPosition().file), 
+        decl->getPosition().line, 
+        evalDIType(decl->getParameters()[idx]->getType())
+    );
+}
+
+void CodeGenerator::diGenFuncEnd(DST::FunctionDeclaration* decl, llvm::Function *func)
+{
+    if (!_emitDebugInfo) return;
+    _dbuilder->finalizeSubprogram(_currDISubProgram);
+    _currDISubProgram = NULL;
+    _currDIScope.pop_back();
+}
+
+llvm::DIScope *CodeGenerator::getCurrDIScope(DST::Node *node)
+{
+    if (_currDIScope.size() == 0)
+    {
+        if (!_compileUnit)
+            _compileUnit = _dbuilder->createCompileUnit(
+                llvm::dwarf::DW_LANG_C_plus_plus, 
+                getDIFile(node->getPosition().file), 
+                "dino", false, "", 0
+            );
+        return _compileUnit;
+    }
+    return _currDIScope.back();
+}
+
+void CodeGenerator::diEmitLocation(DST::Node *node)
+{
+    if (!_emitDebugInfo) return;
+
+    if (!node)
+        _builder.SetCurrentDebugLocation(llvm::DebugLoc());
+    else _builder.SetCurrentDebugLocation(llvm::DebugLoc::get(
+        node->getPosition().line, 
+        node->getPosition().startPos, 
+        getCurrDIScope(node)
+    ));
 }

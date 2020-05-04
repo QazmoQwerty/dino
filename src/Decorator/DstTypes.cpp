@@ -395,8 +395,7 @@ namespace DST
 
 	Type * Type::getType()
 	{
-		std::cout << "you probably didn't wanna call this func" << std::endl;
-		return getTypeidTy();
+		UNREACHABLE
 	}
 
 	bool InterfaceType::assignableTo(Type *type)

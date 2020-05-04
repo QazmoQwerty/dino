@@ -1,12 +1,17 @@
-import "std2"
+// import "std2"
 
 namespace Prog {
 
-    T Foo[T](T f) {
-        return f
+    int putchar(int c): extern "putchar"
+
+    int Foo(int n) {
+        n += 48
+        putchar(n)
+        putchar(10)
+        return n
     }
 
-    void Main() {
-
+    int Main() {
+        return Foo(8)
     }
 }
