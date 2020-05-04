@@ -2,6 +2,7 @@
     Code generation for expression statements.
 */
 #include "CodeGenerator.h"
+#include "DebugInfo.h"
 
 Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
 {
@@ -357,9 +358,8 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
     AllocaInst *alloca = CreateEntryBlockAlloca(func, type, name);
     _namedValues.top()[name] = alloca;
 
-    /*if (type->isArrayTy())
-    {
-        _builder.CreateStore(llvm::ConstantAggregateZero::get(type), alloca); 
-    }*/
+    diGenVarDecl(node, alloca);
+    // if (type->isArrayTy())
+    //    _builder.CreateStore(llvm::ConstantAggregateZero::get(type), alloca); 
     return alloca;
 }

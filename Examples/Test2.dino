@@ -5,9 +5,14 @@ namespace Prog {
     int putchar(int c): extern "putchar"
 
     int Foo(int n) {
-        n += 48
-        putchar(n)
-        putchar(10)
+        int[] arr := new int[n]
+        for int i := 0 | i < arr.Size | i++ {
+            arr[i] := i
+        }
+        for int i := 0 | i < arr.Size | i++ {
+            putchar(arr[i] + 48)
+            putchar(10)
+        }
         return n
     }
 

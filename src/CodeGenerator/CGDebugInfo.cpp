@@ -106,6 +106,23 @@ void CodeGenerator::diGenNamespace(NamespaceMembers *node)
 void CodeGenerator::diGenVarDecl(DST::VariableDeclaration *decl, llvm::Value *val)
 {
     if (!_emitDebugInfo) return;
+
+    auto pos = decl->getPosition();
+
+    auto info = _dbuilder->createAutoVariable(
+        getCurrDIScope(decl),
+        decl->getVarId().to_string(),
+        getDIFile(pos.file),
+        pos.line,
+        evalDIType(decl->getType())
+    );
+
+    _dbuilder->insertDeclare(
+        val, info,
+        llvm::DIExpression::get(_context, {}),
+        llvm::DILocation::get(_context, pos.line, pos.startPos, getCurrDIScope(decl)),
+        _builder.GetInsertBlock()
+    );
 }
 
 void CodeGenerator::diGenFuncStart(DST::FunctionDeclaration* decl, llvm::Function *func)
@@ -113,11 +130,10 @@ void CodeGenerator::diGenFuncStart(DST::FunctionDeclaration* decl, llvm::Functio
     if (!_emitDebugInfo) return;
 
     auto unit = getDIFile(decl->getPosition().file);
-    // DINode::FlagPrototyped, DISubprogram::SPFlagDefinition
     _currDISubProgram = _dbuilder->createFunction(
         getCurrDIScope(decl), decl->getVarDecl()->getVarId().to_string(), llvm::StringRef(), unit, decl->getPosition().line,
         (llvm::DISubroutineType*)evalDIType(decl->getFuncType()),
-        false /* internal linkage */, true /* definition */, decl->getPosition().startPos, llvm::DINode::FlagPrototyped
+        false /* internal linkage */, true /* definition */, decl->getPosition().startPos//, llvm::DINode::FlagPrototyped
     );
     func->setSubprogram(_currDISubProgram);
     _currDIScope.push_back(_currDISubProgram);
@@ -128,13 +144,22 @@ void CodeGenerator::diGenFuncParam(DST::FunctionDeclaration* decl, llvm::Functio
 {
     if (!_emitDebugInfo) return;
 
-    _dbuilder->createParameterVariable(
-        getCurrDIScope(decl), 
-        decl->getVarDecl()->getVarId().to_string(), 
-        idx+1, 
-        getDIFile(decl->getPosition().file), 
-        decl->getPosition().line, 
-        evalDIType(decl->getParameters()[idx]->getType())
+    auto varDecl = decl->getParameters()[idx];
+    auto pos = varDecl->getPosition();
+    auto info = _dbuilder->createParameterVariable(
+        getCurrDIScope(decl),
+        varDecl->getVarId().to_string(),
+        idx+1,
+        getDIFile(pos.file),
+        pos.line,
+        evalDIType(varDecl->getType())
+    );
+
+    _dbuilder->insertDeclare(
+        alloca, info,
+        llvm::DIExpression::get(_context, {}),
+        llvm::DILocation::get(_context, pos.line, pos.startPos, getCurrDIScope(decl)),
+        _builder.GetInsertBlock()
     );
 }
 
