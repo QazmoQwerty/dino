@@ -521,6 +521,32 @@ namespace AST
 		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
 	};
+	
+	class Literal;
+
+	typedef struct EnumMember {
+		unicode_string id;
+		Literal *val;
+	} EnumMember;
+
+	class EnumDeclaration : public Statement 
+	{
+		unicode_string _name;
+		Expression *_type;
+		vector<EnumMember> _members;
+
+	public:
+		EnumDeclaration(unicode_string name) : _name(name) {}
+		void addMember(unicode_string id, Literal *val = NULL) { _members.push_back({id, val}); }
+		void addMember(EnumMember member) { _members.push_back(member); }
+		void setType(Expression *type) { _type = type; }
+		Expression *getType() { return _type; }
+		vector<EnumMember> getMembers() { return _members; }
+
+		virtual StatementType getStatementType() { return ST_ENUM_DECLARATION; };
+		virtual string toString() { return "<EnumDeclaration>\\n" + _name.to_string(); };
+		virtual vector<Node*> getChildren() { TODO };
+	};
 
 	class NamespaceDeclaration : public Statement
 	{

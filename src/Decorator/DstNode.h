@@ -608,6 +608,22 @@ namespace DST
 			virtual bool assignableTo(Type *type);
 	};
 
+	// class EnumType : public BasicType
+	// {
+	// 	private:
+	// 		TypeDeclaration *_decl;
+	// 	public:
+	// 		static ValueType *get(TypeDeclaration *decl);
+	// 		virtual bool implements(InterfaceType *ty);
+
+	// 		virtual bool isValueTy() 	 { return true; }
+	// 		unicode_string getTypeName();
+	// 		ValueType(TypeDeclaration *decl) : _decl(decl) {}
+	// 		virtual TypeDeclaration *getTypeDecl() { return _decl; }
+	// 		virtual Type *getMember(unicode_string name);
+	// 		virtual bool assignableTo(Type *type);
+	// }
+
 	/*
 		A generic type which was declared but not set.
 	*/
@@ -1272,7 +1288,18 @@ namespace DST
 		StatementBlock* getContent() { return _content; }
 	};
 
-	class PropertyDeclaration : public Statement {
+	// class EnumType;
+
+	// class EnumDeclaration : public Statement 
+	// {
+	// 	AST::EnumDeclaration *_base;
+	// 	EnumType *_type;
+	// public:
+
+	// };
+
+	class PropertyDeclaration : public Statement 
+	{
 	private:
 		AST::PropertyDeclaration *_base;
 		Type *_type;

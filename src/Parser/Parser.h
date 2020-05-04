@@ -47,6 +47,8 @@ private:
 	unicode_string expectIdentifier();
 	AST::ExpressionList * expectIdentifierList();
 
+	AST::EnumMember parseEnumMember();
+
 	AST::Expression* convertToExpression(AST::Node* node);
 	AST::Statement* convertToStatement(AST::Node* node);
 	AST::StatementBlock* convertToStatementBlock(AST::Node* node);
