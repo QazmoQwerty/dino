@@ -3,6 +3,7 @@
     This includes the main Code Generator's entry point: startCodeGen()
 */
 #include "CodeGenerator.h"
+#include "DebugInfo.h"
 
 void CodeGenerator::setup(bool isLib, bool emitDebugInfo, bool noGC)
 {
@@ -15,8 +16,7 @@ void CodeGenerator::setup(bool isLib, bool emitDebugInfo, bool noGC)
     llvm::InitializeNativeTargetAsmPrinter();
     llvm::InitializeNativeTargetAsmParser();
 
-    if (emitDebugInfo)
-        _dbuilder = new llvm::DIBuilder(*_module);
+    diGenSetup();
 
     // @.interface_vtable = type { i32, i8** } (interface id, array of function pointers)
     _interfaceVtableType = llvm::StructType::create(_context, { _builder.getInt32Ty(), _builder.getInt8Ty()->getPointerTo()->getPointerTo() }, ".interface_vtable");
@@ -63,13 +63,13 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
         defineNamespaceMembers(i.second);
         _currentNamespace.pop_back();
     }
-    if (_emitDebugInfo)
-        _dbuilder->finalize();
+    diGenFinalize();
     return ret;
 }
 
 void CodeGenerator::writeBitcodeToFile(DST::Program *prog, string fileName) 
 {
+    llvm::verifyModule(*_module);
     llvm::Linker linker(*_module.get());
     for (string s : prog->getBcFileImports())
     {
@@ -134,6 +134,7 @@ void CodeGenerator::declareNamespaceTypesContent(DST::NamespaceDeclaration *node
 
 llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaration *node)
 {
+    diGenNamespace(_currentNamespace.back());
     llvm::Function *ret = NULL;
     for (auto p : node->getMembers())
     {
@@ -177,6 +178,7 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
 
 void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
 {
+    diEnterNamespace(_currentNamespace.back());
     for (auto p : node->getMembers())
     {
         auto member = p.second.first;
@@ -199,6 +201,7 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
             default: break;
         }
     }
+    diLeaveNamespace();
 }
 
 void CodeGenerator::declareInterfaceMembers(DST::InterfaceDeclaration *node)
@@ -666,17 +669,6 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     if (node->getContent() == NULL)
         throw ErrorReporter::report("Undefined function", ERR_CODEGEN, node->getPosition());
 
-    if (_emitDebugInfo)
-    {
-        auto unit = getDIFile(node->getPosition().file);
-        llvm::DIScope *scope = unit;
-        llvm::DISubprogram *subProg = _dbuilder->createFunction(
-            scope, node->getVarDecl()->getVarId().to_string(), llvm::StringRef(), unit, node->getPosition().line,
-            (llvm::DISubroutineType*)evalDIType(node->getFuncType()),
-            false /* internal linkage */, true /* definition */, node->getPosition().startPos
-        );
-        func->setSubprogram(subProg);
-    }
 
     if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
         && ((DST::UnaryOperationStatement*)node->getContent()->getStatements()[0])->getOperator()._type == OT_EXTERN)
@@ -685,6 +677,8 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         llvm::verifyFunction(*func, &llvm::errs());
         return;
     }
+
+    diGenFuncStart(node, func);
 
     auto params = node->getParameters();
 
@@ -695,16 +689,19 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     // Record the function arguments in the NamedValues map.
     _namedValues.push({});
     bool isFirst = true;
+    uint idx = 0;
     for (llvm::Argument &arg : func->args())
     {
         AllocaInst *alloca = CreateEntryBlockAlloca(func, arg.getType(), arg.getName());    // Create an alloca for this variable.
         _builder.CreateStore(&arg, alloca);     // Store the initial value into the alloca.
         _namedValues.top()[arg.getName()] = alloca;   // Add arguments to variable symbol table.
+        diGenFuncParam(node, func, idx++, alloca);
         isFirst = false;
     }
 
     for (auto i : node->getContent()->getStatements()) 
     {
+        diEmitLocation(i);
         auto val = codeGen(i);
         if (val == nullptr)
             throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
@@ -713,6 +710,8 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     if (!_builder.GetInsertBlock()->getTerminator())
         _builder.CreateRetVoid();
 
+    diGenFuncEnd(node, func);
+    // func->print(llvm::errs());
     llvm::verifyFunction(*func, &llvm::errs());
     _namedValues.pop(); // leave block
 }

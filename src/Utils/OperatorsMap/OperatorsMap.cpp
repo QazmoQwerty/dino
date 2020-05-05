@@ -11,7 +11,7 @@ bool OperatorsMap::isWord(OperatorType type)
 {
 	switch(type) {
 		case OT_WHILE: case OT_DO: case OT_FOR: case OT_IF: case OT_ELSE: case OT_LOGICAL_AND: case OT_LOGICAL_OR: case OT_LOGICAL_NOT: case OT_CONST: case OT_TRY: case OT_CATCH:
-		case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_GET: case OT_SET: case OT_IMPLEMENTS: case OT_INCLUDE: case OT_IMPORT:
+		case OT_TYPE: case OT_INTERFACE: case OT_ENUM: case OT_NAMESPACE: case OT_NEW: case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_GET: case OT_SET: case OT_IMPLEMENTS: case OT_INCLUDE: case OT_IMPORT:
 			return true;
 		default: 
 			return false;
@@ -24,7 +24,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 	{
 		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT: case OT_INCREMENT: case OT_DECREMENT: case OT_PARENTHESIS_OPEN: case OT_TRY: case OT_CATCH:
 		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: /*case OT_ELSE:*/ case OT_UNLESS: case OT_IS: case OT_AS: case OT_FOR: case OT_RETURN: case OT_THROW:
-		case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_EXTERN:
+		case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_TYPE: case OT_INTERFACE: case OT_ENUM: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_EXTERN:
 			return true;
 		default: 
 			return false;
@@ -57,7 +57,7 @@ bool OperatorsMap::isKeyword(Operator op)
 	switch (op._type) 
 	{
 		case OT_SWITCH: case OT_CASE: case OT_DEFAULT: case OT_WHILE: case OT_FOR:case OT_DO: case OT_IF: case OT_ELSE: case OT_THEN: case OT_UNLESS: case OT_EXTERN: case OT_TRY: case OT_CATCH:
-		case OT_RETURN: case OT_TYPE: case OT_INTERFACE: case OT_NAMESPACE: case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_GET: case OT_SET: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_THROW:
+		case OT_RETURN: case OT_TYPE: case OT_INTERFACE: case OT_ENUM: case OT_NAMESPACE: case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_GET: case OT_SET: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_THROW:
 			return true;
 		default: 
 			return false;
@@ -258,6 +258,7 @@ void OperatorsMap::setup()
 	_wordsMap[UTF8("import")]		= { OT_IMPORT,		UTF8("import"),		KEYWORD };
 	_wordsMap[UTF8("delete")]		= { OT_DELETE,		UTF8("delete"),		KEYWORD };
 	_wordsMap[UTF8("interface")]	= { OT_INTERFACE,	UTF8("interface"),	KEYWORD };
+	_wordsMap[UTF8("enum")]			= { OT_ENUM,		UTF8("enum"),		KEYWORD };
 	_wordsMap[UTF8("namespace")]	= { OT_NAMESPACE,	UTF8("namespace"),	KEYWORD };
 	_wordsMap[UTF8("const")]		= { OT_CONST,		UTF8("const"),		KEYWORD };
 	_wordsMap[UTF8("extern")]		= { OT_EXTERN,		UTF8("extern"),		KEYWORD };

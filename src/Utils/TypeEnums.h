@@ -38,6 +38,7 @@ enum LiteralType
 	LT_FUNCTION,
 	LT_TYPE,
 	LT_NULL,
+	LT_ENUM,
 	LT_UNKNOWN,
 };
 
@@ -136,6 +137,7 @@ enum OperatorType
 	OT_EXTERN,
 	OT_DELETE,
 	OT_TYPE,
+	OT_ENUM,
 	OT_INTERFACE,
 	OT_NAMESPACE,
 	OT_IMPLEMENTS,
@@ -202,6 +204,7 @@ enum StatementType
 	ST_TYPE_DECLARATION,
 	ST_INTERFACE_DECLARATION,
 	ST_NAMESPACE_DECLARATION,
+	ST_ENUM_DECLARATION,
 	ST_PROPERTY_DECLARATION,
 	ST_UNKNOWN,
 };
@@ -247,6 +250,7 @@ enum ExactType
 	EXACT_POINTER,		// Example: int@ a
 	EXACT_PROPERTY,		// Example: int a { get | set }
 	EXACT_NAMESPACE,	// Example: namespace a {}
+	EXACT_ENUM,
 	EXACT_UNKNOWN,		// Example: var a
 	EXACT_CONST,		// Example: const a := 10
 };

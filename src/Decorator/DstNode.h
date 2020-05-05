@@ -35,11 +35,11 @@ namespace DST
 		BasicType *_i32;	// 32 bit integer
 		BasicType *_i64;	// 64 bit integer
 		BasicType *_i128;	// 128 bit integer
-		BasicType *_u8; 	// 8 bit unsigned integer
-		BasicType *_u16;	// 16 bit unsigned integer
-		BasicType *_u32;	// 32 bit unsigned integer
-		BasicType *_u64;	// 64 bit unsigned integer
-		BasicType *_u128;	// 128 bit unsigned integer
+		BasicType *_u8; 	// 8 bit uinteger
+		BasicType *_u16;	// 16 bit uinteger
+		BasicType *_u32;	// 32 bit uinteger
+		BasicType *_u64;	// 64 bit uinteger
+		BasicType *_u128;	// 128 bit uinteger
 		BasicType *_f16;	// 16 bit float
 		BasicType *_f32;	// 32 bit float
 		BasicType *_f64;	// 64 bit float
@@ -60,8 +60,6 @@ namespace DST
 	class NamespaceDeclaration;
 	extern unordered_map<NamespaceDeclaration*, NamespaceType*> _namespaceTypes;
 
-	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl);
-
 	class NullType;
 
 	// int types
@@ -71,7 +69,7 @@ namespace DST
 	BasicType *geti64Ty();
 	BasicType *geti128Ty();
 
-	// unsigned int types
+	// uint types
 	BasicType *getu8Ty();
 	BasicType *getu16Ty();
 	BasicType *getu32Ty();
@@ -113,7 +111,7 @@ namespace DST
 
 	class Node
 	{
-		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
+		uint _nodeId;	// defined for purpose of the graphic view of the AST.
 		int _line;
 	public:
 		/* Default constructor, does NOT set line.*/
@@ -139,8 +137,8 @@ namespace DST
 			Returns node's unique id number
 			Function defined for AST visual representation - see AstToFile.h
 		*/
-		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		unsigned int getNodeId() const { return _nodeId; };
+		//const uint getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		uint getNodeId() const { return _nodeId; };
 
 		/*
 			Returns a string representation of the node (excluding children info)
@@ -269,7 +267,10 @@ namespace DST
 
 		bool isSigned();
 		bool isIntTy();
+		bool isEnumerable();
 		bool isFloatTy();
+		bool isBoolTy();
+		bool isCharTy();
 
 
 		ConstType *getConstOf();
@@ -281,20 +282,21 @@ namespace DST
 		PropertyType *getPropertyOf(bool hasGet, bool hasSet);
 
 		/* types are non-constant by default */
-		virtual bool isConstTy() 	 { return false; }
-		virtual bool isArrayTy() 	 { return false; }
-		virtual bool isPtrTy() 		 { return false; }
-		virtual bool isValueTy() 	 { return false; }
-		virtual bool isInterfaceTy() { return false; }
-		virtual bool isListTy() 	 { return false; }
-		virtual bool isBasicTy() 	 { return false; }
-		virtual bool isNullTy() 	 { return false; }
-		virtual bool isUnknownTy() 	 { return false; }
-		virtual bool isFuncTy() 	 { return false; }
-		virtual bool isPropertyTy()  { return false; }
-		virtual bool isSpecifierTy() { return false; }
-		virtual bool isNamespaceTy() { return false; }
-		virtual bool isUnsetGenericTy() { return false; }
+		virtual bool isConstTy() 	 	 { return false; }
+		virtual bool isArrayTy() 	 	 { return false; }
+		virtual bool isPtrTy() 		 	 { return false; }
+		virtual bool isValueTy() 	 	 { return false; }
+		virtual bool isInterfaceTy() 	 { return false; }
+		virtual bool isListTy() 	 	 { return false; }
+		virtual bool isBasicTy() 	 	 { return false; }
+		virtual bool isNullTy() 	 	 { return false; }
+		virtual bool isUnknownTy() 	 	 { return false; }
+		virtual bool isFuncTy() 	 	 { return false; }
+		virtual bool isPropertyTy()  	 { return false; }
+		virtual bool isSpecifierTy() 	 { return false; }
+		virtual bool isNamespaceTy() 	 { return false; }
+		virtual bool isEnumTy() { return false; }
+		virtual bool isUnsetGenericTy()  { return false; }
 
 		virtual bool implements(InterfaceType *ty) { return false; };
 
@@ -387,6 +389,35 @@ namespace DST
 			virtual string toShortString() { return "namespaceType"; };
 			virtual bool assignableTo(Type *type) {  return false; /* namespaces are not assignable */ }
 	};
+
+	class EnumDeclaration;
+
+	/*
+		Type for identifiers bound to namespaces.
+	*/
+	class EnumType : public Type
+	{
+		private:
+			EnumDeclaration *_decl;
+		public:
+			static EnumType *get(EnumDeclaration *decl);
+
+			EnumType(DST::EnumDeclaration *decl) : Type(), _decl(decl) {}
+			virtual ~EnumType() {}
+			virtual bool isEnumTy() { return true; }
+			virtual ExactType getExactType() { return EXACT_ENUM; };
+			virtual bool writeable() { return true; }
+			virtual bool readable()  { return true; }
+			EnumDeclaration *getEnumDecl() { return _decl; }
+
+			/* 
+				Short string representation of the type, ready to be pretty-printed. 
+				Example: "Std"
+			*/ 
+			virtual string toShortString();
+
+			virtual bool assignableTo(Type *type) { return type->getNonConstOf()->getNonPropertyOf() == this; }
+	};
 	
 	/*
 		Type for identifiers bound to properties.
@@ -412,19 +443,20 @@ namespace DST
 
 		virtual Type *getNonPropertyOf() { return getReturn(); };
 
-		virtual bool isPropertyTy()  { return true; }
-		virtual bool isConstTy() 	 { return getNonPropertyOf()->isConstTy(); 	   }
-		virtual bool isArrayTy() 	 { return getNonPropertyOf()->isArrayTy(); 	   }
-		virtual bool isPtrTy() 		 { return getNonPropertyOf()->isPtrTy(); 	   }
-		virtual bool isValueTy() 	 { return getNonPropertyOf()->isValueTy(); 	   }
-		virtual bool isInterfaceTy() { return getNonPropertyOf()->isInterfaceTy(); }
-		virtual bool isListTy() 	 { return getNonPropertyOf()->isListTy(); 	   }
-		virtual bool isBasicTy() 	 { return getNonPropertyOf()->isBasicTy(); 	   }
-		virtual bool isNullTy() 	 { return getNonPropertyOf()->isNullTy(); 	   }
-		virtual bool isUnknownTy() 	 { return getNonPropertyOf()->isUnknownTy();   }
-		virtual bool isFuncTy() 	 { return getNonPropertyOf()->isFuncTy(); 	   }
-		virtual bool isSpecifierTy() { return getNonPropertyOf()->isSpecifierTy(); }
-		virtual bool isNamespaceTy() { return getNonPropertyOf()->isNamespaceTy(); }
+		virtual bool isPropertyTy()  	 { return true; }
+		virtual bool isConstTy() 	 	 { return getNonPropertyOf()->isConstTy(); 	   	   }
+		virtual bool isArrayTy() 	 	 { return getNonPropertyOf()->isArrayTy(); 	   	   }
+		virtual bool isPtrTy() 		 	 { return getNonPropertyOf()->isPtrTy(); 	   	   }
+		virtual bool isValueTy() 	 	 { return getNonPropertyOf()->isValueTy(); 	   	   }
+		virtual bool isInterfaceTy() 	 { return getNonPropertyOf()->isInterfaceTy(); 	   }
+		virtual bool isListTy() 	 	 { return getNonPropertyOf()->isListTy(); 	   	   }
+		virtual bool isBasicTy() 	 	 { return getNonPropertyOf()->isBasicTy(); 	   	   }
+		virtual bool isNullTy() 	 	 { return getNonPropertyOf()->isNullTy(); 	   	   }
+		virtual bool isUnknownTy() 	 	 { return getNonPropertyOf()->isUnknownTy();   	   }
+		virtual bool isFuncTy() 	 	 { return getNonPropertyOf()->isFuncTy(); 	   	   }
+		virtual bool isSpecifierTy() 	 { return getNonPropertyOf()->isSpecifierTy(); 	   }
+		virtual bool isNamespaceTy() 	 { return getNonPropertyOf()->isNamespaceTy(); 	   }
+		virtual bool isEnumTy() 		 { return getNonPropertyOf()->isEnumTy(); }
 
 		ExactType getExactType() { return EXACT_PROPERTY; }
 
@@ -478,7 +510,7 @@ namespace DST
 		virtual ~ConstType() { }
 		virtual bool implements(InterfaceType *ty) { return _type->implements(ty); };
 		virtual Type *getNonConstOf() { return _type; }; // returns what type base type of this constant is
-		ExactType getExactType() { return EXACT_POINTER; }
+		ExactType getExactType() { return EXACT_CONST; }
 		virtual bool writeable() { return false; }
 
 		/* 
@@ -491,19 +523,20 @@ namespace DST
 
 		virtual bool assignableTo(DST::Type *type) { return _type->assignableTo(type); };
 
-		virtual bool isConstTy() 	 { return true; }
-		virtual bool isArrayTy() 	 { return getNonConstOf()->isArrayTy(); 	}
-		virtual bool isPtrTy() 		 { return getNonConstOf()->isPtrTy(); 		}
-		virtual bool isValueTy() 	 { return getNonConstOf()->isValueTy(); 	}
-		virtual bool isInterfaceTy() { return getNonConstOf()->isInterfaceTy(); }
-		virtual bool isListTy() 	 { return getNonConstOf()->isListTy(); 		}
-		virtual bool isBasicTy() 	 { return getNonConstOf()->isBasicTy(); 	}
-		virtual bool isNullTy() 	 { return getNonConstOf()->isNullTy(); 		}
-		virtual bool isUnknownTy() 	 { return getNonConstOf()->isUnknownTy(); 	}
-		virtual bool isFuncTy() 	 { return getNonConstOf()->isFuncTy(); 		}
-		virtual bool isPropertyTy()  { return getNonConstOf()->isPropertyTy(); 	}
-		virtual bool isSpecifierTy() { return getNonConstOf()->isSpecifierTy(); }
-		virtual bool isNamespaceTy() { return getNonConstOf()->isNamespaceTy(); }
+		virtual bool isConstTy() 	 	 { return true; }
+		virtual bool isArrayTy() 	 	 { return getNonConstOf()->isArrayTy(); 	}
+		virtual bool isPtrTy() 		 	 { return getNonConstOf()->isPtrTy(); 		}
+		virtual bool isValueTy() 	 	 { return getNonConstOf()->isValueTy(); 	}
+		virtual bool isInterfaceTy() 	 { return getNonConstOf()->isInterfaceTy(); }
+		virtual bool isListTy() 	 	 { return getNonConstOf()->isListTy(); 		}
+		virtual bool isBasicTy() 	 	 { return getNonConstOf()->isBasicTy(); 	}
+		virtual bool isNullTy() 	 	 { return getNonConstOf()->isNullTy(); 		}
+		virtual bool isUnknownTy() 	 	 { return getNonConstOf()->isUnknownTy(); 	}
+		virtual bool isFuncTy() 	 	 { return getNonConstOf()->isFuncTy(); 		}
+		virtual bool isPropertyTy()  	 { return getNonConstOf()->isPropertyTy(); 	}
+		virtual bool isSpecifierTy() 	 { return getNonConstOf()->isSpecifierTy(); }
+		virtual bool isNamespaceTy() 	 { return getNonConstOf()->isNamespaceTy(); }
+		virtual bool isEnumTy() 		 { return getNonConstOf()->isEnumTy(); }
 	};
 
 	class NullType : public Type 
@@ -862,6 +895,7 @@ namespace DST
 
 	class Literal : public Expression
 	{
+	protected:
 		AST::Literal *_base;
 		Type *_type;
 	public:
@@ -870,14 +904,25 @@ namespace DST
 		AST::Literal *getBase() { return _base; }
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
-		int getIntValue();
-		LiteralType getLiteralType() { return _base->getLiteralType(); }
+		virtual int getIntValue();
+		virtual LiteralType getLiteralType() { return _base->getLiteralType(); }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
 		string toShortString() { return _base->toShortString(); }
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+	};
+
+	class EnumLiteral : public Literal 
+	{
+		int _val;
+		PositionInfo _pos;
+	public:
+		virtual LiteralType getLiteralType() { return LT_ENUM; }
+		virtual PositionInfo getPosition() const { return _pos; }
+		EnumLiteral(int value, Type *ty, PositionInfo pos) : Literal(NULL), _val(value), _pos(pos) { setType(ty); }
+		virtual int getIntValue() { return _val; }
 	};
 
 	class Conversion : public Expression
@@ -1202,6 +1247,33 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class EnumDeclaration : public Statement
+	{
+		AST::EnumDeclaration *_base;
+		unordered_map<unicode_string, pair<uint, Literal*>, UnicodeHasherFunction> _members;
+		Type* _memberTy;
+	public:
+		EnumDeclaration(AST::EnumDeclaration *base) : _base(base), _memberTy(NULL) {}
+		unicode_string &getName() { return _base->getName(); }
+		bool hasMember(unicode_string &name) { return _members.count(name); }
+		Literal *getEnumLiteral(unicode_string &name, PositionInfo pos) 
+		{
+			if (auto ret = _members[name].second)
+				return ret;
+			else return new EnumLiteral(_members[name].first, _memberTy, pos);
+		}
+		unordered_map<unicode_string, pair<uint, Literal*>, UnicodeHasherFunction> &getMembers() { return _members; }
+		void addMember(unicode_string name, uint val) { _members[name] = { val, NULL }; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		void setMemberTy(Type *type) { _memberTy = type; }
+		Type *getMemberTy() { return _memberTy; }
+		AST::EnumDeclaration *getBase() { return _base; }
+
+		virtual StatementType getStatementType() { return ST_ENUM_DECLARATION; };
+		virtual string toString() { return "<EnumDeclaration>\\n" + getName().to_string(); };
+		virtual vector<Node*> getChildren() { TODO };
+	};
+
 	class TypeDeclaration : public Statement 
 	{
 		unicode_string _name;
@@ -1272,7 +1344,8 @@ namespace DST
 		StatementBlock* getContent() { return _content; }
 	};
 
-	class PropertyDeclaration : public Statement {
+	class PropertyDeclaration : public Statement 
+	{
 	private:
 		AST::PropertyDeclaration *_base;
 		Type *_type;
@@ -1400,7 +1473,7 @@ namespace DST
 			if (arguments.size() != funcParams.size())
 				throw ErrorReporter::report("expected " + std::to_string(funcParams.size()) + 
 					" arguments in call, got " + std::to_string(arguments.size()), ERR_DECORATOR, getPosition());
-			for (unsigned int i = 0; i < arguments.size(); i++)
+			for (uint i = 0; i < arguments.size(); i++)
 			{
 				if (!arguments[i]->getType()->assignableTo(funcParams[i]))	// TODO - make this error msg better
 					throw ErrorReporter::report("argument types do not match function parameters", ERR_DECORATOR, getPosition());

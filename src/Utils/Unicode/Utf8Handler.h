@@ -11,7 +11,7 @@ using std::vector;
 
 /*
 	A single UTF8 unicode character.
-	Character is saved as an unsigned int32.
+	Character is saved as an uint32.
 */
 class unicode_char {
 public:

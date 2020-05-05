@@ -3,7 +3,7 @@
 */
 #include "Parser.h"
 
-Token * Parser::getToken(unsigned int index)
+Token * Parser::getToken(uint index)
 {
 	if (index >= _tokens.size())
 		return NULL;
@@ -124,4 +124,11 @@ AST::StatementBlock * Parser::parseInnerBlock()
 		return block;
 	}
 	throw ErrorReporter::report("expected a block statement.", ERR_PARSER, peekToken()->_pos);
+}
+
+AST::Literal *Parser::convertToLiteral(AST::Expression *exp, string errorMsg)
+{
+	if (exp && exp->getExpressionType() != ET_LITERAL)
+		throw ErrorReporter::report(errorMsg, ERR_PARSER, exp->getPosition());
+	return (AST::Literal*)exp;
 }

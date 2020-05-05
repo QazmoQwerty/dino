@@ -2,6 +2,7 @@
     Code generation for statements.
 */
 #include "CodeGenerator.h"
+#include "DebugInfo.h"
 
 Value *CodeGenerator::codeGen(DST::Statement *node) 
 {
@@ -37,6 +38,7 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::
     _builder.SetInsertPoint(bb);
     if (node) for (auto i : node->getStatements()) 
     {
+        diEmitLocation(i);
         auto val = codeGen(i);
         if (val == nullptr)
             throw ErrorReporter::report("Error while generating ir for statementblock", ERR_CODEGEN, node->getPosition());
@@ -197,7 +199,7 @@ llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node)
     auto defBB = codeGen(node->getDefault(), "default");
     if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
         _builder.CreateBr(mergeBB);
-    unsigned int count = 0;
+    uint count = 0;
     for (auto i : node->getCases())
         count += i._expressions.size();
     _builder.SetInsertPoint(startBlock);
@@ -243,6 +245,7 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
     {
         for (auto i : node->getThenBranch()->getStatements()) 
         {
+            diEmitLocation(i);
             auto val = codeGen(i);
             if (val == nullptr)
                 throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
@@ -258,6 +261,7 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
     {
         for (auto i : node->getElseBranch()->getStatements()) 
         {
+            diEmitLocation(i);
             auto val = codeGen(i);
             if (val == nullptr)
                 throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
@@ -298,6 +302,7 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
     {
         for (auto i : node->getStatement()->getStatements()) 
         {
+            diEmitLocation(i);
             auto val = codeGen(i);
             if (val == nullptr)
                 throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
@@ -335,6 +340,7 @@ llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
     {
         for (auto i : node->getStatement()->getStatements()) 
         {
+            diEmitLocation(i);
             auto val = codeGen(i);
             if (val == nullptr)
                 throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
@@ -381,6 +387,7 @@ llvm::Value *CodeGenerator::codeGen(DST::ForLoop *node)
     {
         for (auto i : node->getStatement()->getStatements()) 
         {
+            diEmitLocation(i);
             auto val = codeGen(i);
             if (val == nullptr)
                 throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());

@@ -37,7 +37,7 @@ AST::Node * Parser::std(Token * token)
 	{
 		switch (((OperatorToken*)token)->_operator._type)	
 		{
-			case(OT_IMPORT): {
+			case OT_IMPORT: {
 				if (eatOperator(OT_PARENTHESIS_OPEN))
 				{
 					auto block = includeFile();
@@ -51,7 +51,7 @@ AST::Node * Parser::std(Token * token)
 				}
 				else return importFile(token->_pos);
 			}
-			case(OT_INCLUDE): {
+			case OT_INCLUDE: {
 				if (eatOperator(OT_PARENTHESIS_OPEN))
 				{
 					auto block = includeFile();
@@ -65,7 +65,7 @@ AST::Node * Parser::std(Token * token)
 				}
 				else return includeFile();
 			}
-			case(OT_CONST): {
+			case OT_CONST: {
 				auto node = new AST::ConstDeclaration();
 				node->setName(expectIdentifier());
 				expectOperator(OT_ASSIGN_EQUAL);
@@ -73,14 +73,14 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_WHILE): {
+			case OT_WHILE: {
 				auto node = new AST::WhileLoop();
 				node->setCondition(parseExpression());
 				node->setStatement(parseInnerBlock());
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_FOR): {
+			case OT_FOR: {
 				auto node = new AST::ForLoop();
 				node->setBegin(parseStatement());
 				expectLineBreak();
@@ -96,7 +96,7 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_DO): {
+			case OT_DO: {
 				auto node = new AST::DoWhileLoop();
 				node->setStatement(parseInnerBlock());
 				skipLineBreaks();
@@ -105,7 +105,7 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_IF): {
+			case OT_IF: {
 				auto cond = parseExpression();
 				if (eatOperator(OT_THEN)) {	// conditional expression
 					auto node = new AST::ConditionalExpression();
@@ -139,7 +139,7 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_SWITCH): {
+			case OT_SWITCH: {
 				auto node = new AST::SwitchCase();
 				if (!eatOperator(OT_CURLY_BRACES_OPEN))
 				{
@@ -163,7 +163,7 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_UNLESS): {
+			case OT_UNLESS: {
 				auto node = new AST::IfThenElse();
 				node->setCondition(parseExpression());
 				node->setElseBranch(parseInnerBlock());
@@ -171,7 +171,7 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_TRY): {
+			case OT_TRY: {
 				auto node = new AST::TryCatch();
 				node->setTryBlock(parseInnerBlock());
 				expectOperator(OT_CATCH);
@@ -179,9 +179,18 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_CATCH): throw ErrorReporter::report("Missing \"try\" statement before \"catch\"", ERR_PARSER, token->_pos);
-			case(OT_ELSE): throw ErrorReporter::report("Missing \"if\" statement before \"else\"", ERR_PARSER, token->_pos);
-			case(OT_TYPE): {
+			case OT_CATCH: throw ErrorReporter::report("Missing \"try\" statement before \"catch\"", ERR_PARSER, token->_pos);
+			case OT_ELSE: throw ErrorReporter::report("Missing \"if\" statement before \"else\"", ERR_PARSER, token->_pos);
+			case OT_ENUM: {
+				auto node = new AST::EnumDeclaration(expectIdentifier());
+				if (eatOperator(OT_IS)) node->setType(parseExpression());
+				expectOperator(OT_CURLY_BRACES_OPEN);
+				while (eatLineBreak(), !eatOperator(OT_CURLY_BRACES_CLOSE))
+					node->addMember(expectIdentifier(), convertToLiteral(parseOptionalExpression(), "explicit enum value must be a literal"));
+				node->setPosition(token->_pos);
+				return node;
+			}
+			case OT_TYPE: {
 				auto node = new AST::TypeDeclaration();
 				node->setName(expectIdentifier());
 				if (eatOperator(OT_IS))
@@ -208,7 +217,7 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_INTERFACE):	{
+			case OT_INTERFACE:	{
 				auto node = new AST::InterfaceDeclaration();
 				node->setName(expectIdentifier());
 				if (eatOperator(OT_IS))
@@ -241,7 +250,7 @@ AST::Node * Parser::std(Token * token)
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case(OT_NAMESPACE):	{
+			case OT_NAMESPACE:	{
 				auto name = expectIdentifier();
 				AST::NamespaceDeclaration *node;
 				auto inner = parseInnerBlock();
@@ -269,20 +278,20 @@ AST::Node * Parser::std(Token * token)
 				}
 				return node;
 			}
-			case(OT_BREAK): case(OT_CONTINUE): {
+			case OT_BREAK: case OT_CONTINUE: {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setPosition(token->_pos);
 				return op;
 			}
-			case(OT_DELETE): {
+			case OT_DELETE: {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setExpression(parseExpression());
 				op->setPosition(token->_pos);
 				return op;
 			}
-			case(OT_RETURN): case(OT_EXTERN): case(OT_THROW): {
+			case OT_RETURN: case OT_EXTERN: case OT_THROW: {
 				auto op = new AST::UnaryOperationStatement();
 				op->setOperator(((OperatorToken*)token)->_operator);
 				op->setExpression(parseOptionalExpression());
@@ -334,11 +343,11 @@ AST::Node * Parser::nud(Token * token)
 			{
 				switch (params->getExpressionType())	// make sure inner is a list of variable declarations
 				{
-				case(ET_LIST):
+				case ET_LIST:
 					for (auto i : dynamic_cast<AST::ExpressionList*>(inner)->getExpressions())
 						if (i->getExpressionType() != ET_VARIABLE_DECLARATION)
 							return inner;
-				case(ET_VARIABLE_DECLARATION): break;
+				case ET_VARIABLE_DECLARATION: break;
 				default: return inner;
 				}
 			}

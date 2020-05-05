@@ -22,7 +22,7 @@ namespace AST
 
 	class Node
 	{
-		unsigned int _nodeId;	// defined for purpose of the graphic view of the AST.
+		uint _nodeId;	// defined for purpose of the graphic view of the AST.
 		// int _line;
 		PositionInfo _pos;
 	public:
@@ -52,8 +52,8 @@ namespace AST
 			Returns node's unique id number 
 			Function defined for AST visual representation - see AstToFile.h 
 		*/
-		//const unsigned int getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		unsigned int getNodeId() const { return _nodeId; };
+		//const uint getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
+		uint getNodeId() const { return _nodeId; };
 
 		/* 
 			Returns a string representation of the node (excluding children info)
@@ -520,6 +520,34 @@ namespace AST
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
+	};
+	
+	class Literal;
+
+	typedef struct EnumMember {
+		unicode_string id;
+		Literal *val;
+	} EnumMember;
+
+	class EnumDeclaration : public Statement 
+	{
+		unicode_string _name;
+		Expression *_type;
+		vector<EnumMember> _members;
+
+	public:
+		EnumDeclaration(unicode_string name) : _name(name), _type(NULL) {}
+		void addMember(unicode_string id, Literal *val = NULL) { _members.push_back({id, val}); }
+		void addMember(EnumMember member) { _members.push_back(member); }
+		void setType(Expression *type) { _type = type; }
+		Expression *getType() { return _type; }
+		unicode_string &getName() { return _name; }
+		vector<EnumMember> getMembers() { return _members; }
+		virtual bool isDeclaration() { return true; }
+
+		virtual StatementType getStatementType() { return ST_ENUM_DECLARATION; };
+		virtual string toString() { return "<EnumDeclaration>\\n" + _name.to_string(); };
+		virtual vector<Node*> getChildren() { TODO };
 	};
 
 	class NamespaceDeclaration : public Statement

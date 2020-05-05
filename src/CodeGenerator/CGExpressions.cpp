@@ -42,6 +42,8 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
         return llvm::ConstantFP::get(_context, llvm::APFloat(((AST::Fraction*)node->getBase())->getValue()));
     case LT_NULL:
         return llvm::Constant::getNullValue(_builder.getInt8Ty()->getPointerTo());  // 'void*' is invalid in llvm IR
+    case LT_ENUM:
+        return llvm::ConstantInt::get(_context, llvm::APInt( /* 32 bit width */ 32, node->getIntValue(), /* signed */ true));
     case LT_STRING:
     {
         return llvm::ConstantStruct::get(_stringTy, llvm::ConstantStruct::get(llvm::cast<llvm::StructType>(_stringTy->getElementType(0)), {
@@ -248,7 +250,7 @@ Value *CodeGenerator::codeGen(DST::Comparison* node)
 {
     Value *ret = NULL;
     Value *left = codeGen(node->getExpressions()[0]);
-    for (unsigned int i = 0; i < node->getOperators().size(); i++)
+    for (uint i = 0; i < node->getOperators().size(); i++)
     {
         auto right = codeGen(node->getExpressions()[i + 1]);
         Value *newComp = createCompare(
@@ -434,8 +436,8 @@ Value *CodeGenerator::codeGen(DST::Conversion* node)
             return _builder.CreateSIToFP(exp, type);
         return _builder.CreateUIToFP(exp, type);
     }
-    unsigned int targetSz = type->getPrimitiveSizeInBits();
-    unsigned int currSz = exp->getType()->getPrimitiveSizeInBits();
+    uint targetSz = type->getPrimitiveSizeInBits();
+    uint currSz = exp->getType()->getPrimitiveSizeInBits();
     if (targetSz < currSz)
         return _builder.CreateTrunc(exp, type, "cnvrttmp");
     else if (targetSz > currSz) 

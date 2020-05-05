@@ -81,7 +81,7 @@ private:
 	static unsigned _loopCount;
 
 	// Scope
-	static unsigned int currentScope() { return (int)_variables.size() - 1; }
+	static uint currentScope() { return (int)_variables.size() - 1; }
 	static void enterBlock() { _variables.push_back(unordered_map<unicode_string, DST::Expression*, UnicodeHasherFunction>()); }
 	static void leaveBlock();
 };

@@ -1,7 +1,7 @@
 #include "Token.h"
 #include "../Utils//ErrorReporter/ErrorReporter.h"
 
-#define GET_PATH(f) (f ? f->getFullPath() : "")
+#define GET_PATH(f) (f ? f->getOriginalPath() : "")
 
 /*
 	Function gets a Token and prints it based on its type.
@@ -170,7 +170,7 @@ LiteralToken<string> * createStringLiteralToken(unicode_string value, PositionIn
 	token->_pos = pos;
 	token->_literalType = LT_STRING;
 	token->_type = TT_LITERAL;
-	/*for (unsigned int i = 1; i < value.length(); i++) // TODO - special characters
+	/*for (uint i = 1; i < value.length(); i++) // TODO - special characters
 		if (value[i - 1] == "\\")
 			value.replace(i - 1, 2, getSpecialCharConstant(value[i]));*/
 	token->_value = value.to_string();	// TODO - unicode string literals
