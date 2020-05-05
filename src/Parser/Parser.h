@@ -47,12 +47,11 @@ private:
 	unicode_string expectIdentifier();
 	AST::ExpressionList * expectIdentifierList();
 
-	AST::EnumMember parseEnumMember();
-
 	AST::Expression* convertToExpression(AST::Node* node);
 	AST::Statement* convertToStatement(AST::Node* node);
 	AST::StatementBlock* convertToStatementBlock(AST::Node* node);
 	AST::Identifier* convertToIdentifier(AST::Node * node, string errMsg = "expected an identifier");
+	AST::Literal *convertToLiteral(AST::Expression *exp, string errMsg = "expected a literal");
 
 	AST::Statement* parseStatement(int precedence = 0);
 	AST::Expression* parseExpression(int precedence = 0);

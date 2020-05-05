@@ -9,7 +9,6 @@
 namespace DST 
 {
 	PrimitiveTypes _builtinTypes;
-	unordered_map<NamespaceDeclaration*, NamespaceType*> _namespaceTypes;
 
 	void setup() {
 		_builtinTypes._i8 = createPrimitiveTypeSpec("i8");
@@ -94,6 +93,7 @@ namespace DST
 	template<> ValueType 		 *Type::as<ValueType>() 		{ return (ValueType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> InterfaceType 	 *Type::as<InterfaceType>() 	{ return (InterfaceType*)	 getNonConstOf()->getNonPropertyOf(); }
 	template<> FunctionType 	 *Type::as<FunctionType>() 		{ return (FunctionType*)	 getNonConstOf()->getNonPropertyOf(); }
+	template<> EnumType *Type::as<EnumType>() { return (EnumType*)getNonConstOf()->getNonPropertyOf(); }
 
 	bool Type::isFloatTy()
 	{
@@ -101,11 +101,27 @@ namespace DST
 		return t == getf16Ty() || t == getf32Ty() || t == getf64Ty() || t == getf128Ty();
 	}
 
+	bool Type::isBoolTy() 
+	{
+		return getNonPropertyOf()->getNonConstOf() == getBoolTy();
+	}
+
+	bool Type::isCharTy()
+	{
+		auto t = getNonPropertyOf()->getNonConstOf();
+		return t == getc8Ty() || t == getc32Ty();
+	}
+
 	bool Type::isIntTy()
 	{
 		auto t = getNonPropertyOf()->getNonConstOf();
 		return t == geti8Ty() || t == geti16Ty() || t == geti32Ty() || t == geti64Ty() || t == geti128Ty() || 
 			   t == getu8Ty() || t == getu16Ty() || t == getu32Ty() || t == getu64Ty() || t == getu128Ty();
+	}
+
+	bool Type::isEnumerable()
+	{
+		return isIntTy() || isFloatTy() || isBoolTy() || isCharTy();
 	}
 
 	bool Type::isSigned()
@@ -157,13 +173,6 @@ namespace DST
 	bool UnsetGenericType::assignableTo(Type* type)
 	{
 		return equals(type);
-	}
-
-	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl)
-	{
-		if (auto ret = _namespaceTypes[decl])
-			return ret;
-		else return _namespaceTypes[decl] = new NamespaceType(decl);
 	}
 
 
@@ -260,9 +269,18 @@ namespace DST
 
 	NamespaceType *NamespaceType::get(NamespaceDeclaration *decl)
 	{
+		static unordered_map<NamespaceDeclaration*, NamespaceType*> _namespaceTypes;
 		if (auto ret = _namespaceTypes[decl])
 			return ret;
 		else return _namespaceTypes[decl] = new NamespaceType(decl);
+	}
+
+	EnumType *EnumType::get(EnumDeclaration *decl)
+	{
+		static unordered_map<EnumDeclaration*, EnumType*> _namespaceTypes;
+		if (auto ret = _namespaceTypes[decl])
+			return ret;
+		else return _namespaceTypes[decl] = new EnumType(decl);
 	}
 
 	PropertyType *PropertyType::get(Type *ret, bool hasGet, bool hasSet)
@@ -396,6 +414,11 @@ namespace DST
 	Type * Type::getType()
 	{
 		UNREACHABLE
+	}
+
+	string EnumType::toShortString()
+	{
+		return _decl->getName().to_string();
 	}
 
 	bool InterfaceType::assignableTo(Type *type)

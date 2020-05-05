@@ -39,6 +39,13 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                     return _types[bt->getTypeDecl()]->structType;
                 throw ErrorReporter::report("Type " + node->toShortString() + " does not exist", ERR_CODEGEN, node->getPosition());
             }
+        case EXACT_ENUM:
+        {
+            auto membersTy = ((DST::EnumType*)node)->getEnumDecl()->getMemberTy();
+            if (membersTy->isEnumTy())
+                return _builder.getInt32Ty();
+            return evalType(membersTy);
+        }
         case EXACT_ARRAY:
             if (((DST::ArrayType*)node)->getLength() == DST::UNKNOWN_ARRAY_LENGTH) 
             {

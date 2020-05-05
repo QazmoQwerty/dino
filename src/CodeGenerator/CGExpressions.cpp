@@ -42,6 +42,8 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
         return llvm::ConstantFP::get(_context, llvm::APFloat(((AST::Fraction*)node->getBase())->getValue()));
     case LT_NULL:
         return llvm::Constant::getNullValue(_builder.getInt8Ty()->getPointerTo());  // 'void*' is invalid in llvm IR
+    case LT_ENUM:
+        return llvm::ConstantInt::get(_context, llvm::APInt( /* 32 bit width */ 32, node->getIntValue(), /* signed */ true));
     case LT_STRING:
     {
         return llvm::ConstantStruct::get(_stringTy, llvm::ConstantStruct::get(llvm::cast<llvm::StructType>(_stringTy->getElementType(0)), {

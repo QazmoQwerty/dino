@@ -38,6 +38,7 @@ enum LiteralType
 	LT_FUNCTION,
 	LT_TYPE,
 	LT_NULL,
+	LT_ENUM,
 	LT_UNKNOWN,
 };
 
@@ -249,6 +250,7 @@ enum ExactType
 	EXACT_POINTER,		// Example: int@ a
 	EXACT_PROPERTY,		// Example: int a { get | set }
 	EXACT_NAMESPACE,	// Example: namespace a {}
+	EXACT_ENUM,
 	EXACT_UNKNOWN,		// Example: var a
 	EXACT_CONST,		// Example: const a := 10
 };

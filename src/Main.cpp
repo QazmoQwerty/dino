@@ -1,4 +1,6 @@
-﻿#include <fstream>
+﻿#define DINO_VERSION "Dino 0.1.0"
+
+#include <fstream>
 #include <iostream>
 #include <sstream> 
 
@@ -18,6 +20,7 @@ typedef struct cmdOptions
 {
 	const char *fileName;
 	bool showHelp = false;
+	bool showVersion = false;
 	bool verbose = false;
 	bool showLexerOutput = false; 
 	bool outputAstFiles = false; 
@@ -41,6 +44,7 @@ void showHelp()
 {
 	llvm::errs() << "dino [filepath] [args]\n" 
 		<< "    -help (show this help message)\n"
+		<< "    -V (show version)\n"
 		<< "    -fmt (format: swaps all operators with their unicode counterparts)\n"
 		<< "    -v (verbose: show ongoing compilation status)\n"
 		<< "    -showlex (prints the output of the lexer)\n"
@@ -51,7 +55,13 @@ void showHelp()
 		<< "    -o [filepath] (output an executable file to \"filepath\")\n"
 		<< "    -lib [dirpath] (build as a library to the directory \"dirpath\")\n"
 		<< "    -O[0/1/2/3/s/z/d] (optimization levels, see 'opt -help', '-Od' means no optimizations)\n"
-		<< "    -noGC (turn off garbage collection)";
+		<< "    -noGC (turn off garbage collection)\n";
+	exit(0);
+}
+
+void showVersion()
+{
+	llvm::errs() << DINO_VERSION << "\n";
 	exit(0);
 }
 
@@ -93,9 +103,11 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 			if (strlen(argv[i]) && argv[i][0] == '-') 
 			{
 				if 		(!strcmp(argv[i], "-help") || 
-							!strcmp(argv[i], "-h")) 		options->showHelp 			= true;
+							!strcmp(argv[i], "-h")) 		options->showHelp 		= true;
 				else if (!strcmp(argv[i], "-verbose") || 
 							!strcmp(argv[i], "-v"))		options->verbose 			= true;
+				else if (!strcmp(argv[i], "-version") || 
+							!strcmp(argv[i], "-V"))		options->showVersion 		= true;
 				else if (!strcmp(argv[i], "-lex")) 		options->showLexerOutput 	= true;
 				else if (!strcmp(argv[i], "-ast")) 		options->outputAstFiles 	= true;
 				else if (!strcmp(argv[i], "-fmt")) 		options->prettify 			= true;
@@ -145,6 +157,8 @@ cmdOptions *getCmdOptions(int argc, char *argv[])
 		}
 		if (options->showHelp)
 			showHelp();
+		if (options->showVersion)
+			showVersion();
 		if (!options->fileName)
 			throw "incorrect usage, missing input file\nTry \"dino -h\" for more info.";
 	} 
@@ -174,7 +188,6 @@ int main(int argc, char *argv[])
 			exit(0);
 	}
 
-
 	CodeGenerator::setup(cmd->outputLib, cmd->emitDebugInfo, cmd->noGC);
 	OperatorsMap::setup();
 	Lexer::setup();
@@ -182,34 +195,27 @@ int main(int argc, char *argv[])
 	Decorator::setup(cmd->outputLib);
 	try
 	{
-		if (cmd->verbose)
-			llvm::errs() << "Starting build...\n";
+		if (cmd->verbose) llvm::errs() << "Starting build...\n";
 		AST::Node *ast = Parser::parseFile(cmd->fileName, cmd->showLexerOutput);
 
-		if (cmd->verbose)
-			llvm::errs() << "Finished parsing...\n";
+		if (cmd->verbose) llvm::errs() << "Finished parsing...\n";
 		if (cmd->outputAstFiles) 
 		{
 			astToFile("AstDisplay.gv", ast, cmd->showLineAST);
-			if (cmd->verbose)
-				llvm::errs() << "Wrote \"AstDisplay.gv\"...\n";	
+			if (cmd->verbose) llvm::errs() << "Wrote \"AstDisplay.gv\"...\n";	
 		}
 
 		DST::Program* dst = Decorator::decorateProgram(dynamic_cast<AST::StatementBlock*>(ast));
-		if (cmd->verbose) 
-			llvm::errs() << "Finished decorating...\n";
+		if (cmd->verbose) llvm::errs() << "Finished decorating...\n";
 
 		if (cmd->outputAstFiles)
 		{
 			dstToFile("DstDisplay.gv", dst, false);
-			if (cmd->verbose)
-				llvm::errs() << "Wrote \"DstDisplay.gv\"...\n";	
+			if (cmd->verbose) llvm::errs() << "Wrote \"DstDisplay.gv\"...\n";	
 		}
 		
 		CodeGenerator::startCodeGen(dst);
-
-		if (cmd->verbose)
-			llvm::errs() << "Finished generating IR...\n";
+		if (cmd->verbose) llvm::errs() << "Finished generating IR...\n";
 
 		string bcFileName = "";
 		if (cmd->outputBc) 
@@ -224,8 +230,7 @@ int main(int argc, char *argv[])
 		if (cmd->outputBc || cmd->outputExe || cmd->outputLl)
 		{
 			CodeGenerator::writeBitcodeToFile(dst, bcFileName);
-			if (cmd->verbose)
-				llvm::errs() << "outputted .bc file\n";
+			if (cmd->verbose) llvm::errs() << "outputted .bc file\n";
 		}
 
 		if (cmd->outputLib)
@@ -234,29 +239,25 @@ int main(int argc, char *argv[])
 			auto libBcFileName = string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".bc";
 			LibFileWriter::Write(string(cmd->libFileName) + '/' + string(cmd->libFileName) + ".dinh", libBcFileName, dst);
 			CodeGenerator::writeBitcodeToFile(dst, libBcFileName);
-			if (cmd->verbose)
-				llvm::errs() << "outputted lib files\n";
+			if (cmd->verbose) llvm::errs() << "outputted lib files\n";
 		}
 
 		if (cmd->optLevel && strcmp(cmd->optLevel, "-Od"))
 		{
 			runCmd(string("opt ") + bcFileName + " " + cmd->optLevel + " -o " + bcFileName);
-			if (cmd->verbose)
-				llvm::errs() << "Optimized bitcode...\n";
+			if (cmd->verbose) llvm::errs() << "Optimized bitcode...\n";
 		}
 
 		if (cmd->outputLl)
 		{
 			runCmd(string("llvm-dis ") + bcFileName + " -o " + cmd->llFileName);
-			if (cmd->verbose)
-				llvm::errs() << "outputted .ll file\n";
+			if (cmd->verbose) llvm::errs() << "outputted .ll file\n";
 		}
 
 		if (cmd->outputExe)
 		{
 			runCmd(string("clang++ -Wno-override-module -lgc ") + bcFileName + " -o " + cmd->exeFileName);
-			if (cmd->verbose)
-				llvm::errs() << "outputted ELF file\n";
+			if (cmd->verbose) llvm::errs() << "outputted ELF file\n";
 		}
 
 		if (bcFileName != "" && !cmd->outputBc)

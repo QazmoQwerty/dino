@@ -126,32 +126,9 @@ AST::StatementBlock * Parser::parseInnerBlock()
 	throw ErrorReporter::report("expected a block statement.", ERR_PARSER, peekToken()->_pos);
 }
 
-
-AST::EnumMember Parser::parseEnumMember() 
+AST::Literal *Parser::convertToLiteral(AST::Expression *exp, string errorMsg)
 {
-	auto parsed = parse();
-	if (parsed == NULL || !parsed->isExpression())
-		TODO
-	auto exp = dynamic_cast<AST::Expression*>(parsed);
-	switch (exp->getExpressionType())
-	{
-		case ET_ASSIGNMENT:
-		{
-			auto node = (AST::Assignment*)exp;
-			auto ident = convertToIdentifier(node->getLeft());
-			if (node->getRight()->getExpressionType() != ET_LITERAL)
-				throw ErrorReporter::report("enum default value must be a literal value", ERR_PARSER, node->getRight()->getPosition());
-			AST::EnumMember ret = { ident->getVarId(), ((AST::Literal*)node->getRight()) };
-			node->setRight(NULL);	// so the literal won't be delete'd
-			delete node;
-			return ret;
-		}
-		case ET_IDENTIFIER:
-		{
-			AST::EnumMember ret = { ((AST::Identifier*)exp)->getVarId(), NULL };
-			delete exp;
-			return ret;
-		}
-		default: throw ErrorReporter::report("expected an enum member", ERR_PARSER, exp->getPosition());
-	}
+	if (exp && exp->getExpressionType() != ET_LITERAL)
+		throw ErrorReporter::report(errorMsg, ERR_PARSER, exp->getPosition());
+	return (AST::Literal*)exp;
 }

@@ -186,7 +186,7 @@ AST::Node * Parser::std(Token * token)
 				if (eatOperator(OT_IS)) node->setType(parseExpression());
 				expectOperator(OT_CURLY_BRACES_OPEN);
 				while (eatLineBreak(), !eatOperator(OT_CURLY_BRACES_CLOSE))
-					node->addMember(parseEnumMember());
+					node->addMember(expectIdentifier(), convertToLiteral(parseOptionalExpression(), "explicit enum value must be a literal"));
 				node->setPosition(token->_pos);
 				return node;
 			}

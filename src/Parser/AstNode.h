@@ -536,12 +536,14 @@ namespace AST
 		vector<EnumMember> _members;
 
 	public:
-		EnumDeclaration(unicode_string name) : _name(name) {}
+		EnumDeclaration(unicode_string name) : _name(name), _type(NULL) {}
 		void addMember(unicode_string id, Literal *val = NULL) { _members.push_back({id, val}); }
 		void addMember(EnumMember member) { _members.push_back(member); }
 		void setType(Expression *type) { _type = type; }
 		Expression *getType() { return _type; }
+		unicode_string &getName() { return _name; }
 		vector<EnumMember> getMembers() { return _members; }
+		virtual bool isDeclaration() { return true; }
 
 		virtual StatementType getStatementType() { return ST_ENUM_DECLARATION; };
 		virtual string toString() { return "<EnumDeclaration>\\n" + _name.to_string(); };

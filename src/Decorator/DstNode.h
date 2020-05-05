@@ -60,8 +60,6 @@ namespace DST
 	class NamespaceDeclaration;
 	extern unordered_map<NamespaceDeclaration*, NamespaceType*> _namespaceTypes;
 
-	NamespaceType *getNamespaceTy(NamespaceDeclaration *decl);
-
 	class NullType;
 
 	// int types
@@ -269,7 +267,10 @@ namespace DST
 
 		bool isSigned();
 		bool isIntTy();
+		bool isEnumerable();
 		bool isFloatTy();
+		bool isBoolTy();
+		bool isCharTy();
 
 
 		ConstType *getConstOf();
@@ -281,20 +282,21 @@ namespace DST
 		PropertyType *getPropertyOf(bool hasGet, bool hasSet);
 
 		/* types are non-constant by default */
-		virtual bool isConstTy() 	 { return false; }
-		virtual bool isArrayTy() 	 { return false; }
-		virtual bool isPtrTy() 		 { return false; }
-		virtual bool isValueTy() 	 { return false; }
-		virtual bool isInterfaceTy() { return false; }
-		virtual bool isListTy() 	 { return false; }
-		virtual bool isBasicTy() 	 { return false; }
-		virtual bool isNullTy() 	 { return false; }
-		virtual bool isUnknownTy() 	 { return false; }
-		virtual bool isFuncTy() 	 { return false; }
-		virtual bool isPropertyTy()  { return false; }
-		virtual bool isSpecifierTy() { return false; }
-		virtual bool isNamespaceTy() { return false; }
-		virtual bool isUnsetGenericTy() { return false; }
+		virtual bool isConstTy() 	 	 { return false; }
+		virtual bool isArrayTy() 	 	 { return false; }
+		virtual bool isPtrTy() 		 	 { return false; }
+		virtual bool isValueTy() 	 	 { return false; }
+		virtual bool isInterfaceTy() 	 { return false; }
+		virtual bool isListTy() 	 	 { return false; }
+		virtual bool isBasicTy() 	 	 { return false; }
+		virtual bool isNullTy() 	 	 { return false; }
+		virtual bool isUnknownTy() 	 	 { return false; }
+		virtual bool isFuncTy() 	 	 { return false; }
+		virtual bool isPropertyTy()  	 { return false; }
+		virtual bool isSpecifierTy() 	 { return false; }
+		virtual bool isNamespaceTy() 	 { return false; }
+		virtual bool isEnumTy() { return false; }
+		virtual bool isUnsetGenericTy()  { return false; }
 
 		virtual bool implements(InterfaceType *ty) { return false; };
 
@@ -387,6 +389,35 @@ namespace DST
 			virtual string toShortString() { return "namespaceType"; };
 			virtual bool assignableTo(Type *type) {  return false; /* namespaces are not assignable */ }
 	};
+
+	class EnumDeclaration;
+
+	/*
+		Type for identifiers bound to namespaces.
+	*/
+	class EnumType : public Type
+	{
+		private:
+			EnumDeclaration *_decl;
+		public:
+			static EnumType *get(EnumDeclaration *decl);
+
+			EnumType(DST::EnumDeclaration *decl) : Type(), _decl(decl) {}
+			virtual ~EnumType() {}
+			virtual bool isEnumTy() { return true; }
+			virtual ExactType getExactType() { return EXACT_ENUM; };
+			virtual bool writeable() { return true; }
+			virtual bool readable()  { return true; }
+			EnumDeclaration *getEnumDecl() { return _decl; }
+
+			/* 
+				Short string representation of the type, ready to be pretty-printed. 
+				Example: "Std"
+			*/ 
+			virtual string toShortString();
+
+			virtual bool assignableTo(Type *type) { return type->getNonConstOf()->getNonPropertyOf() == this; }
+	};
 	
 	/*
 		Type for identifiers bound to properties.
@@ -412,19 +443,20 @@ namespace DST
 
 		virtual Type *getNonPropertyOf() { return getReturn(); };
 
-		virtual bool isPropertyTy()  { return true; }
-		virtual bool isConstTy() 	 { return getNonPropertyOf()->isConstTy(); 	   }
-		virtual bool isArrayTy() 	 { return getNonPropertyOf()->isArrayTy(); 	   }
-		virtual bool isPtrTy() 		 { return getNonPropertyOf()->isPtrTy(); 	   }
-		virtual bool isValueTy() 	 { return getNonPropertyOf()->isValueTy(); 	   }
-		virtual bool isInterfaceTy() { return getNonPropertyOf()->isInterfaceTy(); }
-		virtual bool isListTy() 	 { return getNonPropertyOf()->isListTy(); 	   }
-		virtual bool isBasicTy() 	 { return getNonPropertyOf()->isBasicTy(); 	   }
-		virtual bool isNullTy() 	 { return getNonPropertyOf()->isNullTy(); 	   }
-		virtual bool isUnknownTy() 	 { return getNonPropertyOf()->isUnknownTy();   }
-		virtual bool isFuncTy() 	 { return getNonPropertyOf()->isFuncTy(); 	   }
-		virtual bool isSpecifierTy() { return getNonPropertyOf()->isSpecifierTy(); }
-		virtual bool isNamespaceTy() { return getNonPropertyOf()->isNamespaceTy(); }
+		virtual bool isPropertyTy()  	 { return true; }
+		virtual bool isConstTy() 	 	 { return getNonPropertyOf()->isConstTy(); 	   	   }
+		virtual bool isArrayTy() 	 	 { return getNonPropertyOf()->isArrayTy(); 	   	   }
+		virtual bool isPtrTy() 		 	 { return getNonPropertyOf()->isPtrTy(); 	   	   }
+		virtual bool isValueTy() 	 	 { return getNonPropertyOf()->isValueTy(); 	   	   }
+		virtual bool isInterfaceTy() 	 { return getNonPropertyOf()->isInterfaceTy(); 	   }
+		virtual bool isListTy() 	 	 { return getNonPropertyOf()->isListTy(); 	   	   }
+		virtual bool isBasicTy() 	 	 { return getNonPropertyOf()->isBasicTy(); 	   	   }
+		virtual bool isNullTy() 	 	 { return getNonPropertyOf()->isNullTy(); 	   	   }
+		virtual bool isUnknownTy() 	 	 { return getNonPropertyOf()->isUnknownTy();   	   }
+		virtual bool isFuncTy() 	 	 { return getNonPropertyOf()->isFuncTy(); 	   	   }
+		virtual bool isSpecifierTy() 	 { return getNonPropertyOf()->isSpecifierTy(); 	   }
+		virtual bool isNamespaceTy() 	 { return getNonPropertyOf()->isNamespaceTy(); 	   }
+		virtual bool isEnumTy() 		 { return getNonPropertyOf()->isEnumTy(); }
 
 		ExactType getExactType() { return EXACT_PROPERTY; }
 
@@ -491,19 +523,20 @@ namespace DST
 
 		virtual bool assignableTo(DST::Type *type) { return _type->assignableTo(type); };
 
-		virtual bool isConstTy() 	 { return true; }
-		virtual bool isArrayTy() 	 { return getNonConstOf()->isArrayTy(); 	}
-		virtual bool isPtrTy() 		 { return getNonConstOf()->isPtrTy(); 		}
-		virtual bool isValueTy() 	 { return getNonConstOf()->isValueTy(); 	}
-		virtual bool isInterfaceTy() { return getNonConstOf()->isInterfaceTy(); }
-		virtual bool isListTy() 	 { return getNonConstOf()->isListTy(); 		}
-		virtual bool isBasicTy() 	 { return getNonConstOf()->isBasicTy(); 	}
-		virtual bool isNullTy() 	 { return getNonConstOf()->isNullTy(); 		}
-		virtual bool isUnknownTy() 	 { return getNonConstOf()->isUnknownTy(); 	}
-		virtual bool isFuncTy() 	 { return getNonConstOf()->isFuncTy(); 		}
-		virtual bool isPropertyTy()  { return getNonConstOf()->isPropertyTy(); 	}
-		virtual bool isSpecifierTy() { return getNonConstOf()->isSpecifierTy(); }
-		virtual bool isNamespaceTy() { return getNonConstOf()->isNamespaceTy(); }
+		virtual bool isConstTy() 	 	 { return true; }
+		virtual bool isArrayTy() 	 	 { return getNonConstOf()->isArrayTy(); 	}
+		virtual bool isPtrTy() 		 	 { return getNonConstOf()->isPtrTy(); 		}
+		virtual bool isValueTy() 	 	 { return getNonConstOf()->isValueTy(); 	}
+		virtual bool isInterfaceTy() 	 { return getNonConstOf()->isInterfaceTy(); }
+		virtual bool isListTy() 	 	 { return getNonConstOf()->isListTy(); 		}
+		virtual bool isBasicTy() 	 	 { return getNonConstOf()->isBasicTy(); 	}
+		virtual bool isNullTy() 	 	 { return getNonConstOf()->isNullTy(); 		}
+		virtual bool isUnknownTy() 	 	 { return getNonConstOf()->isUnknownTy(); 	}
+		virtual bool isFuncTy() 	 	 { return getNonConstOf()->isFuncTy(); 		}
+		virtual bool isPropertyTy()  	 { return getNonConstOf()->isPropertyTy(); 	}
+		virtual bool isSpecifierTy() 	 { return getNonConstOf()->isSpecifierTy(); }
+		virtual bool isNamespaceTy() 	 { return getNonConstOf()->isNamespaceTy(); }
+		virtual bool isEnumTy() 		 { return getNonConstOf()->isEnumTy(); }
 	};
 
 	class NullType : public Type 
@@ -607,22 +640,6 @@ namespace DST
 			virtual Type *getMember(unicode_string name);
 			virtual bool assignableTo(Type *type);
 	};
-
-	// class EnumType : public BasicType
-	// {
-	// 	private:
-	// 		TypeDeclaration *_decl;
-	// 	public:
-	// 		static ValueType *get(TypeDeclaration *decl);
-	// 		virtual bool implements(InterfaceType *ty);
-
-	// 		virtual bool isValueTy() 	 { return true; }
-	// 		unicode_string getTypeName();
-	// 		ValueType(TypeDeclaration *decl) : _decl(decl) {}
-	// 		virtual TypeDeclaration *getTypeDecl() { return _decl; }
-	// 		virtual Type *getMember(unicode_string name);
-	// 		virtual bool assignableTo(Type *type);
-	// }
 
 	/*
 		A generic type which was declared but not set.
@@ -878,6 +895,7 @@ namespace DST
 
 	class Literal : public Expression
 	{
+	protected:
 		AST::Literal *_base;
 		Type *_type;
 	public:
@@ -886,14 +904,23 @@ namespace DST
 		AST::Literal *getBase() { return _base; }
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
-		int getIntValue();
-		LiteralType getLiteralType() { return _base->getLiteralType(); }
+		virtual int getIntValue();
+		virtual LiteralType getLiteralType() { return _base->getLiteralType(); }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
 		string toShortString() { return _base->toShortString(); }
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
+	};
+
+	class EnumLiteral : public Literal 
+	{
+		int _val;
+	public:
+		virtual LiteralType getLiteralType() { return LT_ENUM; }
+		EnumLiteral(int value, Type *ty) : Literal(NULL), _val(value) { setType(ty); }
+		virtual int getIntValue() { return _val; }
 	};
 
 	class Conversion : public Expression
@@ -1218,6 +1245,33 @@ namespace DST
 		virtual vector<Node*> getChildren();
 	};
 
+	class EnumDeclaration : public Statement
+	{
+		AST::EnumDeclaration *_base;
+		unordered_map<unicode_string, pair<uint, Literal*>, UnicodeHasherFunction> _members;
+		Type* _memberTy;
+	public:
+		EnumDeclaration(AST::EnumDeclaration *base) : _base(base), _memberTy(NULL) {}
+		unicode_string &getName() { return _base->getName(); }
+		bool hasMember(unicode_string &name) { return _members.count(name); }
+		Literal *getEnumLiteral(unicode_string &name) 
+		{
+			if (auto ret = _members[name].second)
+				return ret;
+			else return new EnumLiteral(_members[name].first, _memberTy);
+		}
+		unordered_map<unicode_string, pair<uint, Literal*>, UnicodeHasherFunction> &getMembers() { return _members; }
+		void addMember(unicode_string name, uint val) { _members[name] = { val, NULL }; }
+		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		void setMemberTy(Type *type) { _memberTy = type; }
+		Type *getMemberTy() { return _memberTy; }
+		AST::EnumDeclaration *getBase() { return _base; }
+
+		virtual StatementType getStatementType() { return ST_ENUM_DECLARATION; };
+		virtual string toString() { return "<EnumDeclaration>\\n" + getName().to_string(); };
+		virtual vector<Node*> getChildren() { TODO };
+	};
+
 	class TypeDeclaration : public Statement 
 	{
 		unicode_string _name;
@@ -1287,16 +1341,6 @@ namespace DST
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
 		StatementBlock* getContent() { return _content; }
 	};
-
-	// class EnumType;
-
-	// class EnumDeclaration : public Statement 
-	// {
-	// 	AST::EnumDeclaration *_base;
-	// 	EnumType *_type;
-	// public:
-
-	// };
 
 	class PropertyDeclaration : public Statement 
 	{

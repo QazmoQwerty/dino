@@ -53,7 +53,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 
 	if (_currentProgram) 
 		if (auto var = _currentProgram->getNamespace(name))
-			return new DST::Variable(node, DST::getNamespaceTy(var));
+			return new DST::Variable(node, DST::NamespaceType::get(var));
 
 	throw ErrorReporter::report("Identifier '" + name.to_string() + "' is undefined", ERR_DECORATOR, node->getPosition());
 }
@@ -208,10 +208,22 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	if (node->getOperator()._type == OT_PERIOD) 
 	{
 		auto left = decorate(node->getLeft());
-		auto type = left->getType();
-
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
 			throw ErrorReporter::report("Expected an identifier", ERR_DECORATOR, node->getPosition());
+
+		if (left->getExpressionType() == ET_TYPE)
+		{
+			if (!((DST::Type*)left)->isEnumTy())
+				throw ErrorReporter::report("dino does not have static type members", ERR_DECORATOR, node->getLeft()->getPosition());
+			auto enumTy = ((DST::Type*)left)->as<DST::EnumType>();
+			auto ident = ((AST::Identifier*)node->getRight());
+			if (!enumTy->getEnumDecl()->hasMember(ident->getVarId()))
+				throw ErrorReporter::report("\"" + enumTy->toShortString() + "\" has no member named \"" 
+					+ ident->getVarId().to_string() + "\"", ERR_DECORATOR, node->getRight()->getPosition());
+			return enumTy->getEnumDecl()->getEnumLiteral(ident->getVarId());
+		}
+
+		auto type = left->getType();
 
 		if (type->isPropertyTy() && type->as<DST::PropertyType>()->hasGet())
 			type = type->as<DST::PropertyType>()->getReturn();

@@ -95,7 +95,7 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 		{
 			auto decl = (AST::NamespaceDeclaration*)i;
 			auto tempDecl = partA(decl);
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::Variable(decl->getName(), DST::getNamespaceTy(tempDecl)));
+			shallowDecl->addMember(decl->getName(), tempDecl, new DST::Variable(decl->getName(), DST::NamespaceType::get(tempDecl)));
 		}
 		else if (i->getStatementType() == ST_INTERFACE_DECLARATION)
 		{
@@ -122,6 +122,12 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 				else if (decl->getName() == "NullPointerError")
 					DST::_builtinTypes._nullPtrError = type;
 			}
+		}
+		else if (i->getStatementType() == ST_ENUM_DECLARATION)
+		{
+			auto decl = (AST::EnumDeclaration*)i;
+			auto tempDecl = new DST::EnumDeclaration(decl);
+			shallowDecl->addMember(decl->getName(), tempDecl, DST::EnumType::get(tempDecl));
 		}
 	}
 	return shallowDecl;
@@ -164,6 +170,31 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 					decl->addInterface(((DST::Type*)dec)->as<DST::InterfaceType>()->getInterfaceDecl());
 				}
 			break;
+		}
+		case ST_ENUM_DECLARATION:
+		{
+			auto decl = (DST::EnumDeclaration*)i.second.first;
+			if (decl->getBase()->getType())
+			{
+				auto ty = evalType(decl->getBase()->getType());
+				if (!ty->isEnumerable())
+					throw ErrorReporter::report("type must be enumerable", ERR_CODEGEN, decl->getBase()->getType()->getPosition());
+				decl->setMemberTy(ty);
+				TODO
+			}	
+			else 
+			{
+				decl->setMemberTy(DST::EnumType::get(decl));
+				uint count = 0;
+				for (auto i : decl->getBase()->getMembers())
+				{
+					if (i.val)
+						throw ErrorReporter::report("enums with explicit values must state their type", ERR_CODEGEN, decl->getPosition());
+					if (decl->getMembers().count(i.id))
+						throw ErrorReporter::report("duplicate identifer \"" + i.id.to_string() + "\"", ERR_CODEGEN, decl->getPosition());
+					decl->addMember(i.id, count++);
+				}
+			}
 		}
 		default:
 			break;
