@@ -2,9 +2,10 @@ import "std2"
 
 namespace NS {
     void Main() {
-        Day d := Day.Saturda
+        Day d := Day.Saturday
         Std.PrintDLn(d as int)
     }
+    
 
     enum Day {
         Sunday
