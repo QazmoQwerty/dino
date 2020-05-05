@@ -220,7 +220,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			if (!enumTy->getEnumDecl()->hasMember(ident->getVarId()))
 				throw ErrorReporter::report("\"" + enumTy->toShortString() + "\" has no member named \"" 
 					+ ident->getVarId().to_string() + "\"", ERR_DECORATOR, node->getRight()->getPosition());
-			return enumTy->getEnumDecl()->getEnumLiteral(ident->getVarId());
+			return enumTy->getEnumDecl()->getEnumLiteral(ident->getVarId(), ident->getPosition());
 		}
 
 		auto type = left->getType();

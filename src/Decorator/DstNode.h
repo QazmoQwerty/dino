@@ -917,9 +917,11 @@ namespace DST
 	class EnumLiteral : public Literal 
 	{
 		int _val;
+		PositionInfo _pos;
 	public:
 		virtual LiteralType getLiteralType() { return LT_ENUM; }
-		EnumLiteral(int value, Type *ty) : Literal(NULL), _val(value) { setType(ty); }
+		virtual PositionInfo getPosition() const { return _pos; }
+		EnumLiteral(int value, Type *ty, PositionInfo pos) : Literal(NULL), _val(value), _pos(pos) { setType(ty); }
 		virtual int getIntValue() { return _val; }
 	};
 
@@ -1254,11 +1256,11 @@ namespace DST
 		EnumDeclaration(AST::EnumDeclaration *base) : _base(base), _memberTy(NULL) {}
 		unicode_string &getName() { return _base->getName(); }
 		bool hasMember(unicode_string &name) { return _members.count(name); }
-		Literal *getEnumLiteral(unicode_string &name) 
+		Literal *getEnumLiteral(unicode_string &name, PositionInfo pos) 
 		{
 			if (auto ret = _members[name].second)
 				return ret;
-			else return new EnumLiteral(_members[name].first, _memberTy);
+			else return new EnumLiteral(_members[name].first, _memberTy, pos);
 		}
 		unordered_map<unicode_string, pair<uint, Literal*>, UnicodeHasherFunction> &getMembers() { return _members; }
 		void addMember(unicode_string name, uint val) { _members[name] = { val, NULL }; }

@@ -2,8 +2,8 @@ import "std2"
 
 namespace NS {
     void Main() {
-        Day d := Day.Saturday
-        Std.PrintDLn(d as int)
+        Day d := Day.Wednesday
+        Std.PrintDLn(d as int)    
     }
     
 
