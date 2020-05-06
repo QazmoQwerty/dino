@@ -13,7 +13,9 @@
 
 #define CONDITION_TYPE unicode_string("bool")
 #include <stack>
+#include <set>
 
+using std::set;
 using std::stack;
 using std::unordered_map;
 

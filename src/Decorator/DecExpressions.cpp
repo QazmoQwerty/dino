@@ -356,7 +356,7 @@ DST::Expression * Decorator::decorate(AST::Literal * node)
 		case (LT_FRACTION):		lit->setType(DST::getFloatTy());	break;
 		case (LT_INTEGER):		lit->setType(DST::getIntTy());		break;
 		case (LT_STRING):		lit->setType(DST::getStringTy()); 	break;
-		case (LT_NULL):			lit->setType(DST::getNullTy());	break;
+		case (LT_NULL):			lit->setType(DST::getNullTy());		break;
 		default: break;
 	}
 	return lit;
