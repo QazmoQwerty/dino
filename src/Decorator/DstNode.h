@@ -280,6 +280,7 @@ namespace DST
 		ArrayType *getArrayOf(size_t size = DST::UNKNOWN_ARRAY_LENGTH);
 		ArrayType *getArrayOf(Expression *exp);
 		PropertyType *getPropertyOf(bool hasGet, bool hasSet);
+		virtual uint getPrimitiveBitWidth() { UNREACHABLE }
 
 		/* types are non-constant by default */
 		virtual bool isConstTy() 	 	 { return false; }
@@ -295,7 +296,7 @@ namespace DST
 		virtual bool isPropertyTy()  	 { return false; }
 		virtual bool isSpecifierTy() 	 { return false; }
 		virtual bool isNamespaceTy() 	 { return false; }
-		virtual bool isEnumTy() { return false; }
+		virtual bool isEnumTy() 		 { return false; }
 		virtual bool isUnsetGenericTy()  { return false; }
 
 		virtual bool implements(InterfaceType *ty) { return false; };
@@ -593,6 +594,8 @@ namespace DST
 		virtual ~BasicType() { }
 
 		virtual bool isBasicTy() 	 { return true; }
+
+		// virtual uint getPrimitiveBitWidth();
 	
 		virtual TypeDeclaration *getTypeDecl() { return NULL; }
 		virtual InterfaceDeclaration *getInterfaceDecl() { return NULL; }
