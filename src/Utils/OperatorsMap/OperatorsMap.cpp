@@ -23,7 +23,7 @@ bool OperatorsMap::isUnary(OperatorType type)
 	switch (type) 
 	{
 		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT: case OT_INCREMENT: case OT_DECREMENT: case OT_PARENTHESIS_OPEN: case OT_TRY: case OT_CATCH:
-		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: /*case OT_ELSE:*/ case OT_UNLESS: case OT_IS: case OT_AS: case OT_FOR: case OT_RETURN: case OT_THROW:
+		case OT_CURLY_BRACES_OPEN: case OT_WHILE: case OT_DO: case OT_IF: /*case OT_ELSE:*/ case OT_UNLESS: case OT_IS: case OT_IS_NOT: case OT_AS: case OT_FOR: case OT_RETURN: case OT_THROW:
 		case OT_DELETE: case OT_BREAK: case OT_CONTINUE: case OT_TYPE: case OT_INTERFACE: case OT_ENUM: case OT_NAMESPACE: case OT_NEW: case OT_AT: case OT_CONST: case OT_INCLUDE: case OT_IMPORT: case OT_EXTERN:
 			return true;
 		default: 
@@ -107,7 +107,8 @@ ReturnType OperatorsMap::getReturnType(OperatorType type)
 		case OT_ASSIGN_BITWISE_XOR:			//	^=
 			return RT_LEFT;
 
-		case OT_IS:							//	is
+		case OT_IS: 						//	is
+		case OT_IS_NOT:						//	is not
 		case OT_EQUAL:						//	=
 		case OT_NOT_EQUAL:					//	!=
 		case OT_GREATER:					//	>
@@ -179,6 +180,7 @@ void OperatorsMap::setup()
 	_map[UTF8("<<")]		= { OT_BITWISE_SHIFT_LEFT,		UTF8("<<"),		LEFT_TO_RIGHT,		100,	100,	NONE };
 	_map[UTF8(">>")]		= { OT_BITWISE_SHIFT_RIGHT,		UTF8(">>"),		LEFT_TO_RIGHT,		100,	100,	NONE };
 	_wordsMap[UTF8("is")]	= { OT_IS,						UTF8("is"),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
+	_wordsMap[UTF8("isnt")] = { OT_IS_NOT,					UTF8("is not"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8("<")]			= { OT_SMALLER,					UTF8("<"),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8("<=")]		= { OT_SMALLER_EQUAL,			UTF8("<="),		LEFT_TO_RIGHT,		90,		NONE,	NONE };
 	_map[UTF8(u8"≤")]		= { OT_SMALLER_EQUAL,			UTF8(u8"≤"),	LEFT_TO_RIGHT,		90,		NONE,	NONE };

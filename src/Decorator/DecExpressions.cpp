@@ -304,7 +304,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		case RT_BOOLEAN: 
 			switch (node->getOperator()._type)
 			{
-				case OT_IS:
+				case OT_IS: case OT_IS_NOT:
 					if (bo->getRight()->getExpressionType() != ET_TYPE)
 						throw ErrorReporter::report("expected a type", ERR_DECORATOR, node->getRight()->getPosition());
 					break;

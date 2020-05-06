@@ -128,6 +128,7 @@ enum OperatorType
 	OT_ELSE,
 	OT_UNLESS,
 	OT_IS,
+	OT_IS_NOT,
 	OT_AS,
 	OT_RETURN,
 	OT_THEN,
