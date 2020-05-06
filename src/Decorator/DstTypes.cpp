@@ -93,7 +93,7 @@ namespace DST
 	template<> ValueType 		 *Type::as<ValueType>() 		{ return (ValueType*)		 getNonConstOf()->getNonPropertyOf(); }
 	template<> InterfaceType 	 *Type::as<InterfaceType>() 	{ return (InterfaceType*)	 getNonConstOf()->getNonPropertyOf(); }
 	template<> FunctionType 	 *Type::as<FunctionType>() 		{ return (FunctionType*)	 getNonConstOf()->getNonPropertyOf(); }
-	template<> EnumType *Type::as<EnumType>() { return (EnumType*)getNonConstOf()->getNonPropertyOf(); }
+	template<> EnumType 		 *Type::as<EnumType>() { return (EnumType*)getNonConstOf()->getNonPropertyOf(); }
 
 	bool Type::isFloatTy()
 	{
@@ -419,6 +419,11 @@ namespace DST
 	string EnumType::toShortString()
 	{
 		return _decl->getName().to_string();
+	}
+
+	Type *EnumType::getMemberType()
+	{
+		return _decl->getMemberTy();
 	}
 
 	bool InterfaceType::assignableTo(Type *type)

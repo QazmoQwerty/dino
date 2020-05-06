@@ -408,6 +408,7 @@ namespace DST
 			virtual ExactType getExactType() { return EXACT_ENUM; };
 			virtual bool writeable() { return true; }
 			virtual bool readable()  { return true; }
+			Type *getMemberType();
 			EnumDeclaration *getEnumDecl() { return _decl; }
 
 			/* 
@@ -905,6 +906,7 @@ namespace DST
 		void setType(Type *type) { _type = type; }
 		Type *getType() { return _type; }
 		virtual int getIntValue();
+		uint64_t getEnumerableValue();
 		virtual LiteralType getLiteralType() { return _base->getLiteralType(); }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
 
@@ -1263,9 +1265,10 @@ namespace DST
 			else return new EnumLiteral(_members[name].first, _memberTy, pos);
 		}
 		unordered_map<unicode_string, pair<uint, Literal*>, UnicodeHasherFunction> &getMembers() { return _members; }
-		void addMember(unicode_string name, uint val) { _members[name] = { val, NULL }; }
+		void addMember(unicode_string &name, uint val) { _members[name] = { val, NULL }; }
+		void addMember(unicode_string &name, Literal* val) { _members[name] = { val->getEnumerableValue(), val }; }
 		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
-		void setMemberTy(Type *type) { _memberTy = type; }
+		void setMemberTy(Type *type);
 		Type *getMemberTy() { return _memberTy; }
 		AST::EnumDeclaration *getBase() { return _base; }
 

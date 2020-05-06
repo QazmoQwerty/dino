@@ -227,6 +227,24 @@ namespace DST
 
 	FunctionLiteral::~FunctionLiteral() { if (_base) delete _base; if (_content) delete _content; _parameters.clear(); }
 
+	uint64_t Literal::getEnumerableValue() 
+	{
+		switch (getLiteralType()) 
+		{
+			case (LT_BOOLEAN):		return ((AST::Boolean*)_base)->getValue();
+			case (LT_CHARACTER):	return ((AST::Character*)_base)->getValue().getValue();
+			case (LT_FRACTION):		return ((AST::Integer*)_base)->getValue();
+			case (LT_INTEGER):		return ((AST::Integer*)_base)->getValue();
+			default: FATAL_ERROR("literal is not an enumerable value");
+		}
+	}
+
+	void EnumDeclaration::setMemberTy(Type *type) {
+		if (type->isEnumTy() && type->as<EnumType>()->getEnumDecl()->getMemberTy())
+			setMemberTy(type->as<EnumType>()->getEnumDecl()->getMemberTy());
+		_memberTy = type; 
+	}
+
 	int Literal::getIntValue() 
 	{
 		if (getLiteralType() != LT_INTEGER)

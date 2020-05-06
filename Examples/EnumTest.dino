@@ -3,9 +3,12 @@ import "std2"
 namespace NS {
     void Main() {
         Day d := Day.Wednesday
-        Std.PrintDLn(d as int)    
+        Std.PrintDLn(d as int)
+        Std.PrintDLn(Numbers.Three)
+        Std.PrintDLn(Numbers.Two)
+        char n := Letters.B
+        Std.PrintCLn(n)
     }
-    
 
     enum Day {
         Sunday
@@ -15,5 +18,21 @@ namespace NS {
         Thursday
         Fridayday
         Saturday
+    }
+
+    enum Numbers is int {
+        One
+        Three
+        Four
+        Two     2
+        Zero    0
+    }
+
+    enum Letters is char {
+        B   'b'
+        C   'c'
+        D   'd'
+        E   'e'
+        A   'a'
     }
 }

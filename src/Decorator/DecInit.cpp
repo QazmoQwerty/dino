@@ -180,19 +180,40 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				if (!ty->isEnumerable())
 					throw ErrorReporter::report("type must be enumerable", ERR_CODEGEN, decl->getBase()->getType()->getPosition());
 				decl->setMemberTy(ty);
-				TODO
-			}	
+				set<uint64_t> takenVals;
+				uint curr = 0;
+				for (auto i : decl->getBase()->getMembers())
+					if (i.val)
+					{
+						auto val = decorate(i.val);
+						if (!val->getType()->assignableTo(ty))
+							throw ErrorReporter::report("literal with type \"" + val->getType()->toShortString() + "\" does not match enum member type \""
+								+ ty->toShortString() + "\"" , ERR_CODEGEN, val->getPosition());
+						ASSERT(val->getExpressionType() == ET_LITERAL);
+						takenVals.insert(((DST::Literal*)val)->getEnumerableValue());
+						decl->addMember(i.id, ((DST::Literal*)val));
+					}
+				for (auto i : decl->getBase()->getMembers())
+					if (!i.val)
+					{
+						if (decl->getMembers().count(i.id))
+							throw ErrorReporter::report("duplicate identifer \"" + i.id.to_string() + "\"", ERR_CODEGEN, decl->getPosition());
+						while (takenVals.count(curr))
+							curr++;	
+						decl->addMember(i.id, curr++);
+					}
+			}
 			else 
 			{
 				decl->setMemberTy(DST::EnumType::get(decl));
-				uint count = 0;
+				uint curr = 0;
 				for (auto i : decl->getBase()->getMembers())
 				{
 					if (i.val)
 						throw ErrorReporter::report("enums with explicit values must state their type", ERR_CODEGEN, decl->getPosition());
 					if (decl->getMembers().count(i.id))
 						throw ErrorReporter::report("duplicate identifer \"" + i.id.to_string() + "\"", ERR_CODEGEN, decl->getPosition());
-					decl->addMember(i.id, count++);
+					decl->addMember(i.id, curr++);
 				}
 			}
 		}
