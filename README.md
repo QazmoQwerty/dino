@@ -43,8 +43,8 @@ a :≡ 1
 
 // easy type checks and conversions
 if a is int {
-	i :≡ a as int
-	// Do stuff with integers...
+    i :≡ a as int
+    // Do stuff with integers...
 }
 ```
 
@@ -64,20 +64,20 @@ namespace BrainF {
     void Interpret(string input) {
         int ptr ≡ 0
         for i :≡ 0 | i < input.Size | i++ {
-			switch input.Get(i) {
-				case '>': ptr++
-				case '<': ptr--
-				case '+': tape[ptr]++
-            	case '-': tape[ptr]--
-				case '.': Std.PrintC(tape[ptr])
-				case ',': tape[ptr] ≡ Std.GetChar()
-				case ']': if tape[ptr] ≠ '\0':
-					for loop :≡ 1 | loop > 0
-						switch input.Get(i--) {
-							case '[': loop--
-							case ']': loop++
-						}
-			}
+            switch input.Get(i) {
+                case '>': ptr++
+                case '<': ptr--
+                case '+': tape[ptr]++
+                case '-': tape[ptr]--
+                case '.': Std.PrintC(tape[ptr])
+                case ',': tape[ptr] ≡ Std.GetChar()
+                case ']': if tape[ptr] ≠ '\0':
+                    for loop :≡ 1 | loop > 0
+                        switch input.Get(i--) {
+                            case '[': loop--
+                            case ']': loop++
+                        }
+            }
         }
     }
 
