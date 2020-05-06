@@ -8,6 +8,10 @@ namespace NS {
         Std.PrintDLn(Numbers.Two)
         char n := Letters.B
         Std.PrintCLn(n)
+        bool b1 := MyBool.c
+        bool b2 := MyBool.f
+        bool b3 := MyBool.j
+        bool b4 := MyBool.k
     }
 
     enum Day {
@@ -34,5 +38,19 @@ namespace NS {
         D   'd'
         E   'e'
         A   'a'
+    }
+
+    enum MyBool is bool {
+        a   false
+        b
+        c
+        d
+        e
+        f   true
+        g
+        h
+        i
+        j   false
+        k
     }
 }
