@@ -70,12 +70,17 @@ namespace Prettifier {
                     if      (str[idx] == '/') { idx++; out += "*/"; } 
                     else out += u8"×"; 
                     break;
+                case '#': // '#' single line comment
+                    out += "#";
+                    while(idx < str.size() && str[idx] != '\n')
+                        out += str[idx++];
+                    break;
                 case '/': switch(str[idx])
                 {
                     default:
                         out += u8"÷"; 
                         break;
-                    case '/':   // single line comment
+                    case '/':   // '//' single line comment
                         idx++;
                         out += "//";
                         while(idx < str.size() && str[idx] != '\n')

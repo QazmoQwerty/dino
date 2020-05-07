@@ -413,7 +413,7 @@ namespace DST
 
 	Type * Type::getType()
 	{
-		UNREACHABLE
+		return getTypeidTy();
 	}
 
 	string EnumType::toShortString()

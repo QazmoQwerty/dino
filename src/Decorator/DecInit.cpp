@@ -27,7 +27,7 @@ void Decorator::setup(bool isLibrary)
 	_variables[0][unicode_string("char")] 	= DST::getCharTy();
 	_variables[0][unicode_string("float")] 	= DST::getFloatTy();
 	_variables[0][unicode_string("void")] 	= DST::getVoidTy();
-	_variables[0][unicode_string("type")] 	= DST::getTypeidTy();
+	// _variables[0][unicode_string("type")] 	= DST::getTypeidTy();
 	_variables[0][unicode_string("any")] 	= DST::getAnyTy();
 
 	_variables[0][unicode_string("i8")] 	= DST::geti8Ty();

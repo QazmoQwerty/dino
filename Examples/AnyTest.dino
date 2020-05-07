@@ -1,8 +1,9 @@
-// import "Examples/std"
 import "std"
 
 namespace Test {
     void Print(any a) {
+        if a is not bool:
+            Std.PrintS("not bool")
         if a is int:
             Std.PrintD(a as int)
         else if a is Foo:
@@ -11,7 +12,6 @@ namespace Test {
             Std.PrintS(if a as bool then "true" else "false")
         else if a = null:
             Std.PrintS("null")
-        // FIXME: "is null"
         else: Std.PrintS("??")
     }
 
@@ -22,12 +22,12 @@ namespace Test {
     any AA(): return null
 
     void Main() {
-        int i := 10
+        int i ≡ 10
         Foo f
         bool c
         Print(&c)
-        any a := null
-        any b := new int
+        any a ≡ null
+        any b ≡ new int
         if a = b:
             Std.PrintS("aa")
         if a = null:

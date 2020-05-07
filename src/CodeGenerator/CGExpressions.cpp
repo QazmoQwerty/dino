@@ -275,6 +275,8 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
     {
         case OT_IS:
             return createIsOperation(node);
+        case OT_IS_NOT:
+            return _builder.CreateNot(createIsOperation(node));
         case OT_SQUARE_BRACKETS_OPEN:
             if (node->getLeft()->getType()->isConstTy())
             {

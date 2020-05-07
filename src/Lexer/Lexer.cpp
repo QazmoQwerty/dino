@@ -328,6 +328,18 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 				}
 				ignoreLineBreak = false;
 				break;
+			case OT_LOGICAL_NOT:
+			{
+				if (tokens.size() != 0 && tokens.back()->_type == TT_OPERATOR && ((OperatorToken*)tokens.back())->_operator._type == OT_IS)
+				{
+					delete tokens.back();
+					tokens.pop_back();
+					((OperatorToken*)token)->_operator = OperatorsMap::getOperatorByDefinition(OT_IS_NOT).second;
+					token->_data = "is not";
+				}
+				ignoreLineBreak = false;
+				break;
+			}
 			default: 
 				ignoreLineBreak = false; 
 				break;
