@@ -29,21 +29,23 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
 
 llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, const llvm::Twine &blockName)
 {
-    // Get parent function
-    auto parent = getParentFunction();
+    return codeGen(node, NULL, blockName);
+}
 
-    // Create BasicBlock
-    llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, blockName, parent);
+llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, llvm::BasicBlock *emitTo, const llvm::Twine &blockName)
+{
+    if (emitTo == NULL)
+        emitTo = llvm::BasicBlock::Create(_context, blockName, getParentFunction());
 
-    _builder.SetInsertPoint(bb);
-    if (node) for (auto i : node->getStatements()) 
+    _builder.SetInsertPoint(emitTo);
+    if (node && node->getStatements().size()) for (auto i : node->getStatements()) 
     {
         diEmitLocation(i);
         auto val = codeGen(i);
         if (val == nullptr)
             throw ErrorReporter::report("Error while generating ir for statementblock", ERR_CODEGEN, node->getPosition());
     }
-    return bb;
+    return emitTo;
 }
 
 Value *CodeGenerator::codeGen(DST::ConstDeclaration *node) 
@@ -240,33 +242,13 @@ llvm::Value *CodeGenerator::codeGen(DST::IfThenElse *node)
         mergeBB = llvm::BasicBlock::Create(_context, "ifcont"); // No need to create a continue branch if it's unreachable
     llvm::BranchInst *br = _builder.CreateCondBr(cond, thenBB, elseBB);
     parent->getBasicBlockList().push_back(thenBB);
-    _builder.SetInsertPoint(thenBB);
-    if (node->getThenBranch())
-    {
-        for (auto i : node->getThenBranch()->getStatements()) 
-        {
-            diEmitLocation(i);
-            auto val = codeGen(i);
-            if (val == nullptr)
-                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-        }
-    }
+    codeGen(node->getThenBranch(), thenBB);
 
     if (mergeBB && !_builder.GetInsertBlock()->getTerminator())
         _builder.CreateBr(mergeBB);
 
     parent->getBasicBlockList().push_back(elseBB);
-    _builder.SetInsertPoint(elseBB);
-    if (node->getElseBranch())
-    {
-        for (auto i : node->getElseBranch()->getStatements()) 
-        {
-            diEmitLocation(i);
-            auto val = codeGen(i);
-            if (val == nullptr)
-                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-        }
-    } 
+    codeGen(node->getElseBranch(), elseBB);
     if (mergeBB)
     {
         if (!_builder.GetInsertBlock()->getTerminator())
@@ -297,18 +279,10 @@ llvm::Value *CodeGenerator::codeGen(DST::WhileLoop *node)
     parent->getBasicBlockList().push_back(condBB);
 
     parent->getBasicBlockList().push_back(loopBB);
-    _builder.SetInsertPoint(loopBB);
-    if (node->getStatement()->getStatements().size() != 0)
-    {
-        for (auto i : node->getStatement()->getStatements()) 
-        {
-            diEmitLocation(i);
-            auto val = codeGen(i);
-            if (val == nullptr)
-                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-        }
-    }
-    _builder.CreateBr(condBB);
+    codeGen(node->getStatement(), loopBB);
+    
+    if (!_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateBr(condBB);
     parent->getBasicBlockList().push_back(exitBB);
     _builder.SetInsertPoint(exitBB);
     _currBreakJmp = tmpBreakJmp;
@@ -335,19 +309,11 @@ llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
     parent->getBasicBlockList().push_back(loopBB);
 
     // generate loop statement's code.
-    _builder.SetInsertPoint(loopBB);
-    if (node->getStatement()->getStatements().size() != 0)
-    {
-        for (auto i : node->getStatement()->getStatements()) 
-        {
-            diEmitLocation(i);
-            auto val = codeGen(i);
-            if (val == nullptr)
-                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-        }
-    }
-    // at the end of the statements: add a jump statement to the condition.
-    _builder.CreateBr(condBB);
+    codeGen(node->getStatement(), loopBB);
+
+    // add a jump to the condition if the block doesn't already have a terminator.
+    if (!_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateBr(condBB);
 
     // generate condition block.
     _builder.SetInsertPoint(condBB);
@@ -368,11 +334,17 @@ llvm::Value *CodeGenerator::codeGen(DST::DoWhileLoop *node)
 
 llvm::Value *CodeGenerator::codeGen(DST::ForLoop *node)
 {
+    auto tmpBreakJmp = _currBreakJmp;
+    auto tmpContinueJmp = _currContinueJmp;
     codeGen(node->getBegin());
     auto parent = getParentFunction();
     llvm::BasicBlock *condBB = llvm::BasicBlock::Create(_context, "cond");
     llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(_context, "loop");
+    llvm::BasicBlock *incBB = llvm::BasicBlock::Create(_context, "inc");
     llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(_context, "exitLoop");
+
+    _currContinueJmp = incBB;
+    _currBreakJmp = exitBB;
 
     _builder.CreateBr(condBB);
     _builder.SetInsertPoint(condBB);
@@ -382,20 +354,22 @@ llvm::Value *CodeGenerator::codeGen(DST::ForLoop *node)
     parent->getBasicBlockList().push_back(condBB);
 
     parent->getBasicBlockList().push_back(loopBB);
-    _builder.SetInsertPoint(loopBB);
-    if (node->getStatement()->getStatements().size() != 0)
+    codeGen(node->getStatement(), loopBB);
+    
+    if (!_builder.GetInsertBlock()->getTerminator())
+        _builder.CreateBr(incBB);
+
+    if (!llvm::pred_empty(incBB))
     {
-        for (auto i : node->getStatement()->getStatements()) 
-        {
-            diEmitLocation(i);
-            auto val = codeGen(i);
-            if (val == nullptr)
-                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
-        }
+        parent->getBasicBlockList().push_back(incBB);   
+        _builder.SetInsertPoint(incBB);
+        codeGen(node->getIncrement());
+        _builder.CreateBr(condBB);
     }
-    codeGen(node->getIncrement());
-    _builder.CreateBr(condBB);
+
     parent->getBasicBlockList().push_back(exitBB);
     _builder.SetInsertPoint(exitBB);
+    _currBreakJmp = tmpBreakJmp;
+    _currContinueJmp = tmpContinueJmp;
     return br;
 }

@@ -1,0 +1,58 @@
+import "std2"
+
+namespace Main {
+    void Main() {
+        int i := 0
+        // for int i := 0 | i < 10 | i++ {
+        //     Std.PrintDLn(i)
+        //     if i = 5:
+        //         continue
+        // }
+
+        Std.PrintS("for: ")
+        for i := 0 | i < 10 | i++ {
+            if i = 5 {
+                Std.PrintS("(i=5->continue)")
+                continue
+            }
+            Std.PrintD(i)
+        }
+        i := 0
+        Std.PrintLn()
+
+        Std.PrintS("for2: ")
+        for i := 0 | i < 10 | i++ {
+            if i = 5 {
+                Std.PrintS("(i=5->break)")
+                break
+            }
+            Std.PrintD(i)
+        }
+        i := 0
+        Std.PrintLn()
+
+        Std.PrintS("do...while: ")
+        do {
+            if i = 5 {
+                Std.PrintS("(i=5->continue)")
+                continue
+            }
+            Std.PrintD(i)
+        } while i++ < 10
+
+        Std.PrintLn()
+        i := 0
+
+        Std.PrintS("while: ")
+        while i < 10 {
+            if i = 5 {
+                i++ 
+                Std.PrintS("(i=5->break)")
+                break
+            }
+            Std.PrintD(i)
+            i++
+        }
+        Std.PrintLn()
+    }
+}

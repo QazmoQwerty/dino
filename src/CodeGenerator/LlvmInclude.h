@@ -35,3 +35,4 @@
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/Linker/Linker.h"
+#include "llvm/IR/CFG.h"
