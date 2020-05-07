@@ -1,46 +1,38 @@
 echo "Starting tests..."
 echo "--------------------------------------------------------------"
+
 echo "AnyTest.dino:"
-dino AnyTest.dino -o test
-./test
+dino run AnyTest.dino
 echo "--------------------------------------------------------------"
 
 echo "EnumTest.dino:"
-dino EnumTest.dino -o test
-./test
+dino run EnumTest.dino
 echo "--------------------------------------------------------------"
 
 echo "BreakTest.dino:"
-dino BreakTest.dino -o test
-./test
+dino run BreakTest.dino
 echo "--------------------------------------------------------------"
 
 echo "ErrorTest.dino:"
-dino ErrorTest.dino -o test
-./test
+dino run ErrorTest.dino
 echo "--------------------------------------------------------------"
 
 echo "MultRetTest.dino:"
-dino MultRetTest.dino -o test
-./test
+dino run MultRetTest.dino
 echo "--------------------------------------------------------------"
 
 echo "BrainF.dino:"
-dino BrainF.dino -o test
-./test
+dino run BrainF.dino
 echo "--------------------------------------------------------------"
 
 echo "LLTest.dino:"
-dino LLTest.dino -o test
-./test
+dino run LLTest.dino
 echo "--------------------------------------------------------------"
 
 echo "Vector.dino:"
-dino Vector.dino -o test
-./test
+dino run Vector.dino
 echo "--------------------------------------------------------------"
 
 echo "Map.dino:"
-dino Map.dino -o test
-./test
+dino run Map.dino
 echo "--------------------------------------------------------------"

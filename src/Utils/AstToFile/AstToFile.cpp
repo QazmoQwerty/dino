@@ -1,13 +1,4 @@
-﻿#pragma once
-
-#include <sstream>
-#include <fstream>
-#include "Unicode/utf8.h"
-#include "../Parser/AstNode.h"
-#include "../Decorator/DstNode.h"
-
-using std::stringstream;
-using std::ofstream;
+#include "AstToFile.h"
 
 /*
 	Returns a string (graphviz format) representation of an AST.
