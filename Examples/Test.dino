@@ -1,18 +1,13 @@
 import "std2"
 
 namespace Prog {
-	// type Foo {
-	// 	int A
-	// 	void Foo(): A := 20
-	// }
+	interface Foo {
+		bool A()
+		int B: get
+		void Foo()
+	}
 
 	void Main() {
 		
-	}
-}
-
-namespace Prog {
-	void Foo() {
-
 	}
 }

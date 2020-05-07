@@ -284,7 +284,7 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 				switch (((OperatorToken*)tokens.back())->_operator._type)
 				{
 					case OT_RETURN: case OT_BREAK: case OT_CONTINUE: case OT_EXTERN: case OT_INCREMENT: case OT_DECREMENT: 
-					case OT_CURLY_BRACES_CLOSE: case OT_PARENTHESIS_CLOSE: case OT_SQUARE_BRACKETS_CLOSE: case OT_AT:
+					case OT_CURLY_BRACES_CLOSE: case OT_PARENTHESIS_CLOSE: case OT_SQUARE_BRACKETS_CLOSE: case OT_AT: case OT_GET: case OT_SET:
 						b = true;
 					default: break;
 				}
