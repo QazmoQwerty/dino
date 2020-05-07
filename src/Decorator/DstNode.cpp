@@ -157,6 +157,9 @@ namespace DST
 
 	void NamespaceDeclaration::addMember(unicode_string name, Statement * decl, Expression * exp)
 	{
+		if (_decls.count(name) != 0)
+			throw ErrorReporter::report("namespace \"" + getName().to_string() + 
+				"\" already has a member named \"" + name.to_string() + "\"", ERR_DECORATOR, decl->getPosition());
 		_decls[name] = std::make_pair(decl, exp);
 	}
 

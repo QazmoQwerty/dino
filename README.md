@@ -112,8 +112,6 @@ Everything that's missing in the parser plus:
 
 * Generics
 
-* break/continue (I'm pretty sure they're broken atm)
-
 ### What's missing in the Code Generator?
 
 Everything that's missing in the parser plus:

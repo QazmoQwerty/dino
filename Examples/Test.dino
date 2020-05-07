@@ -1,58 +1,13 @@
-// import "DinoStd/std"
-
 import "std2"
 
-// include "LinkedList.dino"
-
 namespace Prog {
-
-	// void NullCheck(void@ a) {
-	// 	// if a = null {
-	// 	// 	error e := new Std.NullPointerError
-	// 	// 	// error e := null as Std.NullPointerError@
-	// 	// 	throw e
-	// 	// }
-	// }
-
-	type Foo {
-		int A
-
-		void Foo(): A := 20
+	interface Foo {
+		bool A()
+		int B: get
+		void Foo()
 	}
 
-	/*
-		// Testeing?
-	*/
 	void Main() {
-		// try {
-		// 	NullCheck(null)
-		// } catch: Std.PrintSLn(caught.Msg)
-		// any a := null
-
-		int a := 12..|||
-			 + 12
-			.. + 12
-
-		Std.PrintDLn(a)
-
-		try {
-			Foo@ f := null
-			// var d := 
-			// (@f).A := 20
-			// f.Foo()
-			// Foo f2 := @f
-			// f2.A := 27
-			Std.PrintDLn(123)
-			// Std.PrintDLn(f.A)
-		} catch: Std.PrintSLn(caught.Msg)
-
 		
-		// try {
-		// 	int@ a := new int
-		// 	@a := 20
-		// 	int@ b := null
-		// 	Std.PrintDLn(@a)
-		// 	Std.PrintDLn(@b)
-		// } catch: Std.PrintSLn(caught.Msg)
 	}
 }

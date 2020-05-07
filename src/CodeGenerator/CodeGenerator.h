@@ -270,7 +270,8 @@ namespace CodeGenerator
     // ---------------------- Statements ---------------------- //
 
     llvm::Value      *codeGen(DST::Statement               *node);
-    llvm::BasicBlock *codeGen(DST::StatementBlock          *node, const llvm::Twine &blockName = "entry");
+    llvm::BasicBlock *codeGen(DST::StatementBlock          *node, const llvm::Twine &blockName);
+    llvm::BasicBlock *codeGen(DST::StatementBlock          *node, llvm::BasicBlock *emitTo = NULL, const llvm::Twine &blockName = "entry");
     llvm::Value      *codeGen(DST::ConstDeclaration        *node);
     llvm::Value      *codeGen(DST::UnaryOperationStatement *node);
     llvm::Value      *codeGen(DST::TryCatch                *node);

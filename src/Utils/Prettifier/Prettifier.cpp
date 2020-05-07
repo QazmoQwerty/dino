@@ -1,14 +1,4 @@
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <map>
-
-using std::map;
-using std::string;
-using std::exception;
-
-#pragma once
+#include "Prettifier.h"
 
 namespace Prettifier {
     /*
