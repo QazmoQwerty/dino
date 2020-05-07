@@ -3,11 +3,21 @@ import "std2"
 namespace Main {
     void Main() {
         int i := 0
-        // for int i := 0 | i < 10 | i++ {
-        //     Std.PrintDLn(i)
-        //     if i = 5:
-        //         continue
-        // }
+        while true {
+            break
+            while false { }
+            break
+        }
+
+        while true {
+            while true {
+                while true {
+                    break
+                }
+                break
+            }
+            break
+        }
 
         Std.PrintS("for: ")
         for i := 0 | i < 10 | i++ {

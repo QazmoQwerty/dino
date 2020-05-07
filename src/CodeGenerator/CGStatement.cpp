@@ -44,6 +44,8 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, llvm::BasicB
         auto val = codeGen(i);
         if (val == nullptr)
             throw ErrorReporter::report("Error while generating ir for statementblock", ERR_CODEGEN, node->getPosition());
+        if (_builder.GetInsertBlock()->getTerminator())
+            break;
     }
     return emitTo;
 }
