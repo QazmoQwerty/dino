@@ -9,7 +9,7 @@
 
 #define fromCategory(tok, cat) (tok->_type == TT_OPERATOR && precedence(tok, cat) != NONE)
 
-AST::Node * Parser::parse(int lastPrecedence)
+AST::Node * Parser::parse(int lastPrecedence, bool isExpression)
 {
 	if (   peekToken()->_type == TT_LINE_BREAK		     || isOperator(peekToken(), OT_SQUARE_BRACKETS_CLOSE)
 		|| isOperator(peekToken(), OT_PARENTHESIS_CLOSE) || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE) 
@@ -17,15 +17,17 @@ AST::Node * Parser::parse(int lastPrecedence)
 		return NULL;
 
 	Token* tok = nextToken();
-		
-	AST::Node* left = std(tok);
-	if (left) return left;
+	AST::Node* left = NULL;	
+	if (!isExpression)
+	{	
+		left = std(tok);
+		if (left) return left;
+	}
 
 	left = nud(tok);
 	if (left == NULL) return NULL;
 
-	while (peekToken()->_type != TT_LINE_BREAK && !isOperator(peekToken(), OT_EOF) && !isOperator(peekToken(), OT_CURLY_BRACES_OPEN)
-		&& (/*peekToken()->_type == TT_IDENTIFIER || */precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence))
+	while (precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence)
 		left = led(left, nextToken());
 	return left;
 }
@@ -361,6 +363,20 @@ AST::Node * Parser::nud(Token * token)
 		}
 		return inner;
 	}
+	if (isOperator(token, OT_IF))
+	{
+		// conditional expression
+		auto cond = parseExpression();
+		expectOperator(OT_THEN);
+		auto node = new AST::ConditionalExpression();
+		node->setCondition(cond);
+		node->setThenBranch(parseExpression());
+		skipLineBreaks();
+		expectOperator(OT_ELSE);
+		node->setElseBranch(parseExpression());
+		node->setPosition(token->_pos);
+		return node;
+	}
 	if (fromCategory(token, PREFIX))
 	{
 		auto ot = ((OperatorToken*)token);
@@ -448,7 +464,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 		{
 			auto decl = new AST::FunctionDeclaration(varDecl);
 			decl->setPosition(token->_pos);
-			decl->addParameter(parse());
+			decl->addParameter(parse(0, true));
 			expectOperator(OT_PARENTHESIS_CLOSE);
 			if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE)) 
 				decl->setContent(NULL);
@@ -464,7 +480,7 @@ AST::Node * Parser::led(AST::Node * left, Token * token)
 			expectOperator(OT_SQUARE_BRACKETS_CLOSE);
 			expectOperator(OT_PARENTHESIS_OPEN);
 			decl->setPosition(token->_pos);
-			decl->addParameter(parse());
+			decl->addParameter(parse(0, false));
 			expectOperator(OT_PARENTHESIS_CLOSE);
 			if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE)) 
 				decl->setContent(NULL);

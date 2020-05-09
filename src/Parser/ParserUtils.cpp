@@ -101,7 +101,7 @@ AST::Statement * Parser::parseStatement(int precedence)
 
 AST::Expression * Parser::parseExpression(int precedence)
 {
-	AST::Node* node = parse(precedence);
+	AST::Node* node = parse(precedence, true);
 	if (node != nullptr && node->isExpression())
 		return dynamic_cast<AST::Expression*>(node);
 	throw ErrorReporter::report("expected an expression", ERR_PARSER, node ? node->getPosition() : peekToken()->_pos);
@@ -109,7 +109,7 @@ AST::Expression * Parser::parseExpression(int precedence)
 
 AST::Expression * Parser::parseOptionalExpression(int precedence)
 {
-	return convertToExpression(parse(precedence));
+	return convertToExpression(parse(precedence, true));
 }
 
 AST::StatementBlock * Parser::parseInnerBlock()

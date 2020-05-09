@@ -39,7 +39,7 @@ private:
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
 	
-	AST::Node* parse(int lastPrecedence = 0);
+	AST::Node* parse(int lastPrecedence = 0, bool isExpression = false);
 	AST::StatementBlock* parseBlock(OperatorType expected = OperatorType::OT_EOF);
 
 	void expectLineBreak();
