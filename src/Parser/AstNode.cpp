@@ -3,6 +3,8 @@
 */
 #include "AstNode.h"
 
+int AST::_idCount = 0;
+
 void AST::Function::addParameters(Expression * parameters)
 {
 	if (parameters == nullptr)

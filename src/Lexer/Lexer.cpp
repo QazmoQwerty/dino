@@ -64,7 +64,7 @@ vector<Token*> Lexer::lex(unicode_string &str, SourceFile* file)
 	if (tokens.size() == 0)
 		throw ErrorReporter::report("empty program", ERR_LEXER, POSITION_INFO_NONE);
 	eof->_pos = tokens.back()->_pos;
-	eof->_operator = { OT_EOF, unicode_string("EOF"), NON_ASSCOCIATIVE, 0 };
+	eof->_operator = { OT_EOF, unicode_string("EOF"), NON_ASSCOCIATIVE, 0, 0, 0 };
 	tokens.push_back(eof);
 	return tokens;
 }

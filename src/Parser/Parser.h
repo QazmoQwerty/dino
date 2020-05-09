@@ -39,7 +39,7 @@ private:
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
 	
-	AST::Node* parse(int lastPrecedence = 0);
+	AST::Node* parse(int lastPrecedence = 0, bool isExpression = false);
 	AST::StatementBlock* parseBlock(OperatorType expected = OperatorType::OT_EOF);
 
 	void expectLineBreak();
@@ -60,7 +60,6 @@ private:
 	int precedence(Token* token, int category);
 	int leftPrecedence(OperatorToken* token, int category);
 
-	static set<string> _parsedFiles;	// files which have already been included into the compilation processs
 
 	bool isOperator(Token * token, OperatorType type) { return token->_type == TT_OPERATOR && ((OperatorToken*)token)->_operator._type == type; };
 	bool eatOperator(OperatorType type) { if (isOperator(peekToken(), type)) { nextToken(); return true; } return false; }
@@ -73,6 +72,7 @@ private:
 	AST::Node* nud(Token* token);
 	AST::Node* led(AST::Node * left, Token * token);
 
+	static set<string> _parsedFiles;	// files which have already been included into the compilation processs
 	vector<Token*> _tokens;
 	unordered_map<unicode_string, AST::NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
 	uint _index;

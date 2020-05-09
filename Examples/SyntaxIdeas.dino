@@ -180,8 +180,8 @@ namespace Ideas {
             default: Std.PrintS("unknown type")
         }
 
-        // with 'case', withot 'v :≡ ...'
-        switch val.type {
+        // with 'case', without 'v :≡ ...'
+        switch v := val.type {
             case int:   return "int"
             case bool:  return "bool"
             case Foo:   return "Foo"

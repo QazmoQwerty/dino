@@ -9,5 +9,4 @@ then
     echo "build failed!"
 else
     echo "build succeeded!"
-    sudo cp /usr/local/bin/dino . # copy the binary into the current folder for debugging
 fi

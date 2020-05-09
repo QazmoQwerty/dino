@@ -224,7 +224,7 @@ void OperatorsMap::setup()
 	_map[UTF8(")")]			= { OT_PARENTHESIS_CLOSE,		UTF8(")"),		LEFT_TO_RIGHT,		0,		0,		0	 };
 	_map[UTF8("[")]			= { OT_SQUARE_BRACKETS_OPEN,	UTF8("["),		LEFT_TO_RIGHT,		150,	150,	150  };
 	_map[UTF8("]")]			= { OT_SQUARE_BRACKETS_CLOSE,	UTF8("]"),		LEFT_TO_RIGHT,		0,		0,		0	 };
-	_map[UTF8("{")]			= { OT_CURLY_BRACES_OPEN,		UTF8("{"),		LEFT_TO_RIGHT,		150,	150,	150  };
+	_map[UTF8("{")]			= { OT_CURLY_BRACES_OPEN,		UTF8("{"),		LEFT_TO_RIGHT,		0,		0,		0    };
 	_map[UTF8("}")]			= { OT_CURLY_BRACES_CLOSE,		UTF8("}"),		LEFT_TO_RIGHT,		0,		0,		0	 };
 
 	// Non-parser related operators:

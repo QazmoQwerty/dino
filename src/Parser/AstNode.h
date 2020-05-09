@@ -18,7 +18,7 @@ using std::vector;
 
 namespace AST
 {
-	static int _idCount = 0;
+	extern int _idCount;
 
 	class Node
 	{
