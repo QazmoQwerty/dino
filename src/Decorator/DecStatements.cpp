@@ -172,7 +172,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 				if (list->getExpressions()[i]->getExpressionType() != ET_VARIABLE_DECLARATION)
 					throw ErrorReporter::report("inferred type is invalid in this context", ERR_DECORATOR, node->getPosition());
 				((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
-				leftTypes->getTypes()[i] = rightTypes->getTypes()[i];
+				leftTypes->getTypes()[i] = rightTypes->getTypes()[i]->getNonPropertyOf()->getNonConstOf();
 				auto name = ((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId();
 				_variables[currentScope()][name] = new DST::Variable(name, rightTypes->getTypes()[i]);
 			}
@@ -189,11 +189,11 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 				throw ErrorReporter::report("Could not infer type", ERR_DECORATOR, assignment->getLeft()->getPosition());
 			default:
 				((DST::VariableDeclaration*)assignment->getLeft())->setType(
-					assignment->getRight()->getType()->getNonConstOf()->getNonPropertyOf()
+					assignment->getRight()->getType()->getNonPropertyOf()->getNonConstOf()
 				); break;
 		}
 		auto name = ((DST::VariableDeclaration*)assignment->getLeft())->getVarId();
-		_variables[currentScope()][name] = new DST::Variable(name, assignment->getRight()->getType()->getNonConstOf());
+		_variables[currentScope()][name] = new DST::Variable(name, assignment->getLeft()->getType());
 	}
 
 	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))
