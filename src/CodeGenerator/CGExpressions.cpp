@@ -278,7 +278,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
         case OT_IS_NOT:
             return _builder.CreateNot(createIsOperation(node));
         case OT_SQUARE_BRACKETS_OPEN:
-            if (node->getLeft()->getType()->isConstTy())
+            if (node->getLeft()->getType()->isConstTy() || node->getLeft()->getType()->isPropertyTy())
             {
                 auto arrVal = codeGen(node->getLeft());
                 auto idx = codeGen(node->getRight());
@@ -543,7 +543,8 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
 {
     if (node->getType()->isPropertyTy())
     {
-        node->getVarId() += ".get";
+        if (node->getVarId().to_string().find('.') == node->getVarId().to_string().npos)
+            node->getVarId() += ".get";
         auto lval = codeGenLval(node);
         if (!isFunc(lval))
             throw ErrorReporter::report("expression is not a getter property", ERR_CODEGEN, node->getPosition());

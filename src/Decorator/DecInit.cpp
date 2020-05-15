@@ -480,7 +480,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 		case ST_PROPERTY_DECLARATION:
 		{
 			auto decl = (DST::PropertyDeclaration*)i.second.first;
-			auto retType = decl->getReturnType();
+			auto retType = decl->getReturnType()->getNonPropertyOf();
 			if (decl->getBase()->getGet())
 			{
 				decl->setGet(decorate(decl->getBase()->getGet()));
