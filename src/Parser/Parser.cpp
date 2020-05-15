@@ -11,30 +11,20 @@
 
 AST::Node * Parser::parse(int lastPrecedence, bool isExpression)
 {
-	if (   peekToken()->_type == TT_LINE_BREAK		     || isOperator(peekToken(), OT_SQUARE_BRACKETS_CLOSE)
-		|| isOperator(peekToken(), OT_PARENTHESIS_CLOSE) || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE) 
-		|| isOperator(peekToken(), OT_EOF)				 || isOperator(peekToken(), OT_COLON))
-		return NULL;
-
-	Token* tok = nextToken();
-	AST::Node* left = NULL;	
-	if (!isExpression)
-	{	
-		left = std(tok);
-		if (left) return left;
-	}
-
-	left = nud(tok);
-	if (left == NULL) return NULL;
-
-	while (precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence)
-		left = led(left, nextToken());
+	if (auto left = std(isExpression))
+		return left;
+		
+	auto left = nud();
+	while (left && precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence)
+		left = led(left);
 	return left;
 }
 
 /* Standard-denotation */
-AST::Node * Parser::std(Token * token)
+AST::Node * Parser::std(bool isExpression)
 {
+	if (isExpression) return NULL;
+	Token* token = nextToken();
 	if (token->_type == TT_OPERATOR && OperatorsMap::isKeyword(((OperatorToken*)token)->_operator))
 	{
 		switch (((OperatorToken*)token)->_operator._type)	
@@ -301,15 +291,22 @@ AST::Node * Parser::std(Token * token)
 				return op;
 			}
 			default: 
+				_index--;
 				return NULL;
 		}
 	}
+	_index--;
 	return NULL;
 }
 
 /* Null-denotation */
-AST::Node * Parser::nud(Token * token)
+AST::Node * Parser::nud()
 {
+	if (   peekToken()->_type == TT_LINE_BREAK		     || isOperator(peekToken(), OT_SQUARE_BRACKETS_CLOSE)
+		|| isOperator(peekToken(), OT_PARENTHESIS_CLOSE) || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE) 
+		|| isOperator(peekToken(), OT_EOF)				 || isOperator(peekToken(), OT_COLON))
+		return NULL;
+	Token* token = nextToken();
 	if (token->_type == TT_IDENTIFIER)
 	{
 		auto node = new AST::Identifier(token->_data);
@@ -412,8 +409,9 @@ AST::Node * Parser::nud(Token * token)
 }
 
 /* Left-denotation */
-AST::Node * Parser::led(AST::Node * left, Token * token)
+AST::Node * Parser::led(AST::Node * left)
 {
+	Token* token = nextToken();
 	if (token->_type == TT_IDENTIFIER)	// variable declaration
 	{
 		auto varDecl = new AST::VariableDeclaration();

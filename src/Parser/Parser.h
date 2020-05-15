@@ -68,9 +68,9 @@ private:
 
 	void skipLineBreaks() { while (eatLineBreak()); }
 
-	AST::Node* std(Token* token);
-	AST::Node* nud(Token* token);
-	AST::Node* led(AST::Node * left, Token * token);
+	AST::Node* std(bool isExpression);
+	AST::Node* nud();
+	AST::Node* led(AST::Node * left);
 
 	static set<string> _parsedFiles;	// files which have already been included into the compilation processs
 	vector<Token*> _tokens;
