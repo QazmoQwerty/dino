@@ -1,15 +1,8 @@
-namespace Prog {
-	char Print(char c): extern "putchar"
+import "std2"
 
-	void PrintNum(int num) {
-		int a ≡ 1
-		while a ≤ num / 10: a *= 10
-		while a > 0 {
-			Print((num % (a * 10) / a + 48) as char)
-			a /= 10
-		}
-		Print('\n')
-	}
+namespace Prog {
+
+	void Print(char c): extern "putchar"
 
 	interface Foo1 { void Show() | void Set(char c) }
 
@@ -18,26 +11,26 @@ namespace Prog {
 	type Bar1 is Foo1, Foo2 {
 		char c
 		void Set(char c): this.c := c
-		void Show() { Print('B') |  Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('1')}
+		void Show() { Print('B') | Print('1') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') | Print('1') | Print('\n') }
 	}
 
 	type Bar2 is Foo1, Foo2 {
 		char c
 		void Set(char c): this.c := c
-		void Show() { Print('B') |  Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('2')}
+		void Show() { Print('B') | Print('2') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') | Print('2') | Print('\n') }
 	}
 
 	type Bar3 is Foo1, Foo2 {
 		char c
 		void Set(char c): this.c := c
-		void Show() { Print('B') |  Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
-		void Show2() { Print('B') |  Print('3') }
+		void Show() { Print('B') | Print('3') | Print(':') | Print(' ') | Print(c) | Print('\n') }
+		void Show2() { Print('B') | Print('3') | Print('\n') }
 	}
 
 	void Main() {
-		Foo2[] arr := new Foo2[3]
+		Foo1[] arr := new Foo1[3]
 		arr[0] := new Bar1
 		arr[1] := new Bar2
 		arr[2] := new Bar3
@@ -48,10 +41,9 @@ namespace Prog {
 
 		for int i := 0 | i < arr.Size | i+=1 {
 			if arr[i] is Bar2:
-				arr[i].Show2()
-		}
+				(arr[i] as Bar2).Show2()
 
-		Bar3 b 
-		CallShow(&b)
+			arr[i].Show()
+		}
 	}
 }

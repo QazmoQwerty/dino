@@ -7,48 +7,46 @@ namespace NS {
         int count
 
         void Init() {
-            data := null
-            count := 0
+            data ≡ null
+            count ≡ 0
         }
 
         int Size get
             return count
 
+        // int Size: get {
+        //     return count
+        // }
+
         void Add(any e) {
-            // if data = null:
-            //     data := new int[10]
             if data.Size = 0
-                data := new any[10]
+                data ≡ new any[10]
             
             // condition to increase data - last slot exhausted
             if data.Size = count {
-                // Line causes crash:
-                // var temp2 := new int[count] //FIXME
-                any[] temp := new any[count*2]
-                for int i := 0 | i < count | i++
-                    temp[i] := data[i]
+                any[] temp ≡ new any[count×2]
+                for int i ≡ 0 | i < count | i++
+                    temp[i] ≡ data[i]
                 delete data
-                data := temp
+                data ≡ temp
             }
 
-            data[count] := e
+            data[count] ≡ e
             count++
         }
 
         void Set(int idx, any e) {
-            if idx >= count {
-                // TODO - throw
+            if idx ≥ count {
                 Std.PrintS("vector out of range")
                 return
             }
-            data[idx] := e
+            data[idx] ≡ e
         }
 
         any Get(int idx) {
-            if idx >= count {
-                // TODO - throw
+            if idx ≥ count {
                 Std.PrintS("vector out of range")
-                any a := null
+                any a ≡ null
                 return null
             }
             return data[idx]
@@ -56,19 +54,19 @@ namespace NS {
 
         void Clear() {
             delete data
-            count := 0
+            count ≡ 0
         }   
     }
 
     int@ NewInt(int n) {
-        var a := new int
-        @a := n
+        var a ≡ new int
+        @a ≡ n
         return a
     }
 
     string@ NewString(string s) {
-        var ret := new string
-        @ret := s
+        var ret ≡ new string
+        @ret ≡ s
         return ret
     }
 
@@ -87,7 +85,7 @@ namespace NS {
     void Main() {
         Vector v
         v.Init()
-        for int i := 0 | i < 10 | i++
+        for int i ≡ 0 | i < 10 | i++
             v.Add(NewInt(i))
 
         v.Add(NewString("wow"))
@@ -95,7 +93,7 @@ namespace NS {
         v.Add(NewString("works!"))
         
         Std.PrintS("[")
-        for int i := 0 | i < v.Size | i++ {
+        for int i ≡ 0 | i < v.Size | i++ {
             unless i = 0
                 Std.PrintS(", ")
             Print(v.Get(i))

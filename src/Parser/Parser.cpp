@@ -11,19 +11,19 @@
 
 AST::Node * Parser::parse(int lastPrecedence, bool isExpression)
 {
-	if (auto left = std(isExpression))
-		return left;
-		
+	if (!isExpression)
+		if (auto left = std())
+			return left;
 	auto left = nud();
-	while (left && precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence)
+	if (!left) return NULL;
+	while (precedence(peekToken(), BINARY | POSTFIX) > lastPrecedence)
 		left = led(left);
 	return left;
 }
 
 /* Standard-denotation */
-AST::Node * Parser::std(bool isExpression)
+AST::Node * Parser::std()
 {
-	if (isExpression) return NULL;
 	Token* token = nextToken();
 	if (token->_type == TT_OPERATOR && OperatorsMap::isKeyword(((OperatorToken*)token)->_operator))
 	{
@@ -74,17 +74,12 @@ AST::Node * Parser::std(bool isExpression)
 			}
 			case OT_FOR: {
 				auto node = new AST::ForLoop();
-				node->setBegin(parseStatement());
+				node->setBegin(parseOptionalStatement());
 				expectLineBreak();
 				node->setCondition(parseExpression());
 				expectLineBreak();
-				node->setIncrement(parseStatement());
-				if (peekToken()->_type == TT_LINE_BREAK)
-				{
-					node->setStatement(new AST::StatementBlock());
-					node->getStatement()->setPosition(peekToken()->_pos);
-				}
-				else node->setStatement(parseInnerBlock());				
+				node->setIncrement(parseOptionalStatement());
+				node->setStatement(parseInnerBlock());
 				node->setPosition(token->_pos);
 				return node;
 			}
@@ -115,14 +110,8 @@ AST::Node * Parser::std(bool isExpression)
 				node->setCondition(cond);
 				node->setThenBranch(parseInnerBlock());
 				bool b = eatLineBreak();
-				if (eatOperator(OT_ELSE)) {
-					if (isOperator(peekToken(), OT_IF)) {
-						auto block = new AST::StatementBlock();
-						block->addStatement(parseStatement());
-						node->setElseBranch(block);
-					}
-					else node->setElseBranch(parseInnerBlock());
-				}
+				if (eatOperator(OT_ELSE))
+					node->setElseBranch(parseInnerBlock());
 				else 
 				{
 					node->setElseBranch(NULL);
@@ -212,34 +201,37 @@ AST::Node * Parser::std(bool isExpression)
 			case OT_INTERFACE:	{
 				auto node = new AST::InterfaceDeclaration();
 				node->setName(expectIdentifier());
+				_inInterface = true;
 				if (eatOperator(OT_IS))
 					node->setImplements(expectIdentifierList());
-				if (eatOperator(OT_COLON))
+				if (eatOperator(OT_CURLY_BRACES_OPEN))
 				{
-					auto decl = parseStatement();
-					switch (decl->getStatementType())
-					{
-					case(ST_PROPERTY_DECLARATION): node->addProperty(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
-					case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
-					default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
-					}
-				}
-				else {
-					expectOperator(OT_CURLY_BRACES_OPEN);
 					while (!eatOperator(OT_CURLY_BRACES_CLOSE))
 					{
 						auto decl = parseStatement();
 						switch (decl->getStatementType())
 						{
-						case(ST_PROPERTY_DECLARATION): node->addProperty(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
-						case(ST_FUNCTION_DECLARATION): node->addFunction(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
-						default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
+							case ST_PROPERTY_DECLARATION: node->addProperty(((AST::PropertyDeclaration*)decl)); break;
+							case ST_FUNCTION_DECLARATION: node->addFunction(((AST::FunctionDeclaration*)decl)); break;
+							default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
 						}
 						if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
 							expectLineBreak();
 					}
 				}
+				else
+				{
+					eatOperator(OT_COLON);
+					auto decl = parseStatement();
+					switch (decl->getStatementType())
+					{
+						case ST_PROPERTY_DECLARATION: node->addProperty(((AST::PropertyDeclaration*)decl)); break;
+						case ST_FUNCTION_DECLARATION: node->addFunction(((AST::FunctionDeclaration*)decl)); break;
+						default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
+					}
+				}
 				node->setPosition(token->_pos);
+				_inInterface = false;
 				return node;
 			}
 			case OT_NAMESPACE:	{
@@ -421,16 +413,15 @@ AST::Node * Parser::led(AST::Node * left)
 		varDecl->setVarId(token->_data);
 
 		// Property declaration
-		if (eatOperator(OT_COLON))
+		if (eatOperator(OT_COLON) || isOperator(peekToken(), OT_GET) || isOperator(peekToken(), OT_SET))
 		{
 			auto decl = new AST::PropertyDeclaration(varDecl);
 
-			#define PARSE_INNER_IF_BLOCK (isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN) ? parseInnerBlock() : NULL)
-
 			if (eatOperator(OT_GET))
-				decl->setGet(PARSE_INNER_IF_BLOCK);
+				decl->setGet(parseInnerBlock());
 			else if (eatOperator(OT_SET))
-				decl->setSet(PARSE_INNER_IF_BLOCK);
+				decl->setSet(parseInnerBlock());
+			else throw ErrorReporter::report("expected \"get\" or \"set\"", ERR_PARSER, token->_pos);
 			decl->setPosition(token->_pos);
 			return decl;
 		}
@@ -440,17 +431,17 @@ AST::Node * Parser::led(AST::Node * left)
 			auto decl = new AST::PropertyDeclaration(varDecl);
 			if (eatOperator(OT_GET))
 			{
-				decl->setGet(PARSE_INNER_IF_BLOCK);
+				decl->setGet(parseInnerBlock());
 				skipLineBreaks();
 				if (eatOperator(OT_SET))
-					decl->setSet(PARSE_INNER_IF_BLOCK);
+					decl->setSet(parseInnerBlock());
 			}
 			else if (eatOperator(OT_SET))
 			{ 
-				decl->setSet(PARSE_INNER_IF_BLOCK);
+				decl->setSet(parseInnerBlock());
 				skipLineBreaks();
 				if (eatOperator(OT_GET))
-					decl->setGet(PARSE_INNER_IF_BLOCK);
+					decl->setGet(parseInnerBlock());
 			}
 			skipLineBreaks();
 			expectOperator(OT_CURLY_BRACES_CLOSE);
@@ -464,7 +455,7 @@ AST::Node * Parser::led(AST::Node * left)
 			decl->setPosition(token->_pos);
 			decl->addParameter(parse(0, true));
 			expectOperator(OT_PARENTHESIS_CLOSE);
-			if (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE)) 
+			if (_inInterface && (peekToken()->_type == TT_LINE_BREAK || isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))) 
 				decl->setContent(NULL);
 			else decl->setContent(parseInnerBlock());
 			return decl;
