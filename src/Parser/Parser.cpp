@@ -155,6 +155,7 @@ AST::Node * Parser::std()
 			case OT_TRY: {
 				auto node = new AST::TryCatch();
 				node->setTryBlock(parseInnerBlock());
+				eatLineBreak();
 				expectOperator(OT_CATCH);
 				node->setCatchBlock(parseInnerBlock());
 				node->setPosition(token->_pos);

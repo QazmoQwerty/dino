@@ -4,12 +4,12 @@ namespace Prog {
 
 	type MyErr is error {
 		int a
-		string Msg: get: return "MyErr"
+		string Msg get return "MyErr"
 	}
 
 	void Foo() {
 		try {
-			error err := new MyErr
+			error err ≡ new MyErr
 			throw err
 			Std.PrintDLn(123)
 		} catch {
@@ -20,10 +20,18 @@ namespace Prog {
 		}
 
 		try {
-			int@ a := null
-			@a := 10
+			int@ a ≡ null
+			@a ≡ 10
 		} catch {
 			Std.PrintS("caught #2: ")
+			Std.PrintC('"')
+			Std.PrintS(caught.Msg)
+			Std.PrintCLn('"')
+		}
+
+		int@ a ≡ null
+		try @a ≡ 10 catch {
+			Std.PrintS("caught #3: ")
 			Std.PrintC('"')
 			Std.PrintS(caught.Msg)
 			Std.PrintCLn('"')
