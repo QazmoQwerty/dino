@@ -326,7 +326,7 @@ AST::Node * Parser::nud()
 		AST::Node* inner = parse();
 		expectOperator(OT_PARENTHESIS_CLOSE);
 
-		// Function literal
+		// Function literal (FIXME!)
 		if (peekToken()->_type == TT_IDENTIFIER || isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
 		{
 			auto params = convertToExpression(inner);
@@ -503,11 +503,7 @@ AST::Node * Parser::led(AST::Node * left)
 			auto node = new AST::IfThenElse();
 			node->setCondition(parseExpression());
 			node->setElseBranch(convertToStatementBlock(left));
-			if (eatOperator(OT_THEN))
-				if (isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
-					node->setThenBranch(parseInnerBlock());
-				else node->setThenBranch(convertToStatementBlock(parseStatement()));
-			else node->setThenBranch(NULL);
+			node->setThenBranch(eatOperator(OT_THEN) ? parseInnerBlock() : NULL);
 			node->setPosition(token->_pos);
 			return node;
 		}
@@ -516,11 +512,7 @@ AST::Node * Parser::led(AST::Node * left)
 			auto node = new AST::IfThenElse();
 			node->setCondition(parseExpression());
 			node->setThenBranch(convertToStatementBlock(left));
-			if (eatOperator(OT_ELSE))
-				if (isOperator(peekToken(), OT_COLON) || isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
-					node->setElseBranch(parseInnerBlock());
-				else node->setElseBranch(convertToStatementBlock(parseStatement()));
-			else node->setElseBranch(NULL);
+			node->setElseBranch(eatOperator(OT_ELSE) ? parseInnerBlock() : NULL);
 			node->setPosition(token->_pos);
 			return node;
 		}
