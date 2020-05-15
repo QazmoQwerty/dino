@@ -14,8 +14,8 @@ namespace BrainF {
             	case '-': tape[ptr]--
 				case '.': Std.PrintC(tape[ptr])
 				case ',': tape[ptr] ≡ Std.GetChar()
-				case ']': if tape[ptr] ≠ '\0':
-					for loop :≡ 1 | loop > 0
+				case ']': if tape[ptr] ≠ '\0'
+					for loop :≡ 1 | loop > 0 |:
 						switch input.Get(i--) {
 							case '[': loop--
 							case ']': loop++

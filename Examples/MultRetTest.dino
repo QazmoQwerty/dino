@@ -2,12 +2,16 @@ import "std2"
 
 namespace Test {
 
-    (int, bool) Bar() {
+    (int, bool) Bar()
         return 10, true
-    }
+
+    (int, bool) Foo: get:
+        return 10, true
 
     void Main() {
         Std.PrintSLn(if Bar()[1] then "true" else "false")
         Std.PrintDLn(Bar()[0])
+        Std.PrintSLn(if Foo[0] = 10 then "true" else "false")
+        Std.PrintDLn(Foo[0])
     }
 }

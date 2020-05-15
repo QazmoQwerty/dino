@@ -34,7 +34,7 @@ private:
 	AST::StatementBlock * includeFile();
 	AST::StatementBlock * importFile(PositionInfo currPos);
 
-	Parser(vector<Token*> tokens) : _tokens(tokens) {_index = 0; }
+	Parser(vector<Token*> tokens) : _tokens(tokens), _inInterface(false) {_index = 0; }
 	Token* getToken(uint index);
 	Token* peekToken() { return getToken(_index); }
 	Token* nextToken() { return getToken(_index++); }
@@ -54,6 +54,7 @@ private:
 	AST::Literal *convertToLiteral(AST::Expression *exp, string errMsg = "expected a literal");
 
 	AST::Statement* parseStatement(int precedence = 0);
+	AST::Statement* parseOptionalStatement(int precedence = 0);
 	AST::Expression* parseExpression(int precedence = 0);
 	AST::Expression* parseOptionalExpression(int precedence = 0);
 	AST::StatementBlock* parseInnerBlock();
@@ -68,12 +69,13 @@ private:
 
 	void skipLineBreaks() { while (eatLineBreak()); }
 
-	AST::Node* std(Token* token);
-	AST::Node* nud(Token* token);
-	AST::Node* led(AST::Node * left, Token * token);
+	AST::Node* std();
+	AST::Node* nud();
+	AST::Node* led(AST::Node * left);
 
 	static set<string> _parsedFiles;	// files which have already been included into the compilation processs
 	vector<Token*> _tokens;
 	unordered_map<unicode_string, AST::NamespaceDeclaration*, UnicodeHasherFunction> _namespaces;
+	bool _inInterface;
 	uint _index;
 };

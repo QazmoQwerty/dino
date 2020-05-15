@@ -96,6 +96,14 @@ AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
 
 AST::Statement * Parser::parseStatement(int precedence)
 {
+	AST::Node* node = parse(precedence);
+	if (node != nullptr && node->isStatement())
+		return dynamic_cast<AST::Statement*>(node);
+	throw ErrorReporter::report("expected a statement", ERR_PARSER, node ? node->getPosition() : peekToken()->_pos);
+}
+
+AST::Statement * Parser::parseOptionalStatement(int precedence)
+{
 	return convertToStatement(parse(precedence));
 }
 
@@ -114,16 +122,18 @@ AST::Expression * Parser::parseOptionalExpression(int precedence)
 
 AST::StatementBlock * Parser::parseInnerBlock()
 {
+	if (_inInterface)
+		return NULL;
 	if (eatOperator(OT_CURLY_BRACES_OPEN))
 		return parseBlock(OT_CURLY_BRACES_CLOSE);
-	else if (eatOperator(OT_COLON))
+	else
 	{
-		skipLineBreaks();
+		eatOperator(OT_COLON);
+		eatLineBreak();
 		auto *block = new AST::StatementBlock();
-		block->addStatement(convertToStatement(parse()));
+		block->addStatement(parseStatement());
 		return block;
 	}
-	throw ErrorReporter::report("expected a block statement.", ERR_PARSER, peekToken()->_pos);
 }
 
 AST::Literal *Parser::convertToLiteral(AST::Expression *exp, string errorMsg)

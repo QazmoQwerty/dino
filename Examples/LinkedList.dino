@@ -11,98 +11,91 @@ namespace LL {
 		ListNode@ next
 	
 		int Data {
-			get: return data
-			set: data ≡ value
+			get return data
+			set data ≡ value
 		}
 
 		ListNode@ Next {
-			get: return next
-			set: next ≡ value
+			get return next
+			set next ≡ value
 		}
 
 		void Init(int data, ListNode@ next) { this.data ≡ data | this.next ≡ next }
 
 		ListNode@ GetNext(int index) {
-			if index = 0 or next = null:
+			if index = 0 or next = null
 				return this
 			return next.GetNext(index - 1)
 		}
 
 		ListNode@ Insert(int index, int data) {
-			if index = 0:
+			if index = 0
 				return CreateNode(data, this)
-			if next = null:
+			if next = null
 				return null	// List index out of bounds
-			else: if next.next = null and index = 2:
+			else if next.next = null and index = 2
 				next.next ≡ CreateNode(data, null)
-			else: next ≡ next.Insert(index - 1, data)
+			else next ≡ next.Insert(index - 1, data)
 			return this
 		}
 
-		int Size: get {
-			if next = null: return 1
-			return 1 + next.Size
-		}
+		int Size get 
+			return if next = null then 1 else 1 + next.Size
 
 		void InsertAtEnd(int data) {
-			if next = null:
+			if next = null
 				next ≡ CreateNode(data, null)
-			else: next.InsertAtEnd(data)
+			else next.InsertAtEnd(data)
 		}
 
 		void Show() {
 			Std.PrintD(data)
-			if next ≠ null {
+			if next ≠ null
 				next.Show()
-			}
 		}
 
 		void Remove(int index) {
-			if next = null or index < 1:
+			if next = null or index < 1
 				return // index out of bounds
-			else if index = 1:
+			else if index = 1
 				next ≡ next.next
-			else: next.Remove(index - 1)
+			else next.Remove(index - 1)
 		}
 	}
 
 	type LinkedList {
 		ListNode@ first
 
-		void Init(): first ≡ null
+		void Init() first ≡ null
 
-		int GetValue(int index): 
+		int GetValue(int index)
 			return first.GetNext(index).Data
 
-		int Size: get {
-			if first = null:
+		int Size get {
+			if first = null
 				return 0
 			return first.Size
 		}
 
-		void Insert(int index, int data) {
-			if first = null:
+		void Insert(int index, int data)
+			first ≡ if first != null
+					then first.Insert(index, data)
+					else CreateNode(data, null)
+
+		void InsertAtFront(int data)
+			first ≡ CreateNode(data, first)
+
+		void InsertAtBack(int data)
+			if first = null
 				first ≡ CreateNode(data, null)
-			else: first ≡ first.Insert(index, data)
-		}
+			else first.InsertAtEnd(data)
 
-		void InsertAtFront(int data): first ≡ CreateNode(data, first)
-
-		void InsertAtBack(int data) {
-			if first = null:
-				first ≡ CreateNode(data, null)
-			else: first.InsertAtEnd(data)		
-		}
-
-		void Remove(int index) {
-			if index = 0:
+		void Remove(int index)
+			if index = 0
 				first ≡ first.Next
-			else: first.Remove(index)
-		}
+			else first.Remove(index)
 
-		void Show() {
-			unless first = null:
-				first.Show()
-		}
+		void Show() 
+			first.Show() unless first = null
 	}
 }

@@ -1,5 +1,5 @@
-// import "Examples/std2"
 import "std2"
+
 namespace Prog {
     type Pair {
         string Key
@@ -9,10 +9,6 @@ namespace Prog {
             this.Key ≡ key
             this.Val ≡ val
         }
-
-        // void Clear():
-        //     if Val ≠ null: 
-        //         delete Val
     }
 
     Pair@ NewPair(string key, any val) {
@@ -38,9 +34,10 @@ namespace Prog {
         int count
         int baseSize
 
-        void Init(): InitSized(MAP_INIT_SIZE)
+        void Init() InitSized(MAP_INIT_SIZE)
 
-        int loadFactor: get: return count × 100 ÷ items.Size
+        int loadFactor get 
+            return count * 100 ÷ items.Size
 
         void InitSized(int baseSize) {
             this.baseSize ≡ baseSize
@@ -48,48 +45,36 @@ namespace Prog {
             items ≡ new Pair@[nextPrime(baseSize)]
         }
 
-        void resizeUp(): resize(baseSize × 2)
-        void resizeDown(): resize(baseSize ÷ 2)
+        void resizeUp()
+            resize(baseSize * 2)
+
+        void resizeDown()
+            resize(baseSize ÷ 2)
 
         void resize(int newSize) {
-            if newSize < MAP_INIT_SIZE: 
+            if newSize < MAP_INIT_SIZE
                 return
             var tmp ≡ new Map
             tmp.InitSized(newSize)
             for int i ≡ 0 | i < items.Size | i++ {
                 var item ≡ items[i]
-                if item ≠ null and item ≠ &DeletedItem:
+                if item ≠ null and item ≠ &DeletedItem
                     tmp.Insert(item.Key, item.Val)
             }
             count ≡ tmp.count
             baseSize ≡ tmp.baseSize
             items, tmp.items ≡ tmp.items, items
-            tmp := null
-            // delete tmp
+            tmp ≡ null
         }
 
-        // void Clear() {
-        //     unless items.Size = 0 {
-        //         for int i ≡ 0 | i < items.Size | i++:
-        //             unless items[i] = null or items[i] = &DeletedItem {
-        //                 items[i].Clear()
-        //                 delete items[i]
-        //             }
-        //         delete items
-        //     }
-        // }
-
         void Insert(string key, any val) {
-            if loadFactor > MAX_LOAD_FACTOR:
-                resizeUp()
+            resizeUp() if loadFactor > MAX_LOAD_FACTOR
 
             int idx ≡ calcHash(key, items.Size, 0)
             Pair@ item ≡ items[idx]
             for int i ≡ 1 | item ≠ null | i++ {
                 if item ≠ &DeletedItem and strEq(item.Key, key) {
-                    // item.Clear()
-                    item := null
-                    // delete item
+                    item ≡ null
                     items[idx] ≡ NewPair(key, val)
                     return
                 }
@@ -104,7 +89,7 @@ namespace Prog {
             int idx ≡ calcHash(key, items.Size, 0)
             var item ≡ items[idx]
             for int i ≡ 1 | item ≠ null | i++ {
-                if item ≠ &DeletedItem and strEq(item.Key, key):
+                if item ≠ &DeletedItem and strEq(item.Key, key)
                     return item.Val
                 idx ≡ calcHash(key, items.Size, i)
                 item ≡ items[idx]
@@ -113,16 +98,13 @@ namespace Prog {
         }
 
         void Delete(string key) {
-            if loadFactor < MIN_LOAD_FACTOR:
-                resizeDown()
+            resizeDown() if loadFactor < MIN_LOAD_FACTOR
 
             int idx ≡ calcHash(key, items.Size, 0)
             var item ≡ items[idx]
             for int i ≡ 1 | item ≠ null | i++ {
                 if item ≠ &DeletedItem and strEq(item.Key, key) {
-                    // item.Clear()
-                    item := null
-                    // delete item
+                    item ≡ null
                     items[idx] ≡ &DeletedItem
                 }
                 idx ≡ calcHash(key, items.Size, i)
@@ -133,18 +115,18 @@ namespace Prog {
     }
 
     bool strEq(string a, string b) {
-        if a.Size ≠ b.Size:
+        if a.Size ≠ b.Size
             return false
-        for int i ≡ 0 | i < a.Size | i++:
-            if a.Get(i) ≠ b.Get(i):
+        for int i ≡ 0 | i < a.Size | i++
+            if a.Get(i) ≠ b.Get(i)
                 return false
         return true
     }
 
     int pow(int a, int n) {
         if n = 0: return 1
-        int t ≡ pow(a, n/2)
-        if n%2 = 0:
+        int t ≡ pow(a, n÷2)
+        if n%2 = 0
             return t*t
         return a*t*t
     }
@@ -152,11 +134,9 @@ namespace Prog {
     int calcHash(string s, int numBuckets, int attempt) {
         const prime1 ≡ 163
         const prime2 ≡ 151
-        // int prime1 ≡ 163
-        // int prime2 ≡ 151
         int hashA ≡ hash(s, prime1, numBuckets)
         int hashB ≡ hash(s, prime2, numBuckets)
-        return (hashA + (attempt × (hashB + 1))) % numBuckets
+        return (hashA + attempt * (hashB + 1)) % numBuckets
     }
 
     // (string to hash, large prime number, max number)
@@ -164,11 +144,8 @@ namespace Prog {
         int h ≡ 0
         int len ≡ s.Size
         const prime ≡ 151
-        // int prime ≡ 151
-        for int i ≡ 0 | i < len | i++ {
-            h += pow(prime, len-i-1) × s.Get(i) as int
-            h %= m
-        }
+        for int i ≡ 0 | i < len | i++
+            h ≡ (h + pow(prime, len-i-1) * s.Get(i) as int) % m
         return h
     }
 
@@ -189,7 +166,7 @@ namespace Prog {
     }
 
     int nextPrime(int x) {
-        while not isPrime(x):
+        while not isPrime(x)
             x++
         return x
     }
@@ -242,7 +219,5 @@ namespace Prog {
         Std.PrintS(map.Search("15") as string)
         Std.PrintS(map.Search("16") as string)
         Std.PrintC('\n')
-        // map.Clear()
-        // delete map
     }
 }

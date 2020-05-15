@@ -320,7 +320,7 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 				}
 				delete token;
 				return NULL;
-			case OT_THEN: case OT_LOGICAL_AND: case OT_LOGICAL_OR:
+			case OT_THEN: case OT_LOGICAL_AND: case OT_LOGICAL_OR: case OT_GET: case OT_SET:
 				if (tokens.size() != 0 && tokens.back()->_type == TT_LINE_BREAK)
 				{
 					delete tokens.back();
