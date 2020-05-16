@@ -5,13 +5,28 @@ namespace Test {
     (int, bool) Bar()
         return 10, true
 
-    (int, bool) Foo: get:
+    (int, bool) Foo get
         return 10, true
 
+    void ShowAgg((int, bool) a) {
+        Std.PrintS(if a[1] then "true" else "false")
+        Std.PrintS(", ")
+        Std.PrintD(a[0])
+    }
+
     void Main() {
-        Std.PrintSLn(if Bar()[1] then "true" else "false")
-        Std.PrintDLn(Bar()[0])
-        Std.PrintSLn(if Foo[0] = 10 then "true" else "false")
-        Std.PrintDLn(Foo[0])
+        Std.PrintS(if Bar()[1] then "true, " else "false, ")
+        Std.PrintD(Bar()[0])
+        Std.PrintS(" | ")
+        Std.PrintS(if Foo[1] then "true, " else "false, ")
+        Std.PrintD(Foo[0])
+        Std.PrintS(" | ")
+        ShowAgg(Foo)
+        Std.PrintS(" | ")
+        var n := Foo
+        n[0] := 20
+        n[1] := false
+        ShowAgg(n)
+        Std.PrintLn()
     }
 }

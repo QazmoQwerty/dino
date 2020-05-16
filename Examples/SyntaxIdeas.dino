@@ -20,6 +20,10 @@ namespace ExtendTypes {
     }
 }
 
+namespace Aliases {
+    type nilErr := Std.NullPointerError
+}
+
 namespace Conditionals {
     void Foo() {
         int a := 10
@@ -30,21 +34,21 @@ namespace Conditionals {
 
         Foo1() unless edgeCase1 then Foo2() unless edgeCase2 then Foo3() unless edgeCase3
 
-{
-    normalExecution()
-} unless edgeCase1 then {
-    treatEdgeCase1()
-} unless edgeCase2 then {
-    treatEdgeCase2()
-} 
+        {
+            normalExecution()
+        } unless edgeCase1 then {
+            treatEdgeCase1()
+        } unless edgeCase2 then {
+            treatEdgeCase2()
+        } 
 
-if edgeCase1 {
-    treatEdgeCase1()
-} else if edgeCase2 {
-    treatEdgeCase2()
-} else {
-    normalExecution()
-}
+        if edgeCase1 {
+            treatEdgeCase1()
+        } else if edgeCase2 {
+            treatEdgeCase2()
+        } else {
+            normalExecution()
+        }
 
         (({
             Foo1()
@@ -225,7 +229,7 @@ namespace Ideas {
         ...if 12 = 13
 
 
-        if leftType is DST.PointerType and (leftType as DST.PointerType@).PtrType is DST.BasicType
+        if leftType is DST.PointerType and (leftType as DST.PointerType).PtrType is DST.BasicType
 
         if left.Type is PointerType...
         and (left.Type as PointerType).PtrType is BasicType
