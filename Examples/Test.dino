@@ -1,17 +1,18 @@
 namespace NS {
 
-    // int Foo {
-    //     get {}
-    // }
-
-    type Foo {
-        // int n = 19
+    int Foo {
+        get return 
     }
 
     int Main() {
-		int@@[] n
-        bool[10][] b
-        var c := n + b
+		int n
+        bool b
+        // var n := n + b
+        // var n := 
+        //     (n+n+n) ..
+        //     +
+        //     (b)
+        // var c := n + b
         // int x = 10
         // int x := 10
 
@@ -20,6 +21,6 @@ namespace NS {
         // // return "10"
         // string a := 20
         // return Foo
-        return new Foo
+        return 19
     }
 }

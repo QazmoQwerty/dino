@@ -300,8 +300,8 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		default: 
 			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
 				throw ErrorReporter::report(
-					"incompatible types in operation", "incompatible types", 
-					ErrorReporter::GENERAL_ERROR, node->getPosition()
+					"incompatible types in `" + bo->getOperator()._str.to_string() + "` operation", 
+					"incompatible types", ErrorReporter::GENERAL_ERROR, node->getPosition()
 				).withSecondary(
 					"left is `" + bo->getLeft()->getType()->toShortString() + "`",
 					node->getLeft()->getPosition()
@@ -321,8 +321,8 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				default:
 					if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
 						throw ErrorReporter::report(
-							"incompatible types in operation", "incompatible types", 
-							ErrorReporter::GENERAL_ERROR, node->getPosition()
+							"incompatible types in `" + bo->getOperator()._str.to_string() + "` operation",
+							"incompatible types", ErrorReporter::GENERAL_ERROR, node->getPosition()
 						).withSecondary(
 							"left is `" + bo->getLeft()->getType()->toShortString() + "`",
 							node->getLeft()->getPosition()

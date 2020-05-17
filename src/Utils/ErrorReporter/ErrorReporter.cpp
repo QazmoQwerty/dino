@@ -31,7 +31,7 @@ namespace ErrorReporter
 
         showBasic();
         for (auto note : notes)
-            if (note.pos.file != pos.file|| note.pos.line >= pos.line)
+            if (note.pos.file != pos.file)
                 note.show();
         return;
 
@@ -44,6 +44,43 @@ namespace ErrorReporter
         // std::cout << color(" --> ") << "./" << pos.file->getOriginalPath() << ":" << pos.line << ":" << pos.startPos << "\n";
         for (uint i = 1; i < std::to_string(pos.line).size(); i++) std::cout << " ";
         std::cout << color(" --> ") << pos.file->getOriginalPath() << "\n";
+
+        bool isFirst = true;
+        for (auto note : notes)
+        {
+            if (isFirst)
+            {
+                printIndent();
+                std::cout << "\n";
+                isFirst = false;
+            }
+            if (note.pos.file == pos.file && note.pos.line < pos.line && note.msg == "")
+            {
+                string line = getLine(pos.file->getOriginalPath(), note.pos.line);
+                auto tmp = note.errTy;
+                note.errTy = errTy;
+                note.printIndent(true);
+                note.errTy = tmp;
+                std::cout << line << "\n";
+                bool isFirst = true;
+                for (auto currLine : splitLines(note.subMsg))
+                {
+                    printIndent();
+                    for (int i = 0; i < note.pos.startPos; i++)
+                        std::cout << (line[i] == '\t' ? "\t" : " ");
+                    
+                    if (isFirst)
+                    {
+                        for (int i = 0; i < note.pos.endPos - note.pos.startPos; i++)
+                            std::cout << note.color("^");
+                        std::cout << note.color(" ");
+                        isFirst = false;
+                    }
+                    std::cout << note.color(currLine);
+                    std::cout << "\n";
+                }
+            }
+        }
 
         string line = getLine(pos.file->getOriginalPath(), pos.line);
 
@@ -61,6 +98,7 @@ namespace ErrorReporter
         }
         
         printIndent();
+
         for (int i = 0; i < pos.startPos; i++)
             std::cout << (line[i] == '\t' ? "\t" : " ");
         for (int i = 0; i < pos.endPos - pos.startPos; i++)
@@ -73,7 +111,9 @@ namespace ErrorReporter
         sortSecondaries();
         for (auto note : notes)
         {
-            if (note.pos.file == pos.file && note.pos.line == pos.line)
+            if (note.pos.file != pos.file)
+                note.show();
+            else if (note.pos.line == pos.line)
             {
                 printIndent();
                 for (int i = 0; i < note.pos.startPos; i++)
@@ -82,7 +122,32 @@ namespace ErrorReporter
                     std::cout << note.color("^");
                 std::cout << " " << note.color(note.subMsg) << "\n";
             }
-            else note.show();
+            else if (note.pos.line > pos.line)
+            {
+                string line = getLine(pos.file->getOriginalPath(), note.pos.line);
+                auto tmp = note.errTy;
+                note.errTy = errTy;
+                note.printIndent(true);
+                note.errTy = tmp;
+                std::cout << line << "\n";
+                bool isFirst = true;
+                for (auto currLine : splitLines(note.subMsg))
+                {
+                    printIndent();
+                    for (int i = 0; i < note.pos.startPos; i++)
+                        std::cout << (line[i] == '\t' ? "\t" : " ");
+                    
+                    if (isFirst)
+                    {
+                        for (int i = 0; i < note.pos.endPos - note.pos.startPos; i++)
+                            std::cout << note.color("^");
+                        std::cout << note.color(" ");
+                        isFirst = false;
+                    }
+                    std::cout << note.color(currLine);
+                    std::cout << "\n";
+                }
+            }
         }
     }
 
@@ -162,6 +227,35 @@ namespace ErrorReporter
 
         }
         std::cout << "\n";
+        for (auto note : notes)
+        {
+            if (note.pos.file == pos.file && note.pos.line > pos.line)
+            {
+                string line = getLine(pos.file->getOriginalPath(), note.pos.line);
+                auto tmp = note.errTy;
+                note.errTy = errTy;
+                note.printIndent(true);
+                note.errTy = tmp;
+                std::cout << line << "\n";
+                bool isFirst = true;
+                for (auto currLine : splitLines(note.subMsg))
+                {
+                    printIndent();
+                    for (int i = 0; i < note.pos.startPos; i++)
+                        std::cout << (line[i] == '\t' ? "\t" : " ");
+                    
+                    if (isFirst)
+                    {
+                        for (int i = 0; i < note.pos.endPos - note.pos.startPos; i++)
+                            std::cout << note.color("^");
+                        std::cout << note.color(" ");
+                        isFirst = false;
+                    }
+                    std::cout << note.color(currLine);
+                    std::cout << "\n";
+                }
+            }
+        }
     }
 
     void Error::sortSecondaries()
