@@ -41,7 +41,7 @@ void LibFileWriter::Write(ofstream &stream, int indentCount, DST::NamespaceDecla
 void LibFileWriter::Write(ofstream &stream, DST::ConstDeclaration *node) 
 {
     if (node->getExpression()->getExpressionType() != ET_LITERAL || ((DST::Literal*)node->getExpression())->getLiteralType() == LT_FUNCTION)
-        throw ErrorReporter::report("Only literal values are currently supported in library const declarations", ERR_CODEGEN, node->getPosition());
+        throw ErrorReporter::report("Only literal values are currently supported in library const declarations", ErrorReporter::GENERAL_ERROR, node->getPosition());
     stream << "const " << node->getName().to_string() << " ≡ " << ((DST::Literal*)node->getExpression())->toShortString() << "\n";
 }
 

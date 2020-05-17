@@ -87,7 +87,7 @@ namespace ErrorReporter
     Error reportInternal(string msg, uint errCode = INTERNAL, Position pos = POS_NONE);
 }
 
-#define FATAL_ERROR(_string) throw ErrorReporter::reportInternal(std::string(_string) + " at " + __func__ + ":" + std::to_string(__LINE__) + " in " + __FILE__ , ERR_INTERNAL)
+#define FATAL_ERROR(_string) throw ErrorReporter::reportInternal(std::string(_string) + " at " + __func__ + ":" + std::to_string(__LINE__) + " in " + __FILE__)
 
 #define TODO FATAL_ERROR("TODO reached");
 #define UNREACHABLE FATAL_ERROR("unreachable reached");

@@ -186,7 +186,7 @@ LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string value, E
 {
 	char val = 'f';
 	if (value.length() == 0)
-		throw ErrorReporter::report("Empty char constant", ERR_LEXER, pos);
+		throw ErrorReporter::report("Empty char constant", ErrorReporter::GENERAL_ERROR, pos);
 	if (value.length() > 1) 
 	{
 		if (value.length() == 2 && value[0].getValue() == ESCAPE_CHAR) 
@@ -209,9 +209,9 @@ LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string value, E
 			else if (value[1].getValue() == '\'')
 				val = '\'';
 				// value = unicode_string("'");
-			else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
+			else throw ErrorReporter::report("Too many characters in character constant", ErrorReporter::GENERAL_ERROR, pos);
 		}
-		else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
+		else throw ErrorReporter::report("Too many characters in character constant", ErrorReporter::GENERAL_ERROR, pos);
 	}
 	struct LiteralToken<unicode_char> * token = new struct LiteralToken<unicode_char>;
 	token->_data = unicode_string("'");
@@ -239,7 +239,7 @@ LiteralToken<float> * createFractionLiteralToken(unicode_string data, ErrorRepor
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_FRACTION;
 	try { token->_value = stof(data.to_string()); }
-	catch (exception) { throw ErrorReporter::report("Invalid fraction literal", ERR_LEXER, pos); }
+	catch (exception) { throw ErrorReporter::report("Invalid fraction literal", ErrorReporter::GENERAL_ERROR, pos); }
 	return token;
 }
 
@@ -256,7 +256,7 @@ LiteralToken<int> * createIntegerLiteralToken(unicode_string data, ErrorReporter
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_INTEGER;
 	try { token->_value = stoi(data.to_string()); }
-	catch (exception) { throw ErrorReporter::report("Invalid integer literal", ERR_LEXER, pos); }
+	catch (exception) { throw ErrorReporter::report("Invalid integer literal", ErrorReporter::GENERAL_ERROR, pos); }
 	return token;
 }
 
@@ -276,7 +276,7 @@ LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, ErrorReporte
 		temp->_value = true;
 	else if (data == "false")
 		temp->_value = false;
-	else throw ErrorReporter::report("Invalid boolean literal", ERR_LEXER, pos);
+	else throw ErrorReporter::report("Invalid boolean literal", ErrorReporter::GENERAL_ERROR, pos);
 	return temp;
 }
 

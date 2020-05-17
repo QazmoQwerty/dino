@@ -28,20 +28,20 @@ AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 void Parser::expectLineBreak()
 {
 	if (!eatLineBreak())
-		throw ErrorReporter::report("expected a line break", ERR_PARSER, peekToken()->_pos);
+		throw ErrorReporter::report("expected a line break", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 }
 
 void Parser::expectOperator(OperatorType ot)
 {
 	if (!eatOperator(ot)) 
-		throw ErrorReporter::report("expected a '" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "'", ERR_PARSER, peekToken()->_pos);
+		throw ErrorReporter::report("expected a '" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "'", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 }
 
 unicode_string Parser::expectIdentifier()
 {
 	if (peekToken()->_type == TT_IDENTIFIER)
 		return nextToken()->_data;
-	else throw ErrorReporter::report("expected an identifier.", ERR_PARSER, peekToken()->_pos);
+	else throw ErrorReporter::report("expected an identifier.", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 }
 
 AST::ExpressionList * Parser::expectIdentifierList()
@@ -54,7 +54,7 @@ AST::ExpressionList * Parser::expectIdentifierList()
 		if (node && (node->getExpressionType() == ET_IDENTIFIER ||
 			(node->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)node)->getOperator()._type == OT_PERIOD)))
 			l->addExpression(node);
-		else throw ErrorReporter::report("Expected an identifier or member access", ERR_PARSER, peekToken()->_pos);
+		else throw ErrorReporter::report("Expected an identifier or member access", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 	} while (eatOperator(OT_COMMA));
 	return l;
 }
@@ -63,21 +63,21 @@ AST::Identifier * Parser::convertToIdentifier(AST::Node * node, string errMsg)
 {
 	if (node != nullptr && node->isExpression() && dynamic_cast<AST::Expression*>(node)->getExpressionType() == ET_IDENTIFIER)
 		return dynamic_cast<AST::Identifier*>(node);
-	throw ErrorReporter::report(errMsg, ERR_PARSER, node->getPosition());
+	throw ErrorReporter::report(errMsg, ErrorReporter::GENERAL_ERROR, node->getPosition());
 }
 
 AST::Expression * Parser::convertToExpression(AST::Node * node)
 {
 	if (node == nullptr || node->isExpression())
 		return dynamic_cast<AST::Expression*>(node);
-	throw ErrorReporter::report("expected an expression", ERR_PARSER, node->getPosition());
+	throw ErrorReporter::report("expected an expression", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }
 
 AST::Statement * Parser::convertToStatement(AST::Node * node)
 {
 	if (node == nullptr || node->isStatement())
 		return dynamic_cast<AST::Statement*>(node);
-	throw ErrorReporter::report("expected a statement", ERR_PARSER, node->getPosition());
+	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }
 
 AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
@@ -91,7 +91,7 @@ AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
 		bl->addStatement(stmnt);
 		return bl;
 	}
-	throw ErrorReporter::report("expected a statement", ERR_PARSER, node->getPosition());
+	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }
 
 AST::Statement * Parser::parseStatement(int precedence)
@@ -99,7 +99,7 @@ AST::Statement * Parser::parseStatement(int precedence)
 	AST::Node* node = parse(precedence);
 	if (node != nullptr && node->isStatement())
 		return dynamic_cast<AST::Statement*>(node);
-	throw ErrorReporter::report("expected a statement", ERR_PARSER, node ? node->getPosition() : peekToken()->_pos);
+	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node ? node->getPosition() : peekToken()->_pos);
 }
 
 AST::Statement * Parser::parseOptionalStatement(int precedence)
@@ -112,7 +112,7 @@ AST::Expression * Parser::parseExpression(int precedence)
 	AST::Node* node = parse(precedence, true);
 	if (node != nullptr && node->isExpression())
 		return dynamic_cast<AST::Expression*>(node);
-	throw ErrorReporter::report("expected an expression", ERR_PARSER, node ? node->getPosition() : peekToken()->_pos);
+	throw ErrorReporter::report("expected an expression", ErrorReporter::GENERAL_ERROR, node ? node->getPosition() : peekToken()->_pos);
 }
 
 AST::Expression * Parser::parseOptionalExpression(int precedence)
@@ -139,6 +139,6 @@ AST::StatementBlock * Parser::parseInnerBlock()
 AST::Literal *Parser::convertToLiteral(AST::Expression *exp, string errorMsg)
 {
 	if (exp && exp->getExpressionType() != ET_LITERAL)
-		throw ErrorReporter::report(errorMsg, ERR_PARSER, exp->getPosition());
+		throw ErrorReporter::report(errorMsg, ErrorReporter::GENERAL_ERROR, exp->getPosition());
 	return (AST::Literal*)exp;
 }

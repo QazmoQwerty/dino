@@ -136,7 +136,7 @@ AST::Node * Parser::std()
 					}
 					else if (eatOperator(OT_DEFAULT))
 						node->setDefault(parseInnerBlock());
-					else throw ErrorReporter::report("expected 'case' or 'default'", ERR_PARSER, peekToken()->_pos);
+					else throw ErrorReporter::report("expected 'case' or 'default'", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 
 					if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
 						expectLineBreak();
@@ -161,8 +161,8 @@ AST::Node * Parser::std()
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case OT_CATCH: throw ErrorReporter::report("Missing \"try\" statement before \"catch\"", ERR_PARSER, token->_pos);
-			case OT_ELSE: throw ErrorReporter::report("Missing \"if\" statement before \"else\"", ERR_PARSER, token->_pos);
+			case OT_CATCH: throw ErrorReporter::report("Missing \"try\" statement before \"catch\"", ErrorReporter::GENERAL_ERROR, token->_pos);
+			case OT_ELSE: throw ErrorReporter::report("Missing \"if\" statement before \"else\"", ErrorReporter::GENERAL_ERROR, token->_pos);
 			case OT_ENUM: {
 				auto node = new AST::EnumDeclaration(expectIdentifier());
 				if (eatOperator(OT_IS)) node->setType(parseExpression());
@@ -186,13 +186,13 @@ AST::Node * Parser::std()
 					case(ST_VARIABLE_DECLARATION): node->addVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
 					case(ST_FUNCTION_DECLARATION): 
 						if (!dynamic_cast<AST::FunctionDeclaration*>(decl)->getContent())
-							throw ErrorReporter::report("missing function body", ERR_PARSER, decl->getPosition());
+							throw ErrorReporter::report("missing function body", ErrorReporter::GENERAL_ERROR, decl->getPosition());
 						node->addFunctionDeclaration(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
 					case(ST_PROPERTY_DECLARATION): 
 						if (!dynamic_cast<AST::PropertyDeclaration*>(decl)->getGet() && !dynamic_cast<AST::PropertyDeclaration*>(decl)->getSet())
-							throw ErrorReporter::report("missing propery body", ERR_PARSER, decl->getPosition());
+							throw ErrorReporter::report("missing propery body", ErrorReporter::GENERAL_ERROR, decl->getPosition());
 						node->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
-					default: throw ErrorReporter::report("expected a variable, property or function declaration", ERR_PARSER, decl->getPosition());
+					default: throw ErrorReporter::report("expected a variable, property or function declaration", ErrorReporter::GENERAL_ERROR, decl->getPosition());
 					}
 					skipLineBreaks();
 				}
@@ -214,7 +214,7 @@ AST::Node * Parser::std()
 						{
 							case ST_PROPERTY_DECLARATION: node->addProperty(((AST::PropertyDeclaration*)decl)); break;
 							case ST_FUNCTION_DECLARATION: node->addFunction(((AST::FunctionDeclaration*)decl)); break;
-							default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
+							default: throw ErrorReporter::report("interfaces may only contain properties and functions", ErrorReporter::GENERAL_ERROR, decl->getPosition());
 						}
 						if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
 							expectLineBreak();
@@ -228,7 +228,7 @@ AST::Node * Parser::std()
 					{
 						case ST_PROPERTY_DECLARATION: node->addProperty(((AST::PropertyDeclaration*)decl)); break;
 						case ST_FUNCTION_DECLARATION: node->addFunction(((AST::FunctionDeclaration*)decl)); break;
-						default: throw ErrorReporter::report("interfaces may only contain properties and functions", ERR_PARSER, decl->getPosition());
+						default: throw ErrorReporter::report("interfaces may only contain properties and functions", ErrorReporter::GENERAL_ERROR, decl->getPosition());
 					}
 				}
 				node->setPosition(token->_pos);
@@ -246,7 +246,7 @@ AST::Node * Parser::std()
 					node->setName(name); 
 					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
 						if (!i->isDeclaration())
-							throw ErrorReporter::report("Expected a declaration", ERR_PARSER, i->getPosition());
+							throw ErrorReporter::report("Expected a declaration", ErrorReporter::GENERAL_ERROR, i->getPosition());
 					node->setStatement(inner);
 					node->setPosition(token->_pos);
 					_namespaces[name] = node;
@@ -257,7 +257,7 @@ AST::Node * Parser::std()
 					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
 					{
 						if (!i->isDeclaration())
-							throw ErrorReporter::report("Expected a declaration", ERR_PARSER, i->getPosition());
+							throw ErrorReporter::report("Expected a declaration", ErrorReporter::GENERAL_ERROR, i->getPosition());
 						node->getStatement()->addStatement(i);
 					}
 				}
@@ -317,7 +317,7 @@ AST::Node * Parser::nud()
 			case (LT_CHARACTER): node = new AST::Character(((LiteralToken<unicode_char>*)token)->_value); break;
 			case (LT_FRACTION): node = new AST::Fraction(((LiteralToken<float>*)token)->_value); break;
 			case (LT_NULL): node = new AST::Null(); break;
-			default: throw ErrorReporter::report("Internal Lexer error", ERR_PARSER, token->_pos);
+			default: throw ErrorReporter::report("Internal Lexer error", ErrorReporter::GENERAL_ERROR, token->_pos);
 		}
 		node->setPosition(token->_pos);
 		return node;
@@ -398,7 +398,7 @@ AST::Node * Parser::nud()
 		op->setExpression(parseExpression(leftPrecedence(ot, PREFIX)));
 		return op;
 	}
-	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ERR_PARSER, token->_pos);
+	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ErrorReporter::GENERAL_ERROR, token->_pos);
 }
 
 /* Left-denotation */
@@ -422,7 +422,7 @@ AST::Node * Parser::led(AST::Node * left)
 				decl->setGet(parseInnerBlock());
 			else if (eatOperator(OT_SET))
 				decl->setSet(parseInnerBlock());
-			else throw ErrorReporter::report("expected \"get\" or \"set\"", ERR_PARSER, token->_pos);
+			else throw ErrorReporter::report("expected \"get\" or \"set\"", ErrorReporter::GENERAL_ERROR, token->_pos);
 			decl->setPosition(token->_pos);
 			return decl;
 		}
@@ -585,5 +585,5 @@ AST::Node * Parser::led(AST::Node * left)
 		op->setExpression(convertToExpression(left));
 		return op;
 	}
-	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ERR_PARSER, token->_pos);
+	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ErrorReporter::GENERAL_ERROR, token->_pos);
 }

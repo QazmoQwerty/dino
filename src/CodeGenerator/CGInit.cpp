@@ -396,7 +396,7 @@ std::pair<llvm::Function*, llvm::Function*> CodeGenerator::declareProperty(DST::
 {
     auto propType = evalType(node->getReturnType());
     if (propType->isVoidTy())
-        throw ErrorReporter::report("Property type may not be \"void\"", ERR_CODEGEN, node->getPosition());
+        throw ErrorReporter::report("Property type may not be \"void\"", ErrorReporter::GENERAL_ERROR, node->getPosition());
 
     auto ret = std::make_pair<llvm::Function*, llvm::Function*>(NULL, NULL);
 
@@ -516,7 +516,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         llvm::Function *getFunc = NULL;
         if (isFunc(getFuncPtr))
             getFunc = (llvm::Function*)getFuncPtr;
-        else throw ErrorReporter::report("\"" + getFuncName.to_string() + "\" is not a function", ERR_CODEGEN, node->getPosition());
+        else throw ErrorReporter::report("\"" + getFuncName.to_string() + "\" is not a function", ErrorReporter::GENERAL_ERROR, node->getPosition());
 
         // Create a new basic block to start insertion into.
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", getFunc);
@@ -536,7 +536,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
+                throw ErrorReporter::report("Error while generating IR for statement", ErrorReporter::GENERAL_ERROR, i->getPosition());
         }
         if (!_builder.GetInsertBlock()->getTerminator())
             _builder.CreateRetVoid();
@@ -564,7 +564,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         llvm::Function *setFunc = NULL;
         if (isFunc(setFuncPtr))
             setFunc = (llvm::Function*)setFuncPtr;
-        else throw ErrorReporter::report("\"" + setFuncName.to_string() + "\" is not a function", ERR_CODEGEN, node->getPosition());
+        else throw ErrorReporter::report("\"" + setFuncName.to_string() + "\" is not a function", ErrorReporter::GENERAL_ERROR, node->getPosition());
 
         // Create a new basic block to start insertion into.
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", setFunc);
@@ -585,7 +585,7 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         {
             auto val = codeGen(i);
             if (val == nullptr)
-                throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
+                throw ErrorReporter::report("Error while generating IR for statement", ErrorReporter::GENERAL_ERROR, i->getPosition());
         }
         if (!_builder.GetInsertBlock()->getTerminator())
             _builder.CreateRetVoid();
@@ -664,10 +664,10 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     llvm::Function *func = NULL;
     if (isFunc(funcPtr))
         func = (llvm::Function*)funcPtr;
-    else throw ErrorReporter::report("\"" + node->getVarDecl()->getVarId().to_string() + "\" is not a function", ERR_CODEGEN, node->getPosition());
+    else throw ErrorReporter::report("\"" + node->getVarDecl()->getVarId().to_string() + "\" is not a function", ErrorReporter::GENERAL_ERROR, node->getPosition());
 
     if (node->getContent() == NULL)
-        throw ErrorReporter::report("Undefined function", ERR_CODEGEN, node->getPosition());
+        throw ErrorReporter::report("Undefined function", ErrorReporter::GENERAL_ERROR, node->getPosition());
 
 
     if (node->getContent()->getStatements().size() == 1 && node->getContent()->getStatements()[0]->getStatementType() == ST_UNARY_OPERATION
@@ -704,7 +704,7 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
         diEmitLocation(i);
         auto val = codeGen(i);
         if (val == nullptr)
-            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
+            throw ErrorReporter::report("Error while generating IR for statement", ErrorReporter::GENERAL_ERROR, i->getPosition());
     }
 
     if (!_builder.GetInsertBlock()->getTerminator())
