@@ -1,5 +1,5 @@
 #include "Token.h"
-#include "../Utils//ErrorReporter/ErrorReporter.h"
+#include "../Utils/ErrorReporter/ErrorReporter.h"
 
 #define GET_PATH(f) (f ? f->getOriginalPath() : "")
 
@@ -161,7 +161,7 @@ string getSpecialCharConstant(string value)
 	Gets an input string and the current line number.
 	Function creates and returns a LiteralToken with type LT_STRING based on the input.
 */
-LiteralToken<string> * createStringLiteralToken(unicode_string value, PositionInfo pos)
+LiteralToken<string> * createStringLiteralToken(unicode_string value, ErrorReporter::Position pos)
 {
 	LiteralToken<string> * token = new struct LiteralToken<string>;
 	token->_data = unicode_string("\"");
@@ -182,11 +182,11 @@ LiteralToken<string> * createStringLiteralToken(unicode_string value, PositionIn
 	Function creates and returns a LiteralToken with type LT_CHARACTER based on the input.
 	NOTE: if input is not a valid character an exception will be thrown.
 */
-LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string value, PositionInfo pos)	
+LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string value, ErrorReporter::Position pos)	
 {
 	char val = 'f';
 	if (value.length() == 0)
-		throw ErrorReporter::report("Empty char constant", ERR_LEXER, pos);
+		throw ErrorReporter::report("Empty char constant", ErrorReporter::GENERAL_ERROR, pos);
 	if (value.length() > 1) 
 	{
 		if (value.length() == 2 && value[0].getValue() == ESCAPE_CHAR) 
@@ -209,9 +209,9 @@ LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string value, P
 			else if (value[1].getValue() == '\'')
 				val = '\'';
 				// value = unicode_string("'");
-			else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
+			else throw ErrorReporter::report("Too many characters in character constant", ErrorReporter::GENERAL_ERROR, pos);
 		}
-		else throw ErrorReporter::report("Too many characters in character constant", ERR_LEXER, pos);
+		else throw ErrorReporter::report("Too many characters in character constant", ErrorReporter::GENERAL_ERROR, pos);
 	}
 	struct LiteralToken<unicode_char> * token = new struct LiteralToken<unicode_char>;
 	token->_data = unicode_string("'");
@@ -231,7 +231,7 @@ LiteralToken<unicode_char> * createCharacterLiteralToken(unicode_string value, P
 	Function creates and returns a LiteralToken with type LT_FRACTION based on the input.
 	NOTE: if input is not a valid fraction an exception will be thrown.
 */
-LiteralToken<float> * createFractionLiteralToken(unicode_string data, PositionInfo pos)
+LiteralToken<float> * createFractionLiteralToken(unicode_string data, ErrorReporter::Position pos)
 {
 	LiteralToken<float> * token = new struct LiteralToken<float>;
 	token->_data = data;
@@ -239,7 +239,7 @@ LiteralToken<float> * createFractionLiteralToken(unicode_string data, PositionIn
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_FRACTION;
 	try { token->_value = stof(data.to_string()); }
-	catch (exception) { throw ErrorReporter::report("Invalid fraction literal", ERR_LEXER, pos); }
+	catch (exception) { throw ErrorReporter::report("Invalid fraction literal", ErrorReporter::GENERAL_ERROR, pos); }
 	return token;
 }
 
@@ -248,7 +248,7 @@ LiteralToken<float> * createFractionLiteralToken(unicode_string data, PositionIn
 	Function creates and returns a LiteralToken with type LT_INTEGER based on the input.
 	NOTE: if input is not a valid integer an exception will be thrown.
 */
-LiteralToken<int> * createIntegerLiteralToken(unicode_string data, PositionInfo pos)
+LiteralToken<int> * createIntegerLiteralToken(unicode_string data, ErrorReporter::Position pos)
 {
 	LiteralToken<int> * token = new struct LiteralToken<int>;
 	token->_data = data;
@@ -256,7 +256,7 @@ LiteralToken<int> * createIntegerLiteralToken(unicode_string data, PositionInfo 
 	token->_type = TT_LITERAL;
 	token->_literalType = LT_INTEGER;
 	try { token->_value = stoi(data.to_string()); }
-	catch (exception) { throw ErrorReporter::report("Invalid integer literal", ERR_LEXER, pos); }
+	catch (exception) { throw ErrorReporter::report("Invalid integer literal", ErrorReporter::GENERAL_ERROR, pos); }
 	return token;
 }
 
@@ -265,7 +265,7 @@ LiteralToken<int> * createIntegerLiteralToken(unicode_string data, PositionInfo 
 	Function creates and returns a LiteralToken with type LT_BOOLEAN based on the input.
 	NOTE: if input is not "false" or "true" an exception will be thrown.
 */
-LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, PositionInfo pos)
+LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, ErrorReporter::Position pos)
 {
 	LiteralToken<bool> * temp = new struct LiteralToken<bool>;
 	temp->_data = data;
@@ -276,11 +276,11 @@ LiteralToken<bool> * createBooleanLiteralToken(unicode_string data, PositionInfo
 		temp->_value = true;
 	else if (data == "false")
 		temp->_value = false;
-	else throw ErrorReporter::report("Invalid boolean literal", ERR_LEXER, pos);
+	else throw ErrorReporter::report("Invalid boolean literal", ErrorReporter::GENERAL_ERROR, pos);
 	return temp;
 }
 
-LiteralToken<bool>* createNullLiteralToken(PositionInfo pos)
+LiteralToken<bool>* createNullLiteralToken(ErrorReporter::Position pos)
 {
 	LiteralToken<bool> * temp = new struct LiteralToken<bool>;
 	temp->_data = "null";

@@ -23,7 +23,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         case ST_INCREMENT: return codeGen((DST::Increment*)node);
         case ST_TRY_CATCH: return codeGen((DST::TryCatch*)node);
-        default: throw ErrorReporter::report("Unimplemented codegen for statement", ERR_CODEGEN, node->getPosition());;
+        default: TODO
     }
 }
 
@@ -43,7 +43,7 @@ llvm::BasicBlock *CodeGenerator::codeGen(DST::StatementBlock *node, llvm::BasicB
         diEmitLocation(i);
         auto val = codeGen(i);
         if (val == nullptr)
-            throw ErrorReporter::report("Error while generating ir for statementblock", ERR_CODEGEN, node->getPosition());
+            throw ErrorReporter::report("Error while generating ir for statementblock", ErrorReporter::GENERAL_ERROR, node->getPosition());
         if (_builder.GetInsertBlock()->getTerminator())
             break;
     }
@@ -72,7 +72,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             if (node->getExpression() == NULL) 
             {
                 if (!getParentFunction()->getReturnType()->isVoidTy())
-                    throw ErrorReporter::report("cannot return void in non void function", ERR_DECORATOR, node->getPosition());
+                    throw ErrorReporter::report("cannot return void in non void function", ErrorReporter::GENERAL_ERROR, node->getPosition());
                 return _builder.CreateRetVoid();
             }
             auto val = codeGen(node->getExpression());
@@ -120,7 +120,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             createCallOrInvoke(free, cast);
             return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
         }
-        default: throw ErrorReporter::report("Unimplemented unary operation statement!", ERR_CODEGEN, node->getPosition());
+        default: UNREACHABLE
     }
 }
 
@@ -155,7 +155,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
     _currCatchBlock = catchBB;
     for (auto i : node->getTryBlock()->getStatements())
         if (!codeGen(i))
-            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
+            throw ErrorReporter::report("Error while generating IR for statement", ErrorReporter::GENERAL_ERROR, i->getPosition());
     if (!_builder.GetInsertBlock()->getTerminator())
         _builder.CreateBr(mergeBB);
     _currCatchBlock = lastPad;
@@ -171,7 +171,7 @@ llvm::Value *CodeGenerator::codeGen(DST::TryCatch *node)
 
     for (auto i : node->getCatchBlock()->getStatements())
         if (!codeGen(i))
-            throw ErrorReporter::report("Error while generating IR for statement", ERR_CODEGEN, i->getPosition());
+            throw ErrorReporter::report("Error while generating IR for statement", ErrorReporter::GENERAL_ERROR, i->getPosition());
 
     _builder.CreateCall(endCatchFunc, {});
 
@@ -219,7 +219,7 @@ llvm::Value *CodeGenerator::codeGen(DST::SwitchCase *node)
             auto v = codeGen(exp);
             if (llvm::isa<llvm::ConstantInt>(v))
                 ret->addCase((llvm::ConstantInt*)v, block);
-            else throw ErrorReporter::report("case clause must be a constant enumerable value", ERR_CODEGEN, exp->getPosition());
+            else throw ErrorReporter::report("case clause must be a constant enumerable value", ErrorReporter::GENERAL_ERROR, exp->getPosition());
         }
     }
     if (mergeBB) 

@@ -80,7 +80,7 @@ namespace CLI
             }
             else throw "unknown command \"" + string(argv[1]) + "\".\nTry \"dino help\" for a list of commands.";
         } 
-        catch (Error err)      { ErrorReporter::showAll(); exit(1); }
+        catch (ErrorReporter::Error err)      { ErrorReporter::showAll(); exit(1); }
         catch (string s)       { llvm::errs() << FRED(BOLD("Error: ")) << s << "\n"; exit(1); }
         catch (const char * c) { llvm::errs() << FRED(BOLD("Error: ")) << c << "\n"; exit(1); }
         return options;

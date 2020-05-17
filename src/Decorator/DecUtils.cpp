@@ -14,7 +14,7 @@ DST::Type * Decorator::evalType(AST::Expression * node)
 {
 	auto ret = decorate(node);
 	if (ret->getExpressionType() != ET_TYPE)
-		throw ErrorReporter::report("expected a type", ERR_DECORATOR, ret->getPosition());
+		throw ErrorReporter::report("expected a type", ErrorReporter::GENERAL_ERROR, ret->getPosition());
 	return (DST::Type*)ret;
 }
 

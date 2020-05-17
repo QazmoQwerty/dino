@@ -16,7 +16,7 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_BINARY_OPERATION: return codeGenLval((DST::BinaryOperation*)node);
         case ET_CONVERSION: return codeGenLval((DST::Conversion*)node);
         case ET_FUNCTION_LITERAL: return codeGenLval((DST::FunctionLiteral*)node);
-        default: throw ErrorReporter::report("unimplemented lval expression type.", ERR_CODEGEN, node->getPosition());
+        default: throw ErrorReporter::report("unimplemented lval expression type.", ErrorReporter::GENERAL_ERROR, node->getPosition());
     }
 }
 
@@ -60,8 +60,7 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
         }
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
-        default:
-            throw ErrorReporter::report("Unimplemented lval unary operation", ERR_CODEGEN, node->getPosition());
+        default: UNREACHABLE
     }    
 }
 
@@ -87,7 +86,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
             }
             UNREACHABLE
         default:
-            throw ErrorReporter::report("Unimplemented lval Binary operation", ERR_CODEGEN, node->getPosition());
+            UNREACHABLE
     }
 }
 
@@ -155,5 +154,5 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else throw ErrorReporter::report("Expression must be of class or namespace type", ERR_CODEGEN, node->getPosition());
+    else throw ErrorReporter::report("Expression must be of class or namespace type", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }

@@ -168,18 +168,6 @@ enum OperatorType
 };
 
 /*
-	At which stage was the error found?
-*/
-enum ErrorType
-{
-	ERR_LEXER,
-	ERR_PARSER,
-	ERR_DECORATOR,
-	ERR_CODEGEN,
-	ERR_INTERNAL,
-};
-
-/*
 	Types of AST/DST statements 
 */
 enum StatementType

@@ -24,7 +24,7 @@ namespace AST
 	{
 		uint _nodeId;	// defined for purpose of the graphic view of the AST.
 		// int _line;
-		PositionInfo _pos;
+		ErrorReporter::Position _pos;
 	public:
 		/* Default constructor, does NOT set line.*/
 		Node() { _nodeId = _idCount++; };
@@ -37,8 +37,8 @@ namespace AST
 		/* Line the node is on */
 		// int getLine() const { return _line; }
 
-		PositionInfo &getPosition() { return _pos; }
-		void setPosition(PositionInfo pos) { _pos = pos; }
+		ErrorReporter::Position &getPosition() { return _pos; }
+		void setPosition(ErrorReporter::Position pos) { _pos = pos; }
 		
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -307,7 +307,7 @@ namespace AST
 		void setExpression(Expression* expression) { _expression = expression; }
 		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
 		void setDefault(StatementBlock* statement) {
-			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ERR_PARSER, statement->getPosition());;
+			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ErrorReporter::GENERAL_ERROR, statement->getPosition());;
 			_default = statement; 
 		}
 		Expression* getExpression() { return _expression; }
@@ -516,7 +516,35 @@ namespace AST
 
 		void setName(unicode_string id) { _name = id; }
 		void setInterfaces(ExpressionList* interfaces) { _interfaces = interfaces; }
-		//void addInterface(unicode_string interface) { _interfaces.push_back(interface); }
+		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
+		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
+		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
+	};
+
+	class TypeExtension : public Statement
+	{
+		unicode_string _name;
+		ExpressionList* _interfaces;
+		vector<VariableDeclaration*> _variableDeclarations;
+		vector<FunctionDeclaration*> _functionDeclarations;
+		vector<PropertyDeclaration*> _propertyDeclarations;
+
+	public:
+		TypeExtension() : _interfaces(NULL) {};
+		virtual ~TypeExtension();
+		virtual bool isDeclaration() { return true; }
+		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual string toString();
+		virtual vector<Node*> getChildren();
+
+		unicode_string &getName() { return _name; }
+		ExpressionList* getInterfaces() { return _interfaces; }
+		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
+		vector<FunctionDeclaration*> getFunctionDeclarations() { return _functionDeclarations; }
+		vector<PropertyDeclaration*> getPropertyDeclarations() { return _propertyDeclarations; }
+
+		void setName(unicode_string id) { _name = id; }
+		void setInterfaces(ExpressionList* interfaces) { _interfaces = interfaces; }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }

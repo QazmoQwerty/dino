@@ -241,7 +241,7 @@ namespace DST
 	TypeList::TypeList(Type *ty, Type *append)  
 	{
 		if (append->isListTy())
-			throw ErrorReporter::reportInternal("cannot append a list type to a list type", ERR_DECORATOR);
+			throw ErrorReporter::reportInternal("cannot append a list type to a list type", ErrorReporter::GENERAL_ERROR);
 
 		if (ty->isListTy())
 		{
@@ -308,7 +308,7 @@ namespace DST
 	TypeList *TypeList::get(vector<Type*> tys)
 	{
 		if (tys.size() < 2)
-			throw ErrorReporter::reportInternal("type list must have at least 2 types", ERR_DECORATOR);
+			throw ErrorReporter::reportInternal("type list must have at least 2 types", ErrorReporter::GENERAL_ERROR);
 		auto ret = tys[0]->appendType(tys[1]);
 		for (uint i = 2; i < tys.size(); i++)
 			ret = ret->appendType(tys[i]);
@@ -387,7 +387,7 @@ namespace DST
 				constRet->_setPropTy = new PropertyType(this, hasGet, hasSet);
 			return constRet->_setPropTy;
 		}
-		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, POSITION_INFO_NONE);
+		throw ErrorReporter::report("a property must have get/set!", ErrorReporter::INTERNAL, ErrorReporter::POS_NONE);
 	}
 
 	ConstType *Type::getConstOf()

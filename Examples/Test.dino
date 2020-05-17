@@ -1,13 +1,26 @@
-import "std2"
+namespace NS {
 
-namespace Prog {
-	interface Foo {
-		bool A()
-		int B: get
-		void Foo()
-	}
+    int Foo {
+        get return 
+    }
 
-	void Main() {
-		
-	}
+    int Main() {
+		int n
+        bool b
+        // var n := n + b
+        // var n := 
+        //     (n+n+n) ..
+        //     +
+        //     (b)
+        // var c := n + b
+        // int x = 10
+        // int x := 10
+
+        // void x := 20
+        // int a := 10
+        // // return "10"
+        // string a := 20
+        // return Foo
+        return 19
+    }
 }

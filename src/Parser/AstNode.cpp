@@ -10,7 +10,7 @@ void AST::Function::addParameters(Expression * parameters)
 	if (parameters == nullptr)
 		return;
 	if (!parameters->isExpression())
-		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, parameters->getPosition());
+		throw ErrorReporter::report("expected a variable declaration", ErrorReporter::GENERAL_ERROR, parameters->getPosition());
 	auto exp = dynamic_cast<Expression*>(parameters);
 	switch (exp->getExpressionType())
 	{
@@ -22,11 +22,11 @@ void AST::Function::addParameters(Expression * parameters)
 		{
 			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
 				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
-			else throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, i->getPosition());
+			else throw ErrorReporter::report("expected a variable declaration", ErrorReporter::GENERAL_ERROR, i->getPosition());
 		}
 		break;
 	default:
-		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, exp->getPosition());
+		throw ErrorReporter::report("expected a variable declaration", ErrorReporter::GENERAL_ERROR, exp->getPosition());
 		break;
 	}
 }
@@ -44,7 +44,7 @@ string AST::InterfaceDeclaration::toString()
 void AST::InterfaceDeclaration::addFunction(FunctionDeclaration * function)
 {
 	if (function && function->getContent())
-		throw ErrorReporter::report("functions inside interfaces may not have a body", ERR_PARSER, function->getPosition());
+		throw ErrorReporter::report("functions inside interfaces may not have a body", ErrorReporter::GENERAL_ERROR, function->getPosition());
 	_functions.push_back(function);
 }
 
@@ -74,7 +74,7 @@ void AST::FunctionDeclaration::addParameter(Node * parameter)
 	if (parameter == nullptr)
 		return;
 	if (!parameter->isExpression())
-		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, parameter->getPosition());
+		throw ErrorReporter::report("expected a variable declaration", ErrorReporter::GENERAL_ERROR, parameter->getPosition());
 	auto exp = dynamic_cast<Expression*>(parameter);
 	switch (exp->getExpressionType())
 	{
@@ -86,11 +86,11 @@ void AST::FunctionDeclaration::addParameter(Node * parameter)
 		{
 			if (i->getExpressionType() == ET_VARIABLE_DECLARATION)
 				_parameters.push_back(dynamic_cast<VariableDeclaration*>(i));
-			else throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, parameter->getPosition());
+			else throw ErrorReporter::report("expected a variable declaration", ErrorReporter::GENERAL_ERROR, parameter->getPosition());
 		}
 		break;
 	default:
-		throw ErrorReporter::report("expected a variable declaration", ERR_PARSER, exp->getPosition());
+		throw ErrorReporter::report("expected a variable declaration", ErrorReporter::GENERAL_ERROR, exp->getPosition());
 	}
 }
 
