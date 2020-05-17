@@ -516,7 +516,35 @@ namespace AST
 
 		void setName(unicode_string id) { _name = id; }
 		void setInterfaces(ExpressionList* interfaces) { _interfaces = interfaces; }
-		//void addInterface(unicode_string interface) { _interfaces.push_back(interface); }
+		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
+		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
+		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
+	};
+
+	class TypeExtension : public Statement
+	{
+		unicode_string _name;
+		ExpressionList* _interfaces;
+		vector<VariableDeclaration*> _variableDeclarations;
+		vector<FunctionDeclaration*> _functionDeclarations;
+		vector<PropertyDeclaration*> _propertyDeclarations;
+
+	public:
+		TypeExtension() : _interfaces(NULL) {};
+		virtual ~TypeExtension();
+		virtual bool isDeclaration() { return true; }
+		virtual StatementType getStatementType() { return ST_TYPE_DECLARATION; };
+		virtual string toString();
+		virtual vector<Node*> getChildren();
+
+		unicode_string &getName() { return _name; }
+		ExpressionList* getInterfaces() { return _interfaces; }
+		vector<VariableDeclaration*> getVariableDeclarations() { return _variableDeclarations; }
+		vector<FunctionDeclaration*> getFunctionDeclarations() { return _functionDeclarations; }
+		vector<PropertyDeclaration*> getPropertyDeclarations() { return _propertyDeclarations; }
+
+		void setName(unicode_string id) { _name = id; }
+		void setInterfaces(ExpressionList* interfaces) { _interfaces = interfaces; }
 		void addVariableDeclaration(VariableDeclaration* variableDeclaration) { _variableDeclarations.push_back(variableDeclaration); }
 		void addFunctionDeclaration(FunctionDeclaration* functionDeclaration) { _functionDeclarations.push_back(functionDeclaration); }
 		void addPropertyDeclaration(PropertyDeclaration* propertyDeclaration) { _propertyDeclarations.push_back(propertyDeclaration); }
