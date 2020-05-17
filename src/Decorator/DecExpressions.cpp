@@ -299,7 +299,16 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	{
 		default: 
 			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
-				throw ErrorReporter::report("left-type != right-type", ErrorReporter::GENERAL_ERROR, node->getPosition());
+				throw ErrorReporter::report(
+					"incompatible types in operation", "incompatible types", 
+					ErrorReporter::GENERAL_ERROR, node->getPosition()
+				).withSecondary(
+					"left is `" + bo->getLeft()->getType()->toShortString() + "`",
+					node->getLeft()->getPosition()
+				).withSecondary(
+					"right is `" + bo->getRight()->getType()->toShortString() + "`",
+					node->getRight()->getPosition()
+				);
 			bo->setType(bo->getLeft()->getType());
 			break;
 		case RT_BOOLEAN: 
@@ -311,7 +320,16 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 					break;
 				default:
 					if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
-						throw ErrorReporter::report("left-type != right-type", ErrorReporter::GENERAL_ERROR, node->getPosition());
+						throw ErrorReporter::report(
+							"incompatible types in operation", "incompatible types", 
+							ErrorReporter::GENERAL_ERROR, node->getPosition()
+						).withSecondary(
+							"left is `" + bo->getLeft()->getType()->toShortString() + "`",
+							node->getLeft()->getPosition()
+						).withSecondary(
+							"right is `" + bo->getRight()->getType()->toShortString() + "`",
+							node->getRight()->getPosition()
+						);
 					break;
 			}			
 			bo->setType(DST::getBoolTy());

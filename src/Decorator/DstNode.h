@@ -1201,6 +1201,8 @@ namespace DST
 
 		void setExpression(Expression* expression) { _expression = expression; }
 
+		AST::UnaryOperationStatement *getBase() { return _base; }
+
 		Operator getOperator() { return _base->getOperator(); }
 		Expression* getExpression() { return _expression; };
 	};

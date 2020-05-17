@@ -165,9 +165,9 @@ AST::StatementBlock * Parser::parseInnerBlock()
 		if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
 			throw ErrorReporter::report(
 				"unexpected `{`", 
-				"dangling curly braces\n"
-				"help: curly braces must be opened at end of line,\n"
-				"try moving it to the end of the previous line",
+				"dangling curly braces\n" +
+				BOLD(FBLK("help: curly braces must be opened at end of line\n")) +
+				BOLD(FBLK("try moving it to the end of the previous line")),
 				ErrorReporter::GENERAL_ERROR, 
 				peekToken()->_pos
 			).withSecondary(

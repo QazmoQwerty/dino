@@ -381,9 +381,9 @@ AST::Node * Parser::nud()
 	{
 		throw ErrorReporter::report(
 			"unexpected `{`", 
-			"dangling curly braces\n"
-			"help: curly braces must be opened at end of line,\n"
-			"try moving it to the end of the previous line",
+			"dangling curly braces\n" + 
+			BOLD(FBLK("help: curly braces must be opened at end of line\n")) +
+			BOLD(FBLK("try moving it to the end of the previous line")),
 			ErrorReporter::GENERAL_ERROR, 
 			token->_pos
 		);

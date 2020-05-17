@@ -25,7 +25,7 @@ namespace DST
 			break;
 		case OT_NEW:	// dynamic memory allocation
 			if (_expression->getExpressionType() != ET_TYPE)
-				throw ErrorReporter::report("Expected a type", ErrorReporter::GENERAL_ERROR, getPosition());
+				throw ErrorReporter::report("Expected a type", "not a type", ErrorReporter::GENERAL_ERROR, _base->getExpression()->getPosition());
 			if (((Type*)_expression)->isArrayTy())	// new int[10] == int[] != (int[10])@
 			{
 				if (((ArrayType*)_expression)->getLength() == UNKNOWN_ARRAY_LENGTH && ((ArrayType*)_expression)->getLenExp() == NULL)
@@ -81,8 +81,8 @@ namespace DST
 						throw ErrorReporter::report(
 							"invalid return type", 
 							"expected `" + returnType->toShortString() + "`, got `" + unaryOp->getExpression()->getType()->toShortString() + "`",
-							ErrorReporter::GENERAL_ERROR, 
-							unaryOp->getExpression()->getPosition()
+							ErrorReporter::GENERAL_ERROR,
+							unaryOp->getBase()->getExpression()->getPosition()
 						);
 					}
 					break;
