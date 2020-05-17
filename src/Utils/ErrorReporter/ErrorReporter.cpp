@@ -1,70 +1,186 @@
 #include "ErrorReporter.h"
 
-vector<Error> ErrorReporter::errors;
-
-Error ErrorReporter::report(string msg, ErrorType errTy, PositionInfo pos, bool isFatal)
+namespace ErrorReporter 
 {
-    errors.push_back({ msg, errTy, pos });
-    if (isFatal)
-        throw "[Aborting due to previous error]";
-    return errors.back();
-}
-
-Error ErrorReporter::reportInternal(string msg, ErrorType errTy, PositionInfo pos)
-{
-    errors.push_back({ msg, errTy, pos });
-    return errors.back();
-}
-
-void ErrorReporter::showAll() 
-{
-    for (uint i = 0; i < errors.size(); i++)
+    void Error::show()
     {
-        if (i) llvm::errs() << "\n";
-        show(errors[i]);
-    }
-}
+        if (notes.size() == 0)
+            return showBasic();
+        
+        std::cout << color(tyToString() + ": ") << BOLD(msg) << "\n";
+        if (pos.file == NULL)
+            return;
+        // uncomment this for uglier, but clickable links
+        // std::cout << color(" --> ") << "./" << pos.file->getOriginalPath() << ":" << pos.line << ":" << pos.startPos << "\n";
+        for (uint i = 1; i < std::to_string(pos.line).size(); i++) std::cout << " ";
+        std::cout << color(" --> ") << pos.file->getOriginalPath() << "\n";
 
-void ErrorReporter::show(Error &err) 
-{
-    if (err.pos.file != NULL)
-    {   
-        llvm::errs() << BOLD(FRED(" --> ")) << BOLD("\"" << err.pos.file->getOriginalPath() << "\": line " << err.pos.line) << BOLD(FRED("\n  | \n"));
-        string line = getLine(err.pos.file->getOriginalPath(), err.pos.line);
-        llvm::errs() << BOLD(FRED("  | ")) << line << BOLD(FRED("\n  | "));
-        for (int i = 0; i < err.pos.startPos; i++)
+        
+        string line = getLine(pos.file->getOriginalPath(), pos.line);
+
+        
+        if (subMsg != "")
         {
-            if (line[i] == '\t')
-                llvm::errs() << "\t";    
-            else llvm::errs() << " ";
+            printIndent();
+            for (int i = 0; i < pos.startPos; i++)
+                std::cout << (line[i] == '\t' ? "    " : " ");
+            std::cout << color(subMsg);
+            std::cout << "\n";
         }
-        for (int i = 0; i < err.pos.endPos - err.pos.startPos; i++)
-            llvm::errs() << BOLD(FRED("^"));
-        llvm::errs() << "\n";
-    }
-    llvm::errs() << BOLD(FRED(toString(err.errTy) << ": ") << err.msg) << "\n";
-}
+        
+        printIndent();
+        for (int i = 0; i < pos.startPos; i++)
+            std::cout << (line[i] == '\t' ? "    " : " ");
+        for (int i = 0; i < pos.endPos - pos.startPos; i++)
+            std::cout << color("v");
+        
+        std::cout << "\n";
+        printIndent(true);
+        std::cout << line << "\n";
 
-string ErrorReporter::toString(ErrorType type) 
-{
-    switch (type)
+        sortSecondaries();
+        for (auto note : notes)
+        {
+            if (note.pos.line == pos.line)
+            {
+                printIndent();
+                for (int i = 0; i < note.pos.startPos; i++)
+                    std::cout << (line[i] == '\t' ? "    " : " ");
+                for (int i = 0; i < note.pos.endPos - note.pos.startPos; i++)
+                    std::cout << note.color("^");
+                std::cout << " " << note.color(note.msg) << "\n";
+            }
+            else note.show();
+        }
+        std::cout << "\n";
+    }
+
+    void Error::showBasic()
     {
-        // case ERR_LEXER: return "LexError";
-        // case ERR_PARSER: return "ParseError";
-        // case ERR_DECORATOR: return "DecorateError";
-        // case ERR_CODEGEN: return "CodeGenError";
-        case ERR_INTERNAL: return "Internal Error";
-        default: return "Error";
+        std::cout << color(tyToString() + ": ") << BOLD(msg) << "\n";
+        if (pos.file == NULL)
+            return;
+        // uncomment this for uglier, but clickable links
+        // std::cout << color(" --> ") << "./" << pos.file->getOriginalPath() << ":" << pos.line << ":" << pos.startPos << "\n";
+        for (uint i = 1; i < std::to_string(pos.line).size(); i++) std::cout << " ";
+        std::cout << color(" --> ") << pos.file->getOriginalPath() << "\n";
+        printIndent();
+        std::cout << "\n";
+        string line = getLine(pos.file->getOriginalPath(), pos.line);
+        printIndent(true);
+        std::cout << line << "\n";
+        printIndent();
+        for (int i = 0; i < pos.startPos; i++)
+            std::cout << (line[i] == '\t' ? "    " : " ");
+        for (int i = 0; i < pos.endPos - pos.startPos; i++)
+            std::cout << color("^");
+        
+        if (subMsg != "")
+            std::cout << " " << color(subMsg);
     }
-}
 
-string ErrorReporter::getLine(string fileName, int line)
-{
-    std::fstream file(fileName);
-    file.seekg(std::ios::beg);
-    for (int i=0; i < line - 1; ++i)
-        file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-    string ret;
-    std::getline(file, ret);
-    return ret;
+
+    void Error::sortSecondaries()
+    {
+        std::sort(
+            std::begin(notes), std::end(notes), 
+            [](Error a, Error b) {return a.pos.startPos > b.pos.startPos; }
+        );
+    }
+
+    vector<Error> errors;
+
+    Error report(string msg, uint errCode, Position pos, bool isFatal)
+    {
+        errors.push_back(Error(msg, errCode, pos));
+        if (isFatal)
+            throw "[Aborting due to previous error]";
+        return errors.back();
+    }
+
+    Error reportInternal(string msg, uint errCode, Position pos)
+    {
+        errors.push_back({ msg, errCode, pos });
+        return errors.back();
+    }
+
+    void showAll() 
+    {
+        for (uint i = 0; i < errors.size(); i++)
+        {
+            if (i) std::cout << "\n";
+            errors[i].show();
+        }
+    }
+
+    string Error::tyToString() 
+    {
+        switch (errTy)
+        {
+            case INTERNAL: return "Internal Error";
+            case WARNING: return "Warning";
+            case NOTE: return "Note";
+            default: return "Error";
+        }
+    }
+
+    string Error::color(string str)
+    {
+        switch (errTy)
+        {
+            default: return BOLD(FRED(str));
+            case WARNING: return BOLD(FBLU(str));
+            case NOTE: return BOLD(FBLK(str));
+        }
+    }
+
+    void Error::printIndent(bool showLine) {
+        if (showLine)
+        {
+            auto str = " " + std::to_string(pos.line) + " ";
+            std::cout << color(str);
+        }
+        else 
+        {
+            for (uint i = 0; i < std::to_string(pos.line).size() + 2; i++)
+                std::cout << " ";
+        }
+        std::cout << color("| ");
+    }
+
+    void show(Error &err) 
+    {
+        // if (err.pos.file != NULL)
+        // {   
+        //     std::cout << color(" --> ", err) << BOLD("`" + err.pos.file->getOriginalPath() + "`, line " + std::to_string(err.pos.line)) "\n";
+        //     printIndent(err);
+        //     std::cout << "\n";
+        //     string line = getLine(err.pos.file->getOriginalPath(), err.pos.line);
+        //     printIndent(err, true);
+        //     std::cout << line << "\n";
+        //     printIndent(err);
+        //     for (int i = 0; i < err.pos.startPos; i++)
+        //     {
+        //         if (line[i] == '\t')
+        //             std::cout << "\t";    
+        //         else std::cout << " ";
+        //     }
+        //     for (int i = 0; i < err.pos.endPos - err.pos.startPos; i++)
+        //         std::cout << color("^", err);
+        //     std::cout << "\n";
+        // }
+
+        // std::cout << color(toString(err) + ": ", err) << err.msg << "\n";        
+    }
+
+    string getLine(string fileName, int line)
+    {
+        std::fstream file(fileName);
+        file.seekg(std::ios::beg);
+        for (int i=0; i < line - 1; ++i)
+            file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+        string ret;
+        std::getline(file, ret);
+        return ret;
+    }
 }

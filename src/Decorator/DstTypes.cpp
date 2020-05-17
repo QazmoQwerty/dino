@@ -387,7 +387,7 @@ namespace DST
 				constRet->_setPropTy = new PropertyType(this, hasGet, hasSet);
 			return constRet->_setPropTy;
 		}
-		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, POSITION_INFO_NONE);
+		throw ErrorReporter::report("a property must have get/set!", ERR_INTERNAL, ErrorReporter::POS_NONE);
 	}
 
 	ConstType *Type::getConstOf()

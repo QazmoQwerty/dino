@@ -24,7 +24,7 @@ namespace AST
 	{
 		uint _nodeId;	// defined for purpose of the graphic view of the AST.
 		// int _line;
-		PositionInfo _pos;
+		ErrorReporter::Position _pos;
 	public:
 		/* Default constructor, does NOT set line.*/
 		Node() { _nodeId = _idCount++; };
@@ -37,8 +37,8 @@ namespace AST
 		/* Line the node is on */
 		// int getLine() const { return _line; }
 
-		PositionInfo &getPosition() { return _pos; }
-		void setPosition(PositionInfo pos) { _pos = pos; }
+		ErrorReporter::Position &getPosition() { return _pos; }
+		void setPosition(ErrorReporter::Position pos) { _pos = pos; }
 		
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;

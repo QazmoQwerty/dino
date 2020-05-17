@@ -25,7 +25,7 @@ AST::StatementBlock * Parser::parseFile(string fileName, bool showLexerOutput)
 	return block;
 }
 
-AST::StatementBlock * Parser::importFile(PositionInfo currPos)
+AST::StatementBlock * Parser::importFile(ErrorReporter::Position currPos)
 {
 	auto t = nextToken();
 	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType != LT_STRING)

@@ -75,7 +75,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		partC(i.second);
 	
 	if (!_main && !_isLibrary)
-		throw ErrorReporter::report("No entry point (Main function)", ERR_DECORATOR, POSITION_INFO_NONE);
+		throw ErrorReporter::report("No entry point (Main function)", ERR_DECORATOR, ErrorReporter::POS_NONE);
 	
 	for (auto i : _currentProgram->getNamespaces())
 		partD(i.second);

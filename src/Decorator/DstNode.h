@@ -123,7 +123,7 @@ namespace DST
 		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
-		virtual PositionInfo getPosition() const { return POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return ErrorReporter::POS_NONE; }
 
 		/* Returns whether the node represents a Statement */
 		virtual bool isStatement() = 0;
@@ -320,7 +320,7 @@ namespace DST
 		virtual bool assignableTo(Type *type) = 0;
 
 		/* types are expressions, but they don't have positions */
-		virtual PositionInfo getPosition() const { return POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return ErrorReporter::POS_NONE; }
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
@@ -746,7 +746,7 @@ namespace DST
 		void setName(unicode_string name) { if (!_base) _name = name; }
 		virtual Type *getType() { return _type; };
 		virtual ExpressionType getExpressionType() { return ET_IDENTIFIER; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -770,7 +770,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_BINARY_OPERATION; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -789,7 +789,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_COMPARISON; }
 		vector<Expression*> getExpressions() { return _expressions; }
 		void addExpression(Expression *exp) { _expressions.push_back(exp); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + getType()->toShortString(); };
 		virtual vector<Node*> getChildren()
@@ -816,7 +816,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
 
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		virtual Type *getType() { return _type; }
 		void setType(Type *type) { _type = type; }
 		void setExpression(Expression* expression) { _expression = expression; }
@@ -839,7 +839,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\\nType: " + getType()->toShortString(); };
 		virtual vector<Node*> getChildren();
 		virtual Type *getType() { return _thenBranch->getType(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(Expression* thenBranch) { _thenBranch = thenBranch; }
@@ -866,7 +866,7 @@ namespace DST
 		virtual string toString() { return _base->toString() + "\\nType: " + getType()->toShortString(); };
 		virtual vector<Node*> getChildren() { return {}; };
 		virtual Type *getType() { return _expr->getType(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		Expression *getExpression() { return _expr; };
 		bool isIncrement() const { return _increment; }
 	};
@@ -891,7 +891,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_MEMBER_ACCESS; }
 		Expression *getLeft() { return _left; }
 		unicode_string &getRight() { return ((AST::Identifier*)_base->getRight())->getVarId(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual string toString() { return "<MemberAccess>\n." + getRight().to_string() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -911,7 +911,7 @@ namespace DST
 		virtual int getIntValue();
 		uint64_t getEnumerableValue();
 		virtual LiteralType getLiteralType() { return _base->getLiteralType(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual ExpressionType getExpressionType() { return ET_LITERAL; }
 		string toShortString() { return _base->toShortString(); }
@@ -922,11 +922,11 @@ namespace DST
 	class EnumLiteral : public Literal 
 	{
 		int _val;
-		PositionInfo _pos;
+		ErrorReporter::Position _pos;
 	public:
 		virtual LiteralType getLiteralType() { return LT_ENUM; }
-		virtual PositionInfo getPosition() const { return _pos; }
-		EnumLiteral(int value, Type *ty, PositionInfo pos) : Literal(NULL), _val(value), _pos(pos) { setType(ty); }
+		virtual ErrorReporter::Position getPosition() const { return _pos; }
+		EnumLiteral(int value, Type *ty, ErrorReporter::Position pos) : Literal(NULL), _val(value), _pos(pos) { setType(ty); }
 		virtual int getIntValue() { return _val; }
 	};
 
@@ -943,7 +943,7 @@ namespace DST
 		}
 		Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_CONVERSION; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		Expression *getExpression() { return _expression; }
 		virtual string toString() { return "<Conversion>\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -965,7 +965,7 @@ namespace DST
 		void setType(FunctionType *type) { _type = type; }
 		FunctionType *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_LITERAL; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual string toString() { return _base->toString() + "\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
@@ -999,7 +999,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_LIST; };
 		virtual string toString() { return "<ExpressionList>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		size_t size() { return _expressions.size(); }
 
 		vector<Expression*> getExpressions() { return _expressions; }
@@ -1017,7 +1017,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_ARRAY; };
 		virtual string toString() { return "<ArrayLiteral>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		//virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		//virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void addValue(Expression* value) { _array.push_back(value); };
 		vector<Expression*> getArray() { return _array; }
@@ -1034,7 +1034,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_STATEMENT_BLOCK; };
 		StatementBlock() : _hasReturn(false) {}
 		virtual ~StatementBlock() { _statements.clear(); }
-		//virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		//virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		bool hasReturnType(Type *returnType);
 		bool hasReturn() { return _hasReturn; }
@@ -1080,7 +1080,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_IF_THEN_ELSE; };
 		virtual string toString() { return "<IfThenElse>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setThenBranch(StatementBlock* thenBranch) { _thenBranch = thenBranch; }
@@ -1109,7 +1109,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_SWITCH; };
 		virtual string toString() { return "<Switch>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void setExpression(Expression* expression) { _expression = expression; }
 		void addCase(vector<Expression*> expressions, StatementBlock* statement) { CaseClause c = { expressions, statement }; _cases.push_back(c); }
@@ -1138,7 +1138,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_WHILE_LOOP; };
 		virtual string toString() { return "<While>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setStatement(StatementBlock* statement) { _statement = statement; }
@@ -1162,7 +1162,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_FOR_LOOP; };
 		virtual string toString() { return "<For>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void setCondition(Expression* condition) { _condition = condition; }
 		void setStatement(StatementBlock* statement) { _statement = statement; }
@@ -1195,7 +1195,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_UNARY_OPERATION; };
 		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void setExpression(Expression* expression) { _expression = expression; }
 
@@ -1242,7 +1242,7 @@ namespace DST
 		Statement* getDeclaration(unicode_string id);
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getDeclarations() { return _decls; }
 		Type* getMemberType(unicode_string id);
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual StatementType getStatementType() { return ST_INTERFACE_DECLARATION; };
 		virtual bool isDeclaration() { return true; }
@@ -1261,7 +1261,7 @@ namespace DST
 		EnumDeclaration(AST::EnumDeclaration *base) : _base(base), _memberTy(NULL) {}
 		unicode_string &getName() { return _base->getName(); }
 		bool hasMember(unicode_string &name) { return _members.count(name); }
-		Literal *getEnumLiteral(unicode_string &name, PositionInfo pos) 
+		Literal *getEnumLiteral(unicode_string &name, ErrorReporter::Position pos) 
 		{
 			if (auto ret = _members[name].second)
 				return ret;
@@ -1270,7 +1270,7 @@ namespace DST
 		unordered_map<unicode_string, pair<uint, Literal*>, UnicodeHasherFunction> &getMembers() { return _members; }
 		void addMember(unicode_string &name, uint val) { _members[name] = { val, NULL }; }
 		void addMember(unicode_string &name, Literal* val) { _members[name] = { val->getEnumerableValue(), val }; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		void setMemberTy(Type *type);
 		Type *getMemberTy() { return _memberTy; }
 		AST::EnumDeclaration *getBase() { return _base; }
@@ -1297,7 +1297,7 @@ namespace DST
 		Statement* getDeclaration(unicode_string id)  { return _decls[id].first; }
 		Type* getMemberType(unicode_string id) { return _decls[id].second; }
 		unordered_map<unicode_string, pair<Statement*, Type*>, UnicodeHasherFunction> getMembers() { return _decls; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		vector<InterfaceDeclaration*> getInterfaces() { return _interfaces; }
 		void addInterface(InterfaceDeclaration *interface) { _interfaces.push_back(interface); }
@@ -1334,7 +1334,7 @@ namespace DST
 		virtual StatementType getStatementType() { return ST_FUNCTION_DECLARATION; };
 		virtual string toString() { return "<FunctionDeclaration>"; };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		FunctionType *getFuncType();
 		AST::FunctionDeclaration *getBase() { return _base; }
@@ -1368,7 +1368,7 @@ namespace DST
 		virtual string toString() { return "<PropertyDeclaration>\\n" + _type->toShortString() + " " + _base->getVarDecl()->getVarId().to_string(); };
 		virtual vector<Node*> getChildren();
 		unicode_string getName() { return _base->getVarDecl()->getVarId(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		Type *getReturnType() { return _type; }
 		void setGet(StatementBlock* get) { _get = get; }
 		void setSet(StatementBlock* set) { _set = set; }
@@ -1389,7 +1389,7 @@ namespace DST
 		virtual string toString() { return _base->toString(); };
 		virtual vector<Node*> getChildren();
 		unicode_string getName() { return _base->getName(); }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		virtual bool isDeclaration() { return true; }
 
 		AST::NamespaceDeclaration *getBase() { return _base; }
@@ -1413,7 +1413,7 @@ namespace DST
 
 		void setType(Type *type) { _type = type; }
 		virtual Type *getType() { return _type; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		virtual ExpressionType getExpressionType() { return ET_VARIABLE_DECLARATION; }
 		virtual StatementType getStatementType() { return ST_VARIABLE_DECLARATION; }
@@ -1438,7 +1438,7 @@ namespace DST
 		void setType(Type *type) { _type = type; };
 		virtual Type *getType() { return _type; }
 		virtual ExpressionType getExpressionType() { return ET_ASSIGNMENT; }
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 		virtual StatementType getStatementType() { return ST_ASSIGNMENT; }
 		Expression *getLeft() { return _left; }
 		Expression *getRight() { return _right; }
@@ -1463,7 +1463,7 @@ namespace DST
 		virtual ExpressionType getExpressionType() { return ET_FUNCTION_CALL; };
 		virtual string toString() { return string() + "<FunctionCall>\\nType: " + _type->toShortString(); };
 		virtual vector<Node*> getChildren();
-		virtual PositionInfo getPosition() const { return _base ? _base->getPosition() : POSITION_INFO_NONE; }
+		virtual ErrorReporter::Position getPosition() const { return _base ? _base->getPosition() : ErrorReporter::POS_NONE; }
 
 		void setFunctionId(Expression* funcId)
 		{

@@ -197,7 +197,7 @@ Value *CodeGenerator::createLogicalAnd(DST::BinaryOperation *node)
     return phi;
 }
 
-llvm::Value *CodeGenerator::createCompare(Value *left, Value *right, OperatorType op, DST::Type *leftTy, DST::Type *rightTy, PositionInfo pos)
+llvm::Value *CodeGenerator::createCompare(Value *left, Value *right, OperatorType op, DST::Type *leftTy, DST::Type *rightTy, ErrorReporter::Position pos)
 {
     if (op == OT_EQUAL || op == OT_NOT_EQUAL)
     {

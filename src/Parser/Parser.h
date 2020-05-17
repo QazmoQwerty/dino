@@ -32,7 +32,7 @@ public:
 
 private:
 	AST::StatementBlock * includeFile();
-	AST::StatementBlock * importFile(PositionInfo currPos);
+	AST::StatementBlock * importFile(ErrorReporter::Position currPos);
 
 	Parser(vector<Token*> tokens) : _tokens(tokens), _inInterface(false) {_index = 0; }
 	Token* getToken(uint index);
