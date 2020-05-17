@@ -89,7 +89,8 @@ namespace ErrorReporter
 
     void Error::showBasic()
     {
-        std::cout << color(tyToString() + ": ") << BOLD(msg) << "\n";
+        if (msg != "")
+            std::cout << color(tyToString() + ": ") << BOLD(msg) << "\n";
         if (pos.file == NULL)
             return;
         // uncomment this for uglier, but clickable links

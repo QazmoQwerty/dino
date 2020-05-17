@@ -57,7 +57,7 @@ namespace ErrorReporter
 
         Error& withSecondary(Error err) { notes.push_back(err); return *this; }
 
-        Error& withSecondary(string message, Position position) { notes.push_back(Error(message, NOTE, position)); return *this; }
+        Error& withSecondary(string message, Position position) { notes.push_back(Error("", message, NOTE, position)); return *this; }
     };
 
     /*
