@@ -23,7 +23,7 @@ Value *CodeGenerator::codeGen(DST::Statement *node)
         case ST_FUNCTION_CALL: return codeGen((DST::FunctionCall*)node);
         case ST_INCREMENT: return codeGen((DST::Increment*)node);
         case ST_TRY_CATCH: return codeGen((DST::TryCatch*)node);
-        default: throw ErrorReporter::report("Unimplemented codegen for statement", ErrorReporter::GENERAL_ERROR, node->getPosition());;
+        default: TODO
     }
 }
 
@@ -120,7 +120,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperationStatement *node)
             createCallOrInvoke(free, cast);
             return _builder.CreateStore(llvm::Constant::getNullValue(ptr->getType()->getPointerElementType()), ptr);
         }
-        default: throw ErrorReporter::report("Unimplemented unary operation statement!", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: UNREACHABLE
     }
 }
 

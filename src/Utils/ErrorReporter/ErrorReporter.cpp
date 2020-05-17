@@ -2,6 +2,24 @@
 
 namespace ErrorReporter 
 {
+    vector<string> splitLines(const string& str)
+    {
+        vector<string> strings;
+
+        string::size_type pos = 0;
+        string::size_type prev = 0;
+        while ((pos = str.find("\n", prev)) != string::npos)
+        {
+            strings.push_back(str.substr(prev, pos - prev));
+            prev = pos + 1;
+        }
+
+        // To get the last substring (or only, if delimiter is not found)
+        strings.push_back(str.substr(prev));
+
+        return strings;
+    }
+
     void Error::show()
     {
         if (notes.size() == 0)
@@ -32,16 +50,19 @@ namespace ErrorReporter
         
         if (subMsg != "")
         {
-            printIndent();
-            for (int i = 0; i < pos.startPos; i++)
-                std::cout << (line[i] == '\t' ? "    " : " ");
-            std::cout << color(subMsg);
-            std::cout << "\n";
+            for (auto currLine : splitLines(subMsg))
+            {
+                printIndent();
+                for (int i = 0; i < pos.startPos; i++)
+                    std::cout << (line[i] == '\t' ? "\t" : " ");
+                std::cout << color(currLine);
+                std::cout << "\n";
+            }
         }
         
         printIndent();
         for (int i = 0; i < pos.startPos; i++)
-            std::cout << (line[i] == '\t' ? "    " : " ");
+            std::cout << (line[i] == '\t' ? "\t" : " ");
         for (int i = 0; i < pos.endPos - pos.startPos; i++)
             std::cout << color("v");
         
@@ -87,7 +108,28 @@ namespace ErrorReporter
             std::cout << color("^");
         
         if (subMsg != "")
-            std::cout << " " << color(subMsg);
+        {
+            bool isFirst = true;
+            for (auto currLine : splitLines(subMsg))
+            {
+                if (isFirst)
+                {
+                    std::cout << " " << color(currLine);
+                    isFirst = false;
+                }
+                else
+                {
+                    std::cout << "\n";
+                    printIndent();
+                    for (int i = 0; i < pos.startPos; i++)
+                        std::cout << (line[i] == '\t' ? "\t" : " ");
+                    std::cout << color(currLine);
+                }
+                
+            }
+            
+
+        }
         std::cout << "\n";
     }
 
@@ -117,7 +159,7 @@ namespace ErrorReporter
         return errors.back();
     }
 
-    Error reportInternal(string msg, uint errCode, Position pos)
+    Error& reportInternal(string msg, uint errCode, Position pos)
     {
         errors.push_back({ msg, errCode, pos });
         return errors.back();

@@ -324,7 +324,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             _builder.CreateStore(res, left);
             return res;
         }
-        default: throw ErrorReporter::report("Unimplemented assignment operator", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: TODO
     }
 }
 

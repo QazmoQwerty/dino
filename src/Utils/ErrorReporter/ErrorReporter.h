@@ -85,7 +85,7 @@ namespace ErrorReporter
     /*
         Report an INTERNAL error - these should never be shown to a user of the compiler (in theory at least).
     */
-    Error reportInternal(string msg, uint errCode = INTERNAL, Position pos = POS_NONE);
+    Error& reportInternal(string msg, uint errCode = INTERNAL, Position pos = POS_NONE);
 }
 
 #define FATAL_ERROR(_string) throw ErrorReporter::reportInternal(std::string(_string) + " at " + __func__ + ":" + std::to_string(__LINE__) + " in " + __FILE__)

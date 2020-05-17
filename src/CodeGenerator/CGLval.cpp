@@ -60,8 +60,7 @@ Value *CodeGenerator::codeGenLval(DST::UnaryOperation* node)
         }
         case OT_BITWISE_AND:
             return _builder.CreateGEP(val, _builder.getInt32(0));
-        default:
-            throw ErrorReporter::report("Unimplemented lval unary operation", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: UNREACHABLE
     }    
 }
 
@@ -87,7 +86,7 @@ Value *CodeGenerator::codeGenLval(DST::BinaryOperation *node)
             }
             UNREACHABLE
         default:
-            throw ErrorReporter::report("Unimplemented lval Binary operation", ErrorReporter::GENERAL_ERROR, node->getPosition());
+            UNREACHABLE
     }
 }
 

@@ -53,6 +53,7 @@ private:
 	AST::Identifier* convertToIdentifier(AST::Node * node, string errMsg = "expected an identifier");
 	AST::Literal *convertToLiteral(AST::Expression *exp, string errMsg = "expected a literal");
 
+	void assertIsDeclaration(AST::Statement * node);
 	AST::Statement* parseStatement(int precedence = 0);
 	AST::Statement* parseOptionalStatement(int precedence = 0);
 	AST::Expression* parseExpression(int precedence = 0);

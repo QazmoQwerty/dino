@@ -40,7 +40,7 @@ namespace DST
 		case OT_ADD: case OT_SUBTRACT: case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
 			_type = _expression->getType();
 			break;
-		default: throw ErrorReporter::report("Unimplemented unary operator", ErrorReporter::GENERAL_ERROR, getPosition());
+		default: UNREACHABLE
 		}
 	}
 

@@ -161,8 +161,8 @@ AST::Node * Parser::std()
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case OT_CATCH: throw ErrorReporter::report("Missing \"try\" statement before \"catch\"", ErrorReporter::GENERAL_ERROR, token->_pos);
-			case OT_ELSE: throw ErrorReporter::report("Missing \"if\" statement before \"else\"", ErrorReporter::GENERAL_ERROR, token->_pos);
+			case OT_CATCH: throw ErrorReporter::report("Missing `try` statement before `catch`", ErrorReporter::GENERAL_ERROR, token->_pos);
+			case OT_ELSE: throw ErrorReporter::report("Missing `if` statement before `else`", ErrorReporter::GENERAL_ERROR, token->_pos);
 			case OT_ENUM: {
 				auto node = new AST::EnumDeclaration(expectIdentifier());
 				if (eatOperator(OT_IS)) node->setType(parseExpression());
@@ -192,7 +192,11 @@ AST::Node * Parser::std()
 						if (!dynamic_cast<AST::PropertyDeclaration*>(decl)->getGet() && !dynamic_cast<AST::PropertyDeclaration*>(decl)->getSet())
 							throw ErrorReporter::report("missing propery body", ErrorReporter::GENERAL_ERROR, decl->getPosition());
 						node->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
-					default: throw ErrorReporter::report("expected a variable, property or function declaration", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+					default: throw ErrorReporter::report(
+						"expected a variable, property or function declaration", 
+						"types may only have variables, properties and functions",
+						ErrorReporter::GENERAL_ERROR, decl->getPosition()
+					);
 					}
 					skipLineBreaks();
 				}
@@ -214,7 +218,11 @@ AST::Node * Parser::std()
 						{
 							case ST_PROPERTY_DECLARATION: node->addProperty(((AST::PropertyDeclaration*)decl)); break;
 							case ST_FUNCTION_DECLARATION: node->addFunction(((AST::FunctionDeclaration*)decl)); break;
-							default: throw ErrorReporter::report("interfaces may only contain properties and functions", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+							default: throw ErrorReporter::report(
+									"expected a function or property declaration", 
+									"interfaces may only contain properties and functions", 
+									ErrorReporter::GENERAL_ERROR, decl->getPosition()
+								);
 						}
 						if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
 							expectLineBreak();
@@ -228,7 +236,11 @@ AST::Node * Parser::std()
 					{
 						case ST_PROPERTY_DECLARATION: node->addProperty(((AST::PropertyDeclaration*)decl)); break;
 						case ST_FUNCTION_DECLARATION: node->addFunction(((AST::FunctionDeclaration*)decl)); break;
-						default: throw ErrorReporter::report("interfaces may only contain properties and functions", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+						default: throw ErrorReporter::report(
+								"expected a function or property declaration", 
+								"interfaces may only contain properties and functions", 
+								ErrorReporter::GENERAL_ERROR, decl->getPosition()
+							);
 					}
 				}
 				node->setPosition(token->_pos);
@@ -244,9 +256,8 @@ AST::Node * Parser::std()
 				{	
 					node = new AST::NamespaceDeclaration();
 					node->setName(name); 
-					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
-						if (!i->isDeclaration())
-							throw ErrorReporter::report("Expected a declaration", ErrorReporter::GENERAL_ERROR, i->getPosition());
+					for (auto i : inner->getStatements())
+						assertIsDeclaration(i);
 					node->setStatement(inner);
 					node->setPosition(token->_pos);
 					_namespaces[name] = node;
@@ -254,10 +265,9 @@ AST::Node * Parser::std()
 				else
 				{
 					node = _namespaces[name];
-					for (auto i : dynamic_cast<AST::StatementBlock*>(inner)->getStatements())
+					for (auto i : inner->getStatements())
 					{
-						if (!i->isDeclaration())
-							throw ErrorReporter::report("Expected a declaration", ErrorReporter::GENERAL_ERROR, i->getPosition());
+						assertIsDeclaration(i);
 						node->getStatement()->addStatement(i);
 					}
 				}
@@ -311,13 +321,13 @@ AST::Node * Parser::nud()
 		AST::Node* node;
 		switch (((LiteralToken<int>*)token)->_literalType)
 		{
-		case (LT_BOOLEAN): node = new AST::Boolean(((LiteralToken<bool>*)token)->_value); break;
-			case (LT_INTEGER): node = new AST::Integer(((LiteralToken<int>*)token)->_value); break;
-			case (LT_STRING):  node = new AST::String(((LiteralToken<string>*)token)->_value); break;
-			case (LT_CHARACTER): node = new AST::Character(((LiteralToken<unicode_char>*)token)->_value); break;
-			case (LT_FRACTION): node = new AST::Fraction(((LiteralToken<float>*)token)->_value); break;
-			case (LT_NULL): node = new AST::Null(); break;
-			default: throw ErrorReporter::report("Internal Lexer error", ErrorReporter::GENERAL_ERROR, token->_pos);
+			case LT_BOOLEAN:   node = new AST::Boolean(((LiteralToken<bool>*)token)->_value); break;
+			case LT_INTEGER:   node = new AST::Integer(((LiteralToken<int>*)token)->_value); break;
+			case LT_STRING:    node = new AST::String(((LiteralToken<string>*)token)->_value); break;
+			case LT_CHARACTER: node = new AST::Character(((LiteralToken<unicode_char>*)token)->_value); break;
+			case LT_FRACTION:  node = new AST::Fraction(((LiteralToken<float>*)token)->_value); break;
+			case LT_NULL: 	   node = new AST::Null(); break;
+			default: UNREACHABLE
 		}
 		node->setPosition(token->_pos);
 		return node;
@@ -367,6 +377,17 @@ AST::Node * Parser::nud()
 		node->setPosition(token->_pos);
 		return node;
 	}
+	if (isOperator(token, OT_CURLY_BRACES_OPEN))
+	{
+		throw ErrorReporter::report(
+			"unexpected `{`", 
+			"dangling curly braces\n"
+			"help: curly braces must be opened at end of line,\n"
+			"try moving it to the end of the previous line",
+			ErrorReporter::GENERAL_ERROR, 
+			token->_pos
+		);
+	}
 	if (fromCategory(token, PREFIX))
 	{
 		auto ot = ((OperatorToken*)token);
@@ -398,7 +419,7 @@ AST::Node * Parser::nud()
 		op->setExpression(parseExpression(leftPrecedence(ot, PREFIX)));
 		return op;
 	}
-	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ErrorReporter::GENERAL_ERROR, token->_pos);
+	throw ErrorReporter::report("unexpected token `" + token->_data.to_string() + "`", ErrorReporter::GENERAL_ERROR, token->_pos);
 }
 
 /* Left-denotation */
@@ -422,7 +443,7 @@ AST::Node * Parser::led(AST::Node * left)
 				decl->setGet(parseInnerBlock());
 			else if (eatOperator(OT_SET))
 				decl->setSet(parseInnerBlock());
-			else throw ErrorReporter::report("expected \"get\" or \"set\"", ErrorReporter::GENERAL_ERROR, token->_pos);
+			else throw ErrorReporter::report("expected `get` or `set`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 			decl->setPosition(token->_pos);
 			return decl;
 		}
@@ -433,19 +454,36 @@ AST::Node * Parser::led(AST::Node * left)
 			if (eatOperator(OT_GET))
 			{
 				decl->setGet(parseInnerBlock());
-				skipLineBreaks();
+				eatLineBreak();
 				if (eatOperator(OT_SET))
+				{
 					decl->setSet(parseInnerBlock());
+					eatLineBreak();
+					expectOperator(OT_CURLY_BRACES_CLOSE);
+				}
+				else if (!eatOperator(OT_CURLY_BRACES_CLOSE))
+					throw ErrorReporter::report(
+						"expected `set` or `}`, found `" + peekToken()->_data.to_string() + "`", 
+						"expected `set` or `}`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos
+					);
 			}
 			else if (eatOperator(OT_SET))
 			{ 
 				decl->setSet(parseInnerBlock());
-				skipLineBreaks();
+				eatLineBreak();
 				if (eatOperator(OT_GET))
+				{
 					decl->setGet(parseInnerBlock());
+					eatLineBreak();
+					expectOperator(OT_CURLY_BRACES_CLOSE);
+				}
+				else if (!eatOperator(OT_CURLY_BRACES_CLOSE))
+					throw ErrorReporter::report(
+						"expected `get` or `}`, found `" + peekToken()->_data.to_string() + "`", 
+						"expected `get` or `}`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos
+					);
 			}
-			skipLineBreaks();
-			expectOperator(OT_CURLY_BRACES_CLOSE);
+			else throw ErrorReporter::report("expected `get` or `set`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 			decl->setPosition(token->_pos);
 			return decl;
 		}
@@ -585,5 +623,5 @@ AST::Node * Parser::led(AST::Node * left)
 		op->setExpression(convertToExpression(left));
 		return op;
 	}
-	throw ErrorReporter::report("unexpected token \"" + token->_data.to_string() + "\"", ErrorReporter::GENERAL_ERROR, token->_pos);
+	throw ErrorReporter::report("unexpected token `" + token->_data.to_string() + "`", ErrorReporter::GENERAL_ERROR, token->_pos);
 }

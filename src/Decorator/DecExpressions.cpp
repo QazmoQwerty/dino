@@ -20,7 +20,7 @@ DST::Expression * Decorator::decorate(AST::Expression * node)
 		case ET_CONDITIONAL_EXPRESSION: return decorate((AST::ConditionalExpression*)node);
 		case ET_INCREMENT: 				return decorate((AST::Increment*)			 node);
 		case ET_COMPARISON: 			return decorate((AST::Comparison*)			 node);
-		default: throw ErrorReporter::report("Unimplemented expression type in the decorator", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		default: UNREACHABLE
 	}
 }
 
@@ -55,6 +55,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 		if (auto var = _currentProgram->getNamespace(name))
 			return new DST::Variable(node, DST::NamespaceType::get(var), var);
 
+	
 	throw ErrorReporter::report("Identifier '" + name.to_string() + "' is undefined", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }
 
@@ -339,7 +340,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 								+ "\" is not an array", ErrorReporter::GENERAL_ERROR, bo->getLeft()->getPosition());
 			break;
 		case RT_VOID: 
-			throw ErrorReporter::report("Could not decorate, unimplemented operator.", ErrorReporter::GENERAL_ERROR, node->getPosition());
+			UNREACHABLE
 	}
 	return bo;
 }

@@ -34,14 +34,18 @@ void Parser::expectLineBreak()
 void Parser::expectOperator(OperatorType ot)
 {
 	if (!eatOperator(ot)) 
-		throw ErrorReporter::report("expected a '" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "'", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+		throw ErrorReporter::report(
+			"expected `" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "`, found `" + peekToken()->_data.to_string() + "`",
+			"expected `" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "`",
+			ErrorReporter::GENERAL_ERROR, peekToken()->_pos
+		);
 }
 
 unicode_string Parser::expectIdentifier()
 {
 	if (peekToken()->_type == TT_IDENTIFIER)
 		return nextToken()->_data;
-	else throw ErrorReporter::report("expected an identifier.", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+	else throw ErrorReporter::report("expected an identifier", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
 }
 
 AST::ExpressionList * Parser::expectIdentifierList()
@@ -77,6 +81,13 @@ AST::Statement * Parser::convertToStatement(AST::Node * node)
 {
 	if (node == nullptr || node->isStatement())
 		return dynamic_cast<AST::Statement*>(node);
+	if (node->isExpression() && dynamic_cast<AST::Expression*>(node)->getExpressionType() == ET_COMPARISON && 
+		dynamic_cast<AST::Comparison*>(node)->getOperators()[0]._type == OT_EQUAL)
+		throw ErrorReporter::report(
+			"expected a statement", 
+			"expected a statement\nhelp: the `=` operator is used for comparisons\ndid you mean `≡`?", 
+			ErrorReporter::GENERAL_ERROR, node->getPosition()
+		);
 	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }
 
@@ -91,6 +102,13 @@ AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
 		bl->addStatement(stmnt);
 		return bl;
 	}
+	if (node->isExpression() && dynamic_cast<AST::Expression*>(node)->getExpressionType() == ET_COMPARISON && 
+		dynamic_cast<AST::Comparison*>(node)->getOperators()[0]._type == OT_EQUAL)
+		throw ErrorReporter::report(
+			"expected a statement", 
+			"expected a statement\nhelp: the `=` operator is used for comparisons\ndid you mean `≡`?", 
+			ErrorReporter::GENERAL_ERROR, node->getPosition()
+		);
 	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }
 
@@ -99,6 +117,13 @@ AST::Statement * Parser::parseStatement(int precedence)
 	AST::Node* node = parse(precedence);
 	if (node != nullptr && node->isStatement())
 		return dynamic_cast<AST::Statement*>(node);
+	if (node->isExpression() && dynamic_cast<AST::Expression*>(node)->getExpressionType() == ET_COMPARISON && 
+		dynamic_cast<AST::Comparison*>(node)->getOperators()[0]._type == OT_EQUAL)
+		throw ErrorReporter::report(
+			"expected a statement", 
+			"expected a statement\nhelp: the `=` operator is used for comparisons\ndid you mean `≡`?", 
+			ErrorReporter::GENERAL_ERROR, node ? node->getPosition() : peekToken()->_pos
+		);
 	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node ? node->getPosition() : peekToken()->_pos);
 }
 
@@ -120,6 +145,12 @@ AST::Expression * Parser::parseOptionalExpression(int precedence)
 	return convertToExpression(parse(precedence, true));
 }
 
+void Parser::assertIsDeclaration(AST::Statement * node)
+{
+	if (!node->isDeclaration())
+		throw ErrorReporter::report("Expected a declaration", ErrorReporter::GENERAL_ERROR, node->getPosition());
+}
+
 AST::StatementBlock * Parser::parseInnerBlock()
 {
 	if (_inInterface)
@@ -128,8 +159,21 @@ AST::StatementBlock * Parser::parseInnerBlock()
 		return parseBlock(OT_CURLY_BRACES_CLOSE);
 	else
 	{
+		auto pos = peekToken()->_pos;
 		eatOperator(OT_COLON);
 		eatLineBreak();
+		if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
+			throw ErrorReporter::report(
+				"unexpected `{`", 
+				"dangling curly braces\n"
+				"help: curly braces must be opened at end of line,\n"
+				"try moving it to the end of the previous line",
+				ErrorReporter::GENERAL_ERROR, 
+				peekToken()->_pos
+			).withSecondary(
+				"try adding `{` here instead",
+				pos
+			);
 		auto *block = new AST::StatementBlock();
 		block->addStatement(parseStatement());
 		return block;

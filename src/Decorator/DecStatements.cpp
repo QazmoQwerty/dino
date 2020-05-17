@@ -28,7 +28,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	case ST_DO_WHILE_LOOP:        return decorate((AST::DoWhileLoop*)			  node);
 	case ST_INCREMENT:            return decorate((AST::Increment*)				  node);
 	case ST_TRY_CATCH:            return decorate((AST::TryCatch*)				  node);
-	default: throw ErrorReporter::report("Unimplemented statement type in the decorator", ErrorReporter::GENERAL_ERROR, node->getPosition());
+	default: UNREACHABLE
 	}
 }
 

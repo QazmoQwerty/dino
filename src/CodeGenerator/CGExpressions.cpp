@@ -24,7 +24,7 @@ Value *CodeGenerator::codeGen(DST::Expression *node)
         case ET_FUNCTION_LITERAL: return codeGen((DST::FunctionLiteral*)node);
         case ET_COMPARISON: return codeGen((DST::Comparison*)node);
         case ET_LIST: return codeGen((DST::ExpressionList*)node);
-        default: throw ErrorReporter::report("Unimplemented codegen for expression", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: UNREACHABLE
     }
 }
 
@@ -51,8 +51,7 @@ Value *CodeGenerator::codeGen(DST::Literal *node)
             (llvm::Constant*)_builder.CreateBitCast(_builder.CreateGlobalString(((AST::String*)node->getBase())->getValue(), ".stringLit"), _builder.getInt8PtrTy())
         }));
     }
-    default:
-        throw ErrorReporter::report("Unimplemented literal type", ErrorReporter::GENERAL_ERROR, node->getPosition());
+    default: UNREACHABLE
     }
 }
 
@@ -225,7 +224,7 @@ llvm::Value *CodeGenerator::createCompare(Value *left, Value *right, OperatorTyp
             case OT_SMALLER_EQUAL: return _builder.CreateFCmpOLE(left, right, "cmptmp");
             case OT_GREATER: return _builder.CreateFCmpOGT(left, right, "cmptmp");
             case OT_GREATER_EQUAL: return _builder.CreateFCmpOGE(left, right, "cmptmp");
-            default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ErrorReporter::GENERAL_ERROR, pos);
+            default: UNREACHABLE
         }
     if (leftTy->isSigned())
         switch (op)
@@ -234,7 +233,7 @@ llvm::Value *CodeGenerator::createCompare(Value *left, Value *right, OperatorTyp
             case OT_SMALLER_EQUAL: return _builder.CreateICmpSLE(left, right, "cmptmp");
             case OT_GREATER: return _builder.CreateICmpSGT(left, right, "cmptmp");
             case OT_GREATER_EQUAL: return _builder.CreateICmpSGE(left, right, "cmptmp");
-            default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ErrorReporter::GENERAL_ERROR, pos);
+            default: UNREACHABLE
         }
     switch (op)
     {
@@ -242,7 +241,7 @@ llvm::Value *CodeGenerator::createCompare(Value *left, Value *right, OperatorTyp
         case OT_SMALLER_EQUAL: return _builder.CreateICmpULE(left, right, "cmptmp");
         case OT_GREATER: return _builder.CreateICmpUGT(left, right, "cmptmp");
         case OT_GREATER_EQUAL: return _builder.CreateICmpUGE(left, right, "cmptmp");
-        default: throw ErrorReporter::reportInternal("Unimplemented comparison operator", ErrorReporter::GENERAL_ERROR, pos);
+        default: UNREACHABLE
     }
 }
 
@@ -329,8 +328,7 @@ Value *CodeGenerator::codeGen(DST::BinaryOperation* node)
             return _builder.CreateOr(left, right, "bOrtmp");
         case OT_BITWISE_XOR:
             return _builder.CreateOr(left, right, "bXortmp");
-        default:
-            throw ErrorReporter::report("Unimplemented Binary operation!", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: TODO
     }
 }
 
@@ -391,7 +389,6 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
             auto val = codeGen(node->getExpression());
             auto zero = llvm::ConstantInt::get(val->getType(),  0);
             return _builder.CreateSub(zero, val);
-            throw ErrorReporter::report("Unimplemented literal type", ErrorReporter::GENERAL_ERROR, node->getPosition());
         }
         case OT_AT:
         {
@@ -403,8 +400,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
             return _builder.CreateGEP(codeGenLval(node->getExpression()), _builder.getInt32(0));
         case OT_LOGICAL_NOT: case OT_BITWISE_NOT:
             return _builder.CreateNot(codeGen(node->getExpression()), "nottmp");
-        default:
-            throw ErrorReporter::report("Unimplemented unary operation", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: UNREACHABLE
     }
     
 }
