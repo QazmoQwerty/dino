@@ -6,7 +6,18 @@ namespace ErrorReporter
     {
         if (notes.size() == 0)
             return showBasic();
-        
+
+        for (auto note : notes)
+            if (note.pos.file == pos.file && note.pos.line == pos.line)
+                goto normal;
+
+        showBasic();
+        for (auto note : notes)
+            note.show();
+        return;
+
+        normal:
+
         std::cout << color(tyToString() + ": ") << BOLD(msg) << "\n";
         if (pos.file == NULL)
             return;
@@ -41,11 +52,11 @@ namespace ErrorReporter
         sortSecondaries();
         for (auto note : notes)
         {
-            if (note.pos.line == pos.line)
+            if (note.pos.file == pos.file && note.pos.line == pos.line)
             {
                 printIndent();
                 for (int i = 0; i < note.pos.startPos; i++)
-                    std::cout << (line[i] == '\t' ? "    " : " ");
+                    std::cout << (line[i] == '\t' ? "\t" : " ");
                 for (int i = 0; i < note.pos.endPos - note.pos.startPos; i++)
                     std::cout << note.color("^");
                 std::cout << " " << note.color(note.msg) << "\n";
@@ -71,14 +82,14 @@ namespace ErrorReporter
         std::cout << line << "\n";
         printIndent();
         for (int i = 0; i < pos.startPos; i++)
-            std::cout << (line[i] == '\t' ? "    " : " ");
+            std::cout << (line[i] == '\t' ? "\t" : " ");
         for (int i = 0; i < pos.endPos - pos.startPos; i++)
             std::cout << color("^");
         
         if (subMsg != "")
             std::cout << " " << color(subMsg);
+        std::cout << "\n";
     }
-
 
     void Error::sortSecondaries()
     {
@@ -90,9 +101,17 @@ namespace ErrorReporter
 
     vector<Error> errors;
 
-    Error report(string msg, uint errCode, Position pos, bool isFatal)
+    Error& report(string msg, uint errCode, Position pos, bool isFatal)
     {
         errors.push_back(Error(msg, errCode, pos));
+        if (isFatal)
+            throw "[Aborting due to previous error]";
+        return errors.back();
+    }
+
+    Error& report(string msg, string subMsg, uint errCode, Position pos, bool isFatal)
+    {
+        errors.push_back(Error(msg, subMsg, errCode, pos));
         if (isFatal)
             throw "[Aborting due to previous error]";
         return errors.back();

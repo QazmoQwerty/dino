@@ -78,10 +78,12 @@ namespace DST
 							if (unaryOp->getExpression()->getType()->assignableTo(returnType))
 								return true;
 						}
-						std::cout << isVoid << std::endl;
-						std::cout << returnType->toShortString() << std::endl;
-						std::cout << unaryOp->getExpression()->getType()->toShortString() << std::endl;
-						throw ErrorReporter::report("Return value type does not match function type.", ErrorReporter::GENERAL_ERROR, i->getPosition());
+						throw ErrorReporter::report(
+							"invalid return type", 
+							"expected `" + returnType->toShortString() + "`, got `" + unaryOp->getExpression()->getType()->toShortString() + "`",
+							ErrorReporter::GENERAL_ERROR, 
+							unaryOp->getExpression()->getPosition()
+						);
 					}
 					break;
 				}

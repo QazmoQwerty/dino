@@ -99,7 +99,11 @@ int main(int argc, char *argv[])
 	catch (exception e) { llvm::errs() << e.what() << "\n"; exit(1); }
 	catch (const char *err) { llvm::errs() << err << "\n"; exit(1); }
 	catch (string err) { llvm::errs() << err << "\n"; exit(1); }
-	catch (ErrorReporter::Error err) { ErrorReporter::showAll(); exit(1); }
+	catch (ErrorReporter::Error err) { 
+		ErrorReporter::showAll(); 
+		llvm::errs() << "\n";
+		exit(1); 
+	}
 
 	llvm::llvm_shutdown();
 	return 0;

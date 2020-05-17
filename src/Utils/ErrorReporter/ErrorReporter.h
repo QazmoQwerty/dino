@@ -79,7 +79,8 @@ namespace ErrorReporter
         Returns the Error created.
         If isFatal is (true), the function will throw a value.
     */
-    Error report(string msg, uint errCode, Position pos, bool isFatal = false);
+    Error& report(string msg, uint errCode, Position pos, bool isFatal = false);
+    Error& report(string msg, string subMsg, uint errCode, Position pos, bool isFatal = false);
 
     /*
         Report an INTERNAL error - these should never be shown to a user of the compiler (in theory at least).

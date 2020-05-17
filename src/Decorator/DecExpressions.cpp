@@ -53,7 +53,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 
 	if (_currentProgram) 
 		if (auto var = _currentProgram->getNamespace(name))
-			return new DST::Variable(node, DST::NamespaceType::get(var));
+			return new DST::Variable(node, DST::NamespaceType::get(var), var);
 
 	throw ErrorReporter::report("Identifier '" + name.to_string() + "' is undefined", ErrorReporter::GENERAL_ERROR, node->getPosition());
 }

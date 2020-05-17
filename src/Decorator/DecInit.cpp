@@ -95,7 +95,7 @@ DST::NamespaceDeclaration *Decorator::partA(AST::NamespaceDeclaration *node, boo
 		{
 			auto decl = (AST::NamespaceDeclaration*)i;
 			auto tempDecl = partA(decl);
-			shallowDecl->addMember(decl->getName(), tempDecl, new DST::Variable(decl->getName(), DST::NamespaceType::get(tempDecl)));
+			shallowDecl->addMember(decl->getName(), tempDecl, new DST::Variable(decl->getName(), DST::NamespaceType::get(tempDecl), tempDecl));
 		}
 		else if (i->getStatementType() == ST_INTERFACE_DECLARATION)
 		{
@@ -327,7 +327,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			for (auto param : func->getParameters())
 				funcDecl->addParameter(decorate(param));
 			leaveBlock();
-			node->addMember(func->getVarDecl()->getVarId(), funcDecl, new DST::Variable(func->getVarDecl()->getVarId(), funcDecl->getFuncType()));
+			node->addMember(func->getVarDecl()->getVarId(), funcDecl, new DST::Variable(func->getVarDecl()->getVarId(), funcDecl->getFuncType(), funcDecl));
 			
 			if (func->getVarDecl()->getVarId() == MAIN_FUNC)
 			{
@@ -344,7 +344,8 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			auto prop = (AST::PropertyDeclaration*)i;
 			auto retType = evalType(prop->getVarDecl()->getVarType());
 			auto type = DST::PropertyType::get(retType, prop->getGet(), prop->getSet());
-			node->addMember(prop->getVarDecl()->getVarId(), new DST::PropertyDeclaration(prop, NULL, NULL, type), new DST::Variable(prop->getVarDecl()->getVarId(), type));
+			auto decl = new DST::PropertyDeclaration(prop, NULL, NULL, type);
+			node->addMember(prop->getVarDecl()->getVarId(), decl, new DST::Variable(prop->getVarDecl()->getVarId(), type, decl));
 			break;
 		}
 		case ST_VARIABLE_DECLARATION:
@@ -352,7 +353,7 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			auto decl = (AST::VariableDeclaration*)i;
 			auto varDecl = new DST::VariableDeclaration(decl);
 			varDecl->setType(evalType(decl->getVarType()));
-			node->addMember(decl->getVarId(), varDecl, new DST::Variable(decl->getVarId(), varDecl->getType()));
+			node->addMember(decl->getVarId(), varDecl, new DST::Variable(decl->getVarId(), varDecl->getType(), varDecl));
 			break;
 		}
 		case ST_CONST_DECLARATION:
@@ -429,10 +430,10 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				{
 					auto decl = (DST::FunctionDeclaration*)member.second.first;
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::Variable(unicode_string("this"), currTy->getPtrTo());
+					_variables[currentScope()][unicode_string("this")] = new DST::Variable(unicode_string("this"), currTy->getPtrTo(), NULL);
 					
 					for (auto param : decl->getParameters())	// Add function parameters to variables map
-						_variables[currentScope()][param->getVarId()] = new DST::Variable(param->getVarId(), param->getType());
+						_variables[currentScope()][param->getVarId()] = new DST::Variable(param->getVarId(), param->getType(), param);
 					decl->setContent(decorate(decl->getBase()->getContent()));
 					if (!decl->getContent())
 						throw ErrorReporter::report("Method must have a body.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
@@ -445,7 +446,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					auto decl = (DST::PropertyDeclaration*)member.second.first;
 					auto retType = member.second.second->as<DST::PropertyType>()->getReturn();
 					enterBlock();
-					_variables[currentScope()][unicode_string("this")] = new DST::Variable(unicode_string("this"), currTy->getPtrTo());
+					_variables[currentScope()][unicode_string("this")] = new DST::Variable(unicode_string("this"), currTy->getPtrTo(), NULL);
 					if (decl->getBase()->getGet())
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
@@ -454,7 +455,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					}
 					if (decl->getBase()->getSet())
 					{
-						_variables[currentScope()][unicode_string("value")] = new DST::Variable(unicode_string("value"), retType);
+						_variables[currentScope()][unicode_string("value")] = new DST::Variable(unicode_string("value"), retType, NULL);
 						decl->setSet(decorate(decl->getBase()->getSet()));
 					}
 					leaveBlock();
@@ -470,7 +471,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 			for (auto ty : decl->getGenerics())		// Add generics to variabes map
 				_variables[currentScope()][ty->getTypeName()] = ty;
 			for (auto param : decl->getParameters())	// Add function parameters to variabes map
-				_variables[currentScope()][param->getVarId()] = new DST::Variable(param->getVarId(), param->getType());
+				_variables[currentScope()][param->getVarId()] = new DST::Variable(param->getVarId(), param->getType(), param);
 			decl->setContent(decorate(decl->getBase()->getContent()));
 			if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
 				throw ErrorReporter::report("Not all control paths lead to a return value.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
@@ -490,7 +491,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 			if (decl->getBase()->getSet())
 			{
 				enterBlock();
-				_variables[currentScope()][unicode_string("value")] = new DST::Variable(unicode_string("value"), retType);
+				_variables[currentScope()][unicode_string("value")] = new DST::Variable(unicode_string("value"), retType, NULL);
 				decl->setSet(decorate(decl->getBase()->getSet()));
 				leaveBlock();
 			}

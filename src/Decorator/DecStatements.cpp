@@ -46,8 +46,32 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 	auto decl = new DST::ConstDeclaration(node);
 	decl->setExpression(decorate(node->getExpression()));
 	unicode_string name = node->getName();
-	if (_variables[currentScope()].count(name))
-		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ErrorReporter::GENERAL_ERROR, node->getPosition());
+	if (auto exp = _variables[currentScope()][name])
+	{
+		if (exp->getExpressionType() == ET_IDENTIFIER)
+		{
+			if (((DST::Variable*)exp)->getDecl())
+				throw ErrorReporter::report(
+					"Identifier `" + name.to_string() + "` is already in use",
+					ErrorReporter::GENERAL_ERROR, 
+					node->getPosition()
+				).withSecondary(
+					"declared here",
+					((DST::Variable*)exp)->getDecl()->getPosition()
+				);
+			throw ErrorReporter::report(
+				"use of built-in identifier `" + name.to_string() + "`",
+				"`" + name.to_string() + "` is built-in",
+				ErrorReporter::GENERAL_ERROR, 
+				node->getPosition()
+			);
+		}
+		throw ErrorReporter::report(
+			"Identifier `" + name.to_string() + "` is already in use",
+			ErrorReporter::GENERAL_ERROR, 
+			node->getPosition()
+		);
+	}
 	_variables[currentScope()][name] = decl->getExpression();
 	return decl;
 }
@@ -87,8 +111,11 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 		else clause = { { expr }, decorate(c._statement) };
 		for (auto i : clause._expressions) 
 			if (!i->getType()->assignableTo(sc->getExpression()->getType()->getNonConstOf()))
-				throw ErrorReporter::report("case clause has type \"" + i->getType()->toShortString() + "\" instead of the required \"" 
-					+ sc->getExpression()->getType()->toShortString() + "\" type", ErrorReporter::GENERAL_ERROR, i->getPosition());
+				throw ErrorReporter::report(
+					"incorrect case clause type", 
+					"expected `" + i->getType()->toShortString() + "`, got `" + sc->getExpression()->getType()->toShortString() + "`", 
+					ErrorReporter::GENERAL_ERROR, i->getPosition()
+				);
 		sc->addCase(clause);
 	}
 	return sc;
@@ -99,7 +126,7 @@ DST::TryCatch * Decorator::decorate(AST::TryCatch *node)
 	auto tryCatch = new DST::TryCatch(node);
 	tryCatch->setTryBlock(decorate(node->getTryBlock()));
 	enterBlock();
-	_variables[currentScope()][unicode_string("caught")] = new DST::Variable(unicode_string("caught"), DST::getErrorTy());
+	_variables[currentScope()][unicode_string("caught")] = new DST::Variable(unicode_string("caught"), DST::getErrorTy(), NULL);
 	tryCatch->setCatchBlock(decorate(node->getCatchBlock()));
 	leaveBlock();
 	return tryCatch;
@@ -145,8 +172,33 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	unicode_string name = node->getVarId();
 	decl->setType(evalType(node->getVarType()));
 	if (_variables[currentScope()].count(name))
-		throw ErrorReporter::report("Identifier '" + name.to_string() + "' is already in use", ErrorReporter::GENERAL_ERROR, node->getPosition());
-	_variables[currentScope()][name] = new DST::Variable(name, decl->getType());
+	if (auto exp = _variables[currentScope()][name])
+	{
+		if (exp->getExpressionType() == ET_IDENTIFIER)
+		{
+			if (((DST::Variable*)exp)->getDecl())
+				throw ErrorReporter::report(
+					"Identifier `" + name.to_string() + "` is already in use",
+					ErrorReporter::GENERAL_ERROR, 
+					node->getPosition()
+				).withSecondary(
+					"declared here",
+					((DST::Variable*)exp)->getDecl()->getPosition()
+				);
+			throw ErrorReporter::report(
+				"use of built-in identifier `" + name.to_string() + "`",
+				"`" + name.to_string() + "` is built-in",
+				ErrorReporter::GENERAL_ERROR, 
+				node->getPosition()
+			);
+		}
+		throw ErrorReporter::report(
+			"Identifier `" + name.to_string() + "` is already in use",
+			ErrorReporter::GENERAL_ERROR, 
+			node->getPosition()
+		);
+	}
+	_variables[currentScope()][name] = new DST::Variable(name, decl->getType(), decl);
 	return decl;
 }
 
@@ -174,7 +226,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 				((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
 				leftTypes->getTypes()[i] = rightTypes->getTypes()[i]->getNonPropertyOf()->getNonConstOf();
 				auto name = ((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId();
-				_variables[currentScope()][name] = new DST::Variable(name, rightTypes->getTypes()[i]);
+				_variables[currentScope()][name] = new DST::Variable(name, rightTypes->getTypes()[i], ((DST::VariableDeclaration*)list->getExpressions()[i]));
 			}
 		}
 	}
@@ -193,7 +245,7 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 				); break;
 		}
 		auto name = ((DST::VariableDeclaration*)assignment->getLeft())->getVarId();
-		_variables[currentScope()][name] = new DST::Variable(name, assignment->getLeft()->getType());
+		_variables[currentScope()][name] = new DST::Variable(name, assignment->getLeft()->getType(), ((DST::VariableDeclaration*)assignment->getLeft()));
 	}
 
 	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))

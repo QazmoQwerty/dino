@@ -737,11 +737,13 @@ namespace DST
 		AST::Identifier *_base;
 		unicode_string _name;
 		Type *_type;
+		Statement *_decl;	// where the identifier was declared
 
 	public:
-		Variable(AST::Identifier *base, Type *type) : _base(base), _type(type) {};
-		Variable(unicode_string name, Type *type) : _base(NULL), _name(name), _type(type) {};
+		Variable(AST::Identifier *base, Type *type, Statement *decl) : _base(base), _type(type), _decl(decl) {};
+		Variable(unicode_string name, Type *type, Statement *decl) : _base(NULL), _name(name), _type(type), _decl(decl) {};
 		virtual ~Variable() { if (_base) delete _base; }
+		Statement *getDecl() { return _decl; }
 		void setType(Type *type) { _type = type; };
 		void setName(unicode_string name) { if (!_base) _name = name; }
 		virtual Type *getType() { return _type; };
