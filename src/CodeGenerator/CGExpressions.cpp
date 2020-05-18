@@ -82,7 +82,7 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node)
         arg.setName(params[idx++]->getVarId().to_string());
 
     if (node->getContent() == NULL)
-        throw ErrorReporter::report("function literal with no body", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        throw ErrorReporter::report("function literal with no body", ERR_GENERAL, node->getPosition());
 
     // Create a new basic block to start insertion into.
     llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", func);
@@ -105,7 +105,7 @@ llvm::Function *CodeGenerator::codeGen(DST::FunctionLiteral *node)
     {
         auto val = codeGen(i);
         if (val == nullptr)
-            throw ErrorReporter::report("Error while generating IR for statement", ErrorReporter::GENERAL_ERROR, i->getPosition());
+            throw ErrorReporter::report("Error while generating IR for statement", ERR_GENERAL, i->getPosition());
     }
 
     if (!_builder.GetInsertBlock()->getTerminator())
@@ -147,7 +147,7 @@ Value *CodeGenerator::createIsOperation(DST::BinaryOperation *node)
         auto diff = _builder.CreatePtrDiff(vtableLoad, vtable);
         return _builder.CreateICmpEQ(diff, _builder.getInt64(0), "isTmp");
     }
-    else throw ErrorReporter::report("The \"is\" operator is currently only implemented for basic types!", ErrorReporter::GENERAL_ERROR, node->getPosition());
+    else throw ErrorReporter::report("The \"is\" operator is currently only implemented for basic types!", ERR_GENERAL, node->getPosition());
 }
 
 Value *CodeGenerator::createLogicalOr(DST::BinaryOperation *node)
@@ -372,7 +372,7 @@ Value *CodeGenerator::codeGen(DST::UnaryOperation* node)
             }
             auto type = evalType((DST::Type*)node->getExpression());
             if (type->isVoidTy())
-                throw ErrorReporter::report("Cannot create instance of 'void'", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                throw ErrorReporter::report("Cannot create instance of 'void'", ERR_GENERAL, node->getPosition());
             int size = _dataLayout->getTypeAllocSize(type);
             return _builder.CreateBitCast( createCallOrInvoke(getMallocFunc(), { _builder.getInt32(size) }), type->getPointerTo(), "newTmp");
         }
@@ -460,7 +460,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
             {
                 auto func = codeGenLval(node);
                 if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 0)
-                    throw ErrorReporter::report("expression is not a getter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                    throw ErrorReporter::report("expression is not a getter property", ERR_GENERAL, node->getPosition());
 
                 return createCallOrInvoke((llvm::Function*)func, {});
             }
@@ -483,7 +483,7 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 auto typeDef = _types[leftTy->as<DST::ValueType>()->getTypeDecl()];
                 auto func = typeDef->functions[node->getRight()];
                 if (func->arg_size() != 1)
-                    throw ErrorReporter::report("expression is not a getter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                    throw ErrorReporter::report("expression is not a getter property", ERR_GENERAL, node->getPosition());
                 return createCallOrInvoke(func, lval);
             }
             case EXACT_POINTER:     // Member getter property of pointer to basic type
@@ -492,13 +492,13 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                 if (!ptrTy->isBasicTy())
                 {
                     llvm::errs() << ptrTy->toShortString() << "\n";
-                    throw ErrorReporter::reportInternal("cannot call getter of ptr to ptr", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                    throw ErrorReporter::reportInternal("cannot call getter of ptr to ptr", ERR_GENERAL, node->getPosition());
                 }
                 auto lval = codeGen(node->getLeft());
                 auto typeDef = _types[ptrTy->as<DST::ValueType>()->getTypeDecl()];
                 auto func = typeDef->functions[node->getRight()];
                 if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 1)
-                    throw ErrorReporter::report("expression is not a getter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                    throw ErrorReporter::report("expression is not a getter property", ERR_GENERAL, node->getPosition());
                 return createCallOrInvoke((llvm::Function*)func, lval);
             }
             case EXACT_ARRAY:       // Member property of array
@@ -511,15 +511,16 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
                         );
                     return _builder.getInt32(codeGen(node->getLeft())->getType()->getArrayNumElements());
                 }
-                throw ErrorReporter::reportInternal("Arrays only have the Size property rn", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                throw ErrorReporter::reportInternal("Arrays only have the Size property rn", ERR_GENERAL, node->getPosition());
             default:
-                throw ErrorReporter::report("only arrays, basic types and ptr types can be called upon rn", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                throw ErrorReporter::report("only arrays, basic types and ptr types can be called upon rn", ERR_GENERAL, node->getPosition());
         }
     }
     if (node->getType()->isConstTy())
         return codeGenLval(node);
     auto val = codeGenLval(node);
-    assertNotNull(val);
+    if (node->getLeft()->getType()->isPtrTy() || node->getLeft()->getType()->isInterfaceTy())
+        assertNotNull(val);
     return _builder.CreateLoad(val, "accesstmp");
 }
 
@@ -543,10 +544,10 @@ Value *CodeGenerator::codeGen(DST::Variable *node)
             node->getVarId() += ".get";
         auto lval = codeGenLval(node);
         if (!isFunc(lval))
-            throw ErrorReporter::report("expression is not a getter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+            throw ErrorReporter::report("expression is not a getter property", ERR_GENERAL, node->getPosition());
         auto func = (llvm::Function*)lval;
         if (func->arg_size() != 0)
-            throw ErrorReporter::report("expression is not a getter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+            throw ErrorReporter::report("expression is not a getter property", ERR_GENERAL, node->getPosition());
         return createCallOrInvoke(func, {});
     }
     auto t = codeGenLval(node);

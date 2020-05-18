@@ -13,7 +13,7 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 	{
 		auto n = decorate((AST::FunctionCall*)node);
 		if (!n->isStatement())
-			throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());
+			throw ErrorReporter::report("expected a statement", ERR_GENERAL, node->getPosition());
 		return dynamic_cast<DST::ExpressionStatement*>(n);
 	}
 	case ST_VARIABLE_DECLARATION: return decorate((AST::VariableDeclaration*)	  node);
@@ -35,9 +35,9 @@ DST::Statement * Decorator::decorate(AST::Statement * node)
 DST::UnaryOperationStatement * Decorator::decorate(AST::UnaryOperationStatement * node)
 {
 	if (node->getOperator()._type == OT_BREAK && _loopCount == 0)
-		throw ErrorReporter::report("\"break\" used outside of loop", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("\"break\" used outside of loop", ERR_GENERAL, node->getPosition());
 	if (node->getOperator()._type == OT_CONTINUE && _loopCount == 0)
-		throw ErrorReporter::report("\"continue\" used outside of loop", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("\"continue\" used outside of loop", ERR_GENERAL, node->getPosition());
 	return new DST::UnaryOperationStatement(node, decorate(node->getExpression()));
 }
 
@@ -51,24 +51,25 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 		if (exp->getExpressionType() == ET_IDENTIFIER)
 		{
 			if (((DST::Variable*)exp)->getDecl())
-				throw ErrorReporter::report(
+				throw ErrorReporter::report(ErrorReporter::Error(
 					"Identifier `" + name.to_string() + "` is already in use",
-					ErrorReporter::GENERAL_ERROR, 
+					"`" + name.to_string() + "` is already in use",
+					ERR_GENERAL, 
 					node->getPosition()
 				).withSecondary(
 					"declared here",
 					((DST::Variable*)exp)->getDecl()->getPosition()
-				);
+				));
 			throw ErrorReporter::report(
 				"use of built-in identifier `" + name.to_string() + "`",
 				"`" + name.to_string() + "` is built-in",
-				ErrorReporter::GENERAL_ERROR, 
+				ERR_GENERAL, 
 				node->getPosition()
 			);
 		}
 		throw ErrorReporter::report(
 			"Identifier `" + name.to_string() + "` is already in use",
-			ErrorReporter::GENERAL_ERROR, 
+			ERR_GENERAL, 
 			node->getPosition()
 		);
 	}
@@ -92,7 +93,7 @@ DST::IfThenElse * Decorator::decorate(AST::IfThenElse * node)
 	auto ite = new DST::IfThenElse(node);
 	ite->setCondition(decorate(node->getCondition()));
 	if (!isCondition(ite->getCondition()))
-		throw ErrorReporter::report("Expected a condition", ErrorReporter::GENERAL_ERROR, node->getCondition()->getPosition());
+		throw ErrorReporter::report("Expected a condition", ERR_GENERAL, node->getCondition()->getPosition());
 	ite->setThenBranch(decorate(node->getThenBranch()));
 	ite->setElseBranch(decorate(node->getElseBranch()));
 	return ite;
@@ -114,7 +115,7 @@ DST::SwitchCase * Decorator::decorate(AST::SwitchCase * node)
 				throw ErrorReporter::report(
 					"incorrect case clause type", 
 					"expected `" + i->getType()->toShortString() + "`, got `" + sc->getExpression()->getType()->toShortString() + "`", 
-					ErrorReporter::GENERAL_ERROR, i->getPosition()
+					ERR_GENERAL, i->getPosition()
 				);
 		sc->addCase(clause);
 	}
@@ -140,7 +141,7 @@ DST::ForLoop * Decorator::decorate(AST::ForLoop * node)
 	loop->setBegin(decorate(node->getBegin()));
 	loop->setCondition(decorate(node->getCondition()));
 	if (!isCondition(loop->getCondition()))
-		throw ErrorReporter::report("Expected a condition", ErrorReporter::GENERAL_ERROR, loop->getCondition()->getPosition());
+		throw ErrorReporter::report("Expected a condition", ERR_GENERAL, loop->getCondition()->getPosition());
 	loop->setIncrement(decorate(node->getIncrement()));
 	loop->setStatement(decorate(node->getStatement()));
 	_loopCount--;
@@ -154,7 +155,7 @@ DST::WhileLoop * Decorator::decorate(AST::WhileLoop * node)
 	_loopCount++;
 	loop->setCondition(decorate(node->getCondition()));
 	if (!isCondition(loop->getCondition()))
-		throw ErrorReporter::report("Expected a condition", ErrorReporter::GENERAL_ERROR, loop->getCondition()->getPosition());
+		throw ErrorReporter::report("Expected a condition", ERR_GENERAL, loop->getCondition()->getPosition());
 	loop->setStatement(decorate(node->getStatement()));
 	_loopCount--;
 	return loop;
@@ -171,33 +172,40 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 	auto decl = new DST::VariableDeclaration(node);
 	unicode_string name = node->getVarId();
 	decl->setType(evalType(node->getVarType()));
-	if (_variables[currentScope()].count(name))
-	if (auto exp = _variables[currentScope()][name])
-	{
-		if (exp->getExpressionType() == ET_IDENTIFIER)
+	for (uint i = 0; i < _variables.size(); i++)
+		if (auto exp = _variables[i][name])
 		{
-			if (((DST::Variable*)exp)->getDecl())
-				throw ErrorReporter::report(
-					"Identifier `" + name.to_string() + "` is already in use",
-					ErrorReporter::GENERAL_ERROR, 
-					node->getPosition()
-				).withSecondary(
-					"declared here",
-					((DST::Variable*)exp)->getDecl()->getPosition()
-				);
-			throw ErrorReporter::report(
+			if (i == 0) throw ErrorReporter::report(
 				"use of built-in identifier `" + name.to_string() + "`",
-				"`" + name.to_string() + "` is built-in",
-				ErrorReporter::GENERAL_ERROR, 
+				"identifier `" + name.to_string() + "` is built-in",
+				ERR_GENERAL, 
+				node->getPosition()
+			);
+			if (exp->getExpressionType() == ET_IDENTIFIER)
+			{
+				if (((DST::Variable*)exp)->getDecl())
+					throw ErrorReporter::report(ErrorReporter::Error(
+						"Identifier `" + name.to_string() + "` is already in use",
+						"`" + name.to_string() + "` is already in use",
+						ERR_GENERAL, 
+						node->getPosition()
+					).withSecondary(
+						"declared here",
+						((DST::Variable*)exp)->getDecl()->getPosition()
+					));
+				throw ErrorReporter::report(
+					"use of built-in identifier `" + name.to_string() + "`",
+					"identifier `" + name.to_string() + "` is built-in",
+					ERR_GENERAL, 
+					node->getPosition()
+				);
+			}
+			throw ErrorReporter::report(
+				"Identifier `" + name.to_string() + "` is already in use",
+				ERR_GENERAL, 
 				node->getPosition()
 			);
 		}
-		throw ErrorReporter::report(
-			"Identifier `" + name.to_string() + "` is already in use",
-			ErrorReporter::GENERAL_ERROR, 
-			node->getPosition()
-		);
-	}
 	_variables[currentScope()][name] = new DST::Variable(name, decl->getType(), decl);
 	return decl;
 }
@@ -208,9 +216,11 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	auto assignment = new DST::Assignment(node, decorate(node->getLeft()), right);
 
 	if (!assignment->getLeft()->getType()->writeable())
-		throw ErrorReporter::report("lvalue is read-only", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		// fixme: better error message
+		throw ErrorReporter::report("left value is read-only", "read-only", ERR_GENERAL, node->getPosition());
 	if (!assignment->getRight()->getType()->readable())
-		throw ErrorReporter::report("rvalue is write-only", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		// fixme: better error message
+		throw ErrorReporter::report("right value is write-only", "write-only", ERR_GENERAL, node->getPosition());
 
 	if (assignment->getLeft()->getExpressionType() == ET_LIST)
 	{
@@ -222,7 +232,8 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 			if (list->getExpressions()[i]->getType()->isUnknownTy())
 			{
 				if (list->getExpressions()[i]->getExpressionType() != ET_VARIABLE_DECLARATION)
-					throw ErrorReporter::report("inferred type is invalid in this context", ErrorReporter::GENERAL_ERROR, node->getPosition());
+					// fixme: better error message
+					throw ErrorReporter::report("inferred type is invalid in this context", ERR_GENERAL, node->getPosition());	
 				((DST::VariableDeclaration*)list->getExpressions()[i])->setType(rightTypes->getTypes()[i]);
 				leftTypes->getTypes()[i] = rightTypes->getTypes()[i]->getNonPropertyOf()->getNonConstOf();
 				auto name = ((DST::VariableDeclaration*)list->getExpressions()[i])->getVarId();
@@ -234,11 +245,14 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	if (assignment->getLeft()->getType()->isUnknownTy())
 	{
 		if (assignment->getLeft()->getExpressionType() != ET_VARIABLE_DECLARATION)
-			throw ErrorReporter::report("inferred type is invalid in this context", ErrorReporter::GENERAL_ERROR, node->getPosition());
+			throw ErrorReporter::report("inferred type is invalid in this context", "expected a variable declaration", 
+										ERR_GENERAL, node->getLeft()->getPosition());
 		switch (assignment->getRight()->getType()->getNonConstOf()->getNonPropertyOf()->getExactType())
 		{
-			case EXACT_UNKNOWN: case EXACT_NULL:
-				throw ErrorReporter::report("Could not infer type", ErrorReporter::GENERAL_ERROR, assignment->getLeft()->getPosition());
+			case EXACT_UNKNOWN: 
+				throw ErrorReporter::report("Could not infer type", "type is unknown", ERR_GENERAL, assignment->getLeft()->getPosition());
+			case EXACT_NULL:
+				throw ErrorReporter::report("Could not infer type", "right is `null`", ERR_GENERAL, assignment->getLeft()->getPosition());
 			default:
 				((DST::VariableDeclaration*)assignment->getLeft())->setType(
 					assignment->getRight()->getType()->getNonPropertyOf()->getNonConstOf()
@@ -249,8 +263,13 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	}
 
 	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))
-		throw ErrorReporter::report("Type \"" + assignment->getRight()->getType()->toShortString() + "\" is not assignable to type \""
-			  						+ assignment->getLeft()->getType()->toShortString() + "\"", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report(ErrorReporter::Error(
+			"cannot assign `" + assignment->getRight()->getType()->getNonPropertyOf()->toShortString() + "` to `" 
+			+ assignment->getLeft()->getType()->getNonPropertyOf()->toShortString() + "`",
+			"invalid assignment types",
+			ERR_GENERAL, node->getPosition())
+		.withSecondary("left is `" + assignment->getLeft()->getType()->getNonPropertyOf()->toShortString() + "`", node->getLeft()->getPosition())
+		.withSecondary("right is `" + assignment->getRight()->getType()->getNonPropertyOf()->toShortString() + "`", node->getRight()->getPosition()));
 
 	if (assignment->getRight()->getType()->isNullTy())
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));

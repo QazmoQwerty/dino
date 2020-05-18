@@ -100,8 +100,7 @@ int main(int argc, char *argv[])
 	catch (const char *err) { llvm::errs() << err << "\n"; exit(1); }
 	catch (string err) { llvm::errs() << err << "\n"; exit(1); }
 	catch (ErrorReporter::Error err) { 
-		ErrorReporter::showAll(); 
-		llvm::errs() << "\n";
+		ErrorReporter::reportAbort();
 		exit(1); 
 	}
 

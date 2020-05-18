@@ -62,7 +62,7 @@ vector<Token*> Lexer::lex(unicode_string &str, SourceFile* file)
 	eof->_data = "EOF";
 	eof->_type = TT_OPERATOR;
 	if (tokens.size() == 0)
-		throw ErrorReporter::report("empty program", ErrorReporter::GENERAL_ERROR, ErrorReporter::POS_NONE);
+		throw ErrorReporter::report("empty program", ERR_GENERAL, ErrorReporter::POS_NONE);
 	eof->_pos = tokens.back()->_pos;
 	eof->_operator = { OT_EOF, unicode_string("EOF"), NON_ASSCOCIATIVE, 0, 0, 0 };
 	tokens.push_back(eof);
@@ -268,7 +268,7 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 		}
 
 		case CT_UNKNOWN:
-			throw ErrorReporter::report("Unknown character", ErrorReporter::GENERAL_ERROR, token->_pos);
+			throw ErrorReporter::report("Unknown character", ERR_GENERAL, token->_pos);
 	}
 	if (pos != 0)
 		token->_pos.endPos = pos;
@@ -317,6 +317,11 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 				{
 					delete tokens.back();
 					tokens.pop_back();
+				}
+				else
+				{
+					if (getCharType(str[index]) != CT_NEWLINE)
+						ErrorReporter::report("line break negator `..` has no effect", "remove to silence this warning", ERR_WARNING, token->_pos);
 				}
 				delete token;
 				return NULL;

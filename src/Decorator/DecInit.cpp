@@ -62,7 +62,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		else
 		{ 
 			if (i->getStatementType() != ST_NAMESPACE_DECLARATION)
-				throw ErrorReporter::report("everything must be in a namespace!", ErrorReporter::GENERAL_ERROR, i->getPosition());
+				throw ErrorReporter::report("everything must be in a namespace!", ERR_GENERAL, i->getPosition());
 			
 			_currentProgram->addNamespace(partA((AST::NamespaceDeclaration*)i, ((AST::NamespaceDeclaration*)i)->getName() == "Std"));
 		}
@@ -75,7 +75,7 @@ DST::Program * Decorator::decorateProgram(AST::StatementBlock * node)
 		partC(i.second);
 	
 	if (!_main && !_isLibrary)
-		throw ErrorReporter::report("No entry point (Main function)", ErrorReporter::GENERAL_ERROR, ErrorReporter::POS_NONE);
+		throw ErrorReporter::report("No entry point (Main function)", ERR_GENERAL, ErrorReporter::POS_NONE);
 	
 	for (auto i : _currentProgram->getNamespaces())
 		partD(i.second);
@@ -153,7 +153,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				{
 					auto dec = decorate(i);
 					if (dec->getExpressionType() != ET_TYPE || !((DST::Type*)dec)->isInterfaceTy())
-						throw ErrorReporter::report("Expected an interface specifier", ErrorReporter::GENERAL_ERROR, dec->getPosition());
+						throw ErrorReporter::report("Expected an interface specifier", ERR_GENERAL, dec->getPosition());
 					decl->addImplements(((DST::Type*)dec)->as<DST::InterfaceType>()->getInterfaceDecl());
 				}
 			break;
@@ -166,7 +166,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				{
 					auto dec = decorate(i);
 					if (dec->getExpressionType() != ET_TYPE || !((DST::Type*)dec)->isInterfaceTy())
-						throw ErrorReporter::report("Expected an interface specifier", ErrorReporter::GENERAL_ERROR, dec->getPosition());
+						throw ErrorReporter::report("Expected an interface specifier", ERR_GENERAL, dec->getPosition());
 					decl->addInterface(((DST::Type*)dec)->as<DST::InterfaceType>()->getInterfaceDecl());
 				}
 			break;
@@ -178,7 +178,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 			{
 				auto ty = evalType(decl->getBase()->getType());
 				if (!ty->isEnumerable())
-					throw ErrorReporter::report("type must be enumerable", ErrorReporter::GENERAL_ERROR, decl->getBase()->getType()->getPosition());
+					throw ErrorReporter::report("type must be enumerable", ERR_GENERAL, decl->getBase()->getType()->getPosition());
 				decl->setMemberTy(ty);
 				set<uint64_t> takenVals;
 				uint curr = 0;
@@ -188,7 +188,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 						auto val = decorate(i.val);
 						if (!val->getType()->assignableTo(ty))
 							throw ErrorReporter::report("literal with type \"" + val->getType()->toShortString() + "\" does not match enum member type \""
-								+ ty->toShortString() + "\"" , ErrorReporter::GENERAL_ERROR, val->getPosition());
+								+ ty->toShortString() + "\"" , ERR_GENERAL, val->getPosition());
 						ASSERT(val->getExpressionType() == ET_LITERAL);
 						takenVals.insert(((DST::Literal*)val)->getEnumerableValue());
 						decl->addMember(i.id, ((DST::Literal*)val));
@@ -197,7 +197,7 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 					if (!i.val)
 					{
 						if (decl->getMembers().count(i.id))
-							throw ErrorReporter::report("duplicate identifer \"" + i.id.to_string() + "\"", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+							throw ErrorReporter::report("duplicate identifer \"" + i.id.to_string() + "\"", ERR_GENERAL, decl->getPosition());
 						while (takenVals.count(curr))
 							curr++;	
 						decl->addMember(i.id, curr++);
@@ -210,9 +210,9 @@ void Decorator::partB(DST::NamespaceDeclaration *node)
 				for (auto i : decl->getBase()->getMembers())
 				{
 					if (i.val)
-						throw ErrorReporter::report("enums with explicit values must state their type", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+						throw ErrorReporter::report("enums with explicit values must state their type", ERR_GENERAL, decl->getPosition());
 					if (decl->getMembers().count(i.id))
-						throw ErrorReporter::report("duplicate identifer \"" + i.id.to_string() + "\"", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+						throw ErrorReporter::report("duplicate identifer \"" + i.id.to_string() + "\"", ERR_GENERAL, decl->getPosition());
 					decl->addMember(i.id, curr++);
 				}
 			}
@@ -232,18 +232,18 @@ DST::UnsetGenericType *Decorator::createGenericTy(AST::Expression *exp)
 		{
 			auto bo = (AST::BinaryOperation*)exp;
 			if (bo->getOperator()._type != OT_IS || bo->getLeft()->getExpressionType() != ET_IDENTIFIER)
-				throw ErrorReporter::report("invalid generic type declaration (2)", ErrorReporter::GENERAL_ERROR, exp->getPosition());
+				throw ErrorReporter::report("invalid generic type declaration (2)", ERR_GENERAL, exp->getPosition());
 			auto ret = new DST::UnsetGenericType(((AST::Identifier*)bo->getLeft())->getVarId());
 			auto right = decorate(bo->getRight());
 			if (right->getExpressionType() != ET_TYPE || !((DST::Type*)right)->isInterfaceTy())
-				throw ErrorReporter::report("invalid generic type declaration (3)", ErrorReporter::GENERAL_ERROR, exp->getPosition());
+				throw ErrorReporter::report("invalid generic type declaration (3)", ERR_GENERAL, exp->getPosition());
 			ret->addImplements(((DST::Type*)right)->as<DST::InterfaceType>()->getInterfaceDecl());
 			return ret;
 		}
 		case ET_IDENTIFIER:
 			return new DST::UnsetGenericType(((AST::Identifier*)exp)->getVarId());
 		default:
-			throw ErrorReporter::report("invalid generic type declaration (1)", ErrorReporter::GENERAL_ERROR, exp->getPosition());
+			throw ErrorReporter::report("invalid generic type declaration (1)", ERR_GENERAL, exp->getPosition());
 	}
 }
 
@@ -332,9 +332,9 @@ void Decorator::partC(DST::NamespaceDeclaration *node)
 			if (func->getVarDecl()->getVarId() == MAIN_FUNC)
 			{
 				if (_isLibrary)
-					throw ErrorReporter::report("Main function can't be declared in a library", ErrorReporter::GENERAL_ERROR, func->getPosition());
+					throw ErrorReporter::report("Main function can't be declared in a library", ERR_GENERAL, func->getPosition());
 				if (_main)
-					throw ErrorReporter::report("Main function can't be declared more than once", ErrorReporter::GENERAL_ERROR, func->getPosition());
+					throw ErrorReporter::report("Main function can't be declared more than once", ERR_GENERAL, func->getPosition());
 				_main = funcDecl;
 			}
 			break;
@@ -436,9 +436,9 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 						_variables[currentScope()][param->getVarId()] = new DST::Variable(param->getVarId(), param->getType(), param);
 					decl->setContent(decorate(decl->getBase()->getContent()));
 					if (!decl->getContent())
-						throw ErrorReporter::report("Method must have a body.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+						throw ErrorReporter::report("Method must have a body.", ERR_GENERAL, decl->getPosition());
 					if (!decl->getContent()->hasReturnType(decl->getReturnType()))
-						throw ErrorReporter::report("Not all control paths lead to a return value.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+						throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_GENERAL, decl->getPosition());
 					leaveBlock();
 				}
 				else if (member.second.first->getStatementType() == ST_PROPERTY_DECLARATION)
@@ -451,7 +451,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 					{
 						decl->setGet(decorate(decl->getBase()->getGet()));
 						if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
-							throw ErrorReporter::report("Not all control paths lead to a return value.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+							throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_GENERAL, decl->getPosition());
 					}
 					if (decl->getBase()->getSet())
 					{
@@ -474,7 +474,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 				_variables[currentScope()][param->getVarId()] = new DST::Variable(param->getVarId(), param->getType(), param);
 			decl->setContent(decorate(decl->getBase()->getContent()));
 			if (decl->getContent() && !decl->getContent()->hasReturnType(decl->getReturnType()))
-				throw ErrorReporter::report("Not all control paths lead to a return value.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+				throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_GENERAL, decl->getPosition());
 			leaveBlock();
 			break;
 		}
@@ -486,7 +486,7 @@ void Decorator::partE(DST::NamespaceDeclaration *node)
 			{
 				decl->setGet(decorate(decl->getBase()->getGet()));
 				if (decl->getGet() && !decl->getGet()->hasReturnType(retType))
-					throw ErrorReporter::report("Not all control paths lead to a return value.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+					throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_GENERAL, decl->getPosition());
 			}
 			if (decl->getBase()->getSet())
 			{

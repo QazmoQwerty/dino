@@ -37,7 +37,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 auto bt = (DST::BasicType*)node;
                 if (bt->isValueTy())
                     return _types[bt->getTypeDecl()]->structType;
-                throw ErrorReporter::report("Type " + node->toShortString() + " does not exist", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                throw ErrorReporter::report("Type " + node->toShortString() + " does not exist", ERR_GENERAL, node->getPosition());
             }
         case EXACT_ENUM:
         {
@@ -94,7 +94,7 @@ llvm::Type *CodeGenerator::evalType(DST::Type *node)
                 return llvm::StructType::get(_context, types);    
             }
         }    
-        default: throw ErrorReporter::report("Specified type is not currently supported in code generation.", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: throw ErrorReporter::report("Specified type is not currently supported in code generation.", ERR_GENERAL, node->getPosition());
     }
 }
 
@@ -113,7 +113,7 @@ llvm::GlobalVariable * CodeGenerator::createGlobalVariable(DST::VariableDeclarat
 {
     auto type = evalType(node->getType());
     if (type->isVoidTy())
-        throw ErrorReporter::report("Cannot create instance of type \"void\"", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        throw ErrorReporter::report("Cannot create instance of type \"void\"", ERR_GENERAL, node->getPosition());
     auto name = node->getVarId().to_string();
     auto glob = new llvm::GlobalVariable(*_module, type, false, llvm::GlobalVariable::CommonLinkage, llvm::Constant::getNullValue(type), name);
     _currentNamespace.back()->values[node->getVarId()] = glob;
@@ -140,22 +140,6 @@ bool CodeGenerator::isFuncPtr(llvm::Value *funcPtr)
     if (funcPtr->getType()->getPointerElementType()->isPointerTy() && funcPtr->getType()->getPointerElementType()->getPointerElementType()->isFunctionTy())
         return true;
     return false;
-}
-
-CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Expression *node)
-{
-    if (node->getExpressionType() == ET_MEMBER_ACCESS)
-    {
-        auto members = getNamespaceMembers(((DST::MemberAccess*)node)->getLeft());
-        return members->namespaces[((DST::MemberAccess*)node)->getRight()];
-    }
-    if (node->getExpressionType() == ET_IDENTIFIER) {
-        if (_currentNamespace.back())
-            if (auto ns = _currentNamespace.back()->namespaces[((DST::Variable*)node)->getVarId()])
-                return ns;
-        return _namespaces[((DST::Variable*)node)->getVarId()];
-    }
-    UNREACHABLE
 }
 
 llvm::Value *CodeGenerator::createCallOrInvoke(llvm::Value *callee, llvm::ArrayRef<llvm::Value*> args)

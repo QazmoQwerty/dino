@@ -29,12 +29,12 @@ AST::StatementBlock * Parser::importFile(ErrorReporter::Position currPos)
 {
 	auto t = nextToken();
 	if (t->_type == TT_LITERAL && ((LiteralToken<bool>*)t)->_literalType != LT_STRING)
-		throw ErrorReporter::report("Expected a file path", ErrorReporter::GENERAL_ERROR, currPos);
+		throw ErrorReporter::report("Expected a file path", ERR_GENERAL, currPos);
 
 	string importPath = ((LiteralToken<string>*)t)->_value;
 	auto dir = opendir(importPath.c_str());
 	if (!dir)
-		throw ErrorReporter::report("Could not open directory \"" + importPath + '\"', ErrorReporter::GENERAL_ERROR, currPos);
+		throw ErrorReporter::report("Could not open directory \"" + importPath + '\"', ERR_GENERAL, currPos);
 	AST::StatementBlock *block = NULL;
 	while (auto ent = readdir(dir))
 	{
@@ -48,7 +48,7 @@ AST::StatementBlock * Parser::importFile(ErrorReporter::Position currPos)
 	}
 	closedir(dir);
 	if (!block)
-		throw ErrorReporter::report("No .dinh files in directory \"" + importPath + '\"', ErrorReporter::GENERAL_ERROR, currPos);
+		throw ErrorReporter::report("No .dinh files in directory \"" + importPath + '\"', ERR_GENERAL, currPos);
 	auto import = new AST::Import(importPath);
 	import->setPosition(currPos);
 	block->addStatement(import);
@@ -63,5 +63,5 @@ AST::StatementBlock * Parser::includeFile()
 		string fileName = ((LiteralToken<string>*)t)->_value;
 		return parseFile(fileName);
 	}
-	else throw ErrorReporter::report("Expected a file path", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+	else throw ErrorReporter::report("Expected a file path", ERR_GENERAL, peekToken()->_pos);
 }

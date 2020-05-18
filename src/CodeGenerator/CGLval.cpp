@@ -16,7 +16,7 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_BINARY_OPERATION: return codeGenLval((DST::BinaryOperation*)node);
         case ET_CONVERSION: return codeGenLval((DST::Conversion*)node);
         case ET_FUNCTION_LITERAL: return codeGenLval((DST::FunctionLiteral*)node);
-        default: throw ErrorReporter::report("unimplemented lval expression type.", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: throw ErrorReporter::report("unimplemented lval expression type.", ERR_GENERAL, node->getPosition());
     }
 }
 
@@ -106,7 +106,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 
     if (leftType->isNamespaceTy())
     {
-        auto members = getNamespaceMembers(node->getLeft());
+        auto members = _namespaces[leftType->as<DST::NamespaceType>()->getNamespaceDecl()];
         ASSERT(members != NULL);
         return members->values[node->getRight()];
     }
@@ -132,7 +132,6 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
         auto bt = leftType->as<DST::ValueType>();
         auto typeDef = _types[bt->getTypeDecl()];
         auto lval = codeGenLval(node->getLeft());
-        assertNotNull(lval);
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
             lval, 
@@ -154,5 +153,5 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else throw ErrorReporter::report("Expression must be of class or namespace type", ErrorReporter::GENERAL_ERROR, node->getPosition());
+    else throw ErrorReporter::report("Expression must be of class or namespace type", ERR_GENERAL, node->getPosition());
 }

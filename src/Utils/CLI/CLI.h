@@ -46,6 +46,9 @@ namespace CLI
 
     void showHelp(int argc = 0, char* argv[] = NULL);
 
+    bool isErrorCode(char* str);
+    void showErrorHelp(char* str);
+
     void showVersion(int argc = 0, char* argv[] = NULL);
 
     // if print output is false, nothing will be printed untill the entire command is done

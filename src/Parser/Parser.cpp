@@ -136,7 +136,7 @@ AST::Node * Parser::std()
 					}
 					else if (eatOperator(OT_DEFAULT))
 						node->setDefault(parseInnerBlock());
-					else throw ErrorReporter::report("expected 'case' or 'default'", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+					else throw ErrorReporter::report("expected 'case' or 'default'", ERR_GENERAL, peekToken()->_pos);
 
 					if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
 						expectLineBreak();
@@ -161,8 +161,8 @@ AST::Node * Parser::std()
 				node->setPosition(token->_pos);
 				return node;
 			}
-			case OT_CATCH: throw ErrorReporter::report("Missing `try` statement before `catch`", ErrorReporter::GENERAL_ERROR, token->_pos);
-			case OT_ELSE: throw ErrorReporter::report("Missing `if` statement before `else`", ErrorReporter::GENERAL_ERROR, token->_pos);
+			case OT_CATCH: throw ErrorReporter::report("Missing `try` statement before `catch`", ERR_GENERAL, token->_pos);
+			case OT_ELSE: throw ErrorReporter::report("Missing `if` statement before `else`", ERR_GENERAL, token->_pos);
 			case OT_ENUM: {
 				auto node = new AST::EnumDeclaration(expectIdentifier());
 				if (eatOperator(OT_IS)) node->setType(parseExpression());
@@ -186,16 +186,16 @@ AST::Node * Parser::std()
 					case(ST_VARIABLE_DECLARATION): node->addVariableDeclaration(dynamic_cast<AST::VariableDeclaration*>(decl)); break;
 					case(ST_FUNCTION_DECLARATION): 
 						if (!dynamic_cast<AST::FunctionDeclaration*>(decl)->getContent())
-							throw ErrorReporter::report("missing function body", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+							throw ErrorReporter::report("missing function body", ERR_GENERAL, decl->getPosition());
 						node->addFunctionDeclaration(dynamic_cast<AST::FunctionDeclaration*>(decl)); break;
 					case(ST_PROPERTY_DECLARATION): 
 						if (!dynamic_cast<AST::PropertyDeclaration*>(decl)->getGet() && !dynamic_cast<AST::PropertyDeclaration*>(decl)->getSet())
-							throw ErrorReporter::report("missing propery body", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+							throw ErrorReporter::report("missing propery body", ERR_GENERAL, decl->getPosition());
 						node->addPropertyDeclaration(dynamic_cast<AST::PropertyDeclaration*>(decl)); break;
 					default: throw ErrorReporter::report(
 						"expected a variable, property or function declaration", 
 						"types may only have variables, properties and functions",
-						ErrorReporter::GENERAL_ERROR, decl->getPosition()
+						ERR_GENERAL, decl->getPosition()
 					);
 					}
 					skipLineBreaks();
@@ -221,7 +221,7 @@ AST::Node * Parser::std()
 							default: throw ErrorReporter::report(
 									"expected a function or property declaration", 
 									"interfaces may only contain properties and functions", 
-									ErrorReporter::GENERAL_ERROR, decl->getPosition()
+									ERR_GENERAL, decl->getPosition()
 								);
 						}
 						if (!isOperator(peekToken(), OT_CURLY_BRACES_CLOSE))
@@ -239,7 +239,7 @@ AST::Node * Parser::std()
 						default: throw ErrorReporter::report(
 								"expected a function or property declaration", 
 								"interfaces may only contain properties and functions", 
-								ErrorReporter::GENERAL_ERROR, decl->getPosition()
+								ERR_GENERAL, decl->getPosition()
 							);
 					}
 				}
@@ -384,7 +384,7 @@ AST::Node * Parser::nud()
 			"dangling curly braces\n" + 
 			BOLD(FBLK("help: curly braces must be opened at end of line\n")) +
 			BOLD(FBLK("try moving it to the end of the previous line")),
-			ErrorReporter::GENERAL_ERROR, 
+			ERR_GENERAL, 
 			token->_pos
 		);
 	}
@@ -419,7 +419,7 @@ AST::Node * Parser::nud()
 		op->setExpression(parseExpression(leftPrecedence(ot, PREFIX)));
 		return op;
 	}
-	throw ErrorReporter::report("unexpected token `" + token->_data.to_string() + "`", ErrorReporter::GENERAL_ERROR, token->_pos);
+	throw ErrorReporter::report("unexpected token `" + token->_data.to_string() + "`", ERR_GENERAL, token->_pos);
 }
 
 /* Left-denotation */
@@ -443,7 +443,8 @@ AST::Node * Parser::led(AST::Node * left)
 				decl->setGet(parseInnerBlock());
 			else if (eatOperator(OT_SET))
 				decl->setSet(parseInnerBlock());
-			else throw ErrorReporter::report("expected `get` or `set`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+			else throw ErrorReporter::report(ErrorReporter::Error("expected `get` or `set`", ERR_GENERAL, peekToken()->_pos)
+											 .withSecondary("property declaration with no get/set", decl->getPosition()));
 			decl->setPosition(token->_pos);
 			return decl;
 		}
@@ -464,7 +465,7 @@ AST::Node * Parser::led(AST::Node * left)
 				else if (!eatOperator(OT_CURLY_BRACES_CLOSE))
 					throw ErrorReporter::report(
 						"expected `set` or `}`, found `" + peekToken()->_data.to_string() + "`", 
-						"expected `set` or `}`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos
+						"expected `set` or `}`", ERR_GENERAL, peekToken()->_pos
 					);
 			}
 			else if (eatOperator(OT_SET))
@@ -480,10 +481,11 @@ AST::Node * Parser::led(AST::Node * left)
 				else if (!eatOperator(OT_CURLY_BRACES_CLOSE))
 					throw ErrorReporter::report(
 						"expected `get` or `}`, found `" + peekToken()->_data.to_string() + "`", 
-						"expected `get` or `}`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos
+						"expected `get` or `}`", ERR_GENERAL, peekToken()->_pos
 					);
 			}
-			else throw ErrorReporter::report("expected `get` or `set`", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+			else throw ErrorReporter::report(ErrorReporter::Error("expected `get` or `set`", ERR_GENERAL, peekToken()->_pos)
+											.withSecondary("property declaration with no get/set", decl->getPosition()));
 			decl->setPosition(token->_pos);
 			return decl;
 		}
@@ -623,5 +625,5 @@ AST::Node * Parser::led(AST::Node * left)
 		op->setExpression(convertToExpression(left));
 		return op;
 	}
-	throw ErrorReporter::report("unexpected token `" + token->_data.to_string() + "`", ErrorReporter::GENERAL_ERROR, token->_pos);
+	throw ErrorReporter::report("unexpected token `" + token->_data.to_string() + "`", ERR_GENERAL, token->_pos);
 }
