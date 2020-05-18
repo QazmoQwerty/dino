@@ -35,7 +35,7 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
 
     for (auto i : node->getNamespaces())
     {
-        auto currentNs = _namespaces[i.first] = new NamespaceMembers();
+        auto currentNs = _namespaces[i.second] = new NamespaceMembers();
         currentNs->decl = i.second;
         _currentNamespace.push_back(currentNs);
         declareNamespaceTypes(i.second);
@@ -44,7 +44,7 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
 
     for (auto i : node->getNamespaces())
     {
-        _currentNamespace.push_back(_namespaces[i.first]);
+        _currentNamespace.push_back(_namespaces[i.second]);
         if (auto var = declareNamespaceMembers(i.second))
             ret = var;
         _currentNamespace.pop_back();
@@ -52,14 +52,14 @@ llvm::Function *CodeGenerator::startCodeGen(DST::Program *node)
     
     for (auto i : node->getNamespaces())    // Needs to be after declaring interfaces because vtable indexing happends then
     {
-        _currentNamespace.push_back(_namespaces[i.first]);
+        _currentNamespace.push_back(_namespaces[i.second]);
         declareNamespaceTypesContent(i.second);
         _currentNamespace.pop_back();
     }
 
     for (auto i : node->getNamespaces())
     {
-        _currentNamespace.push_back(_namespaces[i.first]);
+        _currentNamespace.push_back(_namespaces[i.second]);
         defineNamespaceMembers(i.second);
         _currentNamespace.pop_back();
     }
@@ -93,8 +93,9 @@ void CodeGenerator::declareNamespaceTypes(DST::NamespaceDeclaration *node)
         {
             case ST_NAMESPACE_DECLARATION:
             {
-                auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
-                currentNs->decl = node;
+                auto currentNs = _currentNamespace.back()->namespaces[p.first] = _namespaces[(DST::NamespaceDeclaration*)member] = new NamespaceMembers();
+
+                currentNs->decl = (DST::NamespaceDeclaration*)member;
                 _currentNamespace.push_back(currentNs);
                 declareNamespaceTypesContent((DST::NamespaceDeclaration*)member);
                 _currentNamespace.pop_back();
@@ -117,9 +118,7 @@ void CodeGenerator::declareNamespaceTypesContent(DST::NamespaceDeclaration *node
         {
             case ST_NAMESPACE_DECLARATION:
             {
-                auto currentNs = _currentNamespace.back()->namespaces[p.first] = new NamespaceMembers();
-                currentNs->decl = node;
-                _currentNamespace.push_back(currentNs);
+                _currentNamespace.push_back(_namespaces[(DST::NamespaceDeclaration*)member]);
                 declareNamespaceTypesContent((DST::NamespaceDeclaration*)member);
                 _currentNamespace.pop_back();
                 break;
@@ -143,8 +142,9 @@ llvm::Function * CodeGenerator::declareNamespaceMembers(DST::NamespaceDeclaratio
         {
             case ST_NAMESPACE_DECLARATION:
             {
-                auto currentNs = _currentNamespace.back()->namespaces[p.first];
-                _currentNamespace.push_back(currentNs);
+                // auto currentNs = _currentNamespace.back()->namespaces[p.first];
+                // _currentNamespace.push_back(currentNs);
+                _currentNamespace.push_back(_namespaces[(DST::NamespaceDeclaration*)member]);
                 if (auto var = declareNamespaceMembers((DST::NamespaceDeclaration*)member))
                     ret = var;
                 _currentNamespace.pop_back();
@@ -185,7 +185,8 @@ void CodeGenerator::defineNamespaceMembers(DST::NamespaceDeclaration *node)
         switch (member->getStatementType())
         {
             case ST_NAMESPACE_DECLARATION:
-                _currentNamespace.push_back(_currentNamespace.back()->namespaces[p.first]);
+                // _currentNamespace.push_back(_currentNamespace.back()->namespaces[p.first]);
+                _currentNamespace.push_back(_namespaces[(DST::NamespaceDeclaration*)member]);
                 defineNamespaceMembers((DST::NamespaceDeclaration*)member);
                 _currentNamespace.pop_back();
                 break;
@@ -513,10 +514,8 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
         if (typeDef)
             getFuncPtr = typeDef->functions[getFuncName];
         else getFuncPtr = _currentNamespace.back()->values[getFuncName];
-        llvm::Function *getFunc = NULL;
-        if (isFunc(getFuncPtr))
-            getFunc = (llvm::Function*)getFuncPtr;
-        else throw ErrorReporter::report("\"" + getFuncName.to_string() + "\" is not a function", ERR_GENERAL, node->getPosition());
+        ASSERT(isFunc(getFuncPtr));
+        llvm::Function *getFunc = (llvm::Function*)getFuncPtr;
 
         // Create a new basic block to start insertion into.
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", getFunc);
@@ -562,9 +561,8 @@ void CodeGenerator::codegenProperty(DST::PropertyDeclaration *node, TypeDefiniti
             setFuncPtr = typeDef->functions[setFuncName];
         else setFuncPtr = _currentNamespace.back()->values[setFuncName];
         llvm::Function *setFunc = NULL;
-        if (isFunc(setFuncPtr))
-            setFunc = (llvm::Function*)setFuncPtr;
-        else throw ErrorReporter::report("\"" + setFuncName.to_string() + "\" is not a function", ERR_GENERAL, node->getPosition());
+        ASSERT(isFunc(setFuncPtr));
+        setFunc = (llvm::Function*)setFuncPtr;
 
         // Create a new basic block to start insertion into.
         llvm::BasicBlock *bb = llvm::BasicBlock::Create(_context, "entry", setFunc);
@@ -661,10 +659,8 @@ void CodeGenerator::codegenFunction(DST::FunctionDeclaration *node, CodeGenerato
     if (typeDef)
         funcPtr = typeDef->functions[node->getVarDecl()->getVarId()];
     else funcPtr = _currentNamespace.back()->values[node->getVarDecl()->getVarId()];
-    llvm::Function *func = NULL;
-    if (isFunc(funcPtr))
-        func = (llvm::Function*)funcPtr;
-    else throw ErrorReporter::report("\"" + node->getVarDecl()->getVarId().to_string() + "\" is not a function", ERR_GENERAL, node->getPosition());
+    ASSERT(isFunc(funcPtr));    
+    llvm::Function *func = (llvm::Function*)funcPtr;
 
     if (node->getContent() == NULL)
         throw ErrorReporter::report("Undefined function", ERR_GENERAL, node->getPosition());

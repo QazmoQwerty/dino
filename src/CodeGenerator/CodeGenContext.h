@@ -46,7 +46,9 @@ namespace CodeGenerator
     } NamespaceMembers;
 
     /* Maps a namespace's id to all values, types, and namespaces contained in it */
-    extern unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
+    // extern unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
+
+    extern unordered_map<DST::NamespaceDeclaration*, NamespaceMembers*> _namespaces;
 
     /* Are we compiling a library or a regular file? */
     extern bool _isLib;

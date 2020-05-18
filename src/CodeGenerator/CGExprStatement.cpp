@@ -90,9 +90,8 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     
     if (!isFunc(funcPtr))
     {
-        if (isFuncPtr(funcPtr))
-            funcPtr = _builder.CreateLoad(funcPtr);
-        else throw ErrorReporter::report("expression is not a function!", ERR_GENERAL, node->getPosition());
+        ASSERT(isFuncPtr(funcPtr));
+        funcPtr = _builder.CreateLoad(funcPtr);
     }
 
     auto funcTy = llvm::dyn_cast<llvm::FunctionType>(funcPtr->getType()->getPointerElementType());

@@ -376,6 +376,8 @@ namespace DST
 		public:
 			static NamespaceType *get(NamespaceDeclaration *decl);
 
+
+
 			NamespaceType(DST::NamespaceDeclaration *decl) : Type(), _decl(decl) {}
 			virtual ~NamespaceType() {}
 			virtual bool isNamespaceTy() { return true; }

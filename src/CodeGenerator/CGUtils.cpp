@@ -142,22 +142,6 @@ bool CodeGenerator::isFuncPtr(llvm::Value *funcPtr)
     return false;
 }
 
-CodeGenerator::NamespaceMembers *CodeGenerator::getNamespaceMembers(DST::Expression *node)
-{
-    if (node->getExpressionType() == ET_MEMBER_ACCESS)
-    {
-        auto members = getNamespaceMembers(((DST::MemberAccess*)node)->getLeft());
-        return members->namespaces[((DST::MemberAccess*)node)->getRight()];
-    }
-    if (node->getExpressionType() == ET_IDENTIFIER) {
-        if (_currentNamespace.back())
-            if (auto ns = _currentNamespace.back()->namespaces[((DST::Variable*)node)->getVarId()])
-                return ns;
-        return _namespaces[((DST::Variable*)node)->getVarId()];
-    }
-    UNREACHABLE
-}
-
 llvm::Value *CodeGenerator::createCallOrInvoke(llvm::Value *callee, llvm::ArrayRef<llvm::Value*> args)
 {
     if (_currCatchBlock)

@@ -256,6 +256,12 @@ namespace ErrorReporter
                 }
             }
         }
+
+    }
+
+    bool hasHelpArticle(ErrorCode errTy)
+    {
+        return true;    // TODO
     }
 
     void Error::sortSecondaries()
@@ -268,25 +274,33 @@ namespace ErrorReporter
 
     vector<Error> errors;
 
-    Error& report(string msg, uint errCode, Position pos, bool isFatal)
+    Error& report(string msg, ErrorCode errCode, Position pos)
     {
         errors.push_back(Error(msg, errCode, pos));
-        if (isFatal)
-            throw "[Aborting due to previous error]";
+        errors.back().show();
+        std::cout << "\n";
         return errors.back();
     }
 
-    Error& report(string msg, string subMsg, uint errCode, Position pos, bool isFatal)
+    void reportAbort() 
+    {
+        errors.push_back(Error("aborting due to previous error", ERR_NOTE, POS_NONE));
+        errors.back().show();
+    }
+
+    Error& report(string msg, string subMsg, ErrorCode errCode, Position pos)
     {
         errors.push_back(Error(msg, subMsg, errCode, pos));
-        if (isFatal)
-            throw "[Aborting due to previous error]";
+        errors.back().show();
+        std::cout << "\n";
         return errors.back();
     }
 
-    Error& reportInternal(string msg, uint errCode, Position pos)
+    Error& reportInternal(string msg, ErrorCode errCode, Position pos)
     {
         errors.push_back({ msg, errCode, pos });
+        errors.back().show();
+        std::cout << "\n";
         return errors.back();
     }
 
@@ -301,13 +315,15 @@ namespace ErrorReporter
 
     string Error::tyToString() 
     {
-        switch (errTy)
-        {
-            case ERR_INTERNAL: return "Internal Error";
-            case ERR_WARNING: return "Warning";
-            case ERR_NOTE: return "Note";
-            default: return "Error";
-        }
+        if (ERR_GENERAL <= errTy && errTy < ERR_WARNING)
+            return "error(E" + std::to_string(errTy).substr(1) + ")";
+        else if (ERR_WARNING <= errTy && errTy < ERR_NOTE)
+            return "warning(W" + std::to_string(errTy).substr(1) + ")";
+        else if (ERR_NOTE < errTy && errTy < ERR_UNKNOWN)
+            return "note(N" + std::to_string(errTy).substr(1) + ")";
+        else if (errTy == ERR_NOTE)
+            return "note";
+        return "internal error";
     }
 
     string Error::color(string str)
@@ -315,7 +331,7 @@ namespace ErrorReporter
         switch (errTy)
         {
             default: return BOLD(FRED(str));
-            case ERR_WARNING: return BOLD(FBLU(str));
+            case ERR_WARNING: return BOLD(FYEL(str));
             case ERR_NOTE: return BOLD(FBLK(str));
         }
     }
@@ -332,31 +348,6 @@ namespace ErrorReporter
                 std::cout << " ";
         }
         std::cout << color("| ");
-    }
-
-    void show(Error &err) 
-    {
-        // if (err.pos.file != NULL)
-        // {   
-        //     std::cout << color(" --> ", err) << BOLD("`" + err.pos.file->getOriginalPath() + "`, line " + std::to_string(err.pos.line)) "\n";
-        //     printIndent(err);
-        //     std::cout << "\n";
-        //     string line = getLine(err.pos.file->getOriginalPath(), err.pos.line);
-        //     printIndent(err, true);
-        //     std::cout << line << "\n";
-        //     printIndent(err);
-        //     for (int i = 0; i < err.pos.startPos; i++)
-        //     {
-        //         if (line[i] == '\t')
-        //             std::cout << "\t";    
-        //         else std::cout << " ";
-        //     }
-        //     for (int i = 0; i < err.pos.endPos - err.pos.startPos; i++)
-        //         std::cout << color("^", err);
-        //     std::cout << "\n";
-        // }
-
-        // std::cout << color(toString(err) + ": ", err) << err.msg << "\n";        
     }
 
     string getLine(string fileName, int line)

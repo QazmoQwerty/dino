@@ -519,7 +519,8 @@ Value *CodeGenerator::codeGen(DST::MemberAccess *node)
     if (node->getType()->isConstTy())
         return codeGenLval(node);
     auto val = codeGenLval(node);
-    assertNotNull(val);
+    if (node->getLeft()->getType()->isPtrTy() || node->getLeft()->getType()->isInterfaceTy())
+        assertNotNull(val);
     return _builder.CreateLoad(val, "accesstmp");
 }
 

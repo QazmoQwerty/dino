@@ -12,7 +12,10 @@ namespace CodeGenerator
     unordered_map<DST::TypeDeclaration*, TypeDefinition*> _types;
 
     /* Maps a namespace's id to all values, types, and namespaces contained in it */
-    unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
+    // unordered_map<unicode_string, NamespaceMembers*, UnicodeHasherFunction> _namespaces;
+
+    /* Maps DST::NamespaceDeclarations to useful codeGen info */
+    unordered_map<DST::NamespaceDeclaration*, NamespaceMembers*> _namespaces;
 
     /* Are we compiling a library or a regular file? */
     bool _isLib;

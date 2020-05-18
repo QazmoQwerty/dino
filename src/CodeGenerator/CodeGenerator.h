@@ -187,9 +187,6 @@ namespace CodeGenerator
     /* Gets a value and return's whether that value's type is a ptr to function or ptr to ptr to function */
     bool isFuncPtr(llvm::Value *funcPtr);
 
-    /* Utility function for dealing with namespace Member Accesses */
-    NamespaceMembers *getNamespaceMembers(DST::Expression *node);
-
     /* 
         Creates a call instruction, or an invoke instruction if we are in a catch block.
         Use this instead of _builder.CreateCall.

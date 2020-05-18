@@ -106,7 +106,7 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
 
     if (leftType->isNamespaceTy())
     {
-        auto members = getNamespaceMembers(node->getLeft());
+        auto members = _namespaces[leftType->as<DST::NamespaceType>()->getNamespaceDecl()];
         ASSERT(members != NULL);
         return members->values[node->getRight()];
     }
@@ -132,7 +132,6 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
         auto bt = leftType->as<DST::ValueType>();
         auto typeDef = _types[bt->getTypeDecl()];
         auto lval = codeGenLval(node->getLeft());
-        assertNotNull(lval);
         return _builder.CreateInBoundsGEP(
             typeDef->structType, 
             lval, 

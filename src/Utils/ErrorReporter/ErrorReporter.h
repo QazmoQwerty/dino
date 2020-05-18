@@ -26,10 +26,10 @@ using std::vector;
 
 enum ErrorCode {
     ERR_INTERNAL,
-    ERR_WARNING,
-    ERR_NOTE,
-    ERR_GENERAL = 999,
-    
+    ERR_GENERAL = 1000,
+    ERR_WARNING = 2000,
+    ERR_NOTE    = 3000,
+    ERR_UNKNOWN = 4000,
 };
 
 namespace ErrorReporter 
@@ -44,17 +44,19 @@ namespace ErrorReporter
         SourceFile* file;
     };
 
+    bool hasHelpArticle(ErrorCode errTy);
+
     /* Represents dino compile time errors */
     class Error {
     public:
         string msg;
         string subMsg;
-        uint errTy;
+        ErrorCode errTy;
         Position pos;
         vector<Error> notes;
 
-        Error(string message, uint type, Position position) : msg(message), subMsg(), errTy(type), pos(position) {};
-        Error(string message, string subMessage, uint type, Position position) : msg(message), subMsg(subMessage), errTy(type), pos(position) {};
+        Error(string message, ErrorCode type, Position position) : msg(message), subMsg(), errTy(type), pos(position) {};
+        Error(string message, string subMessage, ErrorCode type, Position position) : msg(message), subMsg(subMessage), errTy(type), pos(position) {};
         void addNote(Error note) { notes.push_back(note); }
         void show();
         void showBasic();
@@ -88,11 +90,12 @@ namespace ErrorReporter
         Returns the Error created.
         If isFatal is (true), the function will throw a value.
     */
-    Error& report(string msg, uint errCode, Position pos, bool isFatal = false);
-    Error& report(string msg, string subMsg, uint errCode, Position pos, bool isFatal = false);
+    Error& report(string msg, ErrorCode errCode, Position pos);
+    Error& report(string msg, string subMsg, ErrorCode errCode, Position pos);
+    void reportAbort();
 
     /*
         Report an ERR_INTERNAL error - these should never be shown to a user of the compiler (in theory at least).
     */
-    Error& reportInternal(string msg, uint errCode = ERR_INTERNAL, Position pos = POS_NONE);
+    Error& reportInternal(string msg, ErrorCode errCode = ERR_INTERNAL, Position pos = POS_NONE);
 }

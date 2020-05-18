@@ -318,6 +318,11 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 					delete tokens.back();
 					tokens.pop_back();
 				}
+				else
+				{
+					if (getCharType(str[index]) != CT_NEWLINE)
+						ErrorReporter::report("line break negator `..` has no effect", "remove to silence this warning", ERR_WARNING, token->_pos);
+				}
 				delete token;
 				return NULL;
 			case OT_THEN: case OT_LOGICAL_AND: case OT_LOGICAL_OR: case OT_GET: case OT_SET:
