@@ -9,9 +9,9 @@ namespace DST
 	BinaryOperation::BinaryOperation(AST::BinaryOperation * base, Expression * left, Expression * right) : _base(base), _left(left), _right(right) 
 	{
 		if (_left && _left->getType() && !_left->getType()->readable())
-			throw ErrorReporter::report("left value is write-only", ErrorReporter::GENERAL_ERROR, _left->getPosition());
+			throw ErrorReporter::report("left value is write-only", ERR_GENERAL, _left->getPosition());
 		if (_right && _right->getExpressionType() != ET_TYPE && _right->getType() && !_right->getType()->readable())
-			throw ErrorReporter::report("right value is write-only", ErrorReporter::GENERAL_ERROR, _left->getPosition());
+			throw ErrorReporter::report("right value is write-only", ERR_GENERAL, _left->getPosition());
 	};
 
 	void UnaryOperation::setType()
@@ -20,16 +20,16 @@ namespace DST
 		{
 		case OT_AT:	// dereference
 			if (!_expression->getType()->isPtrTy())
-				throw ErrorReporter::report("Cannot dereference a non-pointer type", ErrorReporter::GENERAL_ERROR, getPosition());
+				throw ErrorReporter::report("Cannot dereference a non-pointer type", ERR_GENERAL, getPosition());
 			_type = ((PointerType*)_expression->getType())->getPtrType();
 			break;
 		case OT_NEW:	// dynamic memory allocation
 			if (_expression->getExpressionType() != ET_TYPE)
-				throw ErrorReporter::report("Expected a type", "not a type", ErrorReporter::GENERAL_ERROR, _base->getExpression()->getPosition());
+				throw ErrorReporter::report("Expected a type", "not a type", ERR_GENERAL, _base->getExpression()->getPosition());
 			if (((Type*)_expression)->isArrayTy())	// new int[10] == int[] != (int[10])@
 			{
 				if (((ArrayType*)_expression)->getLength() == UNKNOWN_ARRAY_LENGTH && ((ArrayType*)_expression)->getLenExp() == NULL)
-					throw ErrorReporter::report("Expected an array size specifier", ErrorReporter::GENERAL_ERROR, getPosition());
+					throw ErrorReporter::report("Expected an array size specifier", ERR_GENERAL, getPosition());
 				_type = DST::ArrayType::get(((ArrayType*)_expression)->getElementType(), ((ArrayType*)_expression)->getLenExp());
 			}
 			else _type = ((Type*)_expression)->getPtrTo();
@@ -68,7 +68,7 @@ namespace DST
 						else
 						{
 							if (unaryOp->getExpression() == NULL)
-								throw ErrorReporter::report("cannot return void in non void function", ErrorReporter::GENERAL_ERROR, i->getPosition());
+								throw ErrorReporter::report("cannot return void in non void function", ERR_GENERAL, i->getPosition());
 							if (unaryOp->getExpression()->getType()->isNullTy())
 							{
 								auto a = new Conversion(NULL, returnType, unaryOp->getExpression());
@@ -81,7 +81,7 @@ namespace DST
 						throw ErrorReporter::report(
 							"invalid return type", 
 							"expected `" + returnType->toShortString() + "`, got `" + unaryOp->getExpression()->getType()->toShortString() + "`",
-							ErrorReporter::GENERAL_ERROR,
+							ERR_GENERAL,
 							unaryOp->getBase()->getExpression()->getPosition()
 						);
 					}
@@ -129,10 +129,10 @@ namespace DST
 			case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
 			case ST_VARIABLE_DECLARATION: varId = ((VariableDeclaration*)decl)->getVarId(); break;
 			case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getName(); break;
-			default: throw ErrorReporter::report("Type declarations may only specify variable, property, and function declarations.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+			default: throw ErrorReporter::report("Type declarations may only specify variable, property, and function declarations.", ERR_GENERAL, decl->getPosition());
 		}
 		if (_decls.count(varId))
-			throw ErrorReporter::report("Multiple members of same name are not allowed", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+			throw ErrorReporter::report("Multiple members of same name are not allowed", ERR_GENERAL, decl->getPosition());
 		_decls[varId] = std::make_pair(decl, type);
 	}
 
@@ -141,7 +141,7 @@ namespace DST
 		for (auto decl : inter->getDeclarations())
 			if (!(_decls.count(decl.first) != 0 && _decls[decl.first].second->equals(_decls[decl.first].second)))
 				throw ErrorReporter::report("Type " + _name.to_string() + " does not implement " + decl.first.to_string() 
-											+ " of " + inter->getName().to_string(), ErrorReporter::GENERAL_ERROR, _base->getPosition());
+											+ " of " + inter->getName().to_string(), ERR_GENERAL, _base->getPosition());
 		for (auto i : inter->getImplements())
 			validateImplements(i);
 		return true;
@@ -161,7 +161,7 @@ namespace DST
 	{
 		if (_decls.count(name) != 0)
 			throw ErrorReporter::report("namespace \"" + getName().to_string() + 
-				"\" already has a member named \"" + name.to_string() + "\"", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+				"\" already has a member named \"" + name.to_string() + "\"", ERR_GENERAL, decl->getPosition());
 		_decls[name] = std::make_pair(decl, exp);
 	}
 
@@ -172,10 +172,10 @@ namespace DST
 		{
 			case ST_FUNCTION_DECLARATION: varId = ((FunctionDeclaration*)decl)->getVarDecl()->getVarId(); break;
 			case ST_PROPERTY_DECLARATION: varId = ((PropertyDeclaration*)decl)->getName(); break;
-			default: throw ErrorReporter::report("Interface declarations may only specify property, and function declarations.", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+			default: throw ErrorReporter::report("Interface declarations may only specify property, and function declarations.", ERR_GENERAL, decl->getPosition());
 		}
 		if (_decls.count(varId))
-			throw ErrorReporter::report("Multiple members of same name are not allowed", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+			throw ErrorReporter::report("Multiple members of same name are not allowed", ERR_GENERAL, decl->getPosition());
 		_decls[varId] = std::make_pair(decl, type);
 	}
 
@@ -184,7 +184,7 @@ namespace DST
 		for (auto decl : inter->getDeclarations())
 			if (_decls.count(decl.first) != 0)
 				throw ErrorReporter::report("Interface '" + getName().to_string() + "' already has '" + decl.first.to_string() 
-											+ "' of '" + inter->getName().to_string() + "'", ErrorReporter::GENERAL_ERROR, _base->getPosition());
+											+ "' of '" + inter->getName().to_string() + "'", ERR_GENERAL, _base->getPosition());
 		for (auto i : inter->getImplements())
 			i->notImplements(inter);
 	}
@@ -260,21 +260,21 @@ namespace DST
 	void FunctionDeclaration::setVarDecl(VariableDeclaration *decl)
 	{ 
 		if (decl->getType()->isUnknownTy())
-			throw ErrorReporter::report("function return types may not be inferred", ErrorReporter::GENERAL_ERROR, decl->getPosition());
+			throw ErrorReporter::report("function return types may not be inferred", ERR_GENERAL, decl->getPosition());
 		_decl = decl; 
 	}
 
 	void FunctionDeclaration::addParameter(VariableDeclaration *parameter)
 	{ 
 		if (parameter->getType()->isUnknownTy())
-			throw ErrorReporter::report("function parameter types may not be inferred", ErrorReporter::GENERAL_ERROR, parameter->getPosition());
+			throw ErrorReporter::report("function parameter types may not be inferred", ERR_GENERAL, parameter->getPosition());
 		_parameters.push_back(parameter); 
 	}
 
 	void FunctionDeclaration::addParameterToStart(VariableDeclaration *parameter)
 	{
 		if (parameter->getType()->isUnknownTy())
-			throw ErrorReporter::report("function parameter types may not be inferred", ErrorReporter::GENERAL_ERROR, parameter->getPosition());
+			throw ErrorReporter::report("function parameter types may not be inferred", ERR_GENERAL, parameter->getPosition());
 		_parameters.insert(_parameters.begin(), parameter); 
 	}
 
@@ -290,7 +290,7 @@ namespace DST
 
 		auto dir = opendir(bcFileName.c_str());
 		if (!dir)
-			throw ErrorReporter::report("Could not open directory \"" + bcFileName + '\"', ErrorReporter::GENERAL_ERROR, ErrorReporter::POS_NONE);
+			throw ErrorReporter::report("Could not open directory \"" + bcFileName + '\"', ERR_GENERAL, ErrorReporter::POS_NONE);
 		while (auto ent = readdir(dir))
 		{
 			string fileName(ent->d_name);

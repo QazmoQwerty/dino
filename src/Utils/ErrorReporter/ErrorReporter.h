@@ -18,13 +18,22 @@ using std::string;
 using std::exception;
 using std::vector;
 
+#define FATAL_ERROR(_string) throw ErrorReporter::reportInternal(std::string(_string) + " at " + __func__ + ":" + std::to_string(__LINE__) + " in " + __FILE__)
+
+#define TODO FATAL_ERROR("TODO reached");
+#define UNREACHABLE FATAL_ERROR("unreachable reached");
+#define ASSERT(cond) if(!(cond)) FATAL_ERROR("assertion failed")
+
+enum ErrorCode {
+    ERR_INTERNAL,
+    ERR_WARNING,
+    ERR_NOTE,
+    ERR_GENERAL = 999,
+    
+};
+
 namespace ErrorReporter 
 {
-    const uint INTERNAL = 0;
-    const uint WARNING = 1;
-    const uint NOTE = 2;
-    const uint GENERAL_ERROR = 3;
-
     /* Basic information about the position of a token or node */
     class Position 
     {
@@ -57,7 +66,7 @@ namespace ErrorReporter
 
         Error& withSecondary(Error err) { notes.push_back(err); return *this; }
 
-        Error& withSecondary(string message, Position position) { notes.push_back(Error("", message, NOTE, position)); return *this; }
+        Error& withSecondary(string message, Position position) { notes.push_back(Error("", message, ERR_NOTE, position)); return *this; }
     };
 
     /*
@@ -83,13 +92,7 @@ namespace ErrorReporter
     Error& report(string msg, string subMsg, uint errCode, Position pos, bool isFatal = false);
 
     /*
-        Report an INTERNAL error - these should never be shown to a user of the compiler (in theory at least).
+        Report an ERR_INTERNAL error - these should never be shown to a user of the compiler (in theory at least).
     */
-    Error& reportInternal(string msg, uint errCode = INTERNAL, Position pos = POS_NONE);
+    Error& reportInternal(string msg, uint errCode = ERR_INTERNAL, Position pos = POS_NONE);
 }
-
-#define FATAL_ERROR(_string) throw ErrorReporter::reportInternal(std::string(_string) + " at " + __func__ + ":" + std::to_string(__LINE__) + " in " + __FILE__)
-
-#define TODO FATAL_ERROR("TODO reached");
-#define UNREACHABLE FATAL_ERROR("unreachable reached");
-#define ASSERT(cond) if(!(cond)) FATAL_ERROR("assertion failed")

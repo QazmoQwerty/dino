@@ -884,7 +884,7 @@ namespace DST
 		MemberAccess(AST::BinaryOperation *base, Expression *left) : _base(base), _left(left) 
 		{
 			if (base->getRight()->getExpressionType() != ET_IDENTIFIER)
-				throw ErrorReporter::report("right of member access must be an identifier", ErrorReporter::GENERAL_ERROR, _base->getPosition());
+				throw ErrorReporter::report("right of member access must be an identifier", ERR_GENERAL, _base->getPosition());
 		};
 		virtual ~MemberAccess() { if (_base) delete _base;  if (_left) delete _left; }
 		void setType(Type *type) { _type = type; };
@@ -990,7 +990,7 @@ namespace DST
 		ExpressionList(AST::Expression *base, vector<Expression*> expressions) : _base(base), _expressions(expressions) 
 		{ 
 			if (expressions.size() < 2)
-				throw ErrorReporter::reportInternal("expression list must be at least 2 expressions long", ErrorReporter::GENERAL_ERROR);
+				throw ErrorReporter::reportInternal("expression list must be at least 2 expressions long", ERR_GENERAL);
 			vector<Type*> types;
 			for (auto i : expressions)
 				types.push_back(i->getType());
@@ -1117,7 +1117,7 @@ namespace DST
 		void addCase(vector<Expression*> expressions, StatementBlock* statement) { CaseClause c = { expressions, statement }; _cases.push_back(c); }
 		void addCase(CaseClause clause) { _cases.push_back(clause); }
 		void setDefault(StatementBlock* statement) {
-			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ErrorReporter::GENERAL_ERROR, statement->getPosition());
+			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ERR_GENERAL, statement->getPosition());
 			_default = statement;
 		}
 		Expression* getExpression() { return _expression; }
@@ -1472,7 +1472,7 @@ namespace DST
 		void setFunctionId(Expression* funcId)
 		{
 			if (!funcId->getType()->isFuncTy())
-				throw ErrorReporter::report("Cannot invoke expression as function", ErrorReporter::GENERAL_ERROR, funcId->getPosition());
+				throw ErrorReporter::report("Cannot invoke expression as function", ERR_GENERAL, funcId->getPosition());
 			_funcPtr = funcId;
 			_type = ((FunctionType*)funcId->getType())->getReturn();
 		}
@@ -1482,13 +1482,13 @@ namespace DST
 			auto &funcParams = ((FunctionType*)_funcPtr->getType())->getParameters();
 			if (arguments.size() != funcParams.size())
 				throw ErrorReporter::report("expected " + std::to_string(funcParams.size()) + 
-					" arguments in call, got " + std::to_string(arguments.size()), ErrorReporter::GENERAL_ERROR, getPosition());
+					" arguments in call, got " + std::to_string(arguments.size()), ERR_GENERAL, getPosition());
 			for (uint i = 0; i < arguments.size(); i++)
 			{
 				if (!arguments[i]->getType()->assignableTo(funcParams[i]))	// TODO - make this error msg better
-					throw ErrorReporter::report("argument types do not match function parameters", ErrorReporter::GENERAL_ERROR, getPosition());
+					throw ErrorReporter::report("argument types do not match function parameters", ERR_GENERAL, getPosition());
 				if (!arguments[i]->getType()->readable())
-					throw ErrorReporter::report("argument is read-only", ErrorReporter::GENERAL_ERROR, arguments[i]->getPosition());
+					throw ErrorReporter::report("argument is read-only", ERR_GENERAL, arguments[i]->getPosition());
 			}
 			_arguments = arguments; 
 		}

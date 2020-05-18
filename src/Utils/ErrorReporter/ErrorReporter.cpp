@@ -303,9 +303,9 @@ namespace ErrorReporter
     {
         switch (errTy)
         {
-            case INTERNAL: return "Internal Error";
-            case WARNING: return "Warning";
-            case NOTE: return "Note";
+            case ERR_INTERNAL: return "Internal Error";
+            case ERR_WARNING: return "Warning";
+            case ERR_NOTE: return "Note";
             default: return "Error";
         }
     }
@@ -315,8 +315,8 @@ namespace ErrorReporter
         switch (errTy)
         {
             default: return BOLD(FRED(str));
-            case WARNING: return BOLD(FBLU(str));
-            case NOTE: return BOLD(FBLK(str));
+            case ERR_WARNING: return BOLD(FBLU(str));
+            case ERR_NOTE: return BOLD(FBLK(str));
         }
     }
 

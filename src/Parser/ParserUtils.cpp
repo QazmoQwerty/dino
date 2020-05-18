@@ -28,7 +28,7 @@ AST::StatementBlock * Parser::parseBlock(OperatorType expected)
 void Parser::expectLineBreak()
 {
 	if (!eatLineBreak())
-		throw ErrorReporter::report("expected a line break", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+		throw ErrorReporter::report("expected a line break", ERR_GENERAL, peekToken()->_pos);
 }
 
 void Parser::expectOperator(OperatorType ot)
@@ -37,7 +37,7 @@ void Parser::expectOperator(OperatorType ot)
 		throw ErrorReporter::report(
 			"expected `" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "`, found `" + peekToken()->_data.to_string() + "`",
 			"expected `" + OperatorsMap::getOperatorByDefinition(ot).second._str.to_string() + "`",
-			ErrorReporter::GENERAL_ERROR, peekToken()->_pos
+			ERR_GENERAL, peekToken()->_pos
 		);
 }
 
@@ -45,7 +45,7 @@ unicode_string Parser::expectIdentifier()
 {
 	if (peekToken()->_type == TT_IDENTIFIER)
 		return nextToken()->_data;
-	else throw ErrorReporter::report("expected an identifier", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+	else throw ErrorReporter::report("expected an identifier", ERR_GENERAL, peekToken()->_pos);
 }
 
 AST::ExpressionList * Parser::expectIdentifierList()
@@ -58,7 +58,7 @@ AST::ExpressionList * Parser::expectIdentifierList()
 		if (node && (node->getExpressionType() == ET_IDENTIFIER ||
 			(node->getExpressionType() == ET_BINARY_OPERATION && ((AST::BinaryOperation*)node)->getOperator()._type == OT_PERIOD)))
 			l->addExpression(node);
-		else throw ErrorReporter::report("Expected an identifier or member access", ErrorReporter::GENERAL_ERROR, peekToken()->_pos);
+		else throw ErrorReporter::report("Expected an identifier or member access", ERR_GENERAL, peekToken()->_pos);
 	} while (eatOperator(OT_COMMA));
 	return l;
 }
@@ -67,14 +67,14 @@ AST::Identifier * Parser::convertToIdentifier(AST::Node * node, string errMsg)
 {
 	if (node != nullptr && node->isExpression() && dynamic_cast<AST::Expression*>(node)->getExpressionType() == ET_IDENTIFIER)
 		return dynamic_cast<AST::Identifier*>(node);
-	throw ErrorReporter::report(errMsg, ErrorReporter::GENERAL_ERROR, node->getPosition());
+	throw ErrorReporter::report(errMsg, ERR_GENERAL, node->getPosition());
 }
 
 AST::Expression * Parser::convertToExpression(AST::Node * node)
 {
 	if (node == nullptr || node->isExpression())
 		return dynamic_cast<AST::Expression*>(node);
-	throw ErrorReporter::report("expected an expression", ErrorReporter::GENERAL_ERROR, node->getPosition());
+	throw ErrorReporter::report("expected an expression", ERR_GENERAL, node->getPosition());
 }
 
 AST::Statement * Parser::convertToStatement(AST::Node * node)
@@ -88,9 +88,9 @@ AST::Statement * Parser::convertToStatement(AST::Node * node)
 			"expected a statement\n" +
 			BOLD(FBLK("help: the `=` operator is used for comparisons\n")) +
 			BOLD(FBLK("did you mean `≡`?")), 
-			ErrorReporter::GENERAL_ERROR, node->getPosition()
+			ERR_GENERAL, node->getPosition()
 		);
-	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());
+	throw ErrorReporter::report("expected a statement", ERR_GENERAL, node->getPosition());
 }
 
 AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
@@ -109,9 +109,9 @@ AST::StatementBlock * Parser::convertToStatementBlock(AST::Node * node)
 		throw ErrorReporter::report(
 			"expected a statement", 
 			"expected a statement\nhelp: the `=` operator is used for comparisons\ndid you mean `≡`?", 
-			ErrorReporter::GENERAL_ERROR, node->getPosition()
+			ERR_GENERAL, node->getPosition()
 		);
-	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());
+	throw ErrorReporter::report("expected a statement", ERR_GENERAL, node->getPosition());
 }
 
 AST::Statement * Parser::parseStatement(int precedence)
@@ -124,9 +124,9 @@ AST::Statement * Parser::parseStatement(int precedence)
 		throw ErrorReporter::report(
 			"expected a statement", 
 			"expected a statement\nhelp: the `=` operator is used for comparisons\ndid you mean `≡`?", 
-			ErrorReporter::GENERAL_ERROR, node ? node->getPosition() : peekToken()->_pos
+			ERR_GENERAL, node ? node->getPosition() : peekToken()->_pos
 		);
-	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node ? node->getPosition() : peekToken()->_pos);
+	throw ErrorReporter::report("expected a statement", ERR_GENERAL, node ? node->getPosition() : peekToken()->_pos);
 }
 
 AST::Statement * Parser::parseOptionalStatement(int precedence)
@@ -139,7 +139,7 @@ AST::Expression * Parser::parseExpression(int precedence)
 	AST::Node* node = parse(precedence, true);
 	if (node != nullptr && node->isExpression())
 		return dynamic_cast<AST::Expression*>(node);
-	throw ErrorReporter::report("expected an expression", ErrorReporter::GENERAL_ERROR, node ? node->getPosition() : peekToken()->_pos);
+	throw ErrorReporter::report("expected an expression", ERR_GENERAL, node ? node->getPosition() : peekToken()->_pos);
 }
 
 AST::Expression * Parser::parseOptionalExpression(int precedence)
@@ -150,7 +150,7 @@ AST::Expression * Parser::parseOptionalExpression(int precedence)
 void Parser::assertIsDeclaration(AST::Statement * node)
 {
 	if (!node->isDeclaration())
-		throw ErrorReporter::report("Expected a declaration", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("Expected a declaration", ERR_GENERAL, node->getPosition());
 }
 
 AST::StatementBlock * Parser::parseInnerBlock()
@@ -170,7 +170,7 @@ AST::StatementBlock * Parser::parseInnerBlock()
 				"dangling curly braces\n" +
 				BOLD(FBLK("help: curly braces must be opened at end of line\n")) +
 				BOLD(FBLK("try moving it to the end of the previous line")),
-				ErrorReporter::GENERAL_ERROR, 
+				ERR_GENERAL, 
 				peekToken()->_pos
 			).withSecondary(
 				"try adding `{` here instead",
@@ -185,6 +185,6 @@ AST::StatementBlock * Parser::parseInnerBlock()
 AST::Literal *Parser::convertToLiteral(AST::Expression *exp, string errorMsg)
 {
 	if (exp && exp->getExpressionType() != ET_LITERAL)
-		throw ErrorReporter::report(errorMsg, ErrorReporter::GENERAL_ERROR, exp->getPosition());
+		throw ErrorReporter::report(errorMsg, ERR_GENERAL, exp->getPosition());
 	return (AST::Literal*)exp;
 }

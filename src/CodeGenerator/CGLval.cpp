@@ -16,7 +16,7 @@ Value *CodeGenerator::codeGenLval(DST::Expression *node)
         case ET_BINARY_OPERATION: return codeGenLval((DST::BinaryOperation*)node);
         case ET_CONVERSION: return codeGenLval((DST::Conversion*)node);
         case ET_FUNCTION_LITERAL: return codeGenLval((DST::FunctionLiteral*)node);
-        default: throw ErrorReporter::report("unimplemented lval expression type.", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        default: throw ErrorReporter::report("unimplemented lval expression type.", ERR_GENERAL, node->getPosition());
     }
 }
 
@@ -154,5 +154,5 @@ Value *CodeGenerator::codeGenLval(DST::MemberAccess *node)
             node->getRight().to_string()
         );
     }
-    else throw ErrorReporter::report("Expression must be of class or namespace type", ErrorReporter::GENERAL_ERROR, node->getPosition());
+    else throw ErrorReporter::report("Expression must be of class or namespace type", ERR_GENERAL, node->getPosition());
 }

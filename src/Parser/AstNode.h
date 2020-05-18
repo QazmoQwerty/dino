@@ -307,7 +307,7 @@ namespace AST
 		void setExpression(Expression* expression) { _expression = expression; }
 		void addCase(Expression* expression, StatementBlock* statement) { _cases.push_back({ expression, statement }); }
 		void setDefault(StatementBlock* statement) {
-			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ErrorReporter::GENERAL_ERROR, statement->getPosition());;
+			if (_default) throw ErrorReporter::report("'default' clause may only be set once", ERR_GENERAL, statement->getPosition());;
 			_default = statement; 
 		}
 		Expression* getExpression() { return _expression; }

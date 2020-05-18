@@ -56,7 +56,7 @@ DST::Expression *Decorator::decorate(AST::Identifier * node)
 			return new DST::Variable(node, DST::NamespaceType::get(var), var);
 
 	
-	throw ErrorReporter::report("Identifier '" + name.to_string() + "' is undefined", ErrorReporter::GENERAL_ERROR, node->getPosition());
+	throw ErrorReporter::report("Identifier '" + name.to_string() + "' is undefined", ERR_GENERAL, node->getPosition());
 }
 
 DST::Comparison *Decorator::decorate(AST::Comparison *node)
@@ -70,7 +70,7 @@ DST::Comparison *Decorator::decorate(AST::Comparison *node)
 			ty = i->getType();
 		else if (!i->getType()->comparableTo(ty))
 			throw ErrorReporter::report("cannot compare types \"" + ty->toShortString() 
-				+ "\" and \"" + i->getType()->toShortString() + "\"", ErrorReporter::GENERAL_ERROR, i->getPosition());
+				+ "\" and \"" + i->getType()->toShortString() + "\"", ERR_GENERAL, i->getPosition());
 	return comp;
 }
 
@@ -85,18 +85,18 @@ DST::Expression * Decorator::decorate(AST::UnaryOperation * node)
 	if (node->getOperator()._type == OT_SQUARE_BRACKETS_OPEN)	// Array Literal
 	{
 		if (!val)
-			throw ErrorReporter::report("array literal can't be empty", ErrorReporter::GENERAL_ERROR, node->getPosition());
+			throw ErrorReporter::report("array literal can't be empty", ERR_GENERAL, node->getPosition());
 		else if (val->getExpressionType() == ET_LIST)
 		{
 			DST::Type *prevType = NULL;
 			for (auto val : ((DST::ExpressionList*)val)->getExpressions())
 			{
 				if (prevType && !val->getType()->equals(prevType))
-					throw ErrorReporter::report("Array Literal must have only one type", ErrorReporter::GENERAL_ERROR, node->getPosition());
+					throw ErrorReporter::report("Array Literal must have only one type", ERR_GENERAL, node->getPosition());
 					prevType = val->getType();
 			}
 			if (!prevType)
-				throw ErrorReporter::report("array literal can't be empty", ErrorReporter::GENERAL_ERROR, node->getPosition());
+				throw ErrorReporter::report("array literal can't be empty", ERR_GENERAL, node->getPosition());
 			return new DST::ArrayLiteral(prevType->getConstOf(), ((DST::ExpressionList*)val)->getExpressions());
 		}
 		else
@@ -121,16 +121,16 @@ DST::Expression * Decorator::decorate(AST::ConditionalExpression * node)
 	expr->setElseBranch(decorate(node->getElseBranch()));
 
 	if (!expr->getCondition())
-		throw ErrorReporter::report("Expected a condition", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("Expected a condition", ERR_GENERAL, node->getPosition());
 	if (!isCondition(expr->getCondition()))
-		throw ErrorReporter::report("Condition must be of bool type", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("Condition must be of bool type", ERR_GENERAL, node->getPosition());
 	if (!expr->getThenBranch())
-		throw ErrorReporter::report("Expected then branch of conditional expression", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("Expected then branch of conditional expression", ERR_GENERAL, node->getPosition());
 	if (!expr->getElseBranch())
-		throw ErrorReporter::report("Expected else branch of conditional expression", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("Expected else branch of conditional expression", ERR_GENERAL, node->getPosition());
 	if (!expr->getThenBranch()->getType()->equals(expr->getElseBranch()->getType()))
 		throw ErrorReporter::report("Operand types are incompatible (\"" + expr->getThenBranch()->getType()->toShortString() + 
-							"\" and \"" + expr->getElseBranch()->getType()->toShortString() + "\")", ErrorReporter::GENERAL_ERROR, node->getPosition());
+							"\" and \"" + expr->getElseBranch()->getType()->toShortString() + "\")", ERR_GENERAL, node->getPosition());
 	return expr;
 }
 
@@ -148,7 +148,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		else vec.push_back(((DST::Type*)args));
 
 		if (funcId->getExpressionType() != ET_TYPE)
-			throw ErrorReporter::report("expected a type", "not a type", ErrorReporter::GENERAL_ERROR, node->getFunctionId()->getPosition());
+			throw ErrorReporter::report("expected a type", "not a type", ERR_GENERAL, node->getFunctionId()->getPosition());
 			
 		return DST::FunctionType::get((DST::Type*)funcId, vec);
 	}
@@ -174,7 +174,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		}
 		if (arguments.size() == 1) // conversion
 			return new DST::Conversion(node, (DST::Type*)funcId, arguments[0]);
-		throw ErrorReporter::report("invalid function arguments", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("invalid function arguments", ERR_GENERAL, node->getPosition());
 	}
 
 	auto call = new DST::FunctionCall(node, funcId, arguments);
@@ -199,7 +199,7 @@ DST::FunctionLiteral * Decorator::decorate(AST::Function * node)
 	lit->setContent(decorate(node->getContent()));
 	lit->setType(DST::FunctionType::get(ret, params));
 	if (lit->getContent() && !lit->getContent()->hasReturnType(lit->getType()->getReturn()))
-		throw ErrorReporter::report("Not all control paths lead to a return value.", ErrorReporter::GENERAL_ERROR, node->getPosition());
+		throw ErrorReporter::report("Not all control paths lead to a return value.", ERR_GENERAL, node->getPosition());
 	leaveBlock();
 	return lit;
 }
@@ -210,17 +210,17 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	{
 		auto left = decorate(node->getLeft());
 		if (node->getRight()->getExpressionType() != ET_IDENTIFIER)
-			throw ErrorReporter::report("Expected an identifier", ErrorReporter::GENERAL_ERROR, node->getPosition());
+			throw ErrorReporter::report("Expected an identifier", ERR_GENERAL, node->getPosition());
 
 		if (left->getExpressionType() == ET_TYPE)
 		{
 			if (!((DST::Type*)left)->isEnumTy())
-				throw ErrorReporter::report("dino does not have static type members", ErrorReporter::GENERAL_ERROR, node->getLeft()->getPosition());
+				throw ErrorReporter::report("dino does not have static type members", ERR_GENERAL, node->getLeft()->getPosition());
 			auto enumTy = ((DST::Type*)left)->as<DST::EnumType>();
 			auto ident = ((AST::Identifier*)node->getRight());
 			if (!enumTy->getEnumDecl()->hasMember(ident->getVarId()))
 				throw ErrorReporter::report("\"" + enumTy->toShortString() + "\" has no member named \"" 
-					+ ident->getVarId().to_string() + "\"", ErrorReporter::GENERAL_ERROR, node->getRight()->getPosition());
+					+ ident->getVarId().to_string() + "\"", ERR_GENERAL, node->getRight()->getPosition());
 			return enumTy->getEnumDecl()->getEnumLiteral(ident->getVarId(), ident->getPosition());
 		}
 
@@ -238,7 +238,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		{
 			auto bt = type->as<DST::BasicType>();
 			if (!(bt->isValueTy() && _currentTypeDecl == bt->getTypeDecl()) && !varId[0].isUpper())
-				throw ErrorReporter::report("Cannot access private member \"" + varId.to_string() + "\"", ErrorReporter::GENERAL_ERROR, node->getPosition());
+				throw ErrorReporter::report("Cannot access private member \"" + varId.to_string() + "\"", ERR_GENERAL, node->getPosition());
 			memberType = bt->getMember(varId);	
 		}
 		else if (type->isArrayTy() && varId == unicode_string("Size"))
@@ -253,11 +253,11 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 		else 
 		{
 			std::cout << memberType->toShortString() << "\n";
-			throw ErrorReporter::report("Expression must have class or namespace type", ErrorReporter::GENERAL_ERROR, left->getPosition());
+			throw ErrorReporter::report("Expression must have class or namespace type", ERR_GENERAL, left->getPosition());
 		}
 
 		if (memberType == nullptr)
-			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ErrorReporter::GENERAL_ERROR, node->getRight()->getPosition());
+			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ERR_GENERAL, node->getRight()->getPosition());
 
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
@@ -301,7 +301,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
 				throw ErrorReporter::report(
 					"incompatible types in `" + bo->getOperator()._str.to_string() + "` operation", 
-					"incompatible types", ErrorReporter::GENERAL_ERROR, node->getPosition()
+					"incompatible types", ERR_GENERAL, node->getPosition()
 				).withSecondary(
 					"left is `" + bo->getLeft()->getType()->toShortString() + "`",
 					node->getLeft()->getPosition()
@@ -316,13 +316,13 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			{
 				case OT_IS: case OT_IS_NOT:
 					if (bo->getRight()->getExpressionType() != ET_TYPE)
-						throw ErrorReporter::report("expected a type", "not a type", ErrorReporter::GENERAL_ERROR, node->getRight()->getPosition());
+						throw ErrorReporter::report("expected a type", "not a type", ERR_GENERAL, node->getRight()->getPosition());
 					break;
 				default:
 					if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
 						throw ErrorReporter::report(
 							"incompatible types in `" + bo->getOperator()._str.to_string() + "` operation",
-							"incompatible types", ErrorReporter::GENERAL_ERROR, node->getPosition()
+							"incompatible types", ERR_GENERAL, node->getPosition()
 						).withSecondary(
 							"left is `" + bo->getLeft()->getType()->toShortString() + "`",
 							node->getLeft()->getPosition()
@@ -339,23 +339,23 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			{
 				// array access
 				if (bo->getRight()->getType() != DST::getIntTy() || (bo->getRight()->getType()->isConstTy() && bo->getRight()->getType() == DST::getIntTy()->getConstOf()))
-					throw ErrorReporter::report("array index must be an integer value", ErrorReporter::GENERAL_ERROR, bo->getRight()->getPosition());
+					throw ErrorReporter::report("array index must be an integer value", ERR_GENERAL, bo->getRight()->getPosition());
 				bo->setType(bo->getLeft()->getType()->as<DST::ArrayType>()->getElementType());
 			}
 			else if (bo->getLeft()->getType()->isListTy()) 
 			{
 				// aggregate type access. 
 				if (bo->getRight()->getExpressionType() != ET_LITERAL || ((DST::Literal*)bo->getRight())->getLiteralType() != LT_INTEGER)
-					throw ErrorReporter::report("aggregate index must be a constant integer value", ErrorReporter::GENERAL_ERROR, bo->getRight()->getPosition());
+					throw ErrorReporter::report("aggregate index must be a constant integer value", ERR_GENERAL, bo->getRight()->getPosition());
 				int idx = ((DST::Literal*)bo->getRight())->getIntValue();
 				auto list = bo->getLeft()->getType()->as<DST::TypeList>();
 				if (idx < 0 || size_t(idx) >= list->size())
 					throw ErrorReporter::report("aggregate index [" + std::to_string(idx) + "] out of range [" + 
-							std::to_string(list->size()) + "]", ErrorReporter::GENERAL_ERROR, bo->getRight()->getPosition());
+							std::to_string(list->size()) + "]", ERR_GENERAL, bo->getRight()->getPosition());
 				bo->setType(list->getTypes()[idx]);
 			}
 			else throw ErrorReporter::report("type \"" + bo->getLeft()->getType()->toShortString() 
-								+ "\" is not an array", ErrorReporter::GENERAL_ERROR, bo->getLeft()->getPosition());
+								+ "\" is not an array", ERR_GENERAL, bo->getLeft()->getPosition());
 			break;
 		case RT_VOID: 
 			UNREACHABLE

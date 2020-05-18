@@ -38,7 +38,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             else 
             {
                 if (!ty->as<DST::PointerType>()->getPtrType()->isBasicTy())
-                    throw ErrorReporter::reportInternal("Internal decorator error?", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                    throw ErrorReporter::reportInternal("Internal decorator error?", ERR_GENERAL, node->getPosition());
                 typeDef = _types[ty->as<DST::PointerType>()->getPtrType()->as<DST::ValueType>()->getTypeDecl()];
             }
 
@@ -55,7 +55,7 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
             if (funcTy->getNumParams() != node->getArguments().size() + 1 + retPtrs.size()) // + 1 since we are also passing a "this" ptr
                 throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
                     std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments().size()) + ")"
-                    , ErrorReporter::GENERAL_ERROR, node->getPosition());
+                    , ERR_GENERAL, node->getPosition());
 
             std::vector<Value*> args;
             args.push_back(thisPtr);
@@ -92,17 +92,17 @@ Value *CodeGenerator::codeGen(DST::FunctionCall *node, vector<Value*> retPtrs)
     {
         if (isFuncPtr(funcPtr))
             funcPtr = _builder.CreateLoad(funcPtr);
-        else throw ErrorReporter::report("expression is not a function!", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        else throw ErrorReporter::report("expression is not a function!", ERR_GENERAL, node->getPosition());
     }
 
     auto funcTy = llvm::dyn_cast<llvm::FunctionType>(funcPtr->getType()->getPointerElementType());
     if (!funcTy)
-        throw ErrorReporter::report("Internal error while generating IR for function call", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        throw ErrorReporter::report("Internal error while generating IR for function call", ERR_GENERAL, node->getPosition());
     
     if (funcTy->getNumParams() != node->getArguments().size() + retPtrs.size())
         throw ErrorReporter::report(string("Incorrect # arguments passed (needed ") + 
             std::to_string(funcTy->getNumParams()) + ", got " + std::to_string(node->getArguments().size()) + ")"
-            , ErrorReporter::GENERAL_ERROR, node->getPosition());
+            , ERR_GENERAL, node->getPosition());
         
     std::vector<Value *> args;
 
@@ -150,7 +150,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 {
                     left = codeGenLval(node->getLeft());
                     if (!isFunc(left))
-                        throw ErrorReporter::report("expression is not a setter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                        throw ErrorReporter::report("expression is not a setter property", ERR_GENERAL, node->getPosition());
                     auto right = codeGen(node->getRight());
                     createCallOrInvoke((llvm::Function*)left, right);
                     return right;
@@ -176,7 +176,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                         auto typeDef = _types[ac->getLeft()->getType()->as<DST::ValueType>()->getTypeDecl()];
                         auto func = typeDef->functions[ac->getRight()];
                         if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
-                            throw ErrorReporter::report("expression is not a setter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                            throw ErrorReporter::report("expression is not a setter property", ERR_GENERAL, node->getPosition());
                         createCallOrInvoke((llvm::Function*)func, { left, right });
                     }
                     return right;
@@ -185,22 +185,22 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
                 {
                     auto ptrTy = ac->getLeft()->getType()->as<DST::PointerType>()->getPtrType();
                     if (!ptrTy->isBasicTy())
-                        throw ErrorReporter::report("only pointers and basic types have setter properties", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                        throw ErrorReporter::report("only pointers and basic types have setter properties", ERR_GENERAL, node->getPosition());
                     auto thisPtr = codeGen(ac->getLeft());
                     auto typeDef = _types[ptrTy->as<DST::ValueType>()->getTypeDecl()];
                     auto func = typeDef->functions[ac->getRight()];
                     if (!isFunc(func) || ((llvm::Function*)func)->arg_size() != 2)
-                        throw ErrorReporter::report("expression is not a setter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                        throw ErrorReporter::report("expression is not a setter property", ERR_GENERAL, node->getPosition());
                     return createCallOrInvoke((llvm::Function*)func, { thisPtr, codeGen(node->getRight()) });
                 }
                 default:
-                    throw ErrorReporter::report("only pointers and basic types have setter properties", ErrorReporter::GENERAL_ERROR, node->getPosition());
+                    throw ErrorReporter::report("only pointers and basic types have setter properties", ERR_GENERAL, node->getPosition());
             }
         }
 
         left = codeGenLval(node->getLeft());
         if (!isFunc(left))
-            throw ErrorReporter::report("expression is not a setter property", ErrorReporter::GENERAL_ERROR, node->getPosition());
+            throw ErrorReporter::report("expression is not a setter property", ERR_GENERAL, node->getPosition());
 
         createCallOrInvoke((llvm::Function*)left, codeGen(node->getRight()));
         return right;
@@ -229,7 +229,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
         // }
 
         // if (node->getRight()->getExpressionType() != ET_LIST)
-        //     throw ErrorReporter::report("Multi-return functions are not implemented yet", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        //     throw ErrorReporter::report("Multi-return functions are not implemented yet", ERR_GENERAL, node->getPosition());
         // vector<Value*> lefts, rights;
         // for (auto i : ((DST::ExpressionList*)node->getLeft())->getExpressions())
         //     lefts.push_back(codeGenLval(i));
@@ -262,7 +262,7 @@ Value *CodeGenerator::codeGen(DST::Assignment* node)
             _builder.CreateStore(right, left);
             return right;
         }
-        else throw ErrorReporter::report("You shouldn't have gotten here...", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        else throw ErrorReporter::report("You shouldn't have gotten here...", ERR_GENERAL, node->getPosition());
     }
 
     if (node->getOperator()._type != OT_ASSIGN_EQUAL)
@@ -347,7 +347,7 @@ AllocaInst *CodeGenerator::codeGen(DST::VariableDeclaration *node)
 {
     auto type = evalType(node->getType());
     if (type->isVoidTy())
-        throw ErrorReporter::report("Cannot create instance of type \"void\"", ErrorReporter::GENERAL_ERROR, node->getPosition());
+        throw ErrorReporter::report("Cannot create instance of type \"void\"", ERR_GENERAL, node->getPosition());
 
     auto name = node->getVarId().to_string();
     if (!_builder.GetInsertBlock())
