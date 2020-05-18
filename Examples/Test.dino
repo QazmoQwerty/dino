@@ -1,25 +1,24 @@
-import "std2"
+// import "std2"
 
 namespace NS {
 
-
-    // int foo = 10
-	namespace Foo {
-		int A
-
-		int GetA(): return A
-
-        int AA { get: return A set: A := value }
-	}
-
-	// type Bar {
-	// 	int A
-	// }
-
     int Main() {
-        Std.String mystr := "wow"
-        Std.PrintSLn(mystr)
-        return Foo.GetA()
+        bool c := 10 .. 
+
+
+        
+        +
+        // comment for context        
+        false
+
+        // }
+
+
+
+
+        
+
+        return 10
         // return Foo.A
     }
 }

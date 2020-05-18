@@ -78,9 +78,9 @@ namespace CLI
                 if (!options.fileName)
                     throw "incorrect usage, missing input file\nTry \"dino help build\" for more info.";
             }
-            else throw "unknown command \"" + string(argv[1]) + "\".\nTry \"dino help\" for a list of commands.";
+            else throw "unknown command `" + string(argv[1]) + "`.\nTry `dino help` for a list of commands.";
         } 
-        catch (ErrorReporter::Error err)      { ErrorReporter::showAll(); exit(1); }
+        catch (ErrorReporter::Error err) { ErrorReporter::showAll(); exit(1); }
         catch (string s)       { llvm::errs() << FRED(BOLD("Error: ")) << s << "\n"; exit(1); }
         catch (const char * c) { llvm::errs() << FRED(BOLD("Error: ")) << c << "\n"; exit(1); }
         return options;
@@ -136,7 +136,7 @@ namespace CLI
                 << "        run        compile and run Dino code\n"
                 << "        fmt        format source code\n"
                 << "        version    print Dino version\n\n"
-                << "For more info on a specific command, try \"dino help <command>\"\n\n";
+                << "For more info on a specific command, try `dino help <command>`\n\n";
         }
         else for (int i = 2; i < argc; i++) 
         {
@@ -158,8 +158,8 @@ namespace CLI
             else if (!strcmp(argv[i], "fmt"))
             {
                 llvm::errs() << "Usage: dino fmt <file>\n"
-                             << "The command \"fmt\" formats Dino code by swapping all non-unicode operators with their unicode counterparts.\n"
-                             << "For examples, ':=' turns into '≠'\n";
+                             << "The command `fmt` formats Dino code by swapping all non-unicode operators with their unicode counterparts.\n"
+                             << "For examples, '!=' turns into '≠'\n";
             }
             else if (!strcmp(argv[i], "build"))
             {
@@ -179,7 +179,9 @@ namespace CLI
                     << "    -ast               output a .gv file of the AST and DST\n" 
                     << "    -lineAst           show line numbers in the AST and DST files\n";
             }
-            else throw "unknown command \"" + string(argv[i]) + "\".\nTry \"dino help\" for a list of commands.";
+            else if (isErrorCode(argv[i]))
+                showErrorHelp(argv[i]);
+            else throw "no help article found for `" + string(argv[i]) + "`";
         }
         exit(0);
     }

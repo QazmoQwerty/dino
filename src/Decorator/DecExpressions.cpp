@@ -233,31 +233,36 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			type = type->as<DST::PointerType>()->getPtrType();
 			
 		DST::Type *memberType = NULL;
-		unicode_string varId = ((AST::Identifier*)node->getRight())->getVarId();
+		unicode_string &varId = ((AST::Identifier*)node->getRight())->getVarId();
 		if (type->isBasicTy())
 		{
 			auto bt = type->as<DST::BasicType>();
 			if (!(bt->isValueTy() && _currentTypeDecl == bt->getTypeDecl()) && !varId[0].isUpper())
-				throw ErrorReporter::report("Cannot access private member \"" + varId.to_string() + "\"", ERR_GENERAL, node->getPosition());
-			memberType = bt->getMember(varId);	
+				throw ErrorReporter::report("Cannot access private member `" + varId.to_string() + "`", 
+											"starts with a lowercase letter", ERR_GENERAL, node->getRight()->getPosition());
+			memberType = bt->getMember(varId);
 		}
 		else if (type->isArrayTy() && varId == unicode_string("Size"))
 			memberType = DST::getIntTy()->getPropertyOf(true, false);
 		else if (type->isNamespaceTy())
 		{
+			auto ty = type->as<DST::NamespaceType>();
+			if (_currentNamespace.back() != ty->getNamespaceDecl() && !varId[0].isUpper())
+				throw ErrorReporter::report("Cannot access private namespace member `" + varId.to_string() + "`", 
+											"starts with a lowercase letter", ERR_GENERAL, node->getRight()->getPosition());
 			auto member = type->as<DST::NamespaceType>()->getNamespaceDecl()->getMemberExp(varId);
+			if (member == NULL)
+				throw ErrorReporter::report("namespace has no member `" + varId.to_string() + "`", 
+											"no member with this name", ERR_GENERAL, node->getRight()->getPosition());
 			if (member->getExpressionType() == ET_TYPE)
 				return member;
 			memberType = member->getType();
 		}
-		else 
-		{
-			std::cout << memberType->toShortString() << "\n";
-			throw ErrorReporter::report("Expression must have class or namespace type", ERR_GENERAL, left->getPosition());
-		}
+		else throw ErrorReporter::report("expression must have class or namespace type", 
+										 "is `" + left->getType()->toShortString() +"`", ERR_GENERAL, node->getLeft()->getPosition());
 
 		if (memberType == nullptr)
-			throw ErrorReporter::report("Unkown identifier \"" + varId.to_string() + "\"", ERR_GENERAL, node->getRight()->getPosition());
+			throw ErrorReporter::report("unkown identifier `" + varId.to_string() + "`", ERR_GENERAL, node->getRight()->getPosition());
 
 		auto access = new DST::MemberAccess(node, left);
 		access->setType(memberType);
@@ -299,7 +304,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 	{
 		default: 
 			if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
-				throw ErrorReporter::report(
+				throw ErrorReporter::report(ErrorReporter::Error(
 					"incompatible types in `" + bo->getOperator()._str.to_string() + "` operation", 
 					"incompatible types", ERR_GENERAL, node->getPosition()
 				).withSecondary(
@@ -308,7 +313,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 				).withSecondary(
 					"right is `" + bo->getRight()->getType()->toShortString() + "`",
 					node->getRight()->getPosition()
-				);
+				));
 			bo->setType(bo->getLeft()->getType());
 			break;
 		case RT_BOOLEAN: 
@@ -320,7 +325,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 					break;
 				default:
 					if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
-						throw ErrorReporter::report(
+						throw ErrorReporter::report(ErrorReporter::Error(
 							"incompatible types in `" + bo->getOperator()._str.to_string() + "` operation",
 							"incompatible types", ERR_GENERAL, node->getPosition()
 						).withSecondary(
@@ -329,7 +334,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 						).withSecondary(
 							"right is `" + bo->getRight()->getType()->toShortString() + "`",
 							node->getRight()->getPosition()
-						);
+						));
 					break;
 			}			
 			bo->setType(DST::getBoolTy());

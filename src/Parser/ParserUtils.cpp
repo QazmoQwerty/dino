@@ -165,7 +165,7 @@ AST::StatementBlock * Parser::parseInnerBlock()
 		eatOperator(OT_COLON);
 		eatLineBreak();
 		if (isOperator(peekToken(), OT_CURLY_BRACES_OPEN))
-			throw ErrorReporter::report(
+			throw ErrorReporter::report(ErrorReporter::Error(
 				"unexpected `{`", 
 				"dangling curly braces\n" +
 				BOLD(FBLK("help: curly braces must be opened at end of line\n")) +
@@ -175,7 +175,7 @@ AST::StatementBlock * Parser::parseInnerBlock()
 			).withSecondary(
 				"try adding `{` here instead",
 				pos
-			);
+			));
 		auto *block = new AST::StatementBlock();
 		block->addStatement(parseStatement());
 		return block;

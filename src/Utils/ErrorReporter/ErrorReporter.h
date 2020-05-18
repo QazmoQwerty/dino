@@ -38,9 +38,9 @@ namespace ErrorReporter
     class Position 
     {
     public:
-        int line;
-        int startPos;
-        int endPos;
+        uint line;
+        uint startPos;
+        uint endPos;
         SourceFile* file;
     };
 
@@ -58,16 +58,15 @@ namespace ErrorReporter
         Error(string message, ErrorCode type, Position position) : msg(message), subMsg(), errTy(type), pos(position) {};
         Error(string message, string subMessage, ErrorCode type, Position position) : msg(message), subMsg(subMessage), errTy(type), pos(position) {};
         void addNote(Error note) { notes.push_back(note); }
-        void show();
-        void showBasic();
+        void show(uint maxLine = 0);
+        void showBasic(uint maxLine = 0);
         string tyToString();
         void sortSecondaries();
-        void showAsSecondary();
         string color(string str);
-        void printIndent(bool showLine = false);
+        void printIndent(uint maxLine, bool showLine = false);
+        void printPaddingLine(uint maxLine, uint line = 0, SourceFile *file = NULL);
 
         Error& withSecondary(Error err) { notes.push_back(err); return *this; }
-
         Error& withSecondary(string message, Position position) { notes.push_back(Error("", message, ERR_NOTE, position)); return *this; }
     };
 
@@ -88,8 +87,8 @@ namespace ErrorReporter
     /* 
         Create and save an error/warning.
         Returns the Error created.
-        If isFatal is (true), the function will throw a value.
     */
+    Error& report(Error err);
     Error& report(string msg, ErrorCode errCode, Position pos);
     Error& report(string msg, string subMsg, ErrorCode errCode, Position pos);
     void reportAbort();

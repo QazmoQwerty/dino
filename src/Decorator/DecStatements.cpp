@@ -51,7 +51,7 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 		if (exp->getExpressionType() == ET_IDENTIFIER)
 		{
 			if (((DST::Variable*)exp)->getDecl())
-				throw ErrorReporter::report(
+				throw ErrorReporter::report(ErrorReporter::Error(
 					"Identifier `" + name.to_string() + "` is already in use",
 					"`" + name.to_string() + "` is already in use",
 					ERR_GENERAL, 
@@ -59,7 +59,7 @@ DST::ConstDeclaration *Decorator::decorate(AST::ConstDeclaration * node)
 				).withSecondary(
 					"declared here",
 					((DST::Variable*)exp)->getDecl()->getPosition()
-				);
+				));
 			throw ErrorReporter::report(
 				"use of built-in identifier `" + name.to_string() + "`",
 				"`" + name.to_string() + "` is built-in",
@@ -184,7 +184,7 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 			if (exp->getExpressionType() == ET_IDENTIFIER)
 			{
 				if (((DST::Variable*)exp)->getDecl())
-					throw ErrorReporter::report(
+					throw ErrorReporter::report(ErrorReporter::Error(
 						"Identifier `" + name.to_string() + "` is already in use",
 						"`" + name.to_string() + "` is already in use",
 						ERR_GENERAL, 
@@ -192,7 +192,7 @@ DST::VariableDeclaration *Decorator::decorate(AST::VariableDeclaration * node)
 					).withSecondary(
 						"declared here",
 						((DST::Variable*)exp)->getDecl()->getPosition()
-					);
+					));
 				throw ErrorReporter::report(
 					"use of built-in identifier `" + name.to_string() + "`",
 					"identifier `" + name.to_string() + "` is built-in",
@@ -263,13 +263,13 @@ DST::Assignment * Decorator::decorate(AST::Assignment * node)
 	}
 
 	if (!assignment->getRight()->getType()->assignableTo(assignment->getLeft()->getType()))
-		throw ErrorReporter::report(
+		throw ErrorReporter::report(ErrorReporter::Error(
 			"cannot assign `" + assignment->getRight()->getType()->getNonPropertyOf()->toShortString() + "` to `" 
 			+ assignment->getLeft()->getType()->getNonPropertyOf()->toShortString() + "`",
 			"invalid assignment types",
 			ERR_GENERAL, node->getPosition())
 		.withSecondary("left is `" + assignment->getLeft()->getType()->getNonPropertyOf()->toShortString() + "`", node->getLeft()->getPosition())
-		.withSecondary("right is `" + assignment->getRight()->getType()->getNonPropertyOf()->toShortString() + "`", node->getRight()->getPosition());
+		.withSecondary("right is `" + assignment->getRight()->getType()->getNonPropertyOf()->toShortString() + "`", node->getRight()->getPosition()));
 
 	if (assignment->getRight()->getType()->isNullTy())
 		assignment->setRight(new DST::Conversion(NULL, assignment->getLeft()->getType(), assignment->getRight()));

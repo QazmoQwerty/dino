@@ -443,8 +443,8 @@ AST::Node * Parser::led(AST::Node * left)
 				decl->setGet(parseInnerBlock());
 			else if (eatOperator(OT_SET))
 				decl->setSet(parseInnerBlock());
-			else throw ErrorReporter::report("expected `get` or `set`", ERR_GENERAL, peekToken()->_pos)
-						.withSecondary("property declaration with no get/set", decl->getPosition());
+			else throw ErrorReporter::report(ErrorReporter::Error("expected `get` or `set`", ERR_GENERAL, peekToken()->_pos)
+											 .withSecondary("property declaration with no get/set", decl->getPosition()));
 			decl->setPosition(token->_pos);
 			return decl;
 		}
@@ -484,8 +484,8 @@ AST::Node * Parser::led(AST::Node * left)
 						"expected `get` or `}`", ERR_GENERAL, peekToken()->_pos
 					);
 			}
-			else throw ErrorReporter::report("expected `get` or `set`", ERR_GENERAL, peekToken()->_pos)
-						.withSecondary("property declaration with no get/set", decl->getPosition());
+			else throw ErrorReporter::report(ErrorReporter::Error("expected `get` or `set`", ERR_GENERAL, peekToken()->_pos)
+											.withSecondary("property declaration with no get/set", decl->getPosition()));
 			decl->setPosition(token->_pos);
 			return decl;
 		}
