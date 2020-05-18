@@ -85,7 +85,9 @@ AST::Statement * Parser::convertToStatement(AST::Node * node)
 		dynamic_cast<AST::Comparison*>(node)->getOperators()[0]._type == OT_EQUAL)
 		throw ErrorReporter::report(
 			"expected a statement", 
-			"expected a statement\nhelp: the `=` operator is used for comparisons\ndid you mean `≡`?", 
+			"expected a statement\n" +
+			BOLD(FBLK("help: the `=` operator is used for comparisons\n")) +
+			BOLD(FBLK("did you mean `≡`?")), 
 			ErrorReporter::GENERAL_ERROR, node->getPosition()
 		);
 	throw ErrorReporter::report("expected a statement", ErrorReporter::GENERAL_ERROR, node->getPosition());

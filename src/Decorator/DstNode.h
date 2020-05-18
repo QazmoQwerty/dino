@@ -470,7 +470,7 @@ namespace DST
 
 		/* 
 			Short string representation of the type, ready to be pretty-printed. 
-			Example: "int { get | set }"
+			Example: "int { get set }"
 		*/ 
 		virtual string toShortString();
 		virtual string toString() { return "<PropertyType>" + toShortString(); };

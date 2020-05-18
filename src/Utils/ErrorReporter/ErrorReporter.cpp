@@ -48,33 +48,33 @@ namespace ErrorReporter
         bool isFirst = true;
         for (auto note : notes)
         {
-            if (isFirst)
-            {
-                printIndent();
-                std::cout << "\n";
-                isFirst = false;
-            }
             if (note.pos.file == pos.file && note.pos.line < pos.line && note.msg == "")
             {
+                if (isFirst)
+                {
+                    printIndent();
+                    std::cout << "\n";
+                    isFirst = false;
+                }
                 string line = getLine(pos.file->getOriginalPath(), note.pos.line);
                 auto tmp = note.errTy;
                 note.errTy = errTy;
                 note.printIndent(true);
                 note.errTy = tmp;
                 std::cout << line << "\n";
-                bool isFirst = true;
+                bool isFirstB = true;
                 for (auto currLine : splitLines(note.subMsg))
                 {
                     printIndent();
                     for (int i = 0; i < note.pos.startPos; i++)
                         std::cout << (line[i] == '\t' ? "\t" : " ");
                     
-                    if (isFirst)
+                    if (isFirstB)
                     {
                         for (int i = 0; i < note.pos.endPos - note.pos.startPos; i++)
                             std::cout << note.color("^");
                         std::cout << note.color(" ");
-                        isFirst = false;
+                        isFirstB = false;
                     }
                     std::cout << note.color(currLine);
                     std::cout << "\n";

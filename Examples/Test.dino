@@ -1,25 +1,20 @@
 namespace NS {
 
     int Foo {
-        get return 
+        get return 10
     }
 
-    int Main() {
-		int n
-        bool b
-        // var n := n + b
-        // var n := 
-        //     (n+n+n) ..
-        //     +
-        //     (b)
-        // var c := n + b
-        // int x = 10
-        // int x := 10
+    // int foo = 10
 
-        // void x := 20
-        // int a := 10
-        // // return "10"
-        // string a := 20
+    int Main() {
+
+		int c := 
+			12 ..
+			* ..
+			false
+        // bool b := Foo
+        // int char := 10
+        // char c := 20
         // return Foo
         return 19
     }

@@ -509,7 +509,7 @@ namespace DST
 
 	string PropertyType::toShortString()
 	{
-		return _return->toShortString() + ((_hasGet && _hasSet) ? "{get|set}" : _hasGet ? "{get}" : "{set}");
+		return _return->toShortString() + ((_hasGet && _hasSet) ? "{ get set }" : _hasGet ? " get" : " set");
 	}
 
 	bool Type::comparableTo(Type *other)

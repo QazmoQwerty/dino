@@ -148,7 +148,7 @@ DST::Expression * Decorator::decorate(AST::FunctionCall * node)
 		else vec.push_back(((DST::Type*)args));
 
 		if (funcId->getExpressionType() != ET_TYPE)
-			throw ErrorReporter::report("expected a type", ErrorReporter::GENERAL_ERROR, funcId->getPosition());
+			throw ErrorReporter::report("expected a type", "not a type", ErrorReporter::GENERAL_ERROR, node->getFunctionId()->getPosition());
 			
 		return DST::FunctionType::get((DST::Type*)funcId, vec);
 	}
@@ -316,7 +316,7 @@ DST::Expression * Decorator::decorate(AST::BinaryOperation * node)
 			{
 				case OT_IS: case OT_IS_NOT:
 					if (bo->getRight()->getExpressionType() != ET_TYPE)
-						throw ErrorReporter::report("expected a type", ErrorReporter::GENERAL_ERROR, node->getRight()->getPosition());
+						throw ErrorReporter::report("expected a type", "not a type", ErrorReporter::GENERAL_ERROR, node->getRight()->getPosition());
 					break;
 				default:
 					if (!bo->getLeft()->getType()->equals(bo->getRight()->getType()))
