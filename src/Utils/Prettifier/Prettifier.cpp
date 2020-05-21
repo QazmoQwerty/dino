@@ -14,7 +14,6 @@ namespace Prettifier {
         >=  |   ≥
 
         The function is 'smart': it won't replace characters inside string/char literals or inside comments.
-        TODO - currently only treats '//' single line comments, need to add treatment for '#' single line comments.
     */
     void Prettify(string fileName) {
         std::ifstream t;
