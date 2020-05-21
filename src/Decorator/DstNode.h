@@ -20,8 +20,6 @@ using std::map;
 namespace DST
 {
 	static const size_t UNKNOWN_ARRAY_LENGTH = 0;
-	static int idCount = 0;
-
 
 	class BasicType;
 	class InterfaceDeclaration;
@@ -111,16 +109,8 @@ namespace DST
 
 	class Node
 	{
-		uint _nodeId;	// defined for purpose of the graphic view of the AST.
-		int _line;
 	public:
-		/* Default constructor, does NOT set line.*/
-		Node() { _nodeId = idCount++; };
-
 		virtual ~Node() {};
-
-		/* Set the line the node is on */
-		void setLine(int line) { _line = line; }
 
 		/* Line the node is on */
 		virtual ErrorReporter::Position getPosition() const { return ErrorReporter::POS_NONE; }
@@ -132,13 +122,6 @@ namespace DST
 		virtual bool isExpression() = 0;
 
 		/* ----------  For AstToFile.h ---------- */
-
-		/*
-			Returns node's unique id number
-			Function defined for AST visual representation - see AstToFile.h
-		*/
-		//const uint getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		uint getNodeId() const { return _nodeId; };
 
 		/*
 			Returns a string representation of the node (excluding children info)

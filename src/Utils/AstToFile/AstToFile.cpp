@@ -47,19 +47,17 @@ void astToFile(string filename, AST::Node* ast)
 string dstToString(DST::Node* node)
 {
 	static int nullCount = -1;
-	if (node == NULL || node == nullptr)
-		return "";
+	if (node == NULL) return "";
 	stringstream ss;
-	int id = node->getNodeId();
-	ss << id << " [label=\"" << node->toString() << "\"];";
+	ss << (unsigned long)node << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren())
 	{
 		if (child == NULL)
 		{
-			ss << id << "->" << nullCount << ';';
+			ss << (unsigned long)node << "->" << nullCount << ';';
 			ss << nullCount-- << " [label=\"<NULL>\"];";
 		}
-		else ss << id << "->" << child->getNodeId() << ';';
+		else ss << (unsigned long)node << "->" << (unsigned long)child << ';';
 	}
 	ss << '\n';
 	for (auto child : node->getChildren())
