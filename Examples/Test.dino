@@ -2,11 +2,10 @@
 
 namespace NS {
 
-    int Main() {
+    int ..Main() {
 
         // 'aaa'
         bool c := 10 ..   
-
 
         
         +
