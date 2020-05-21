@@ -2,17 +2,19 @@
 
 namespace NS {
 
-    int ..Main() {
+    int Main() {
 
-        // 'aaa'
-        bool c := 10 ..   
+        int n := 10 + 20
+
+        // // 'aaa'
+        // bool c := 10 ..   
 
         
-        +
-        // comment for context        
-        false
+        // +
+        // // comment for context        
+        // false
 
-        // }
+        // // }
         
 
 

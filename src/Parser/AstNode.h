@@ -18,24 +18,11 @@ using std::vector;
 
 namespace AST
 {
-	extern int _idCount;
-
 	class Node
 	{
-		uint _nodeId;	// defined for purpose of the graphic view of the AST.
-		// int _line;
 		ErrorReporter::Position _pos;
 	public:
-		/* Default constructor, does NOT set line.*/
-		Node() { _nodeId = _idCount++; };
-
 		virtual ~Node() {}
-
-		/* Set the line the node is on */
-		// void setLine(int line) { _line = line; }
-
-		/* Line the node is on */
-		// int getLine() const { return _line; }
 
 		ErrorReporter::Position &getPosition() { return _pos; }
 		void setPosition(ErrorReporter::Position pos) { _pos = pos; }
@@ -52,8 +39,7 @@ namespace AST
 			Returns node's unique id number 
 			Function defined for AST visual representation - see AstToFile.h 
 		*/
-		//const uint getNodeId() const { return (this == nullptr) ? -1 : _nodeId; };
-		uint getNodeId() const { return _nodeId; };
+		uint_fast64_t getNodeId() const { return (uint_fast64_t)this; };
 
 		/* 
 			Returns a string representation of the node (excluding children info)
@@ -575,7 +561,7 @@ namespace AST
 
 		virtual StatementType getStatementType() { return ST_ENUM_DECLARATION; };
 		virtual string toString() { return "<EnumDeclaration>\\n" + _name.to_string(); };
-		virtual vector<Node*> getChildren() { TODO };
+		virtual vector<Node*> getChildren();
 	};
 
 	class NamespaceDeclaration : public Statement
@@ -646,18 +632,10 @@ namespace AST
 		Comparison() : Expression() {};
 		virtual ~Comparison() {  }
 		virtual ExpressionType getExpressionType() { return ET_COMPARISON; };
-		virtual string toString() { return string() + "<Comparison>\\nTODO"; };
-		virtual vector<Node*> getChildren() 
-		{
-			vector<Node*> ret;
-			for (auto i : _expressions)
-				ret.push_back(i);
-			return ret;
-		}
-
+		virtual string toString();
+		virtual vector<Node*> getChildren();
 		void addOperator(Operator op) { _operators.push_back(op); }
 		void addExpression(Expression *exp) { _expressions.push_back(exp); }
-
 		vector<Operator> getOperators() { return _operators; }
 		vector<Expression*> getExpressions() { return _expressions; }
 	};
@@ -809,7 +787,7 @@ namespace AST
 		vector<VariableDeclaration*> getParameters() { return _parameters; }
 		StatementBlock* getContent() { return _content; }
 		Expression* getReturnType() { return _returnType; }
-		virtual string toShortString() { return "TODO"; }
+		virtual string toShortString() { UNREACHABLE }
 	};
 
 	class Null : public Literal

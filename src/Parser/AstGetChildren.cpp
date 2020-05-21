@@ -20,6 +20,14 @@ vector<AST::Node*> AST::ConstDeclaration        ::getChildren() { return { _expr
 vector<AST::Node*> AST::NamespaceDeclaration    ::getChildren() { return { _statement };                                 }
 vector<AST::Node*> AST::PropertyDeclaration     ::getChildren() { return { _decl, _get, _set};                           }
 vector<AST::Node*> AST::VariableDeclaration     ::getChildren() { return { _type };                                      }
+vector<AST::Node*> AST::EnumDeclaration         ::getChildren() { return {_type};                                        }
+
+vector<AST::Node*> AST::Comparison::getChildren() 
+{
+	vector<Node*> ret;
+	for (auto i : _expressions) ret.push_back(i);
+	return ret;
+}
 
 vector<AST::Node*> AST::ExpressionList::getChildren()
 {

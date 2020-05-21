@@ -2,45 +2,38 @@
 
 /*
 	Returns a string (graphviz format) representation of an AST.
-	NOTE: The 'showline' option is currently redacted.
 */
-string astToString(AST::Node* node, bool showLine)
+string astToString(AST::Node* node)
 {
-	static int nullCount = -1;
-	if (node == NULL || node == nullptr)
-		return "";
+	static long nullCount = -1;
+	if (node == NULL) return "";
 	stringstream ss;
-	int id = node->getNodeId();
-	/*int line = node->getLine();
-	// if (showLine)
-	// 	ss << id << " [label=\"line " << line << "\n" << node->toString() << "\"];";
-	else */ss << id << " [label=\"" << node->toString() << "\"];";
+	ss << (unsigned long)node << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren()) 
 	{
 		if (child == NULL) 
 		{
-			ss << id << "->" << nullCount << ';';
-			ss << nullCount-- << " [label=\"<NULL>\"];";
+			ss << (unsigned long)node << "->" << nullCount << ';';
+			ss << (unsigned long)nullCount-- << " [label=\"<NULL>\"];";
 		}
-		else ss << id << "->" << child->getNodeId() << ';';
+		else ss << (unsigned long)node << "->" << (unsigned long)child << ';';
 	}
 	ss << '\n';
 	for (auto child : node->getChildren())
-		ss << astToString(child, showLine);
+		ss << astToString(child);
 	return ss.str();
 }
 
 /*
 	Outputs a .gv (graphviz) representation of an AST to fileName.
-	NOTE: The 'showline' option is currently redacted.
 */
-void astToFile(string filename, AST::Node* ast, bool showLine)
+void astToFile(string filename, AST::Node* ast)
 {
 	ofstream file;
 	file.open(filename);
 	file << utf8::bom;	// make sure output file is utf8 encoded
 	file << "digraph G {\n";
-	file << astToString(ast, showLine);
+	file << astToString(ast);
 	file << '}';
 	file.close();
 }
@@ -50,19 +43,15 @@ void astToFile(string filename, AST::Node* ast, bool showLine)
 
 /*
 	Returns a string (graphviz format) representation of a DST.
-	NOTE: The 'showline' option is currently redacted.
 */
-string dstToString(DST::Node* node, bool showLine)
+string dstToString(DST::Node* node)
 {
 	static int nullCount = -1;
 	if (node == NULL || node == nullptr)
 		return "";
 	stringstream ss;
 	int id = node->getNodeId();
-	/* int line = node->getLine();
-	// if (showLine)
-	// 	ss << id << " [label=\"line " << line << "\n" << node->toString() << "\"];";
-	else*/ ss << id << " [label=\"" << node->toString() << "\"];";
+	ss << id << " [label=\"" << node->toString() << "\"];";
 	for (auto child : node->getChildren())
 	{
 		if (child == NULL)
@@ -74,21 +63,20 @@ string dstToString(DST::Node* node, bool showLine)
 	}
 	ss << '\n';
 	for (auto child : node->getChildren())
-		ss << dstToString(child, showLine);
+		ss << dstToString(child);
 	return ss.str();
 }
 
 /*
 	Outputs a .gv (graphviz) representation of a DST to fileName.
-	NOTE: The 'showline' option is currently redacted.
 */
-void dstToFile(string filename, DST::Node* dst, bool showLine)
+void dstToFile(string filename, DST::Node* dst)
 {
 	ofstream file;
 	file.open(filename);
 	//file << utf8::bom;	// make sure output file is utf8 encoded - needed in windows
 	file << "digraph G {\n";
-	file << dstToString(dst, showLine);
+	file << dstToString(dst);
 	file << '}';
 	file.close();
 }

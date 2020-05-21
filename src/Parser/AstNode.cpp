@@ -3,7 +3,18 @@
 */
 #include "AstNode.h"
 
-int AST::_idCount = 0;
+// int AST::_idCount = 0;
+
+string AST::Comparison::toString()
+{
+	string ret =  "<Comparison>\\n";
+	for (uint i = 0; i < _operators.size(); i++)
+	{
+		if (i != 0) ret += " ";
+		ret += _operators[i]._str.to_string();
+	}
+	return ret;
+}
 
 void AST::Function::addParameters(Expression * parameters)
 {
