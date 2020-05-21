@@ -3,7 +3,9 @@
 namespace NS {
 
     int Main() {
-        bool c := 10 .. 
+
+        // 'aaa'
+        bool c := 10 ..   
 
 
         
@@ -12,11 +14,8 @@ namespace NS {
         false
 
         // }
-
-
-
-
         
+
 
         return 10
         // return Foo.A

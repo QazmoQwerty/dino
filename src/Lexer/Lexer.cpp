@@ -203,8 +203,14 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 				unicode_char c = temp->_data[0];
 				temp->_data = "";
 
-				while (index < str.length())
+				while (true)
 				{
+					if (index == str.length())
+					{
+						if (temp->_operator._type == OT_SINGLE_QUOTE)
+							throw ErrorReporter::report("character literal was never closed", "expected a second `'`", ERR_GENERAL, token->_pos);
+						else throw ErrorReporter::report("string literal was never closed", "expected a second `\"`", ERR_GENERAL, token->_pos);
+					}
 					if (str[index] == c)
 					{
 						uint count = 0;
@@ -222,6 +228,7 @@ Token * Lexer::getToken(unicode_string &str, uint & index, uint & line, uint & p
 					index++;
 					pos++;
 				}
+				
 				index++;
 				pos++;
 
