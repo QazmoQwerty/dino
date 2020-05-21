@@ -13,23 +13,23 @@ using std::ofstream;
 	Returns a string (graphviz format) representation of an AST.
 	NOTE: The 'showline' option is currently redacted.
 */
-string astToString(AST::Node* node, bool showLine);
+string astToString(AST::Node* node);
 
 /*
 	Outputs a .gv (graphviz) representation of an AST to fileName.
 	NOTE: The 'showline' option is currently redacted.
 */
-void astToFile(string filename, AST::Node* ast, bool showLine);
+void astToFile(string filename, AST::Node* ast);
 
 
 /*
 	Returns a string (graphviz format) representation of a DST.
 	NOTE: The 'showline' option is currently redacted.
 */
-string dstToString(DST::Node* node, bool showLine);
+string dstToString(DST::Node* node);
 
 /*
 	Outputs a .gv (graphviz) representation of a DST to fileName.
 	NOTE: The 'showline' option is currently redacted.
 */
-void dstToFile(string filename, DST::Node* dst, bool showLine);
+void dstToFile(string filename, DST::Node* dst);

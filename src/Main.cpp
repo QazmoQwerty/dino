@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 		if (cmd.verbose) llvm::errs() << "Finished parsing...\n";
 		if (cmd.outputAstFiles) 
 		{
-			astToFile("AstDisplay.gv", ast, cmd.showLineAST);
+			astToFile("AstDisplay.gv", ast);
 			if (cmd.verbose) llvm::errs() << "Wrote \"AstDisplay.gv\"...\n";	
 		}
 
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
 		if (cmd.outputAstFiles)
 		{
-			dstToFile("DstDisplay.gv", dst, false);
+			dstToFile("DstDisplay.gv", dst);
 			if (cmd.verbose) llvm::errs() << "Wrote \"DstDisplay.gv\"...\n";	
 		}
 		
