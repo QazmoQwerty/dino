@@ -7,7 +7,7 @@ See the [language specification](https://docs.google.com/document/d/11jGM8cC0KQR
 
 ### No Semicolons
 
-```
+```c#
 foo.Foo()
 a() | b()  // the line break operator is '|'.
 ```
@@ -16,7 +16,7 @@ The most important thing in a language, really.
 
 ### Unicode Operators
 
-```
+```c#
 if b ≠ 0:
     a ≡ b
 ```
@@ -25,7 +25,7 @@ The IDE will make entering them convenient, I promise!
 
 ### And a bunch of Syntatic Sugar
 
-```
+```c#
 // unless - equivalent to "if not":
 unless a: // Use ':' rather than braces if a block only has one statement
     return 10
@@ -54,7 +54,7 @@ An interpreter for the esoteric language [Brainfuck](https://en.wikipedia.org/wi
 
 This example can currently be fully built by the compiler.
 
-```
+```c#
 import "std"
 
 namespace BrainF {
